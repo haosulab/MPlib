@@ -581,8 +581,18 @@ PinocchioModelTpl<DATATYPE>::computeIKCLIKJL(size_t const &index, Vector7 const 
         v.noalias() = -J.transpose() * JJt.ldlt().solve(err);
         q = pinocchio::integrate(model, q, v * dt);
         for (int j = 0; j < q.rows(); j++) {
-            if (q[j] < qmin[j]) q[j] = qmin[j];
-            if (q[j] > qmax[j]) q[j] = qmax[j];
+            if (q[j] < qmin[j]) {
+                if (abs(qmin[j] + 3.1415926) < 1e-3)
+                    q[j] = 3.1415926;
+                else
+                    q[j] = qmin[j];
+            }
+            if (q[j] > qmax[j]) {
+                if (abs(qmin[j] - 3.1415926) < 1e-3)
+                    q[j] = -3.1415926;
+                else
+                    q[j] = qmax[j];
+            } 
         }
     }
     return {qposPinocchio2User(q), success, err};

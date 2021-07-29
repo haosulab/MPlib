@@ -96,7 +96,7 @@ public:
             }
         } else if (joint_type[joint_prefix.size()] == 'R' && joint_type[joint_prefix.size() + 1] == 'U'){
             ret = Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>(1, 2);
-            ret(0, 0) = -3.14, ret(0, 1) = 3.14;
+            ret(0, 0) = -3.14159265359, ret(0, 1) = 3.14159265359;
         }
         return ret;
     }

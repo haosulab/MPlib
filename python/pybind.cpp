@@ -6,13 +6,9 @@
 #include "pybind_ompl.hpp"
 #include "pybind_kdl.hpp"
 
-//using namespace pyfcl;
-//using namespace pyompl;
-
 namespace py = pybind11;
 
-
-PYBIND11_MODULE(_pymp, m)
+PYBIND11_MODULE(_mplib, m)
 {
     m.doc() = "Motion planning python binding";
     build_pyfcl(m);
@@ -23,6 +19,5 @@ PYBIND11_MODULE(_pymp, m)
     build_pyompl(m);
     //build_pytopp(m);
 }
-//PYBIND11_MODULE(pyarticulation, m) { build_pyarticulation(m); }
-//PYBIND11_MODULE(pykdl, m) { build_pykdl(m); }
+
 

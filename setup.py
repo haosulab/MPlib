@@ -14,8 +14,7 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        #extdir = "/home/pip_build/pymp"
-        print(extdir)
+
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
 
@@ -52,14 +51,32 @@ class CMakeBuild(build_ext):
         )
 
 setup(
-    name="pymp",
-    version="0.0.1",
+    name="mplib",
+    version="0.0.4",
     author_email="minghua@ucsd.edu",
-    description="A simple motion planning library",
-    ext_modules=[CMakeExtension("_pymp")],
-    install_requires=["numpy >= 1.17", "toppra >= 0.4.0", "transforms3d >= 0.3.1"],
+    keywords="robotics motion planning",
+    description="A lightweight motion planning library",
+    classifiers=[
+        "Operating System :: POSIX :: Linux",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Education",
+        "Intended Audience :: Other Audience",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Framework :: Robot Framework :: Tool",
+        "Programming Language :: C++",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Topic :: Education",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Utilities",
+    ],
+    python_requires='>=3.6',
+    install_requires=["numpy >= 1.20", "toppra >= 0.4.0", "transforms3d >= 0.3.1"],
+    ext_modules=[CMakeExtension("_mplib")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    packages=["pymp"],
-    package_dir = {"pymp": "pymp/"}
+    packages=["mplib"],
+    package_dir = {"mplib": "mplib/"}
 )

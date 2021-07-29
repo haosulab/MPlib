@@ -40,8 +40,8 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
                 cs->addSubspace(subspcae, 1.0);
             } else if (joint_type[joint_prefix.size()] == 'R' && joint_type[joint_prefix.size() + 1] == 'U') {
                 cs->addSubspace(std::make_shared<ob::SO2StateSpace>(), 1.0);
-                lower_joint_limits.push_back(-3.14);
-                upper_joint_limits.push_back(3.14);
+                lower_joint_limits.push_back(-3.14159265359);
+                upper_joint_limits.push_back(3.14159265359);
                 dim_i += 1;
             }
         }
