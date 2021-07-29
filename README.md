@@ -1,6 +1,8 @@
 # MPlib
 
-<img src="demo.gif" width="30%">
+<p align="center">
+  <img src="demo.gif">
+</p>
 
 MPlib is a lightweight python package for motion planning, which is decoupled from ROS and is easy to set up. With a few lines of python code, one can achieve most of the motion planning functionalities in robot manipulation.
 
