@@ -21,7 +21,7 @@ class Planner(object):
 		user_joint_names=['panda_joint1', 'panda_joint2', 'panda_joint3', 'panda_joint4',
 		                'panda_joint5', 'panda_joint6', 'panda_joint7',
 						'panda_finger_joint1', 'panda_finger_joint2'],
-		move_group="ee_link",
+		move_group="panda_hand",
 		joint_vel_limits=np.ones(7),
 		joint_acc_limits=np.ones(7)
 	):
