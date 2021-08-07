@@ -1,0 +1,29 @@
+# compilation and distribution
+__pycache__
+_ext
+*.pyc
+*.so
+build/
+dist/
+*.egg-info/
+wheelhouse/
+
+# pybind11-stubgen
+stubs/
+
+# ipython/jupyter notebooks
+#*.ipynb
+**/.ipynb_checkpoints/
+
+# Editor temporaries
+*.swn
+*.swo
+*.swp
+*~
+
+# Pycharm editor settings
+.idea
+# VSCode editor settings
+.vscode
+# Mac OS-specific storage files
+.DS_Store
