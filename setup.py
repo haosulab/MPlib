@@ -3,7 +3,7 @@ import os
 import sys
 import subprocess
 
-from setuptools import setup, Extension
+from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
 
@@ -81,11 +81,10 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Utilities",
     ],
+    packages=find_packages(include="mplib*"),
     python_requires=">=3.6",
-    install_requires=["toppra >= 0.4.0", "transforms3d >= 0.3.1"],
-    ext_modules=[CMakeExtension("_mplib")],
+    install_requires=["numpy", "toppra >= 0.4.0", "transforms3d >= 0.3.1"],
+    ext_modules=[CMakeExtension("mplib.pymp")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    packages=["mplib"],
-    package_dir={"mplib": "mplib"},
 )

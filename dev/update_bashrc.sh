@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 PY36_BIN=/opt/python/cp36-cp36m/bin
 PY36_INCLUDE=/opt/python/cp36-cp36m/include/python3.6m
 PY38_BIN=/opt/python/cp38-cp38/bin

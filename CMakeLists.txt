@@ -27,5 +27,5 @@ set_target_properties(mp PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 add_subdirectory("third_party/pybind11")
 include_directories("python")
-pybind11_add_module(_mplib python/pybind.cpp)
-target_link_libraries(_mplib PRIVATE mp)
+pybind11_add_module(pymp python/pybind.cpp)
+target_link_libraries(pymp PRIVATE mp)

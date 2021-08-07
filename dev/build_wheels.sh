@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+PY_VERSION=
 PACKAGE_VERSION=
 REPAIR_ONLY=
 
@@ -27,7 +28,7 @@ while (( "$#" )); do
         REPAIR_ONLY=1
         shift
         ;;
-    -*) # unsupported flags
+    *) # unsupported flags
         echo "Error: Unsupported flag $1" >&2
         exit 1
         ;;
@@ -48,7 +49,7 @@ function build_wheel() {
         PY_DOT=3.9
         EXT=""
     else
-        echo "Error, python version not found!"
+        echo "Error: Python version($PY_VERSION) not found"
         exit 2
     fi
 
@@ -75,11 +76,13 @@ function build_wheel() {
     fi
 }
 
-if [ $PY_VERSION == "all" ]; then
+if [ -z "$PY_VERSION" ]; then
+    echo "Error: No python version is provided"
+    exit 3
+fi
+
+if [ "$PY_VERSION" == "all" ]; then
     for PY_VERSION in 36 37 38 39; do
-        if [ -d "build" ]; then
-            rm -rf build
-        fi 
         build_wheel
     done
 else

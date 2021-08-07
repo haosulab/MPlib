@@ -1,9 +1,9 @@
-import mplib
+from mplib import Planner
 import numpy as np
 
 
 def test():
-    planner = mplib.Planner(
+    planner = Planner(
         urdf="data/panda/panda.urdf",
         srdf="data/panda/panda.srdf",
         move_group="panda_hand",
