@@ -14,8 +14,9 @@ from .pymp import *
 class Planner:
     """Motion planner."""
 
-    # TODO(jigu): no srdf
+    # TODO(jigu): what happens if no srdf?
     # TODO(jigu): default joint vel and acc limits
+    # TODO(jigu): how does user link names and joint names are exactly used?
 
     def __init__(
         self,

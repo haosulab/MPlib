@@ -54,6 +54,11 @@ function build_wheel() {
     fi
 
     if [ -z "$REPAIR_ONLY" ]; then
+        # if [ -d build/lib.linux-x86_64-${PY_DOT} ]; then
+        #     echo "Delete old build/lib.linux-x86_64-${PY_DOT}"
+        #     rm -rf "build/lib.linux-x86_64-${PY_DOT}"
+        # fi
+
         INCLUDE_PATH=/opt/python/cp${PY_VERSION}-cp${PY_VERSION}${EXT}/include/python${PY_DOT}${EXT}
         BIN=/opt/python/cp${PY_VERSION}-cp${PY_VERSION}${EXT}/bin/python
         echo "Using bin path ${BIN}"
