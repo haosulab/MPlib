@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Sequence, Tuple, Union
 
 import numpy as np
 from transforms3d.quaternions import quat2mat
@@ -11,52 +11,50 @@ import toppra.algorithm as algo
 from .pymp import *
 
 
-class Planner(object):
+class Planner:
+    """Motion planner."""
+
+    # TODO(jigu): no srdf
+    # TODO(jigu): default joint vel and acc limits
+
     def __init__(
         self,
-        urdf="./panda/panda.urdf",
-        srdf="./panda/panda.srdf",
-        # align the order of user links
-        user_link_names=[
-            "panda_link0",
-            "panda_link1",
-            "panda_link2",
-            "panda_link3",
-            "panda_link4",
-            "panda_link5",
-            "panda_link6",
-            "panda_link7",
-            "panda_link8",
-            "panda_hand",
-            "panda_leftfinger",
-            "panda_rightfinger",
-        ],
-        # align the order of user joints
-        user_joint_names=[
-            "panda_joint1",
-            "panda_joint2",
-            "panda_joint3",
-            "panda_joint4",
-            "panda_joint5",
-            "panda_joint6",
-            "panda_joint7",
-            "panda_finger_joint1",
-            "panda_finger_joint2",
-        ],
-        move_group="panda_hand",
-        joint_vel_limits=np.ones(7),
-        joint_acc_limits=np.ones(7),
+        urdf: str,
+        srdf: str,
+        user_link_names: Sequence[str],
+        user_joint_names: Sequence[str],
+        move_group: str,
+        joint_vel_limits: Union[Sequence[float], np.ndarray],
+        joint_acc_limits: Union[Sequence[float], np.ndarray],
     ):
+        r"""Motion planner for robots.
+
+        Args:
+            urdf: Unified Robot Description Format file.
+            srdf: Semantic Robot Description Format file.
+            user_link_names: names of links, the order
+            user_joint_names: names of the joints to plan
+            move_group: target link to move, usually the end-effector.
+            joint_vel_limits: maximum joint velocities for time parameterization,
+                which should have the same length as
+            joint_acc_limits: maximum joint accelerations for time parameterization,
+                which should have the same length as
+        References:
+            http://docs.ros.org/en/kinetic/api/moveit_tutorials/html/doc/urdf_srdf/urdf_srdf_tutorial.html
+
+        """
         self.urdf = urdf
         self.srdf = srdf
         self.user_link_names = user_link_names
         self.user_joint_names = user_joint_names
+
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
             self.joint_name_2_idx[joint] = i
         self.link_name_2_idx = {}
         for i, link in enumerate(self.user_link_names):
             self.link_name_2_idx[link] = i
+
         self.robot = articulation.ArticulatedModel(
             urdf,
             srdf,
@@ -83,7 +81,9 @@ class Planner(object):
         self.joint_vel_limits = joint_vel_limits
         self.joint_acc_limits = joint_acc_limits
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
-        assert len(self.joint_vel_limits) == len(self.move_group_joint_indices)
+        assert len(self.joint_vel_limits) == len(
+            self.move_group_joint_indices
+        ), len(self.move_group_joint_indices)
         assert len(self.joint_acc_limits) == len(self.move_group_joint_indices)
 
     def distance_6D(self, p1, q1, p2, q2):
