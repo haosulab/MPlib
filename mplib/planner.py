@@ -114,15 +114,29 @@ class Planner:
                     flag = False
         return flag
 
+    def normalize_qpos(self, qpos): # normalize joint position to [-pi, pi]
+        for i in range(len(qpos)):
+            if self.joint_types[i].startswith("JointModelR"):
+                if (self.joint_limits[i][0] < -np.pi and self.joint_limits[i][1] > np.pi):
+                    qpos[i] -= 2 * np.pi * ((qpos[i] + np.pi) // (2 * np.pi))
+        return qpos
+
     def IK(self, goal_pose, start_qpos, n_init_qpos=20, threshold=1e-3):
         index = self.link_name_2_idx[self.move_group]
         min_dis = 1e9
         result = np.zeros(len(self.user_joint_names))
+        idx = self.move_group_joint_indices
         for i in range(n_init_qpos):
             ik_results = self.pinocchio_model.compute_IK_CLIK(
                 index, goal_pose, start_qpos
             )
-            flag = self.check_joint_limit(np.copy(ik_results[0]))
+            flag = self.check_joint_limit(ik_results[0]) # will clip qpos
+
+            # check collision
+            self.planning_world.set_qpos_all(ik_results[0][idx])
+            if (len(self.planning_world.collide_full()) != 0):
+                flag = False
+
             if flag:
                 self.pinocchio_model.compute_forward_kinematics(ik_results[0])
                 new_pose = self.pinocchio_model.get_link_pose(index)
@@ -131,7 +145,7 @@ class Planner:
                 )
                 if tmp_dis < min_dis:
                     min_dis = tmp_dis
-                    result = ik_results[0]
+                    result = self.normalize_qpos(ik_results[0])
                 if min_dis < threshold:
                     return "Success", result
             start_qpos = self.pinocchio_model.get_random_configuration()

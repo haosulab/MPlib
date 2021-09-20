@@ -59,7 +59,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="mplib",
-    version="0.0.4",
+    version="0.0.7",
     author_email="minghua@ucsd.edu",
     keywords="robotics motion planning",
     description="A lightweight motion planning library",
