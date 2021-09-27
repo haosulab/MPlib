@@ -114,18 +114,25 @@ class Planner:
                     flag = False
         return flag
 
-    def normalize_qpos(self, qpos): # normalize joint position to [-pi, pi]
+    def normalize_qpos(self, qpos, start_qpos): # normalize qpos towards start qpos
+        resulst = np.copy(qpos)
         for i in range(len(qpos)):
             if self.joint_types[i].startswith("JointModelR"):
-                if (self.joint_limits[i][0] < -np.pi and self.joint_limits[i][1] > np.pi):
-                    qpos[i] -= 2 * np.pi * ((qpos[i] + np.pi) // (2 * np.pi))
-        return qpos
+                for direction in range(-1, 2):
+                    tmp = qpos[i] + direction * 2 * np.pi
+                    if (tmp > (self.joint_limits[i][0] - 1e-3) and \
+                        tmp < (self.joint_limits[i][1] + 1e-3) and \
+                        np.abs(tmp - start_qpos[i]) < np.abs(resulst[i] - start_qpos[i])):
+                        resulst[i] = tmp
+        return resulst
+
 
     def IK(self, goal_pose, start_qpos, n_init_qpos=20, threshold=1e-3):
         index = self.link_name_2_idx[self.move_group]
         min_dis = 1e9
-        result = np.zeros(len(self.user_joint_names))
         idx = self.move_group_joint_indices
+        qpos0 = np.copy(start_qpos)
+        results = []
         for i in range(n_init_qpos):
             ik_results = self.pinocchio_model.compute_IK_CLIK(
                 index, goal_pose, start_qpos
@@ -145,18 +152,25 @@ class Planner:
                 )
                 if tmp_dis < min_dis:
                     min_dis = tmp_dis
-                    result = self.normalize_qpos(ik_results[0])
-                if min_dis < threshold:
-                    return "Success", result
+                if tmp_dis < threshold:
+                    result = self.normalize_qpos(ik_results[0], qpos0)
+                    unique = True
+                    for j in range(len(results)):
+                        if np.linalg.norm(results[j][idx] - result[idx]) < 0.1:
+                            unique = False
+                    if unique:
+                        results.append(result)
             start_qpos = self.pinocchio_model.get_random_configuration()
-        if min_dis != 1e9:
+        if len(results) != 0:
+            status = "Success"
+        elif min_dis != 1e9:
             status = (
                 "IK Failed! Distance %lf is greater than threshold %lf."
                 % (min_dis, threshold)
             )
         else:
             status = "IK Failed! Cannot find valid solution."
-        return status, result
+        return status, results
 
     def TOPP(self, path, step=0.1, verbose=False):
         N_samples = path.shape[0]
@@ -211,18 +225,26 @@ class Planner:
 
         idx = self.move_group_joint_indices
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos)
-
         if ik_status != "Success":
             return {"status": ik_status}
 
-        self.robot.set_qpos(current_qpos, True)
-        status, path = self.planner.plan(
-            current_qpos[idx],
-            goal_qpos[idx],
-            range=rrt_range,
-            verbose=verbose,
-            time=planning_time,
-        )
+        if verbose:
+            print("IK results:")
+            for i in range(len(goal_qpos)):
+               print(goal_qpos[i])
+
+        for i in range(len(goal_qpos)):
+            self.robot.set_qpos(current_qpos, True)
+            status, path = self.planner.plan(
+                current_qpos[idx],
+                goal_qpos[i][idx],
+                range=rrt_range,
+                verbose=verbose,
+                time=planning_time,
+            )
+            if status == "Exact solution":
+                break
+
         if status == "Exact solution":
             if verbose:
                 ta.setup_logging("INFO")
