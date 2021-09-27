@@ -144,9 +144,17 @@ FCLModelTpl<DATATYPE>::setLinkOrder(const std::vector<std::string> &names) {
 template<typename DATATYPE>
 void FCLModelTpl<DATATYPE>::removeCollisionPairsFromSrdf(std::string const &srdf_filename) {
     const std::string extension = srdf_filename.substr(srdf_filename.find_last_of('.') + 1);
-    ASSERT(extension == "srdf", srdf_filename + " does not have the right extension.");
+    if (extension != "srdf") {
+        std::cout << srdf_filename + " does not have the right extension." << std::endl;
+        return ;
+    }
+
     std::ifstream srdf_stream(srdf_filename.c_str());
-    ASSERT(srdf_stream.is_open(), srdf_filename + " does not seem to be a valid file.");
+
+    if (srdf_stream.is_open() == false) {
+        std::cout << srdf_filename + " does not seem to be a valid file." << std::endl;
+        return ;
+    }
 
     boost::property_tree::ptree pt;
     boost::property_tree::xml_parser::read_xml(srdf_stream, pt);

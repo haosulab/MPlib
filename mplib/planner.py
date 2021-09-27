@@ -14,25 +14,23 @@ from .pymp import *
 class Planner:
     """Motion planner."""
 
-    # TODO(jigu): what happens if no srdf?
     # TODO(jigu): default joint vel and acc limits
     # TODO(jigu): how does user link names and joint names are exactly used?
 
     def __init__(
         self,
         urdf: str,
-        srdf: str,
         user_link_names: Sequence[str],
         user_joint_names: Sequence[str],
         move_group: str,
         joint_vel_limits: Union[Sequence[float], np.ndarray],
         joint_acc_limits: Union[Sequence[float], np.ndarray],
+        srdf: str = ""
     ):
         r"""Motion planner for robots.
 
         Args:
             urdf: Unified Robot Description Format file.
-            srdf: Semantic Robot Description Format file.
             user_link_names: names of links, the order
             user_joint_names: names of the joints to plan
             move_group: target link to move, usually the end-effector.
@@ -40,6 +38,7 @@ class Planner:
                 which should have the same length as
             joint_acc_limits: maximum joint accelerations for time parameterization,
                 which should have the same length as
+            srdf: Semantic Robot Description Format file.
         References:
             http://docs.ros.org/en/kinetic/api/moveit_tutorials/html/doc/urdf_srdf/urdf_srdf_tutorial.html
 
