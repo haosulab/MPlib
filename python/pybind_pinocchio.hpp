@@ -40,7 +40,7 @@ void build_pypinocchio(py::module &m_all) {
             .def("compute_single_link_local_jacobian", &PinocchioModel::computeSingleLinkLocalJacobian, py::arg("qpos"),
                  py::arg("index"))
             .def("compute_IK_CLIK", &PinocchioModel::computeIKCLIK,
-                 py::arg("index"), py::arg("pose"), py::arg("q_init"), py::arg("eps") = 1e-5,
+                 py::arg("index"), py::arg("pose"), py::arg("q_init"), py::arg("mask") = std::vector<bool>(),  py::arg("eps") = 1e-5,
                  py::arg("maxIter") = 1000, py::arg("dt") = 1e-1, py::arg("damp") = 1e-12)
             .def("compute_IK_CLIK_JL", &PinocchioModel::computeIKCLIKJL,
                  py::arg("index"), py::arg("pose"), py::arg("q_init"), py::arg("q_min"), py::arg("q_max"), py::arg("eps") = 1e-5,

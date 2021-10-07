@@ -494,8 +494,9 @@ PinocchioModelTpl<DATATYPE>::computeSingleLinkLocalJacobian(VectorX const &qpos,
 
 template<typename DATATYPE>
 std::tuple<Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1>, bool, Eigen::Matrix<DATATYPE, 6, 1>>
-PinocchioModelTpl<DATATYPE>::computeIKCLIK(size_t const &index, Vector7 const &pose, VectorX const &q_init, double const &eps,
-                                                        int const &maxIter, double const &dt, double const &damp) {
+PinocchioModelTpl<DATATYPE>::computeIKCLIK(size_t const &index, Vector7 const &pose, VectorX const &q_init, std::vector<bool> const &mask,
+                                            double const &eps, int const &maxIter, double const &dt, double const &damp) {
+
     ASSERT(index < link_index_user2pinocchio.size(), "link index out of bound");
     auto frameId = link_index_user2pinocchio[index];
     auto jointId = model.frames[frameId].parent;
@@ -515,6 +516,7 @@ PinocchioModelTpl<DATATYPE>::computeIKCLIK(size_t const &index, Vector7 const &p
     Vector6 err;
     VectorX v(model.nv);
 
+    int mask_size = mask.size();
     for (int i = 0;; i++) {
         pinocchio::forwardKinematics(model, data, q);
         const SE3 dMi = joint_pose.actInv(data.oMi[jointId]);
@@ -528,6 +530,16 @@ PinocchioModelTpl<DATATYPE>::computeIKCLIK(size_t const &index, Vector7 const &p
             break;
         }
         pinocchio::computeJointJacobian(model, data, q, jointId, J);
+
+        // mask out certain joints
+        if (mask_size != 0) {
+            for (int j = 0; j < mask_size; j++) 
+                if (mask[j]) {
+                    int u = joint_index_user2pinocchio[j] - 1;
+                    for (int k = 0; k < 6; k++)
+                        J(k, u) = 0;
+                }
+        }
         Matrix6 JJt;
         JJt.noalias() = J * J.transpose();
         JJt.diagonal().array() += damp;

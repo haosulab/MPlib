@@ -67,6 +67,7 @@ class Planner:
         self.planning_world = planning_world.PlanningWorld(
             [self.robot], ["robot"], [], []
         )
+        assert(move_group in self.user_link_names)
         self.move_group = move_group
         self.robot.set_move_group(self.move_group)
         self.move_group_joint_indices = (
@@ -126,15 +127,16 @@ class Planner:
         return resulst
 
 
-    def IK(self, goal_pose, start_qpos, n_init_qpos=20, threshold=1e-3):
+    def IK(self, goal_pose, start_qpos, mask = [], n_init_qpos=20, threshold=1e-3):
         index = self.link_name_2_idx[self.move_group]
         min_dis = 1e9
         idx = self.move_group_joint_indices
         qpos0 = np.copy(start_qpos)
         results = []
+        self.robot.set_qpos(start_qpos, True)
         for i in range(n_init_qpos):
             ik_results = self.pinocchio_model.compute_IK_CLIK(
-                index, goal_pose, start_qpos
+                index, goal_pose, start_qpos, mask
             )
             flag = self.check_joint_limit(ik_results[0]) # will clip qpos
 
@@ -160,6 +162,11 @@ class Planner:
                     if unique:
                         results.append(result)
             start_qpos = self.pinocchio_model.get_random_configuration()
+            mask_len = len(mask)
+            if mask_len > 0:
+                for j in range(mask_len):
+                    if mask[j]:
+                        start_qpos[j] = qpos0[j]
         if len(results) != 0:
             status = "Success"
         elif min_dis != 1e9:
@@ -204,6 +211,7 @@ class Planner:
         self,
         goal_pose,
         current_qpos,
+        mask = [],
         time_step=0.1,
         rrt_range=0.1,
         planning_time=1,
@@ -223,7 +231,7 @@ class Planner:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
         idx = self.move_group_joint_indices
-        ik_status, goal_qpos = self.IK(goal_pose, current_qpos)
+        ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
             return {"status": ik_status}
 

@@ -240,7 +240,7 @@ public:
     Matrix6x computeSingleLinkLocalJacobian(VectorX const &qpos, size_t const &index);
 
     std::tuple<VectorX, bool, Vector6>
-    computeIKCLIK(size_t const &index, Vector7 const &pose, VectorX const &q_init, double const &eps = 1e-5,
+    computeIKCLIK(size_t const &index, Vector7 const &pose, VectorX const &q_init, std::vector<bool> const &mask, double const &eps = 1e-5,
                                 int const &maxIter = 1000, double const &dt = 1e-1, double const &damp = 1e-12);
 
     std::tuple<VectorX, bool, Vector6>
