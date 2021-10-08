@@ -1,8 +1,8 @@
 from typing import Sequence, Tuple, Union
 
+import os
 import numpy as np
 from transforms3d.quaternions import quat2mat
-
 import toppra
 import toppra as ta
 import toppra.constraint as constraint
@@ -44,6 +44,10 @@ class Planner:
 
         """
         self.urdf = urdf
+        if srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
+            srdf = urdf.replace(".urdf", ".srdf")
+            print("No SRDF file provided. Try to load %s." % srdf)
+            
         self.srdf = srdf
         self.user_link_names = user_link_names
         self.user_joint_names = user_joint_names
@@ -64,16 +68,23 @@ class Planner:
             verbose=False,
             convex=True,
         )
+        self.pinocchio_model = self.robot.get_pinocchio_model()
+
         self.planning_world = planning_world.PlanningWorld(
             [self.robot], ["robot"], [], []
         )
+
+        if srdf == "":
+            self.generate_collision_pair()
+            self.robot.update_SRDF(self.srdf)
+
         assert(move_group in self.user_link_names)
         self.move_group = move_group
         self.robot.set_move_group(self.move_group)
         self.move_group_joint_indices = (
             self.robot.get_move_group_joint_indices()
         )
-        self.pinocchio_model = self.robot.get_pinocchio_model()
+
         self.joint_types = self.pinocchio_model.get_joint_types()
         self.joint_limits = np.concatenate(
             self.pinocchio_model.get_joint_limits()
@@ -86,6 +97,44 @@ class Planner:
             self.move_group_joint_indices
         ), len(self.move_group_joint_indices)
         assert len(self.joint_acc_limits) == len(self.move_group_joint_indices)
+
+    def generate_collision_pair(self, sample_time = 1000000, echo_freq = 100000):
+        print("Since no SRDF file is provided. We will first detect link pairs that will always collide. This may take several minutes.")
+        n_link = len(self.user_link_names)
+        cnt = np.zeros((n_link, n_link), dtype=np.int32)
+        for i in range(sample_time):
+            qpos = self.pinocchio_model.get_random_configuration()
+            self.robot.set_qpos(qpos, True)
+            collisions = self.planning_world.collide_full()
+            for collision in collisions:
+                u = self.link_name_2_idx[collision.link_name1]
+                v = self.link_name_2_idx[collision.link_name2]
+                cnt[u][v] += 1
+            if i % echo_freq == 0:
+                print("Finish %.1f%%!" % (i * 100 / sample_time))
+        
+        import xml.etree.ElementTree as ET
+        from xml.dom import minidom
+
+        root = ET.Element('robot')
+        robot_name = self.urdf.split('/')[-1].split('.')[0]
+        root.set('name', robot_name)
+        self.srdf = self.urdf.replace(".urdf", ".srdf")
+
+        for i in range(n_link):
+            for j in range(n_link):
+                if cnt[i][j] == sample_time:
+                    link1 = self.user_link_names[i]
+                    link2 = self.user_link_names[j]
+                    print("Ignore collision pair: (%s, %s), reason:  always collide" % (link1, link2))
+                    collision = ET.SubElement(root, 'disable_collisions')
+                    collision.set('link1', link1)
+                    collision.set('link2', link2)
+                    collision.set('reason', 'Default')
+        srdffile = open(self.srdf, "w")
+        srdffile.write(minidom.parseString(ET.tostring(root)).toprettyxml(indent="    "))
+        srdffile.close()
+        print("Saving the SRDF file to %s" % self.srdf)
 
     def distance_6D(self, p1, q1, p2, q2):
         return np.linalg.norm(p1 - p2) + min(
@@ -229,6 +278,14 @@ class Planner:
                     current_qpos[i] = self.joint_limits[i][0] + 1e-3
                 if current_qpos[i] > self.joint_limits[i][1]:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
+
+
+        self.robot.set_qpos(current_qpos, True)
+        collisions = self.planning_world.collide_full()
+        if len(collisions) != 0:
+            print("Invalid start state!")
+            for collision in collisions:
+                print("%s and %s collide!" % (collision.link_name1, collision.link_name2))
 
         idx = self.move_group_joint_indices
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)

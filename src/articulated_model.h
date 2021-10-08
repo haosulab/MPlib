@@ -54,6 +54,8 @@ public:
     VectorX getQpos(void) { return current_qpos; }
 
     void setQpos(VectorX const& qpos, bool const& full=false);
+
+    void updateSRDF(std::string const &srdf) {fcl_model.removeCollisionPairsFromSrdf(srdf);}
 };
 
 template<typename T>
