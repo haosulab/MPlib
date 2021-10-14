@@ -8,6 +8,7 @@
 #include <ompl/base/samplers/ObstacleBasedValidStateSampler.h>
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/StateSpace.h>
+#include <ompl/base/goals/GoalStates.h>
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/base/objectives/StateCostIntegralObjective.h>
 #include <ompl/base/objectives/MaximizeMinClearanceObjective.h>
@@ -134,6 +135,7 @@ class OMPLPlannerTpl {
     ValidityCheckerTpl_ptr<DATATYPE> valid_checker;
     size_t dim;
     std::vector<DATATYPE> lower_joint_limits, upper_joint_limits;
+    std::vector<bool> is_revolute;
 
 public:
     VectorX random_sample_nearby(VectorX const &start_state);
@@ -147,7 +149,7 @@ public:
     size_t get_dim() { return dim; }
 
     std::pair <std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
-    plan(VectorX const &start_state, VectorX const &goal_state, const std::string &planner_name = "RRTConnect",
+    plan(VectorX const &start_state, std::vector<VectorX> const &goal_states, const std::string &planner_name = "RRTConnect",
         const double &time = 1.0, const double& range = 0.0, const bool &verbose = false);
 };
 

@@ -163,19 +163,6 @@ class Planner:
                     flag = False
         return flag
 
-    def normalize_qpos(self, qpos, start_qpos): # normalize qpos towards start qpos
-        resulst = np.copy(qpos)
-        for i in range(len(qpos)):
-            if self.joint_types[i].startswith("JointModelR"):
-                for direction in range(-1, 2):
-                    tmp = qpos[i] + direction * 2 * np.pi
-                    if (tmp > (self.joint_limits[i][0] - 1e-3) and \
-                        tmp < (self.joint_limits[i][1] + 1e-3) and \
-                        np.abs(tmp - start_qpos[i]) < np.abs(resulst[i] - start_qpos[i])):
-                        resulst[i] = tmp
-        return resulst
-
-
     def IK(self, goal_pose, start_qpos, mask = [], n_init_qpos=20, threshold=1e-3):
         index = self.link_name_2_idx[self.move_group]
         min_dis = 1e9
@@ -203,7 +190,7 @@ class Planner:
                 if tmp_dis < min_dis:
                     min_dis = tmp_dis
                 if tmp_dis < threshold:
-                    result = self.normalize_qpos(ik_results[0], qpos0)
+                    result = ik_results[0] 
                     unique = True
                     for j in range(len(results)):
                         if np.linalg.norm(results[j][idx] - result[idx]) < 0.1:
@@ -297,23 +284,25 @@ class Planner:
             for i in range(len(goal_qpos)):
                print(goal_qpos[i])
 
+        goal_qpos_ = []
         for i in range(len(goal_qpos)):
-            self.robot.set_qpos(current_qpos, True)
-            status, path = self.planner.plan(
-                current_qpos[idx],
-                goal_qpos[i][idx],
-                range=rrt_range,
-                verbose=verbose,
-                time=planning_time,
-            )
-            if status == "Exact solution":
-                break
+            goal_qpos_.append(goal_qpos[i][idx])
+        self.robot.set_qpos(current_qpos, True)
+        
+        status, path = self.planner.plan(
+            current_qpos[idx],
+            goal_qpos_, 
+            range=rrt_range,
+            verbose=verbose,
+            time=planning_time,
+        )
 
         if status == "Exact solution":
             if verbose:
                 ta.setup_logging("INFO")
             else:
                 ta.setup_logging("WARNING")
+
             times, pos, vel, acc, duration = self.TOPP(path, time_step)
             return {
                 "status": "Success",

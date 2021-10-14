@@ -8,6 +8,7 @@ DEFINE_TEMPLATE_OMPL(double)
 
 DEFINE_TEMPLATE_OMPL(float)
 
+#define PI 3.14159265359
 
 template<typename DATATYPE>
 void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
@@ -40,9 +41,15 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
                 cs->addSubspace(subspcae, 1.0);
             } else if (joint_type[joint_prefix.size()] == 'R' && joint_type[joint_prefix.size() + 1] == 'U') {
                 cs->addSubspace(std::make_shared<ob::SO2StateSpace>(), 1.0);
-                lower_joint_limits.push_back(-3.14159265359);
-                upper_joint_limits.push_back(3.14159265359);
+                lower_joint_limits.push_back(-PI);
+                upper_joint_limits.push_back(PI);
                 dim_i += 1;
+            }
+            if (joint_type[joint_prefix.size()] == 'R' || joint_type[joint_prefix.size()] == 'P') {
+                if (joint_type[joint_prefix.size()] == 'R' && joint_type[joint_prefix.size() + 1] != 'U')
+                    is_revolute.push_back(true);
+                else
+                    is_revolute.push_back(false);
             }
         }
         ASSERT(dim_i == robot->getQposDim(), "Dim of bound is different from dim of qpos " +  std::to_string(dim_i) + " " + std::to_string(robot->getQposDim()));
@@ -88,10 +95,10 @@ Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> OMPLPlannerTpl<DATATYPE>::random_samp
 
 template<typename DATATYPE>
 std::pair<std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
-OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, VectorX const &goal_state, const std::string &planner_name,
+OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> const &goal_states, const std::string &planner_name,
                                 const double &time, const double& range, const bool& verbose) {
-    //ASSERT(start_state.rows() == goal_state.rows(), "Len of start state and goal state should be equal");
-    //ASSERT(start_state.rows() == dim, "Len of start state and problem dimension should be equal");
+    ASSERT(start_state.rows() == goal_states[0].rows(), "Length of start state and goal state should be equal");
+    ASSERT(start_state.rows() == dim, "Length of start state and problem dimension should be equal");
     if (verbose == false)
         ompl::msg::noOutputHandler();
 
@@ -105,13 +112,59 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, VectorX const &goal_s
         start = eigen2vector<DATATYPE, double>(new_start_state);
     }
 
-    ob::ScopedState<> goal(cs);
-    goal = eigen2vector<DATATYPE, double>(goal_state);
+    auto goals = std::make_shared<ob::GoalStates>(si);
+
+    int tot_enum_states = 1, tot_goal_state = 0;
+    for (int i = 0; i < dim; i++) 
+        tot_enum_states *= 3;
+
+    for (int ii = 0; ii < goal_states.size(); ii++)
+        for (int i = 0; i < tot_enum_states; i++) {
+            std::vector<double> tmp_state;
+            int tmp = i;
+            bool flag = true;
+            for (int j = 0; j < dim; j++) {
+                tmp_state.push_back(goal_states[ii](j));
+                int dir = tmp % 3;
+                tmp /= 3;
+                if (dir != 0 && is_revolute[j] == false) {
+                    flag = false;
+                    break;
+                }
+                if (dir == 1) {
+                    if (tmp_state[j] - 2 * PI > lower_joint_limits[j]) 
+                        tmp_state[j] -= 2 * PI;
+                    else {
+                        flag = false;
+                        break;
+                    }
+                }
+                else if (dir == 2) {
+                    if (tmp_state[j] + 2 * PI < upper_joint_limits[j]) 
+                        tmp_state[j] += 2 * PI;
+                    else {
+                        flag = false;
+                        break;
+                    }                
+                }
+            }
+            if (flag) {
+                ob::ScopedState<> goal(cs);
+                goal = tmp_state; 
+                goals->addState(goal);
+                tot_goal_state += 1;
+            }
+        }
+    if (verbose)
+        std::cout << "number of goal state: " << tot_goal_state << std::endl;
 
     pdef->clearStartStates();
     pdef->clearGoal();
     pdef->clearSolutionPaths();
-    pdef->setStartAndGoalStates(start, goal);
+    pdef->clearSolutionNonExistenceProof();
+    //pdef->setStartAndGoalStates(start, goal);
+    pdef->setGoal(goals);
+    pdef->addStartState(start);
     ob::PlannerPtr planner;
     if (planner_name == "RRTConnect")
     {
