@@ -3,7 +3,6 @@ from typing import Sequence, Tuple, Union
 import os
 import numpy as np
 from transforms3d.quaternions import quat2mat
-import toppra
 import toppra as ta
 import toppra.constraint as constraint
 import toppra.algorithm as algo
