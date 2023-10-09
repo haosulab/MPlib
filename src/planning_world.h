@@ -78,6 +78,14 @@ public:
 
     void setUseAttach(bool const & use) {use_attach = use;}
 
+    /**
+     * @brief updateAttachedSphere
+     * @param obj collision object
+     * @param link_id id of the link to which the object is attached
+     * @param pose the pose of the attached object w.r.t. the link it's attached to
+     */
+    void updateAttachedSphere(DATATYPE radius, int link_id, const Vector7 &pose);
+
     void updateAttachedBox(Vector3 const & size, int const & link_id, Vector7 const & pose);
 
     void printAttachedBoxPose() {

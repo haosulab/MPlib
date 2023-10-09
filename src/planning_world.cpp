@@ -47,6 +47,17 @@ void PlanningWorldTpl<DATATYPE>::updatePointCloud(Matrixx3 const& vertices, doub
 }
 
 template<typename DATATYPE>
+void PlanningWorldTpl<DATATYPE>::updateAttachedSphere(DATATYPE radius, int link_id, const Vector7 &pose) {
+    attach_link_id = link_id;
+    // linear here means the upper left 3x3 matrix, which is not necessarily a rotation matrix if scaling is involved
+    attach_to_link_pose.linear() = Quaternion(pose[3], pose[4], pose[5], pose[6]).matrix();
+    attach_to_link_pose.translation() = pose.head(3);
+    attached_box = std::make_shared<CollisionObject>(std::make_shared<fcl::Sphere<DATATYPE>>(radius),
+                                                     attach_to_link_pose);
+    has_attach = true;
+}
+
+template<typename DATATYPE>
 void PlanningWorldTpl<DATATYPE>::updateAttachedBox(Vector3 const & size, int const & link_id, Vector7 const & pose) {
     //CollisionGeometry_ptr collision_geometry = std::make_shared<Box>((DATATYPE) size[0], (DATATYPE) size[1], (DATATYPE) size[2]);
     attach_link_id = link_id;
@@ -55,7 +66,6 @@ void PlanningWorldTpl<DATATYPE>::updateAttachedBox(Vector3 const & size, int con
     attached_box = std::make_shared<CollisionObject>(std::make_shared<fcl::Box<DATATYPE>>((DATATYPE) size[0],
                                                     (DATATYPE) size[1], (DATATYPE) size[2]), attach_to_link_pose);
     has_attach = true;
-    return ;
 }
 
 

@@ -89,7 +89,6 @@ void FCLModelTpl<DATATYPE>::init(urdf::ModelInterfaceSharedPtr const &urdfTree, 
     urdf::LinkConstSharedPtr root_link = urdf_model->getRoot();
     dfs_parse_tree(root_link, "root's parent");
     auto tmp_user_link_names = collision_link_names;
-    std::sort(tmp_user_link_names.begin(), tmp_user_link_names.end());
     auto last = std::unique(tmp_user_link_names.begin(), tmp_user_link_names.end());
     tmp_user_link_names.erase(last, tmp_user_link_names.end());
     setLinkOrder(tmp_user_link_names);
