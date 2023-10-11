@@ -29,6 +29,9 @@ private:
     using CollisionRequest = fcl::CollisionRequest<DATATYPE>;
     using CollisionResult = fcl::CollisionResult<DATATYPE>;
 
+    using CollisionGeometry = fcl::CollisionGeometry<DATATYPE>;
+    using CollisionGeometry_ptr = std::shared_ptr<CollisionGeometry>;
+
     using CollisionObject = fcl::CollisionObject<DATATYPE>;
     using CollisionObject_ptr = std::shared_ptr<CollisionObject>;
 
@@ -47,7 +50,7 @@ private:
     std::vector<std::string> articulation_names;
     std::vector<std::string> normal_object_names;
     int move_articulation_id, attach_link_id;
-    CollisionObject_ptr point_cloud, attached_box;
+    CollisionObject_ptr point_cloud, attached_tool;
     bool has_point_cloud, use_point_cloud, has_attach, use_attach;
     Transform3 attach_to_link_pose;
     //BroadPhaseCollisionManager_ptr normal_manager;
@@ -88,18 +91,22 @@ public:
     void removeAttach() {has_attach = false;}
 
     /**
-     * @brief updateAttachedSphere
-     * @param obj collision object
+     * @brief attach or update the attached object
+     * @param p_geom shared ptr to a collision object
      * @param link_id id of the link to which the object is attached
      * @param pose the pose of the attached object w.r.t. the link it's attached to
      */
+    void updateAttachedTool(CollisionGeometry_ptr p_geom, int link_id, Vector7 const & pose);
+
     void updateAttachedSphere(DATATYPE radius, int link_id, const Vector7 &pose);
 
-    void updateAttachedBox(Vector3 const & size, int const & link_id, Vector7 const & pose);
+    void updateAttachedBox(Vector3 const & size, int link_id, Vector7 const & pose);
 
-    void printAttachedBoxPose() {
-        auto tmp1 = attached_box.get()->getTranslation();
-        auto tmp2 = attached_box.get()->getRotation();
+    void updateAttachedMesh(std::string const &mesh_path, int link_id, Vector7 const & pose);
+
+    void printAttachedToolPose() {
+        auto tmp1 = attached_tool.get()->getTranslation();
+        auto tmp2 = attached_tool.get()->getRotation();
         std::cout << tmp1 << ' ' << tmp2 << std::endl;
     }
 
