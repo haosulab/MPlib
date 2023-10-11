@@ -37,26 +37,13 @@ ArticulatedModelTpl<DATATYPE>::
 ArticulatedModelTpl(std::string const &urdf_filename, std::string const &srdf_filename, Vector3 const &gravity,
                     std::vector<std::string> const &joint_names, std::vector<std::string> const &link_names,
                     bool const &verbose, bool const& convex) :verbose(verbose),
-                                          pinocchio_model(urdf_filename, gravity, verbose),
-                                          fcl_model(urdf_filename, verbose, convex) {
-    //std::cout << "Verbose" << verbose << std::endl;
-
-    // check if the joints and links are empty. if so, use all the joints and links in the order of the urdf
-    if (!link_names.empty()) {
-        user_link_names = joint_names;
-        pinocchio_model.setLinkOrder(user_link_names);
-        fcl_model.setLinkOrder(user_link_names);
-    } else {
-        user_link_names = pinocchio_model.getLinkNames(false);  // set default link order
-    }
-
-    if (!joint_names.empty()) {
-        user_joint_names = joint_names;
-        pinocchio_model.setJointOrder(user_joint_names);
-    } else {
-        user_joint_names = pinocchio_model.getJointNames(false);  // set default joint order
-    }
-
+                    pinocchio_model(urdf_filename, gravity, verbose),
+                    fcl_model(urdf_filename, verbose, convex) {
+    user_link_names = link_names.size() == 0 ? pinocchio_model.getLinkNames(false) : link_names;
+    user_joint_names = joint_names.size() == 0 ? pinocchio_model.getJointNames(false) : joint_names;
+    pinocchio_model.setLinkOrder(user_link_names);
+    pinocchio_model.setJointOrder(user_joint_names);
+    fcl_model.setLinkOrder(user_link_names);
     fcl_model.removeCollisionPairsFromSrdf(srdf_filename);
     current_qpos = VectorX::Constant(pinocchio_model.getModel().nv, 0);
     setMoveGroup(user_link_names);

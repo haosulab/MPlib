@@ -76,7 +76,16 @@ public:
 
     void updatePointCloud(Matrixx3 const& vertices, double  const& resolution);
 
-    void setUseAttach(bool const & use) {use_attach = use;}
+    void setUseAttach(bool const & use) {
+        use_attach = use;
+        if (!use) removeAttach();
+    }
+
+    /**
+     * @brief remove attach object so nothing won't be anything on the end effector
+     *        when use_attach is set to true again
+     */
+    void removeAttach() {has_attach = false;}
 
     /**
      * @brief updateAttachedSphere

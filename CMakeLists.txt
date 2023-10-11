@@ -21,9 +21,12 @@ include_directories("/usr/include/eigen3")
 include_directories("/usr/local/include/ompl-1.5")
 include_directories("src")
 
+# store libries in a variable
+set(LIBS ompl fcl pinocchio assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
+
 file(GLOB_RECURSE PROJECT_SRC "src/*.h" "src/*.cpp" "src/*.hpp")
 add_library(mp STATIC ${PROJECT_SRC})
-target_link_libraries(mp PRIVATE ompl fcl pinocchio assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
+target_link_libraries(mp PRIVATE ${LIBS})
 set_target_properties(mp PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 add_subdirectory("third_party/pybind11")

@@ -31,7 +31,7 @@ class PlanningDemo():
         # Load URDF
         loader: sapien.URDFLoader = self.scene.create_urdf_loader()
         loader.fix_root_link = True
-        self.robot: sapien.Articulation = loader.load("./panda/panda.urdf")
+        self.robot: sapien.Articulation = loader.load("./data/panda/panda.urdf")
         self.robot.set_root_pose(sapien.Pose([0, 0, 0], [1, 0, 0, 0]))
 
         # Set initial joint positions
@@ -74,8 +74,8 @@ class PlanningDemo():
         link_names = [link.get_name() for link in self.robot.get_links()]
         joint_names = [joint.get_name() for joint in self.robot.get_active_joints()]
         self.planner = mplib.Planner(
-            urdf="./panda/panda.urdf",
-            srdf="./panda/panda.srdf",
+            urdf="./data/panda/panda.urdf",
+            srdf="./data/panda/panda.srdf",
             user_link_names=link_names,
             user_joint_names=joint_names,
             move_group="panda_hand",
@@ -86,6 +86,7 @@ class PlanningDemo():
         n_step = result['position'].shape[0]
         for i in range(n_step):  
             qf = self.robot.compute_passive_force(
+                external=False,
                 gravity=True, 
                 coriolis_and_centrifugal=True)
             self.robot.set_qf(qf)
@@ -102,6 +103,7 @@ class PlanningDemo():
             joint.set_drive_target(0.4)
         for i in range(100): 
             qf = self.robot.compute_passive_force(
+                external=False,
                 gravity=True, 
                 coriolis_and_centrifugal=True)
             self.robot.set_qf(qf)
@@ -115,6 +117,7 @@ class PlanningDemo():
             joint.set_drive_target(0)
         for i in range(100):  
             qf = self.robot.compute_passive_force(
+                external=False,
                 gravity=True, 
                 coriolis_and_centrifugal=True)
             self.robot.set_qf(qf)

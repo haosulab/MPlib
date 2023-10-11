@@ -237,6 +237,11 @@ class Planner:
     def update_point_cloud(self, pc, resolution=1e-3):
         self.planning_world.update_point_cloud(pc, resolution)
 
+    def update_attached_sphere(self, radius, pose, link_id=-1):
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.update_attached_sphere(radius, link_id, pose)
+
     def update_attached_box(self, size, pose, link_id=-1):
         if link_id == -1:
             link_id = self.move_group_link_id

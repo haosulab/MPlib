@@ -57,6 +57,8 @@ void build_planning_world(py::module &m_all) {
             .def("set_use_point_cloud", &PlanningWorld::setUsePointCloud, py::arg("use") = false)
             .def("update_point_cloud", &PlanningWorld::updatePointCloud, py::arg("vertices"), py::arg("resolution") = 0.01)
             .def("set_use_attach", &PlanningWorld::setUseAttach, py::arg("use") = false)
+            .def("remove_attach", &PlanningWorld::removeAttach)
+            .def("update_attached_sphere", &PlanningWorld::updateAttachedSphere, py::arg("radius"), py::arg("link_id"), py::arg("pose"))
             .def("update_attached_box", &PlanningWorld::updateAttachedBox, py::arg("size"), py::arg("link_id"), py::arg("pose"))
             .def("print_attached_box_pose", &PlanningWorld::printAttachedBoxPose);
 
