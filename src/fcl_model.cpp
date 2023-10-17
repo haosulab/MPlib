@@ -28,7 +28,7 @@ void FCLModelTpl<DATATYPE>::dfs_parse_tree(urdf::LinkConstSharedPtr const &link,
             if (geom_model->type == urdf::Geometry::MESH) {
                 const urdf::MeshSharedPtr urdf_mesh = urdf::dynamic_pointer_cast<urdf::Mesh>(geom_model);
                 std::string file_name = urdf_mesh->filename;
-                if (use_convex)
+                if (use_convex && file_name.find(".convex.stl") == std::string::npos)
                     file_name = file_name += ".convex.stl";
                 auto mesh_path = (boost::filesystem::path(package_dir) / file_name).string();
                 if (mesh_path == "") {
