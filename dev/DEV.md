@@ -45,4 +45,15 @@ Please check whether your extension file `*.so` has the same name as `PYBIND11_M
 
 ### Compile
 
-WIP
+One can compile the dynamic library by doing the following:
+
+1. `mkdir build && cd build`
+2. cmake .. && make -j8
+
+Depending on your python version, you will get a file called `pymp.cpython-310-x86_64-linux-gnu.so` or similar. This is directly importable in python by doing `import pymp`.
+
+To install the entire package along with python glue code, do `python3.[version] -m pip install .` inside the root directory of the project.
+
+### Stub generation
+
+Stubs are useful for type checking and IDE autocompletion. To generate stubs, you **first need to have mplib compiled and installed**. Then, do `python3.[version] -m pip install pybind11_stubgen` and then run `bash dev/generate_stubs.sh`. This will generate stubs for the entire project in the `stubs/` directory. Note that you might need to change the version of the python inside the script. The default is 3.11.
