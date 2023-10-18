@@ -165,7 +165,7 @@ class PlanningDemo():
 
         if use_attach:
             self.use_attach = True
-            # self.planner.update_attached_mesh("~/MPlib/data/panda/franka_description/meshes/collision/hand.stl", [0, 0, 0.14, 1, 0, 0, 0])
+            # self.planner.update_attached_mesh("./data/panda/franka_description/meshes/collision/hand.stl", [0, 0, 0.14, 1, 0, 0, 0])
             # self.planner.update_attached_sphere(0.12, [0, 0, 0.14, 1, 0, 0, 0])
             self.planner.update_attached_box([0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0])
 
