@@ -66,7 +66,7 @@ function build_wheel() {
         # fi
 
         INCLUDE_PATH=/opt/python/cp${PY_VERSION}-cp${PY_VERSION}${EXT}/include/python${PY_DOT}${EXT}
-        BIN=/usr/bin/python3
+        BIN=/opt/python/cp${PY_VERSION}-cp${PY_VERSION}${EXT}/bin/python
         echo "Using bin path ${BIN}"
         echo "Using include path ${INCLUDE_PATH}"
 
