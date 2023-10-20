@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# python3.[version] pip install pybind11_stubgen
+# python3.[version] pip install pybind11-stubgen
 
 if [ -d stubs ]; then
     rm -rf stubs
