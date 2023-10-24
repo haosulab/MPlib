@@ -31,7 +31,11 @@ class DetectCollisionDemo(DemoSetup):
     point_cloud += [0, 0, -0.1]  # shift the entire point cloud down by 0.1m so we do not collide with the base
     self.planner.update_point_cloud(point_cloud)
     env_collision_qpos = [0, 1.5, 0, -1.5, 0, 0, 0]  # this pose causes several joints to dip below the floor
+
+    # the planner will ignore the point cloud if not enabled
     self.planner.planning_world.set_use_point_cloud(True)
+    # additionally, you might want to enable attach to treat whatever the gripper is grabbing as part of the robot
+    # self.planner.planning_world.set_use_attach(True)
     self.print_collisions(self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos))
     
     print("\n----- env-collision causing planner to timeout -----")
