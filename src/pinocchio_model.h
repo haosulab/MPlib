@@ -2,7 +2,6 @@
 #include "macros_utils.hpp"
 #include <pinocchio/parsers/urdf.hpp>
 #include <pinocchio/multibody/joint/fwd.hpp>
-#include <pinocchio/parsers/urdf.hpp>
 #include <pinocchio/algorithm/jacobian.hpp>
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>

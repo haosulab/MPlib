@@ -48,6 +48,12 @@ function build_wheel() {
     elif (( $PY_VERSION == 39 )); then
         PY_DOT=3.9
         EXT=""
+    elif (( $PY_VERSION == 310 )); then
+        PY_DOT=3.10
+        EXT=""
+    elif (( $PY_VERSION == 311 )); then
+        PY_DOT=3.11
+        EXT=""
     else
         echo "Error: Python version($PY_VERSION) not found"
         exit 2
@@ -87,7 +93,7 @@ if [ -z "$PY_VERSION" ]; then
 fi
 
 if [ "$PY_VERSION" == "all" ]; then
-    for PY_VERSION in 36 37 38 39; do
+    for PY_VERSION in 36 37 38 39 310 311; do
         build_wheel
     done
 else

@@ -39,7 +39,7 @@ class CMakeBuild(build_ext):
         # if not cmake_generator:
         #    cmake_args += ["-GNinja"]
 
-        self.parallel = 4
+        self.parallel = 8
         if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
             if hasattr(self, "parallel") and self.parallel:
                 build_args += ["-j{}".format(self.parallel)]
