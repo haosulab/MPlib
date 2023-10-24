@@ -89,7 +89,6 @@ void FCLModelTpl<DATATYPE>::init(urdf::ModelInterfaceSharedPtr const &urdfTree, 
     urdf::LinkConstSharedPtr root_link = urdf_model->getRoot();
     dfs_parse_tree(root_link, "root's parent");
     auto tmp_user_link_names = collision_link_names;
-    std::sort(tmp_user_link_names.begin(), tmp_user_link_names.end());
     auto last = std::unique(tmp_user_link_names.begin(), tmp_user_link_names.end());
     tmp_user_link_names.erase(last, tmp_user_link_names.end());
     setLinkOrder(tmp_user_link_names);
@@ -116,7 +115,6 @@ FCLModelTpl<DATATYPE>::FCLModelTpl(urdf::ModelInterfaceSharedPtr const &urdfTree
 template<typename DATATYPE>
 FCLModelTpl<DATATYPE>::FCLModelTpl(std::string const &urdf_filename, bool const &verbose, bool const &convex)
         : verbose(verbose), use_convex(convex) {
-    //std::cout << "Verbose" << verbose << std::endl;
     auto found = urdf_filename.find_last_of("/\\");
     auto urdf_dir = urdf_filename.substr(0, found);
     urdf::ModelInterfaceSharedPtr urdfTree = urdf::parseURDFFile(urdf_filename);

@@ -172,7 +172,7 @@ int dfs_build_mesh(const aiScene *scene, const aiNode *node, const Eigen::Matrix
 template<typename DATATYPE>
 std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<DATATYPE>>>
 load_mesh_as_BVH(const std::string &mesh_path, const Eigen::Matrix<DATATYPE, 3, 1> &scale) {
-    auto loader = AssimpLoader();
+    auto loader = AssimpLoader();  // TODO[Xinsong] change to a global loader so we do not initialize it every time
     loader.load(mesh_path);
 
     std::vector<fcl::Vector3<DATATYPE>> vertices;

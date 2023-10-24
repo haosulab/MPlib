@@ -3,7 +3,6 @@ from typing import Sequence, Tuple, Union
 import os
 import numpy as np
 from transforms3d.quaternions import quat2mat
-import toppra
 import toppra as ta
 import toppra.constraint as constraint
 import toppra.algorithm as algo
@@ -238,10 +237,25 @@ class Planner:
     def update_point_cloud(self, pc, resolution=1e-3):
         self.planning_world.update_point_cloud(pc, resolution)
 
+    def update_attached_tool(self, fcl_collision_geometry, pose, link_id=-1):
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.update_attached_tool(fcl_collision_geometry, link_id, pose)
+
+    def update_attached_sphere(self, radius, pose, link_id=-1):
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.update_attached_sphere(radius, link_id, pose)
+
     def update_attached_box(self, size, pose, link_id=-1):
         if link_id == -1:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_box(size, link_id, pose)
+    
+    def update_attached_mesh(self, mesh_path, pose, link_id=-1):
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
 
     def plan(
         self,

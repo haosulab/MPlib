@@ -27,3 +27,6 @@ stubs/
 .vscode
 # Mac OS-specific storage files
 .DS_Store
+
+# GUI config
+imgui.ini

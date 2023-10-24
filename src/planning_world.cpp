@@ -47,17 +47,32 @@ void PlanningWorldTpl<DATATYPE>::updatePointCloud(Matrixx3 const& vertices, doub
 }
 
 template<typename DATATYPE>
-void PlanningWorldTpl<DATATYPE>::updateAttachedBox(Vector3 const & size, int const & link_id, Vector7 const & pose) {
-    //CollisionGeometry_ptr collision_geometry = std::make_shared<Box>((DATATYPE) size[0], (DATATYPE) size[1], (DATATYPE) size[2]);
+void PlanningWorldTpl<DATATYPE>::updateAttachedTool(CollisionGeometry_ptr p_geom, int link_id, Vector7 const &pose) {
     attach_link_id = link_id;
+    // linear here means the upper left 3x3 matrix, which is not necessarily a rotation matrix if scaling is involved
     attach_to_link_pose.linear() = Quaternion(pose[3], pose[4], pose[5], pose[6]).matrix();
     attach_to_link_pose.translation() = pose.head(3);
-    attached_box = std::make_shared<CollisionObject>(std::make_shared<fcl::Box<DATATYPE>>((DATATYPE) size[0],
-                                                    (DATATYPE) size[1], (DATATYPE) size[2]), attach_to_link_pose);
+    attached_tool = std::make_shared<CollisionObject>(p_geom, attach_to_link_pose);
     has_attach = true;
-    return ;
 }
 
+template<typename DATATYPE>
+void PlanningWorldTpl<DATATYPE>::updateAttachedSphere(DATATYPE radius, int link_id, const Vector7 &pose) {
+    CollisionGeometry_ptr collision_geometry = std::make_shared<fcl::Sphere<DATATYPE>>(radius);
+    updateAttachedTool(collision_geometry, link_id, pose);
+}
+
+template<typename DATATYPE>
+void PlanningWorldTpl<DATATYPE>::updateAttachedBox(Vector3 const &size, int link_id, Vector7 const &pose) {
+    CollisionGeometry_ptr collision_geometry = std::make_shared<fcl::Box<DATATYPE>>(size[0], size[1], size[2]);
+    updateAttachedTool(collision_geometry, link_id, pose);
+}
+
+template<typename DATATYPE>
+void PlanningWorldTpl<DATATYPE>::updateAttachedMesh(std::string const &mesh_path, int link_id, Vector7 const &pose) {
+    CollisionGeometry_ptr collision_geometry = load_mesh_as_BVH(mesh_path, Vector3(1,1,1));
+    updateAttachedTool(collision_geometry, link_id, pose);
+}
 
 template<typename DATATYPE>
 void PlanningWorldTpl<DATATYPE>::setQposAll(VectorX const &state) {
@@ -179,11 +194,11 @@ std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::colli
             pose.translation() = link_pose.head(3);
             pose = pose * attach_to_link_pose;
             //std::cout << "attached box pose: " << pose << std::endl;
-            attached_box.get()->setTransform(pose);
+            attached_tool.get()->setTransform(pose);
 
             CollisionResult result;
             result.clear();
-            fcl::collide(attached_box.get(), point_cloud.get(), request, result);
+            fcl::collide(attached_tool.get(), point_cloud.get(), request, result);
             if (result.isCollision()) {
                 WorldCollisionResult tmp;
                 tmp.res = result;

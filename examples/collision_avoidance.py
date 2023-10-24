@@ -6,7 +6,7 @@ from sapien.utils.viewer import Viewer
 class PlanningDemo():
     def __init__(self):
         self.engine = sapien.Engine()
-        self.renderer = sapien.VulkanRenderer()
+        self.renderer = sapien.SapienRenderer()
         self.engine.set_renderer(self.renderer)
 
         scene_config = sapien.SceneConfig()
@@ -16,12 +16,11 @@ class PlanningDemo():
         physical_material = self.scene.create_physical_material(1, 1, 0.0)
         self.scene.default_physical_material = physical_material
 
-        self.rscene = self.scene.get_renderer_scene()
-        self.rscene.set_ambient_light([0.5, 0.5, 0.5])
-        self.rscene.add_directional_light([0, 1, -1], [0.5, 0.5, 0.5], shadow=True)
-        self.rscene.add_point_light([1, 2, 2], [1, 1, 1], shadow=True)
-        self.rscene.add_point_light([1, -2, 2], [1, 1, 1], shadow=True)
-        self.rscene.add_point_light([-1, 0, 1], [1, 1, 1], shadow=True)
+        self.scene.set_ambient_light([0.5, 0.5, 0.5])
+        self.scene.add_directional_light([0, 1, -1], [0.5, 0.5, 0.5], shadow=True)
+        self.scene.add_point_light([1, 2, 2], [1, 1, 1], shadow=True)
+        self.scene.add_point_light([1, -2, 2], [1, 1, 1], shadow=True)
+        self.scene.add_point_light([-1, 0, 1], [1, 1, 1], shadow=True)
 
         self.viewer = Viewer(self.renderer)
         self.viewer.set_scene(self.scene)
@@ -32,7 +31,7 @@ class PlanningDemo():
         # Load URDF
         loader: sapien.URDFLoader = self.scene.create_urdf_loader()
         loader.fix_root_link = True
-        self.robot: sapien.Articulation = loader.load("./panda/panda.urdf")
+        self.robot: sapien.Articulation = loader.load("./data/panda/panda.urdf")
         self.robot.set_root_pose(sapien.Pose([0, 0, 0], [1, 0, 0, 0]))
 
         # Set initial joint positions
@@ -75,8 +74,8 @@ class PlanningDemo():
         link_names = [link.get_name() for link in self.robot.get_links()]
         joint_names = [joint.get_name() for joint in self.robot.get_active_joints()]
         self.planner = mplib.Planner(
-            urdf="./panda/panda.urdf",
-            srdf="./panda/panda.srdf",
+            urdf="./data/panda/panda.urdf",
+            srdf="./data/panda/panda.srdf",
             user_link_names=link_names,
             user_joint_names=joint_names,
             move_group="panda_hand",
@@ -87,6 +86,7 @@ class PlanningDemo():
         n_step = result['position'].shape[0]
         for i in range(n_step):  
             qf = self.robot.compute_passive_force(
+                external=False,
                 gravity=True, 
                 coriolis_and_centrifugal=True)
             self.robot.set_qf(qf)
@@ -103,6 +103,7 @@ class PlanningDemo():
             joint.set_drive_target(0.4)
         for i in range(100): 
             qf = self.robot.compute_passive_force(
+                external=False,
                 gravity=True, 
                 coriolis_and_centrifugal=True)
             self.robot.set_qf(qf)
@@ -116,6 +117,7 @@ class PlanningDemo():
             joint.set_drive_target(0)
         for i in range(100):  
             qf = self.robot.compute_passive_force(
+                external=False,
                 gravity=True, 
                 coriolis_and_centrifugal=True)
             self.robot.set_qf(qf)
@@ -163,6 +165,8 @@ class PlanningDemo():
 
         if use_attach:
             self.use_attach = True
+            # self.planner.update_attached_mesh("./data/panda/franka_description/meshes/collision/hand.stl", [0, 0, 0.14, 1, 0, 0, 0])
+            # self.planner.update_attached_sphere(0.12, [0, 0, 0.14, 1, 0, 0, 0])
             self.planner.update_attached_box([0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0])
 
         pickup_pose[2] += 0.12
@@ -177,4 +181,4 @@ class PlanningDemo():
 
 if __name__ == '__main__':
     demo = PlanningDemo()
-    demo.demo()
+    demo.demo(False, True, True)
