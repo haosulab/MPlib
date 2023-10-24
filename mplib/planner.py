@@ -163,6 +163,30 @@ class Planner:
                     flag = False
         return flag
 
+    def check_for_collision(self, collision_function, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None) -> list:
+        # handle no user input
+        if articulation is None:
+            articulation = self.robot
+        if qpos is None:
+            qpos = articulation.get_qpos()
+        # if the user does not specify the end-effector joints, append them to the qpos
+        if len(qpos) == len(self.move_group_joint_indices):
+            tmp = articulation.get_qpos()
+            tmp[:len(qpos)] = qpos
+            qpos = tmp
+
+        # first save the current qpos
+        old_qpos = articulation.get_qpos()
+        # set robot to new qpos
+        articulation.set_qpos(qpos, True)
+        # find the index of the articulation inside the array
+        idx = self.planning_world.get_articulations().index(articulation)
+        # check for self-collision
+        collisions = collision_function(idx)
+        # reset qpos
+        articulation.set_qpos(old_qpos, True)
+        return collisions
+
     def check_for_self_collision(self, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None) -> list:
         """Check if the robot is in self-collision.
 
@@ -173,23 +197,7 @@ class Planner:
         Returns:
             A list of collisions.
         """
-        # handle no user input
-        if articulation is None:
-            articulation = self.robot
-        if qpos is None:
-            qpos = articulation.get_qpos()
-
-        # first save the current qpos
-        old_qpos = articulation.get_qpos()
-        # set robot to new qpos
-        articulation.set_qpos(qpos)
-        # find the index of the articulation inside the array
-        idx = self.planning_world.get_articulations().index(articulation)
-        # check for self-collision
-        collisions = self.planning_world.self_collide(idx)
-        # reset qpos
-        articulation.set_qpos(old_qpos)
-        return collisions
+        return self.check_for_collision(self.planning_world.self_collide, articulation, qpos)
 
     def check_for_env_collision(self, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None):
         """Check if the robot is in collision with the environment
@@ -201,23 +209,7 @@ class Planner:
         Returns:
             A list of collisions.
         """
-        # handle no user input
-        if articulation is None:
-            articulation = self.robot
-        if qpos is None:
-            qpos = articulation.get_qpos()
-
-        # first save the current qpos
-        old_qpos = articulation.get_qpos()
-        # set robot to new qpos
-        articulation.set_qpos(qpos)
-        # find the index of the articulation inside the array
-        idx = self.planning_world.get_articulations().index(articulation)
-        # check for environment collision
-        collisions = self.planning_world.collide_with_others(idx)
-        # reset qpos
-        articulation.set_qpos(old_qpos)
-        return collisions
+        return self.check_for_collision(self.planning_world.collide_with_others, articulation, qpos)
 
 
     def IK(self, goal_pose, start_qpos, mask = [], n_init_qpos=20, threshold=1e-3):

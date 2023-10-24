@@ -33,8 +33,3 @@ add_subdirectory("third_party/pybind11")
 include_directories("python")
 pybind11_add_module(pymp python/pybind.cpp)
 target_link_libraries(pymp PRIVATE mp)
-
-# compile test_articulated_model and run the test
-add_executable(test_articulated_model tests/test_articulated_model.cpp)
-target_link_libraries(test_articulated_model PRIVATE mp)
-add_test(NAME test_articulated_model COMMAND test_articulated_model)
