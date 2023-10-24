@@ -1,7 +1,6 @@
 import sapien.core as sapien
 import mplib
 import numpy as np
-from sapien.utils.viewer import Viewer
 from demo_setup import DemoSetup
 
 class PlanningDemo(DemoSetup):
