@@ -30,3 +30,6 @@ stubs/
 
 # GUI config
 imgui.ini
+
+# Converted URDF that used to contain package:// paths
+**/*_package_keyword_replaced.urdf
