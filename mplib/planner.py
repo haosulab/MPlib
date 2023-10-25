@@ -24,7 +24,8 @@ class Planner:
         move_group: str,
         joint_vel_limits: Union[Sequence[float], np.ndarray],
         joint_acc_limits: Union[Sequence[float], np.ndarray],
-        srdf: str = ""
+        srdf: str = "",
+        package_keyword_replacement: str = ""
     ):
         r"""Motion planner for robots.
 
@@ -57,6 +58,9 @@ class Planner:
         self.link_name_2_idx = {}
         for i, link in enumerate(self.user_link_names):
             self.link_name_2_idx[link] = i
+
+        # replace package:// keyword if exists
+        urdf = self.replace_package_keyword(package_keyword_replacement)
 
         self.robot = articulation.ArticulatedModel(
             urdf,
@@ -96,6 +100,18 @@ class Planner:
             self.move_group_joint_indices
         ), len(self.move_group_joint_indices)
         assert len(self.joint_acc_limits) == len(self.move_group_joint_indices)
+
+    def replace_package_keyword(self, package_keyword_replacement):
+        rtn_urdf = self.urdf
+        with open(self.urdf, "r") as in_f:
+            content = in_f.read()
+            if "package://" in content:
+                rtn_urdf = self.urdf.replace(".urdf", "_package_keyword_replaced.urdf")
+                content = content.replace("package://", package_keyword_replacement)
+                if not os.path.exists(rtn_urdf):
+                    with open(rtn_urdf, "w") as out_f:
+                        out_f.write(content)
+        return rtn_urdf
 
     def generate_collision_pair(self, sample_time = 1000000, echo_freq = 100000):
         print("Since no SRDF file is provided. We will first detect link pairs that will always collide. This may take several minutes.")
