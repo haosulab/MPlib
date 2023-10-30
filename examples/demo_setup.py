@@ -114,7 +114,13 @@ class DemoSetup():
 
   def move_to_pose_with_RRTConnect(self, pose, use_point_cloud=True, use_attach=True):
     result = self.planner.plan(
-      pose, self.robot.get_qpos(), time_step=1/250, use_point_cloud=use_point_cloud, use_attach=use_attach)
+      pose,
+      self.robot.get_qpos(),
+      time_step=1/250,
+      use_point_cloud=use_point_cloud,
+      use_attach=use_attach,
+      planner_name="RRTConnect"
+    )
     if result['status'] != "Success":
       print(result['status'])
       return -1
