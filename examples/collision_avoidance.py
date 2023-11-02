@@ -45,7 +45,7 @@ class PlanningDemo(DemoSetup):
         box = trimesh.creation.box([0.1, 0.4, 0.2])
         points, _ = trimesh.sample.sample_surface(box, 1000)
         points += [0.55, 0, 0.1]
-        self.planner.update_point_cloud(points)
+        self.planner.update_point_cloud(points, clear=False, radius=0.01)
         return 
 
     def demo(self, with_screw = True, use_point_cloud = True, use_attach = True):

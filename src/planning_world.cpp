@@ -13,9 +13,11 @@ DEFINE_TEMPLATE_PW(float)
 
 
 template<typename DATATYPE>
-PlanningWorldTpl<DATATYPE>::PlanningWorldTpl(std::vector<ArticulatedModel_ptr> const &articulations, std::vector<std::string> const & articulation_names,
+PlanningWorldTpl<DATATYPE>::PlanningWorldTpl(std::vector<ArticulatedModel_ptr> const &articulations,
+                                             std::vector<std::string> const & articulation_names,
                                              std::vector<CollisionObject_ptr> const &normal_objects, std::vector<std::string> const & normal_object_names,
-                                             int move_articulation_id):
+                                             int move_articulation_id,
+                                             double point_cloud_resolution):
         articulations(articulations),
         normal_objects(normal_objects),
         articulation_names(articulation_names),
@@ -24,9 +26,12 @@ PlanningWorldTpl<DATATYPE>::PlanningWorldTpl(std::vector<ArticulatedModel_ptr> c
         has_point_cloud(false),
         use_point_cloud(false),
         has_attach(false),
-        use_attach(false) {}
-        //articulation_flags(articulation_flags) {}
-
+        use_attach(false) {
+    // all this work just to get the damn thing to compile -_-
+    p_octree = std::make_shared<octomap::OcTree>(point_cloud_resolution);
+    point_cloud = std::make_shared<CollisionObject>(
+        std::make_shared< fcl::OcTree<DATATYPE> >(p_octree), Transform3::Identity());
+}
 
 template<typename DATATYPE>
 void PlanningWorldTpl<DATATYPE>::setQpos(int const &index, VectorX const &state) {
@@ -34,38 +39,48 @@ void PlanningWorldTpl<DATATYPE>::setQpos(int const &index, VectorX const &state)
 }
 
 template<typename DATATYPE>
-void PlanningWorldTpl<DATATYPE>::updatePointCloud(Matrixx3 const& vertices, double  const& resolution) {
-    octomap::OcTree* tree = new octomap::OcTree(resolution);
+void PlanningWorldTpl<DATATYPE>::updatePointCloud(Matrixx3 const& vertices, bool clear, const double& radius) {
+    octomap::Pointcloud cloud;
     DATATYPE min_x = INT_MAX, min_y = INT_MAX, min_z = INT_MAX, max_x = INT_MIN, max_y = INT_MIN, max_z = INT_MIN;
     for (size_t i = 0; i < vertices.rows(); i++) {
+        // calculate the bounding box of the point cloud
         min_x = std::min(min_x, vertices(i, 0));
         min_y = std::min(min_y, vertices(i, 1));
         min_z = std::min(min_z, vertices(i, 2));
         max_x = std::max(max_x, vertices(i, 0));
         max_y = std::max(max_y, vertices(i, 1));
         max_z = std::max(max_z, vertices(i, 2));
-        tree->updateNode(octomap::point3d(vertices(i, 0), vertices(i, 1), vertices(i, 2)), true);
+        // add the point to the cloud
+        cloud.push_back(vertices(i, 0), vertices(i, 1), vertices(i, 2));
+        if (radius > 0.0) {
+            // we want to make each point bigger, so the robot won't run into it
+            // push 6 more points to the cloud each one one unit radius away from the original point
+            cloud.push_back(vertices(i, 0) + radius, vertices(i, 1), vertices(i, 2));
+            cloud.push_back(vertices(i, 0) - radius, vertices(i, 1), vertices(i, 2));
+            cloud.push_back(vertices(i, 0), vertices(i, 1) + radius, vertices(i, 2));
+            cloud.push_back(vertices(i, 0), vertices(i, 1) - radius, vertices(i, 2));
+            cloud.push_back(vertices(i, 0), vertices(i, 1), vertices(i, 2) + radius);
+            cloud.push_back(vertices(i, 0), vertices(i, 1), vertices(i, 2) - radius);
+        }
     }
-    Vector3 O(min_x, min_y, min_z);
-    Vector3 A(min_x, max_y, min_z);
-    Vector3 B(max_x, min_y, min_z);
-    Vector3 C(min_x, min_y, max_z);
+    if (clear) p_octree->clear();
+    p_octree->insertPointCloud(cloud, octomap::point3d(0, 0, 0));
+    has_point_cloud = true;
+
+    Vector3 O(min_x, min_y, min_z);  // origin
+    Vector3 A(min_x, max_y, min_z);  // one side
+    Vector3 B(max_x, min_y, min_z);  // second side
+    Vector3 C(min_x, min_y, max_z);  // third side
     Vector3 OA = A - O;
     Vector3 OB = B - O;
     Vector3 OC = C - O;
     // super crude approximation of the volume of the point cloud by taking the area of the parallelepiped
     DATATYPE approximate_volume = std::abs(OA.cross(OB).dot(OC));
     DATATYPE density = vertices.rows() / approximate_volume;
-    if (density < 125000) {  // this equates to roughly 2cm accuracy
+    if (density < 124999.9) {  // this equates to roughly 2cm accuracy
         std::cout << "Warning: approx. density of the point cloud is low: " << density << " points/m^3" << std::endl;
         std::cout << "Collision might be inaccurate. If your shape is non-convex, please ignore." << std::endl;
     }
-
-    auto tree_ptr = std::shared_ptr<const octomap::OcTree>(tree);
-    auto pose = Transform3::Identity();
-    point_cloud = std::make_shared<CollisionObject>(std::make_shared< fcl::OcTree<DATATYPE> >(tree_ptr), pose);
-    has_point_cloud = true;
-    return ;
 }
 
 template<typename DATATYPE>
