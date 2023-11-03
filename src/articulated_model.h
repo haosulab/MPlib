@@ -16,7 +16,7 @@ private:
     FCLModel fcl_model;
 
     std::vector<std::string> user_link_names;
-    std::vector<std::string> user_joint_names;
+    std::vector<std::string> user_joint_names;  // all links and joints you want to control. order matters
 
     std::vector<size_t> move_group_user_joints;
     std::vector<std::string> move_group_end_effectors;
@@ -28,7 +28,7 @@ private:
 
 public:
     ArticulatedModelTpl(std::string const &urdf_filename, std::string const &srdf_filename, Vector3 const &gravity,
-                        std::vector<std::string> const &joint_names, std::vector<std::string> const &link_names,
+                        std::vector<std::string> const &joint_names = {}, std::vector<std::string> const &link_names = {},
                         bool const &verbose=true, bool const &convex=false);
 
     PinocchioModelTpl<DATATYPE>& getPinocchioModel() { return pinocchio_model; }

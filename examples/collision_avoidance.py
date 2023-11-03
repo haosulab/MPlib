@@ -39,7 +39,7 @@ class PlanningDemo(DemoSetup):
         builder.add_box_visual(half_size=[0.05, 0.2, 0.1], color=[0, 0, 1])
         self.blue_cube = builder.build(name='blue_cube')
         self.blue_cube.set_pose(sapien.Pose([0.55, 0, 0.1]))
-    
+
     def add_point_cloud(self):
         import trimesh
         box = trimesh.creation.box([0.1, 0.4, 0.2])
