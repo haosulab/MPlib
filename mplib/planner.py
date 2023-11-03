@@ -98,7 +98,7 @@ class Planner:
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
         assert len(self.joint_vel_limits) == len(
             self.move_group_joint_indices
-        ), len(self.move_group_joint_indices)
+        ), f"{len(self.joint_vel_limits)} =/= {len(self.move_group_joint_indices)}"
         assert len(self.joint_acc_limits) == len(self.move_group_joint_indices)
 
     def replace_package_keyword(self, package_keyword_replacement):

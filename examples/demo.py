@@ -11,7 +11,7 @@ class PlanningDemo(DemoSetup):
         self.setup_planner()
 
         # Set initial joint positions
-        init_qpos = [0, 0.19634954084936207, 0.0, -2.617993877991494, 0.0, 2.941592653589793, 0.7853981633974483, 0, 0]
+        init_qpos = [0, 0, 0, 0.19634954084936207, 0.0, -2.617993877991494, 0.0, 2.941592653589793, 0.7853981633974483, 0, 0]
         self.robot.set_qpos(init_qpos)
 
         # table top
@@ -47,20 +47,20 @@ class PlanningDemo(DemoSetup):
         for i in range(3):
             pose = poses[i]
             pose[2] += 0.2
-            self.move_to_pose(pose)
+            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
             self.open_gripper()
             pose[2] -= 0.12
-            self.move_to_pose(pose)
+            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
             self.close_gripper()
             pose[2] += 0.12
-            self.move_to_pose(pose)
+            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
             pose[0] += 0.1
-            self.move_to_pose(pose)
+            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
             pose[2] -= 0.12
-            self.move_to_pose(pose)
+            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
             self.open_gripper()
             pose[2] += 0.12
-            self.move_to_pose(pose)
+            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
 
 if __name__ == '__main__':
     demo = PlanningDemo()

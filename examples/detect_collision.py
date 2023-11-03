@@ -18,11 +18,11 @@ class DetectCollisionDemo(DemoSetup):
   def demo(self):
     print("\n----- self-collision-free pose -----")
     # if the joint pose does not include the gripper joints, it will be set to the current gripper joint angle
-    self_collision_free_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78]
+    self_collision_free_qpos = [0, 0, 0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78]
     self.print_collisions(self.planner.check_for_self_collision(self.planner.robot, self_collision_free_qpos))
     
     print("\n----- self-collision pose -----")
-    self_collision_qpos = [0, 1.36, 0, -3, -3, 3, -1]
+    self_collision_qpos = [0, 0, 0, 1.36, 0, -3, -3, 3, -1]
     self.print_collisions(self.planner.check_for_self_collision(self.planner.robot, self_collision_qpos))
 
     print("\n----- env-collision pose -----")
@@ -30,7 +30,7 @@ class DetectCollisionDemo(DemoSetup):
     point_cloud, _ = trimesh.sample.sample_surface(floor, 10000)
     point_cloud += [0, 0, -0.1]  # shift the entire point cloud down by 0.1m so we do not collide with the base
     self.planner.update_point_cloud(point_cloud)
-    env_collision_qpos = [0, 1.5, 0, -1.5, 0, 0, 0]  # this pose causes several joints to dip below the floor
+    env_collision_qpos = [0, 0, 0, 1.5, 0, -1.5, 0, 0, 0]  # this pose causes several joints to dip below the floor
 
     # the planner will ignore the point cloud if not enabled
     self.planner.planning_world.set_use_point_cloud(True)
