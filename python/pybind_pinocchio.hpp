@@ -12,11 +12,7 @@
 
 namespace py = pybind11;
 
-#ifdef USE_SINGLE
-using DATATYPE=float;
-#else
 using DATATYPE = double;
-#endif
 
 using PinocchioModel = PinocchioModelTpl<DATATYPE>;
 DEFINE_TEMPLATE_EIGEN(DATATYPE)

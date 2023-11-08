@@ -13,11 +13,7 @@
 
 namespace py = pybind11;
 
-#ifdef USE_SINGLE
-using DATATYPE = float;
-#else
 using DATATYPE = double;
-#endif
 
 using CollisionObject = fcl::CollisionObject<DATATYPE>;
 using CollisionObject_ptr = std::shared_ptr<CollisionObject>;

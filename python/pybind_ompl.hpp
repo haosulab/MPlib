@@ -11,12 +11,7 @@
 
 namespace py = pybind11;
 
-#ifdef USE_SINGLE
-using DATATYPE = float;
-#else
 using DATATYPE = double;
-#endif
-
 
 using OMPLPlanner = OMPLPlannerTpl<DATATYPE>;
 using PlannerStatus = ob::PlannerStatus;
@@ -33,8 +28,14 @@ void build_pyompl(py::module &m_all) {
     auto m = m_all.def_submodule("ompl");
 
     auto PyOMPLPlanner = py::class_<OMPLPlanner, std::shared_ptr<OMPLPlanner>>(m, "OMPLPlanner");
-    PyOMPLPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &>(), py::arg("world"))
-            .def("plan", &OMPLPlanner::plan, py::arg("start_state"), py::arg("goal_states"),
-                py::arg("planner_name") = "RRTConnect",  py::arg("time") = 1.0, py::arg("range") = 0.0, py::arg("verbose") = false);
-
+    PyOMPLPlanner
+        .def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &>(), py::arg("world"))
+        .def("plan", &OMPLPlanner::plan,
+             py::arg("start_state"),
+             py::arg("goal_states"),
+             py::arg("planner_name") = "RRTConnect",
+             py::arg("time") = 1.0,
+             py::arg("range") = 0.0,
+             py::arg("verbose") = false,
+             py::arg("fixed_joints") = FixedJoints());
 }

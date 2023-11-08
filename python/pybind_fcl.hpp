@@ -34,11 +34,7 @@
 #include "../src/urdf_utils.h"
 #include "../src/macros_utils.hpp"
 
-#ifdef USE_SINGLE
-using DATATYPE = float;
-#else
 using DATATYPE = double;
-#endif
 
 DEFINE_TEMPLATE_FCL(DATATYPE)
 
