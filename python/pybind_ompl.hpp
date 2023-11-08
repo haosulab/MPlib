@@ -38,4 +38,13 @@ void build_pyompl(py::module &m_all) {
              py::arg("range") = 0.0,
              py::arg("verbose") = false,
              py::arg("fixed_joints") = FixedJoints());
+
+    auto PyFixedJoint = py::class_<FixedJoint, std::shared_ptr<FixedJoint>>(m, "FixedJoint");
+    PyFixedJoint.def(py::init<size_t, size_t, double>(),
+                     py::arg("articulation_idx"),
+                     py::arg("joint_idx"),
+                     py::arg("value"));
+    PyFixedJoint.def_readwrite("articulation_idx", &FixedJoint::articulation_idx);
+    PyFixedJoint.def_readwrite("joint_idx", &FixedJoint::joint_idx);
+    PyFixedJoint.def_readwrite("value", &FixedJoint::value);
 }

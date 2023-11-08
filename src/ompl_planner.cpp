@@ -17,9 +17,9 @@ bool is_fixed_joint(const FixedJoints &fixed_joints, size_t articulation_idx, si
 }
 
 Eigen::VectorXd remove_fixed_joints(const FixedJoints &fixed_joints, Eigen::VectorXd const &state) {
-    Eigen::VectorXd ret(fixed_joints.size());
+    Eigen::VectorXd ret(state.rows() - fixed_joints.size());
     size_t cnt = 0;
-    for (size_t i = 0; i < state.rows(); i++) {
+    for (auto i = 0; i < state.rows(); i++) {
         if (is_fixed_joint(fixed_joints, 0, i)) continue;  //TODO[xinsong] only support one robot rn
         ret[cnt++] = state[i];
     }
@@ -30,7 +30,7 @@ Eigen::VectorXd add_fixed_joints(const FixedJoints &fixed_joints, Eigen::VectorX
     auto fixed_itr = fixed_joints.begin();
     Eigen::VectorXd ret(fixed_joints.size() + state.rows());
     size_t j = 0;
-    for (size_t i = 0; i < ret.rows(); i++) {
+    for (auto i = 0; i < ret.rows(); i++) {
         if (is_fixed_joint(fixed_joints, 0, i)) {
             ret[i] = fixed_itr->value;
             ++fixed_itr;
@@ -73,8 +73,8 @@ void OMPLPlannerTpl<DATATYPE>::build_planning_config(FixedJoints const &fixed_jo
                 auto subspcae = std::make_shared<ob::RealVectorStateSpace>(bound.rows());
                 auto ob_bounds = ob::RealVectorBounds(bound.rows());
                 ASSERT(bound.rows() == 1, "Only support simple joint the dim of joint is not 1!");
-                planning_config.lower_joint_limits[i] = bound(0, 0);
-                planning_config.upper_joint_limits[i] = bound(0, 1);
+                planning_config.lower_joint_limits.push_back(bound(0, 0));
+                planning_config.upper_joint_limits.push_back(bound(0, 1));
                 ob_bounds.setLow(0, bound(0, 0)), ob_bounds.setHigh(0, bound(0, 1));
                 ++dim_i;
                 subspcae->setBounds(ob_bounds);
@@ -92,8 +92,8 @@ void OMPLPlannerTpl<DATATYPE>::build_planning_config(FixedJoints const &fixed_jo
                     planning_config.is_revolute.push_back(false);
             }
         }
-        ASSERT(dim_i == robot->getQposDim(), "Dim of bound is different from dim of qpos: "
-               + std::to_string(dim_i) + " active dims " + std::to_string(ignored_dim) + " ignored dims not equal to"
+        ASSERT(dim_i + ignored_dim == robot->getQposDim(), "Dim of bound is different from dim of qpos: "
+               + std::to_string(dim_i) + " active dims " + std::to_string(ignored_dim) + " ignored dims not equal to "
                + std::to_string(d) + " qpos dim");
         planning_config.dim += dim_i;
     }
@@ -102,7 +102,6 @@ void OMPLPlannerTpl<DATATYPE>::build_planning_config(FixedJoints const &fixed_jo
     planning_config.valid_checker = std::make_shared<ValidityChecker>(world, planning_config.si, fixed_joints);
     planning_config.si->setStateValidityChecker(planning_config.valid_checker);
     planning_config.pdef = std::make_shared<ob::ProblemDefinition>(planning_config.si);
-    planning_config.fixed_joints = fixed_joints;
     planning_configs[fixed_joints] = planning_config;
 }
 
@@ -117,7 +116,7 @@ OMPLPlannerTpl<DATATYPE>::random_sample_nearby(VectorX const &start_state, Plann
     for (int cnt = 0; cnt < 1000; ++cnt) {
         DATATYPE ratio = (DATATYPE) (cnt + 1) / 1000;
         VectorX new_state = start_state;
-        for (int i = 0; i < planning_config.dim; i++) {
+        for (size_t i = 0; i < planning_config.dim; i++) {
             DATATYPE r = (DATATYPE) rand() / RAND_MAX * 2 - 1;
             new_state[i] += (planning_config.upper_joint_limits[i] - planning_config.lower_joint_limits[i]) * ratio * r;
             if (new_state[i] < planning_config.lower_joint_limits[i])
@@ -144,6 +143,7 @@ OMPLPlannerTpl<DATATYPE>::plan(const VectorX &start_state,
                                const bool& verbose,
                                const FixedJoints &fixed_joints) {
     if (!planning_configs.count(fixed_joints)) build_planning_config(fixed_joints);
+    else planning_configs[fixed_joints].valid_checker->update_fixed_joints(fixed_joints);  // update collision checker
     auto &planning_config = planning_configs[fixed_joints];
 
     Eigen::VectorXd reduced_start_state = remove_fixed_joints(fixed_joints, start_state);
@@ -170,7 +170,7 @@ OMPLPlannerTpl<DATATYPE>::plan(const VectorX &start_state,
     auto goals = std::make_shared<ob::GoalStates>(planning_config.si);
 
     int tot_enum_states = 1, tot_goal_state = 0;
-    for (int i = 0; i < planning_config.dim; i++) 
+    for (size_t i = 0; i < planning_config.dim; i++) 
         tot_enum_states *= 3;
 
     for (int ii = 0; ii < reduced_goal_states.size(); ii++)
@@ -178,7 +178,7 @@ OMPLPlannerTpl<DATATYPE>::plan(const VectorX &start_state,
             std::vector<double> tmp_state;
             int tmp = i;
             bool flag = true;
-            for (int j = 0; j < planning_config.dim; j++) {
+            for (size_t j = 0; j < planning_config.dim; j++) {
                 tmp_state.push_back(reduced_goal_states[ii](j));
                 int dir = tmp % 3;
                 tmp /= 3;
@@ -240,23 +240,24 @@ OMPLPlannerTpl<DATATYPE>::plan(const VectorX &start_state,
         ob::PathPtr path = planning_config.pdef->getSolutionPath();
         auto geo_path = std::dynamic_pointer_cast<og::PathGeometric>(path);
         size_t len = geo_path->getStateCount();
-        Eigen::MatrixXd ret(len + invalid_start, planning_config.dim);
-        if (verbose) std::cout << "Result size " << len << " " << planning_config.dim << std::endl;
+        Eigen::MatrixXd ret(len + invalid_start, start_state.rows());
+        if (verbose) std::cout << "Solved path size " << len << std::endl;
+        
+        // put the invalid start state back as the original state
         if (invalid_start) {
-            for (int j = 0; j < planning_config.dim; j++)
-                ret(0, j) = reduced_start_state(j);
+            for (auto j = 0; j < start_state.rows(); j++)
+                ret(0, j) = start_state(j);
         }
         for (size_t i = 0; i < len; i++) {
             auto res_i = state2eigen<DATATYPE>(geo_path->getState(i), planning_config.si.get());
-            //std::cout << "Size_i " << res_i.rows() << std::endl;
-            ASSERT(res_i.rows() == planning_config.dim, "Result dimension is not correct!");
-            for (size_t j = 0; j < planning_config.dim; j++)
+            ASSERT(res_i.rows() == planning_config.dim, "Result dimension is not the same as problem space dimension!");
+            res_i = add_fixed_joints(fixed_joints, res_i);
+            for (auto j = 0; j < start_state.rows(); j++)
                 ret(invalid_start + i, j) = res_i[j];
         }
         return std::make_pair(solved.asString(), ret);
-    }
-    else {
-        Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret(0, planning_config.dim);
+    } else {
+        Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret(0, start_state.rows());
         return std::make_pair(solved.asString(), ret);
     }
 }

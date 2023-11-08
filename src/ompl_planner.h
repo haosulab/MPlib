@@ -52,7 +52,7 @@ std::vector <DATATYPE> state2vector(const ob::State *state_raw, ob::SpaceInforma
 template<typename IN_TYPE, typename OUT_TYPE>
 std::vector <OUT_TYPE> eigen2vector(Eigen::Matrix<IN_TYPE, Eigen::Dynamic, 1> const &x) {
     std::vector <OUT_TYPE> ret;
-    for (size_t i = 0; i < x.rows(); i++)
+    for (auto i = 0; i < x.rows(); i++)
         ret.push_back((OUT_TYPE) x[i]);
     return ret;
 }
@@ -86,6 +86,9 @@ typedef struct FixedJoint {
     size_t joint_idx;  // what is the index of the joint you want it fixed?
     double value;  // what is the value of the fixed joint?  we are actively trying to get rid of the DATATYPE template
 
+    FixedJoint(size_t articulation_idx, size_t joint_idx, double value)
+            : articulation_idx(articulation_idx), joint_idx(joint_idx), value(value) {}
+
     bool operator==(const FixedJoint &other) const {
         return articulation_idx == other.articulation_idx && joint_idx == other.joint_idx;
     }
@@ -114,6 +117,10 @@ public:
     ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world,
                        const ob::SpaceInformationPtr &si, const FixedJoints &fixed_joints)
             : ob::StateValidityChecker(si), world(world), fixed_joints(fixed_joints) {}
+
+    void update_fixed_joints(const FixedJoints &fixed_joints) {
+        this->fixed_joints = fixed_joints;
+    }
 
     bool _isValid(VectorX state) const {
         world->setQposAll(add_fixed_joints(fixed_joints, state));
@@ -162,7 +169,6 @@ class OMPLPlannerTpl {
         ValidityCheckerTpl_ptr<DATATYPE> valid_checker;
         std::vector<DATATYPE> lower_joint_limits, upper_joint_limits;
         std::vector<bool> is_revolute;
-        FixedJoints fixed_joints;
         size_t dim;
     } PlanningConfig;
 
