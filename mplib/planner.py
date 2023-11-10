@@ -81,7 +81,10 @@ class Planner:
             self.generate_collision_pair()
             self.robot.update_SRDF(self.srdf)
 
-        assert(move_group in self.user_link_names)
+        if len(user_joint_names):
+            assert(move_group in self.user_link_names)
+        else:
+            assert(move_group in self.robot.get_user_link_names())  # it has default order
         self.move_group = move_group
         self.robot.set_move_group(self.move_group)
         self.move_group_joint_indices = (
@@ -226,7 +229,6 @@ class Planner:
         """
         return self.check_for_collision(self.planning_world.collide_with_others, articulation, qpos)
 
-
     def IK(self, goal_pose, start_qpos, mask = [], n_init_qpos=20, threshold=1e-3):
         index = self.link_name_2_idx[self.move_group]
         min_dis = 1e9
@@ -322,19 +324,22 @@ class Planner:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
 
-    def plan(
+    def plan_qpos_to_qpos(
         self,
-        goal_pose,
+        goal_qposes: list,
         current_qpos,
-        mask = [],
         time_step=0.1,
         rrt_range=0.1,
         planning_time=1,
         fix_joint_limits=True,
         use_point_cloud=False,
         use_attach=False,
-        verbose=False,
+        fixed_joint_indices=[],
+        verbose=False
     ):
+        """
+        fixed_joint_indices: list of indices of joints that are fixed
+        """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
         n = current_qpos.shape[0]
@@ -354,34 +359,26 @@ class Planner:
                 print("%s and %s collide!" % (collision.link_name1, collision.link_name2))
 
         idx = self.move_group_joint_indices
-        ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
-        if ik_status != "Success":
-            return {"status": ik_status}
-
-        if verbose:
-            print("IK results:")
-            for i in range(len(goal_qpos)):
-               print(goal_qpos[i])
-
-        goal_qpos_ = []
-        for i in range(len(goal_qpos)):
-            goal_qpos_.append(goal_qpos[i][idx])
-        self.robot.set_qpos(current_qpos, True)
         
+        goal_qpos_ = []
+        for i in range(len(goal_qposes)):
+            goal_qpos_.append(goal_qposes[i][idx])
+        
+        fixed_joints = set()
+        for joint_idx in fixed_joint_indices:
+            fixed_joints.add(ompl.FixedJoint(0, joint_idx, current_qpos[joint_idx]))
+
+        assert len(current_qpos[idx]) == len(goal_qpos_[0])
         status, path = self.planner.plan(
             current_qpos[idx],
-            goal_qpos_, 
+            goal_qpos_,
             range=rrt_range,
-            verbose=verbose,
             time=planning_time,
+            fixed_joints=fixed_joints,
+            verbose=verbose
         )
 
         if status == "Exact solution":
-            if verbose:
-                ta.setup_logging("INFO")
-            else:
-                ta.setup_logging("WARNING")
-
             times, pos, vel, acc, duration = self.TOPP(path, time_step)
             return {
                 "status": "Success",
@@ -393,6 +390,47 @@ class Planner:
             }
         else:
             return {"status": "RRT Failed. %s" % status}
+
+    def plan_qpos_to_pose(
+        self,
+        goal_pose,
+        current_qpos,
+        mask = [],
+        time_step=0.1,
+        rrt_range=0.1,
+        planning_time=1,
+        fix_joint_limits=True,
+        use_point_cloud=False,
+        use_attach=False,
+        verbose=False,
+    ):
+        n = current_qpos.shape[0]
+        if fix_joint_limits:
+            for i in range(n):
+                if current_qpos[i] < self.joint_limits[i][0]:
+                    current_qpos[i] = self.joint_limits[i][0] + 1e-3
+                if current_qpos[i] > self.joint_limits[i][1]:
+                    current_qpos[i] = self.joint_limits[i][1] - 1e-3
+
+        ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
+        if ik_status != "Success":
+            return {"status": ik_status}
+
+        if verbose:
+            print("IK results:")
+            for i in range(len(goal_qpos)):
+               print(goal_qpos[i])
+
+        return self.plan_qpos_to_qpos(
+            goal_qpos,
+            current_qpos,
+            time_step,
+            rrt_range,
+            planning_time,
+            fix_joint_limits,
+            use_point_cloud,
+            use_attach,
+        )
 
     def plan_screw(
         self,

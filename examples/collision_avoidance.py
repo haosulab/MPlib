@@ -11,7 +11,7 @@ class PlanningDemo(DemoSetup):
         self.setup_planner()
 
         # Set initial joint positions
-        init_qpos = [0, 0, 0, 0.19634954084936207, 0.0, -2.617993877991494, 0.0, 2.941592653589793, 0.7853981633974483, 0, 0]
+        init_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78, 0, 0]
         self.robot.set_qpos(init_qpos)
 
         # table top

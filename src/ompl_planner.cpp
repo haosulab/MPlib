@@ -173,7 +173,7 @@ OMPLPlannerTpl<DATATYPE>::plan(const VectorX &start_state,
     for (size_t i = 0; i < planning_config.dim; i++) 
         tot_enum_states *= 3;
 
-    for (int ii = 0; ii < reduced_goal_states.size(); ii++)
+    for (size_t ii = 0; ii < reduced_goal_states.size(); ii++) {
         for (int i = 0; i < tot_enum_states; i++) {
             std::vector<double> tmp_state;
             int tmp = i;
@@ -210,8 +210,8 @@ OMPLPlannerTpl<DATATYPE>::plan(const VectorX &start_state,
                 tot_goal_state += 1;
             }
         }
-    if (verbose)
-        std::cout << "number of goal state: " << tot_goal_state << std::endl;
+    }
+    if (verbose) std::cout << "number of goal state: " << tot_goal_state << std::endl;
 
     planning_config.pdef->clearStartStates();
     planning_config.pdef->clearGoal();
