@@ -12,6 +12,9 @@ class DetectCollisionDemo(DemoSetup):
     self.setup_planner()
 
   def print_collisions(self, collisions):
+    if len(collisions) == 0:
+      print("No collision")
+      return
     for collision in collisions:
       print(f"{collision.link_name1} of entity {collision.object_name1} collides with "
             f"{collision.link_name2} of entity {collision.object_name2}")
@@ -38,12 +41,15 @@ class DetectCollisionDemo(DemoSetup):
 
     print("\n----- env-collision pose -----")
     env_collision_qpos = [0, 1.5, 0, -1.5, 0, 0, 0]  # this pose causes several joints to dip below the floor
-    self.print_collisions(self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos, with_point_cloud=True))
+    self.print_collisions(self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos))
     
     print("\n----- env-collision causing planner to timeout -----")
     status, path = self.planner.planner.plan(start_state=self_collision_free_qpos, goal_states=[env_collision_qpos])
     print(status, path)
 
+    print("\n----- no more env-collision after removing the floor -----")
+    self.planner.remove_normal_object("floor")
+    self.print_collisions(self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos))
 
 if __name__ == '__main__':
   demo = DetectCollisionDemo()
