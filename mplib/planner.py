@@ -379,6 +379,8 @@ class Planner:
         )
 
         if status == "Exact solution":
+            if verbose: ta.setup_logging("INFO")
+            else: ta.setup_logging("WARNING")
             times, pos, vel, acc, duration = self.TOPP(path, time_step)
             return {
                 "status": "Success",
