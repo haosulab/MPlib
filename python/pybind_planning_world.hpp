@@ -45,8 +45,8 @@ void build_planning_world(py::module &m_all) {
     .def("get_normal_objects", &PlanningWorld::getNormalObjects)
     .def("add_articulation", &PlanningWorld::addArticulation, py::arg("model"), py::arg("name"))
     .def("add_articulations", &PlanningWorld::addArticulations, py::arg("models"), py::arg("names"))
-    .def("add_normal_object", &PlanningWorld::addNormalObject, py::arg("collision_object"), py::arg("name"))
-    .def("add_normal_objects", &PlanningWorld::addNormalObjects, py::arg("collision_objects"), py::arg("names"))
+    .def("set_normal_object", &PlanningWorld::setNormalObject, py::arg("name"), py::arg("collision_object"))
+    .def("remove_normal_object", &PlanningWorld::removeNormalObject, py::arg("name"))
     .def("set_qpos", &PlanningWorld::setQpos, py::arg("index"), py::arg("qpos"))
     .def("set_qpos_all", &PlanningWorld::setQposAll, py::arg("qpos"))
     .def("collide", &PlanningWorld::collide)
@@ -61,7 +61,9 @@ void build_planning_world(py::module &m_all) {
     .def("update_attached_sphere", &PlanningWorld::updateAttachedSphere, py::arg("radius"), py::arg("link_id"), py::arg("pose"))
     .def("update_attached_box", &PlanningWorld::updateAttachedBox, py::arg("size"), py::arg("link_id"), py::arg("pose"))
     .def("update_attached_mesh", &PlanningWorld::updateAttachedMesh, py::arg("mesh_path"), py::arg("link_id"), py::arg("pose"))
-    .def("print_attached_tool_pose", &PlanningWorld::printAttachedToolPose);
+    .def("print_attached_tool_pose", &PlanningWorld::printAttachedToolPose)
+    .def_readonly("use_point_cloud", &PlanningWorld::use_point_cloud)
+    .def_readonly("use_attach", &PlanningWorld::use_attach);
 
   auto PyWorldCollisionResult = py::class_<WorldCollisionResult, std::shared_ptr<WorldCollisionResult>>(m, "WorldCollisionResult");
   PyWorldCollisionResult.def_readonly("res", &WorldCollisionResult::res)
