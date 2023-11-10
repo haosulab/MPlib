@@ -124,8 +124,12 @@ class DemoSetup():
   def move_to_pose_with_screw(self, pose, use_point_cloud=True, use_attach=True):
     result = self.planner.plan_screw(
       pose, self.robot.get_qpos(), time_step=1/250, use_point_cloud=use_point_cloud, use_attach=use_attach)
-    if result['status'] != "Success":
+    if result['status'] == "Success":
+      self.follow_path(result)
+      return 0
+    else:
       return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach)
+
 
   def move_to_pose(self, pose, with_screw=True, use_point_cloud=True, use_attach=True):
     if with_screw:
