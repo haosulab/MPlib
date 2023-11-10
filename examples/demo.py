@@ -47,20 +47,20 @@ class PlanningDemo(DemoSetup):
         for i in range(3):
             pose = poses[i]
             pose[2] += 0.2
-            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
+            self.move_to_pose(pose)
             self.open_gripper()
             pose[2] -= 0.12
-            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
+            self.move_to_pose(pose)
             self.close_gripper()
             pose[2] += 0.12
-            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
+            self.move_to_pose(pose)
             pose[0] += 0.1
-            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
+            self.move_to_pose(pose)
             pose[2] -= 0.12
-            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
+            self.move_to_pose(pose)
             self.open_gripper()
             pose[2] += 0.12
-            self.move_to_pose(pose, with_screw=False, use_point_cloud=False, use_attach=False)
+            self.move_to_pose(pose)
 
 if __name__ == '__main__':
     demo = PlanningDemo()
