@@ -50,7 +50,6 @@ private:
     std::vector<std::string> articulation_names;
     std::vector<std::string> normal_object_names;
     int move_articulation_id, attach_link_id;
-    std::shared_ptr<octomap::OcTree> p_octree;  // the underlying datastructure for point_cloud below
     CollisionObject_ptr point_cloud, attached_tool;
     bool has_point_cloud, use_point_cloud, has_attach, use_attach;
     Transform3 attach_to_link_pose;
@@ -65,14 +64,12 @@ public:
      * @param normal_objects collision objects that are not articulated
      * @param normal_object_names names of the normal objects
      * @param plan_articulation_id id of the articulated model that is used for planning
-     * @param point_cloud_resolution resolution of the point cloud used for collision checking (default 1mm)
      */
     PlanningWorldTpl(std::vector<ArticulatedModel_ptr> const &articulations,
                      std::vector<std::string> const & articulation_names,
                      std::vector<CollisionObject_ptr> const &normal_objects,
                      std::vector<std::string> const & normal_object_names,
-                     int plan_articulation_id = 0,
-                     double point_cloud_resolution = 1e-3);
+                     int plan_articulation_id = 0);
                      //std::vector<bool> const &articulation_flags);
 
     std::vector<ArticulatedModel_ptr> &getArticulations(void) {return articulations;}
@@ -93,11 +90,10 @@ public:
      * @brief update the octree given a point cloud
      * 
      * @param vertices a set of points
-     * @param clear whether to clear the octree before adding the points
      * @param radius how big the radius of each point is. This will cause robot to plan around certain objects
      *               since the collision geometry is bigger
      */
-    void updatePointCloud(Matrixx3 const& vertices, bool clear=false, const double& radius=0.0);
+    void updatePointCloud(Matrixx3 const& vertices, const double& radius=0.0);
 
     void setUseAttach(bool const & use) {
         use_attach = use;

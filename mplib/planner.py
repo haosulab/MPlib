@@ -299,14 +299,13 @@ class Planner:
         qdds_sample = jnt_traj(ts_sample, 2)
         return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration
 
-    def update_point_cloud(self, pc, clear: bool = False, radius = 0.0):
+    def update_point_cloud(self, pc, radius = 0.0):
         """ 
         Args:
             pc: numpy array of shape (n, 3)
-            clear: clear all the previous point cloud
             radius: radius of each point. This gives a buffer around each point that planner will avoid
         """
-        self.planning_world.update_point_cloud(pc, clear, radius)
+        self.planning_world.update_point_cloud(pc, radius)
 
     def update_attached_tool(self, fcl_collision_geometry, pose, link_id=-1):
         if link_id == -1:
