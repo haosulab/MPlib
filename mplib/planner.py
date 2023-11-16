@@ -2,7 +2,7 @@ from typing import Sequence, Tuple, Union
 
 import os
 import numpy as np
-from transforms3d.quaternions import quat2mat
+from transforms3d.quaternions import quat2mat, mat2quat
 import toppra as ta
 import toppra.constraint as constraint
 import toppra.algorithm as algo
@@ -322,6 +322,9 @@ class Planner:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
 
+    def set_base_pose(self, pose):
+        self.robot.set_base_pose(pose)
+
     def plan(
         self,
         goal_pose,
@@ -334,6 +337,7 @@ class Planner:
         use_point_cloud=False,
         use_attach=False,
         verbose=False,
+        wrt_world=False
     ):
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
@@ -352,6 +356,18 @@ class Planner:
             print("Invalid start state!")
             for collision in collisions:
                 print("%s and %s collide!" % (collision.link_name1, collision.link_name2))
+
+        if wrt_world:
+            base_pose = self.robot.get_base_pose()
+            base_tf = np.eye(4)
+            base_tf[0:3, 3] = base_pose[:3]
+            base_tf[0:3, 0:3] = quat2mat(base_pose[3:])
+            goal_tf = np.eye(4)
+            goal_tf[0:3, 3] = goal_pose[:3]
+            goal_tf[0:3, 0:3] = quat2mat(goal_pose[3:])
+            goal_tf = np.linalg.inv(base_tf).dot(goal_tf)
+            goal_pose[:3] = goal_tf[0:3, 3]
+            goal_pose[3:] = mat2quat(goal_tf[0:3, 0:3])
 
         idx = self.move_group_joint_indices
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)

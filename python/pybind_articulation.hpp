@@ -42,9 +42,8 @@ void build_pyarticulation(py::module &m_all) {
             .def("get_move_group_end_effectors", &ArticulatedModel::getMoveGroupEndEffectors)
             .def("get_qpos", &ArticulatedModel::getQpos)
             .def("get_qpos_dim", &ArticulatedModel::getQposDim)
-            .def("set_qpos", &ArticulatedModel::setQpos,
-                 py::arg("qpos"), py::arg("full") = false)
-            .def("update_SRDF", &ArticulatedModel::updateSRDF,
-                 py::arg("SRDF"));
-
+            .def("set_qpos", &ArticulatedModel::setQpos, py::arg("qpos"), py::arg("full") = false)
+            .def("update_SRDF", &ArticulatedModel::updateSRDF, py::arg("SRDF"))
+            .def("set_base_pose", &ArticulatedModel::setBasePose, py::arg("pose"))
+            .def("get_base_pose", &ArticulatedModel::getBasePose);
 }

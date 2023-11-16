@@ -25,11 +25,18 @@ private:
     int qpos_dim;
     bool verbose;
 
+    // the base pose of the robot
+    Vector7 base_pose;
+    Transform3 base_tf;
 
 public:
-    ArticulatedModelTpl(std::string const &urdf_filename, std::string const &srdf_filename, Vector3 const &gravity,
-                        std::vector<std::string> const &joint_names = {}, std::vector<std::string> const &link_names = {},
-                        bool const &verbose=true, bool const &convex=false);
+    ArticulatedModelTpl(std::string const &urdf_filename,
+                        std::string const &srdf_filename,
+                        Vector3 const &gravity,
+                        std::vector<std::string> const &joint_names = {},
+                        std::vector<std::string> const &link_names = {},
+                        bool const &verbose=true,
+                        bool const &convex=false);
 
     PinocchioModelTpl<DATATYPE>& getPinocchioModel() { return pinocchio_model; }
 
@@ -55,7 +62,11 @@ public:
 
     void setQpos(VectorX const& qpos, bool const& full=false);
 
-    void updateSRDF(std::string const &srdf) {fcl_model.removeCollisionPairsFromSrdf(srdf);}
+    void updateSRDF(std::string const &srdf) { fcl_model.removeCollisionPairsFromSrdf(srdf); }
+
+    void setBasePose(const Vector7 &pose);
+
+    Vector7 getBasePose() { return base_pose; }
 };
 
 template<typename T>
