@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
 project(mp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS_RELEASE " -O3 -g3 -Wall -fsized-deallocation -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g3 -fuse-ld=lld -Wall -fsized-deallocation -Wno-deprecated-declarations")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fuse-ld=lld")
+
+# add ccache as compiler launcher
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    message(STATUS "Using ccache")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+endif(CCACHE_FOUND)
 
 # Pinocchio uses its own FindCppAD, but does not provide it.
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
@@ -22,7 +29,7 @@ include_directories("/usr/local/include/ompl-1.5")
 include_directories("src")
 
 # store libries in a variable
-set(LIBS ompl fcl pinocchio assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
+set(LIBS ompl fcl assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
 
 file(GLOB_RECURSE PROJECT_SRC "src/*.h" "src/*.cpp" "src/*.hpp")
 add_library(mp STATIC ${PROJECT_SRC})
