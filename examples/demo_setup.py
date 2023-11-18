@@ -61,16 +61,9 @@ class DemoSetup():
       )
 
   def setup_planner(self, **kwargs):
-    # link_names = [link.get_name() for link in self.robot.get_links()]
-    # joint_names = [joint.get_name() for joint in self.robot.get_active_joints()]
-    # TODO[xinsong] change these back after merging attach-other-stuff
-    link_names = ["panda_link0", "panda_link1", "panda_link2", "panda_link3", "panda_link4", "panda_link5", "panda_link6", "panda_link7", "panda_hand", "panda_leftfinger", "panda_rightfinger"]
-    joint_names = ["panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"]
     self.planner = mplib.Planner(
       urdf=kwargs.get('urdf_path', "./data/panda/panda.urdf"),
       srdf=kwargs.get('srdf_path', "./data/panda/panda.srdf"),
-      user_link_names=link_names,
-      user_joint_names=joint_names,
       move_group=kwargs.get('move_group', 'panda_hand'),
       joint_vel_limits=kwargs.get('joint_vel_limits', np.ones(7)),
       joint_acc_limits=kwargs.get('joint_acc_limits', np.ones(7))

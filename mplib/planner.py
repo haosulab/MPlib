@@ -19,20 +19,20 @@ class Planner:
     def __init__(
         self,
         urdf: str,
-        user_link_names: Sequence[str],
-        user_joint_names: Sequence[str],
         move_group: str,
         joint_vel_limits: Union[Sequence[float], np.ndarray],
         joint_acc_limits: Union[Sequence[float], np.ndarray],
         srdf: str = "",
-        package_keyword_replacement: str = ""
+        package_keyword_replacement: str = "",
+        user_link_names: Sequence[str] = [],
+        user_joint_names: Sequence[str] = []
     ):
         r"""Motion planner for robots.
 
         Args:
             urdf: Unified Robot Description Format file.
-            user_link_names: names of links, the order
-            user_joint_names: names of the joints to plan
+            user_link_names: names of links, the order. if empty, all links will be used.
+            user_joint_names: names of the joints to plan.  if empty, all active joints will be used.
             move_group: target link to move, usually the end-effector.
             joint_vel_limits: maximum joint velocities for time parameterization,
                 which should have the same length as
@@ -45,12 +45,29 @@ class Planner:
         """
         self.urdf = urdf
         if srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
-            srdf = urdf.replace(".urdf", ".srdf")
-            print("No SRDF file provided. Try to load %s." % srdf)
+            self.srdf = urdf.replace(".urdf", ".srdf")
+            print(f"No SRDF file provided but found {self.srdf}")
             
-        self.srdf = srdf
-        self.user_link_names = user_link_names
-        self.user_joint_names = user_joint_names
+        # replace package:// keyword if exists
+        urdf = self.replace_package_keyword(package_keyword_replacement)
+
+        self.robot = articulation.ArticulatedModel(
+            urdf,
+            srdf,
+            [0, 0, -9.81],
+            user_joint_names,
+            user_link_names,
+            verbose=False,
+            convex=True,
+        )
+
+        if srdf == "":
+            self.generate_collision_pair()
+            self.robot.update_SRDF(self.srdf)
+
+        self.pinocchio_model = self.robot.get_pinocchio_model()
+        self.user_link_names = self.pinocchio_model.get_link_names()
+        self.user_joint_names = self.pinocchio_model.get_joint_names()
 
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
@@ -59,47 +76,30 @@ class Planner:
         for i, link in enumerate(self.user_link_names):
             self.link_name_2_idx[link] = i
 
-        # replace package:// keyword if exists
-        urdf = self.replace_package_keyword(package_keyword_replacement)
-
-        self.robot = articulation.ArticulatedModel(
-            urdf,
-            srdf,
-            [0, 0, -9.81],
-            self.user_joint_names,
-            self.user_link_names,
-            verbose=False,
-            convex=True,
-        )
-        self.pinocchio_model = self.robot.get_pinocchio_model()
-
-        self.planning_world = planning_world.PlanningWorld(
-            [self.robot], ["robot"], [], []
-        )
-
-        if srdf == "":
-            self.generate_collision_pair()
-            self.robot.update_SRDF(self.srdf)
-
-        assert(move_group in self.user_link_names)
+        assert move_group in self.user_link_names,\
+            f"end-effector not found as one of the links in {self.user_link_names}"
         self.move_group = move_group
         self.robot.set_move_group(self.move_group)
-        self.move_group_joint_indices = (
-            self.robot.get_move_group_joint_indices()
-        )
+        self.move_group_joint_indices = self.robot.get_move_group_joint_indices()
 
         self.joint_types = self.pinocchio_model.get_joint_types()
-        self.joint_limits = np.concatenate(
-            self.pinocchio_model.get_joint_limits()
-        )
-        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+        self.joint_limits = np.concatenate(self.pinocchio_model.get_joint_limits())
         self.joint_vel_limits = joint_vel_limits
         self.joint_acc_limits = joint_acc_limits
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
-        assert len(self.joint_vel_limits) == len(
-            self.move_group_joint_indices
-        ), len(self.move_group_joint_indices)
-        assert len(self.joint_acc_limits) == len(self.move_group_joint_indices)
+        assert len(self.joint_vel_limits) == len(self.joint_acc_limits),\
+            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "\
+            f"length of joint_acc_limits ({len(self.joint_acc_limits)})"
+        assert len(self.joint_vel_limits) == len(self.move_group_joint_indices),\
+            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "\
+            f"length of move_group ({len(self.move_group_joint_indices)})"
+        assert len(self.joint_vel_limits) <= len(self.joint_limits),\
+            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) > "\
+            f"number of total joints ({len(self.joint_limits)})"
+        
+        self.planning_world = planning_world.PlanningWorld([self.robot], ["robot"], [], [])
+        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+
 
     def replace_package_keyword(self, package_keyword_replacement):
         rtn_urdf = self.urdf
