@@ -178,17 +178,26 @@ class Planner:
                     flag = False
         return flag
 
+    def pad_qpos(self, qpos, articulation=None):
+        """ if the user does not provide the full qpos but only the move_group joints, pad the qpos with the rest of the joints """
+        if len(qpos) == len(self.move_group_joint_indices):
+            tmp = articulation.get_qpos() if articulation is not None else self.robot.get_qpos()
+            tmp[:len(qpos)] = qpos
+            qpos = tmp
+
+        assert len(qpos) == len(self.joint_limits),\
+            f"length of qpos ({len(qpos)}) =/= "\
+            f"number of total joints ({len(self.joint_limits)})"
+
+        return qpos
+
     def check_for_collision(self, collision_function, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None) -> list:
         # handle no user input
         if articulation is None:
             articulation = self.robot
         if qpos is None:
             qpos = articulation.get_qpos()
-        # if the user does not specify the end-effector joints, append them to the qpos
-        if len(qpos) == len(self.move_group_joint_indices):
-            tmp = articulation.get_qpos()
-            tmp[:len(qpos)] = qpos
-            qpos = tmp
+        qpos = self.pad_qpos(qpos, articulation)
 
         # first save the current qpos
         old_qpos = articulation.get_qpos()
@@ -225,7 +234,6 @@ class Planner:
             A list of collisions.
         """
         return self.check_for_collision(self.planning_world.collide_with_others, articulation, qpos)
-
 
     def IK(self, goal_pose, start_qpos, mask = [], n_init_qpos=20, threshold=1e-3):
         index = self.link_name_2_idx[self.move_group]
@@ -345,6 +353,7 @@ class Planner:
                 if current_qpos[i] > self.joint_limits[i][1]:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
+        current_qpos = self.pad_qpos(current_qpos)
 
         self.robot.set_qpos(current_qpos, True)
         collisions = self.planning_world.collide_full()
@@ -406,7 +415,7 @@ class Planner:
     ):
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
-        qpos = np.copy(qpos)
+        qpos = self.pad_qpos(qpos.copy())
         self.robot.set_qpos(qpos, True)
 
         def pose7D2mat(pose):
