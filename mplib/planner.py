@@ -334,6 +334,7 @@ class Planner:
         use_point_cloud=False,
         use_attach=False,
         verbose=False,
+        planner_name="RRTConnect"
     ):
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
@@ -374,6 +375,7 @@ class Planner:
             range=rrt_range,
             verbose=verbose,
             time=planning_time,
+            planner_name=planner_name
         )
 
         if status == "Exact solution":

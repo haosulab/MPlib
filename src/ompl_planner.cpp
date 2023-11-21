@@ -166,15 +166,19 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
     pdef->setGoal(goals);
     pdef->addStartState(start);
     ob::PlannerPtr planner;
-    if (planner_name == "RRTConnect")
-    {
+    if (planner_name == "RRTConnect") {
         auto rrt_connect = std::make_shared<og::RRTConnect>(si);
         if (range > 1E-6)
             rrt_connect->setRange(range);
         planner = rrt_connect;
+    } else if (planner_name == "RRT*") {
+        auto rrt_star = std::make_shared<og::RRTstar>(si);
+        if (range > 1E-6)
+            rrt_star->setRange(range);
+        planner = rrt_star;
+    } else {
+        throw std::runtime_error("Planner Not implemented, please choose from {RRTConnect, RRT*}");
     }
-    else
-        throw std::runtime_error("Planner Not implemented");
 
     planner->setProblemDefinition(pdef);
     planner->setup();
@@ -182,11 +186,23 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
         std::cout << "OMPL setup" << std::endl;
     ob::PlannerStatus solved = planner->ob::Planner::solve(time);
     if (solved) {
-        if (verbose)
-            std::cout << "Solved!" << std::endl;
+        if (verbose) std::cout << "Solved!" << std::endl;
+
+        // obtain the path
         ob::PathPtr path = pdef->getSolutionPath();
-        auto geo_path = std::dynamic_pointer_cast<og::PathGeometric>(path);
-        size_t len = geo_path->getStateCount();
+        auto geoPathPtr = std::dynamic_pointer_cast<og::PathGeometric>(path);
+
+        // try to simply the path and restore if new path contains collision
+        auto geoPathBackup = *geoPathPtr;
+        og::PathSimplifier simplifer(si);
+        if (!simplifer.simplifyMax(*geoPathPtr)) *geoPathPtr = geoPathBackup;
+
+        if (verbose) {
+            std::cout << "Path length before simplification: " << geoPathBackup.getStateCount() << std::endl;
+            std::cout << "Path length after simplification: " << geoPathPtr->getStateCount() << std::endl;
+        }
+
+        size_t len = geoPathPtr->getStateCount();
         Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret(len + invalid_start, dim);
         if (verbose)
             std::cout << "Result size " << len << " " << dim << std::endl;
@@ -195,7 +211,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
                 ret(0, j) = start_state(j);
         }
         for (size_t i = 0; i < len; i++) {
-            auto res_i = state2eigen<DATATYPE>(geo_path->getState(i), si.get());
+            auto res_i = state2eigen<DATATYPE>(geoPathPtr->getState(i), si.get());
             //std::cout << "Size_i " << res_i.rows() << std::endl;
             ASSERT(res_i.rows() == dim, "Result dimension is not correct!");
             for (size_t j = 0; j < dim; j++)
