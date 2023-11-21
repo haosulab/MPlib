@@ -13,7 +13,8 @@ DEFINE_TEMPLATE_PW(float)
 
 
 template<typename DATATYPE>
-PlanningWorldTpl<DATATYPE>::PlanningWorldTpl(std::vector<ArticulatedModel_ptr> const &articulations, std::vector<std::string> const & articulation_names,
+PlanningWorldTpl<DATATYPE>::PlanningWorldTpl(std::vector<ArticulatedModel_ptr> const &articulations,
+                                             std::vector<std::string> const & articulation_names,
                                              std::vector<CollisionObject_ptr> const &normal_objects, std::vector<std::string> const & normal_object_names,
                                              int move_articulation_id):
         articulations(articulations),
@@ -25,8 +26,6 @@ PlanningWorldTpl<DATATYPE>::PlanningWorldTpl(std::vector<ArticulatedModel_ptr> c
         use_point_cloud(false),
         has_attach(false),
         use_attach(false) {}
-        //articulation_flags(articulation_flags) {}
-
 
 template<typename DATATYPE>
 void PlanningWorldTpl<DATATYPE>::setQpos(int const &index, VectorX const &state) {
@@ -34,16 +33,14 @@ void PlanningWorldTpl<DATATYPE>::setQpos(int const &index, VectorX const &state)
 }
 
 template<typename DATATYPE>
-void PlanningWorldTpl<DATATYPE>::updatePointCloud(Matrixx3 const& vertices, double  const& resolution) {
-    octomap::OcTree* tree = new octomap::OcTree(resolution);
-    for (size_t i = 0; i < vertices.rows(); i++) 
-        tree->updateNode(octomap::point3d(vertices(i, 0), vertices(i, 1), vertices(i, 2)), true);
-
-    auto tree_ptr = std::shared_ptr<const octomap::OcTree>(tree);
-    auto pose = Transform3::Identity();
-    point_cloud = std::make_shared<CollisionObject>(std::make_shared< fcl::OcTree<DATATYPE> >(tree_ptr), pose);
+void PlanningWorldTpl<DATATYPE>::updatePointCloud(Matrixx3 const& vertices, const double& radius) {
+    std::shared_ptr<octomap::OcTree> p_octree = std::make_shared<octomap::OcTree>(radius);
+    for (size_t i = 0; i < vertices.rows(); i++) {
+        p_octree->updateNode(vertices(i, 0), vertices(i, 1), vertices(i, 2), true);
+    }
+    point_cloud = std::make_shared<CollisionObject>(
+        std::make_shared< fcl::OcTree<DATATYPE> >(p_octree), Transform3::Identity());
     has_point_cloud = true;
-    return ;
 }
 
 template<typename DATATYPE>

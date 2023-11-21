@@ -55,11 +55,20 @@ private:
     Transform3 attach_to_link_pose;
     //BroadPhaseCollisionManager_ptr normal_manager;
 
-
 public:
 
-    PlanningWorldTpl(std::vector<ArticulatedModel_ptr> const &articulations, std::vector<std::string> const & articulation_names,
-                     std::vector<CollisionObject_ptr> const &normal_objects, std::vector<std::string> const & normal_object_names,
+    /**
+     * @brief PlanningWorld constructor
+     * @param articulations articulated models i.e. robot arms
+     * @param articulation_names names of the articulated models
+     * @param normal_objects collision objects that are not articulated
+     * @param normal_object_names names of the normal objects
+     * @param plan_articulation_id id of the articulated model that is used for planning
+     */
+    PlanningWorldTpl(std::vector<ArticulatedModel_ptr> const &articulations,
+                     std::vector<std::string> const & articulation_names,
+                     std::vector<CollisionObject_ptr> const &normal_objects,
+                     std::vector<std::string> const & normal_object_names,
                      int plan_articulation_id = 0);
                      //std::vector<bool> const &articulation_flags);
 
@@ -77,7 +86,14 @@ public:
 
     void setUsePointCloud(bool const & use) {use_point_cloud = use;}
 
-    void updatePointCloud(Matrixx3 const& vertices, double  const& resolution);
+    /**
+     * @brief update the octree given a point cloud
+     * 
+     * @param vertices a set of points
+     * @param radius how big the radius of each point is. This will cause robot to plan around certain objects
+     *               since the collision geometry is bigger
+     */
+    void updatePointCloud(Matrixx3 const& vertices, const double& radius=0.0);
 
     void setUseAttach(bool const & use) {
         use_attach = use;
