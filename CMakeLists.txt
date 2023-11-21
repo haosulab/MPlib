@@ -1,9 +1,17 @@
 cmake_minimum_required(VERSION 3.10)
 project(mp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g3 -fuse-ld=lld -Wall -fsized-deallocation -Wno-deprecated-declarations")
+
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g3 -Wall -fsized-deallocation -Wno-deprecated-declarations")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fuse-ld=lld")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
+# set -fuse-ld=lld if lld is found
+find_program(LLD_FOUND ld.lld)
+if(LLD_FOUND)
+    message(STATUS "Using lld")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
+endif(LLD_FOUND)
 
 # add ccache as compiler launcher
 find_program(CCACHE_FOUND ccache)
@@ -25,7 +33,7 @@ find_package(orocos_kdl REQUIRED)
 find_package(urdfdom REQUIRED)
 
 include_directories("/usr/include/eigen3")
-include_directories("/usr/local/include/ompl-1.5")
+include_directories("/usr/local/include/ompl-1.6")
 include_directories("src")
 
 # store libries in a variable
