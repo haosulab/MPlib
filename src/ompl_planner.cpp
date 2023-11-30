@@ -17,7 +17,7 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
     std::string const joint_prefix = "JointModel";
     for (auto robot: world->getArticulations()) {
         auto dim_i = 0;
-        auto model = robot->getPinocchioModel();
+        auto &model = robot->getPinocchioModel();
         auto joint_types = model.getJointTypes();
         auto d = robot->getQposDim(); // TODO!!! only construct for move group joints
         auto indices = robot->getMoveGroupJointIndices();

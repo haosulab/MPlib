@@ -74,6 +74,7 @@ class Planner:
             self.joint_name_2_idx[joint] = i
         self.link_name_2_idx = {}
         for i, link in enumerate(self.user_link_names):
+            # looks like a bug here! we need the pinocchio link index, not the user link index
             self.link_name_2_idx[link] = i
 
         assert move_group in self.user_link_names,\

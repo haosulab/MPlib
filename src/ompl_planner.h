@@ -14,6 +14,7 @@
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SO2StateSpace.h>
 #include "planning_world.h"
+#include <ompl/base/Constraint.h>
 
 namespace ob = ompl::base;
 //namespace oc = ompl::control;
@@ -102,6 +103,51 @@ public:
     }
 };
 
+class LevelConstraint : public ob::Constraint {
+    ArticulatedModeld_ptr model;
+    Eigen::Vector3d v;  // the unit vector we want the constraint to align to
+    double k;  // if k = 1, then we want the z axis of the end effector to be exactly v
+public:
+    LevelConstraint(ArticulatedModeld_ptr model, Eigen::Vector3d v, double k=1)
+    : ob::Constraint(model->getQposDim(), 1),
+      model(model),
+      v(v),
+      k(k) {
+        assert(0.99 < v.norm() && v.norm() < 1.01);
+    }
+
+    Eigen::Vector3d getEndEffectorZ() {
+        auto &pinocchio_model = model->getPinocchioModel();
+        auto dim = model->getQposDim();
+        auto ee_idx = model->getMoveGroupJointIndices()[dim-1];
+        auto ee_pose = model->getPinocchioModel().getLinkPose(ee_idx);
+        auto ee_quat = ee_pose.tail(4);
+        auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
+        auto ee_z = ee_rot.col(2);
+        return ee_z;
+    }
+
+    void function(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::VectorXd> out) {
+        model->setQpos(x);  // not full cuz we don't care about non-movegroup joints
+        auto ee_z = getEndEffectorZ();
+        out[0] = ee_z.dot(v) - k;
+    }
+
+    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out)
+    {
+        model->setQpos(x);
+        auto ee_z = getEndEffectorZ();
+        auto &pinocchio_model = model->getPinocchioModel();
+        auto dim = model->getQposDim();
+        auto jacobian = pinocchio_model.getLinkJacobian(dim-1);
+        auto rot_jacobian = jacobian.bottomRows<3>();
+        for (size_t i = 0; i < dim; i++) {
+            out(0, i) = rot_jacobian.col(i).cross(ee_z).dot(v);
+        }
+    }
+};
+
+
 template<typename DATATYPE>
 using ValidityCheckerTpl_ptr = std::shared_ptr<ValidityCheckerTpl<DATATYPE>>;
 
@@ -110,7 +156,6 @@ using ValidityCheckerd_ptr = ValidityCheckerTpl_ptr<double>;
 using ValidityCheckerf_ptr = ValidityCheckerTpl_ptr<float>;
 using ValidityCheckerd = ValidityCheckerTpl<double>;
 using ValidityCheckerf = ValidityCheckerTpl<float>;
-
 
 template<typename DATATYPE>
 class OMPLPlannerTpl {

@@ -87,7 +87,7 @@ void PlanningWorldTpl<DATATYPE>::setQposAll(VectorX const &state) {
 template<typename DATATYPE>
 std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::selfCollide(int index, CollisionRequest const& request) {
     std::vector<WorldCollisionResult> ret;
-    auto fcl_model = articulations[index]->getFCLModel();
+    auto &fcl_model = articulations[index]->getFCLModel();
     auto results = fcl_model.collideFull(request);
     auto CollisionLinkNames = fcl_model.getCollisionLinkNames();
     auto CollisionPairs = fcl_model.getCollisionPairs();
@@ -110,16 +110,16 @@ std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::selfC
 template<typename DATATYPE>
 std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::collideWithOthers(int index, CollisionRequest const& request) {
     std::vector<WorldCollisionResult> ret;
-    auto pinocchio_model = articulations[index]->getPinocchioModel();
-    auto fcl_model = articulations[index]->getFCLModel();
-    auto CollisionObjects = fcl_model.getCollisionObjects();
+    auto &pinocchio_model = articulations[index]->getPinocchioModel();
+    auto &fcl_model = articulations[index]->getFCLModel();
+    auto &CollisionObjects = fcl_model.getCollisionObjects();
     auto CollisionLinkNames = fcl_model.getCollisionLinkNames();
 
     for (size_t i = 0; i < articulations.size(); i++) {
         if (i == index)
             continue;
-        auto fcl_model1 = articulations[i]->getFCLModel();
-        auto CollisionObjects1 = fcl_model.getCollisionObjects();
+        auto &fcl_model1 = articulations[i]->getFCLModel();
+        auto &CollisionObjects1 = fcl_model.getCollisionObjects();
         auto CollisionLinkNames1 = fcl_model.getCollisionLinkNames();
         for (size_t j = 0; j < CollisionObjects.size(); j++)
             for (size_t k = 0; k < CollisionObjects1.size(); k++) {
