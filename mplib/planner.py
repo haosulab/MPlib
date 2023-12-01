@@ -368,7 +368,7 @@ class Planner:
             for collision in collisions:
                 print("%s and %s collide!" % (collision.link_name1, collision.link_name2))
 
-        idx = self.move_group_joint_indices
+        idx = self.move_group_joint_indices  # we need to take only the move_group joints when planning
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
             return {"status": ik_status}

@@ -23,6 +23,17 @@ using PlannerStatus = ob::PlannerStatus;
 using Path = ob::Path;
 using PathGeometric = og::PathGeometric;
 
+std::string plan_doc = R"(
+    Plan a path from start state to goal states.
+    Args:
+        start_state: start state of the movegroup joints
+        goal_states: list of goal states. planner will stop when one of them is reached
+        planner_name: name of the planner pick between {RRTConnect, RRT*}
+        time: planning time limit
+        range: planning range (for RRT family of planners and represents the maximum step size)
+        verbose: print debug information
+    Returns:
+        pair of planner status and path. If planner succeeds, status is "Exact solution.")";
 
 template<typename T>
 py::array_t<T> make_array(std::vector<T> const &values) {
@@ -34,7 +45,12 @@ void build_pyompl(py::module &m_all) {
 
     auto PyOMPLPlanner = py::class_<OMPLPlanner, std::shared_ptr<OMPLPlanner>>(m, "OMPLPlanner");
     PyOMPLPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &>(), py::arg("world"))
-            .def("plan", &OMPLPlanner::plan, py::arg("start_state"), py::arg("goal_states"),
-                py::arg("planner_name") = "RRTConnect",  py::arg("time") = 1.0, py::arg("range") = 0.0, py::arg("verbose") = false);
+                 .def("plan", &OMPLPlanner::plan,
+                              py::arg("start_state"),
+                              py::arg("goal_states"),
+                              py::arg("planner_name") = "RRTConnect", 
+                              py::arg("time") = 1.0,
+                              py::arg("range") = 0.0,
+                              py::arg("verbose") = false);
 
 }
