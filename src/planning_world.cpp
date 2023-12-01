@@ -190,7 +190,8 @@ std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::colli
             pose.linear() = Quaternion(link_pose[3], link_pose[4], link_pose[5], link_pose[6]).matrix();
             pose.translation() = link_pose.head(3);
             pose = pose * attach_to_link_pose;
-            //std::cout << "attached box pose: " << pose << std::endl;
+            // std::cout << attach_link_id << std::endl;
+            // std::cout << "attached box pose: " << pose.linear() << std::endl;
             attached_tool.get()->setTransform(pose);
 
             CollisionResult result;

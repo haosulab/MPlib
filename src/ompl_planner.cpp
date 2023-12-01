@@ -107,6 +107,17 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
     if (verbose == false)
         ompl::msg::noOutputHandler();
 
+    auto model = world->getArticulations()[0];
+    model->setQpos(start_state);
+    auto &pinocchio_model = model->getPinocchioModel();
+    auto dim = model->getQposDim();
+    // auto ee_idx = model->getMoveGroupJointIndices()[dim-1];
+    auto ee_pose = model->getPinocchioModel().getLinkPose(9);
+    auto ee_quat = ee_pose.tail(4);
+    auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
+    auto ee_z = ee_rot.col(2);
+    std::cout << ee_rot << std::endl;
+
     ob::ScopedState<> start(cs);
     start = eigen2vector<DATATYPE, double>(start_state);
 

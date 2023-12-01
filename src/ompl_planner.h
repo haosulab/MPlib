@@ -119,8 +119,8 @@ public:
     Eigen::Vector3d getEndEffectorZ() {
         auto &pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
-        auto ee_idx = model->getMoveGroupJointIndices()[dim-1];
-        auto ee_pose = model->getPinocchioModel().getLinkPose(ee_idx);
+        // auto ee_idx = model->getMoveGroupJointIndices()[dim-1];
+        auto ee_pose = model->getPinocchioModel().getLinkPose(9);  // this 9 is hardcoded for now
         auto ee_quat = ee_pose.tail(4);
         auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
         auto ee_z = ee_rot.col(2);
