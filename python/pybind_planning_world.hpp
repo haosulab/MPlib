@@ -54,7 +54,7 @@ void build_planning_world(py::module &m_all) {
     .def("collide_with_others", &PlanningWorld::collideWithOthers, py::arg("index")=0, py::arg("request")=CollisionRequest())
     .def("collide_full", &PlanningWorld::collideFull, py::arg("index")=0, py::arg("request")=CollisionRequest())
     .def("set_use_point_cloud", &PlanningWorld::setUsePointCloud, py::arg("use") = false)
-    .def("update_point_cloud", &PlanningWorld::updatePointCloud, py::arg("vertices"), py::arg("resolution") = 0.01)
+    .def("update_point_cloud", &PlanningWorld::updatePointCloud, py::arg("vertices"), py::arg("radius"))
     .def("set_use_attach", &PlanningWorld::setUseAttach, py::arg("use") = false)
     .def("remove_attach", &PlanningWorld::removeAttach)
     .def("update_attached_tool", &PlanningWorld::updateAttachedTool, py::arg("p_geom"), py::arg("link_id"), py::arg("pose"))
