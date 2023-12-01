@@ -307,7 +307,7 @@ class Planner:
         qdds_sample = jnt_traj(ts_sample, 2)
         return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration
 
-    def update_point_cloud(self, pc, radius = 0.0):
+    def update_point_cloud(self, pc, radius=1e-3):
         """ 
         Args:
             pc: numpy array of shape (n, 3)
