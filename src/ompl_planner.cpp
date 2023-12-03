@@ -55,6 +55,14 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
         ASSERT(dim_i == robot->getQposDim(), "Dim of bound is different from dim of qpos " +  std::to_string(dim_i) + " " + std::to_string(robot->getQposDim()));
         dim += dim_i;
     }
+    p_ambient_space = std::make_shared<ob::RealVectorStateSpace>(dim);
+    ob::RealVectorBounds ambient_space_bounds(dim);
+    for (size_t i = 0; i < dim; i++) {
+        ambient_space_bounds.setLow(i, lower_joint_limits[i]);
+        ambient_space_bounds.setHigh(i, upper_joint_limits[i]);
+    }
+    p_ambient_space->setBounds(ambient_space_bounds);
+    ASSERT(dim == is_revolute.size() && dim == lower_joint_limits.size(), "Dim mismatch");
 }
 
 
@@ -62,7 +70,7 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
 template<typename DATATYPE>
 OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world):world(world) {
     build_state_space();
-    si = std::make_shared<SpaceInformation>(cs);
+    si = std::make_shared<SpaceInformation>(p_ambient_space);
     valid_checker = std::make_shared<ValidityChecker>(world, si);
     si->setStateValidityChecker(valid_checker);
 
@@ -107,7 +115,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
     if (verbose == false)
         ompl::msg::noOutputHandler();
 
-    ob::ScopedState<> start(cs);
+    ob::ScopedState<> start(p_ambient_space);
     start = eigen2vector<DATATYPE, double>(start_state);
 
     bool invalid_start = !valid_checker->_isValid(start_state);
@@ -154,7 +162,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
                 }
             }
             if (flag) {
-                ob::ScopedState<> goal(cs);
+                ob::ScopedState<> goal(p_ambient_space);
                 goal = tmp_state; 
                 goals->addState(goal);
                 tot_goal_state += 1;
@@ -187,9 +195,9 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
 
     planner->setProblemDefinition(pdef);
     planner->setup();
-    if (verbose)
-        std::cout << "OMPL setup" << std::endl;
+    std::cerr << "OMPL setup" << std::endl;
     ob::PlannerStatus solved = planner->ob::Planner::solve(time);
+    std::cerr << "OMPL solved" << std::endl;
     if (solved) {
         if (verbose) std::cout << "Solved!" << std::endl;
 

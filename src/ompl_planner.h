@@ -128,6 +128,7 @@ class OMPLPlannerTpl {
     DEFINE_TEMPLATE_EIGEN(DATATYPE)
 
     CompoundStateSpace_ptr cs;
+    std::shared_ptr <ob::RealVectorStateSpace> p_ambient_space;
     SpaceInformation_ptr si;
     ProblemDefinition_ptr pdef;
     PlanningWorldTpl_ptr<DATATYPE> world;
