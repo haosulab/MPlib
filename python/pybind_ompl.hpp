@@ -11,12 +11,7 @@
 
 namespace py = pybind11;
 
-#ifdef USE_SINGLE
-using DATATYPE = float;
-#else
 using DATATYPE = double;
-#endif
-
 
 using OMPLPlanner = OMPLPlannerTpl<DATATYPE>;
 using PlannerStatus = ob::PlannerStatus;

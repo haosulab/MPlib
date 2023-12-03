@@ -15,6 +15,9 @@
 #include <ompl/base/spaces/SO2StateSpace.h>
 #include "planning_world.h"
 #include <ompl/base/Constraint.h>
+#include <ompl/base/spaces/constraint/ProjectedStateSpace.h>
+#include <ompl/base/ConstrainedSpaceInformation.h>
+#include <ompl/geometric/SimpleSetup.h>
 
 namespace ob = ompl::base;
 //namespace oc = ompl::control;
@@ -116,7 +119,7 @@ public:
         assert(0.99 < v.norm() && v.norm() < 1.01);
     }
 
-    Eigen::Vector3d getEndEffectorZ() {
+    Eigen::Vector3d getEndEffectorZ() const {
         auto &pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
         // auto ee_idx = model->getMoveGroupJointIndices()[dim-1];
@@ -127,20 +130,19 @@ public:
         return ee_z;
     }
 
-    void function(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::VectorXd> out) {
+    void function(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::VectorXd> out) const override {
         model->setQpos(x);  // not full cuz we don't care about non-movegroup joints
         auto ee_z = getEndEffectorZ();
         out[0] = ee_z.dot(v) - k;
     }
 
-    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out)
-    {
+    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override{
         model->setQpos(x);
         auto ee_z = getEndEffectorZ();
         auto &pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
-        auto jacobian = pinocchio_model.getLinkJacobian(dim-1);
-        auto rot_jacobian = jacobian.bottomRows<3>();
+        auto link_jacobian = pinocchio_model.getLinkJacobian(dim-1);
+        auto rot_jacobian = link_jacobian.bottomRows<3>();
         for (size_t i = 0; i < dim; i++) {
             out(0, i) = rot_jacobian.col(i).cross(ee_z).dot(v);
         }
@@ -172,7 +174,11 @@ class OMPLPlannerTpl {
 
     DEFINE_TEMPLATE_EIGEN(DATATYPE)
 
+    std::shared_ptr<ob::RealVectorStateSpace> p_ambient_space;
+    std::shared_ptr<ob::ProjectedStateSpace> p_constrained_space;
     CompoundStateSpace_ptr cs;
+    ob::StateSpacePtr state_space;
+    std::shared_ptr<ompl::geometric::SimpleSetup> ss;
     SpaceInformation_ptr si;
     ProblemDefinition_ptr pdef;
     PlanningWorldTpl_ptr<DATATYPE> world;
@@ -182,11 +188,15 @@ class OMPLPlannerTpl {
     std::vector<bool> is_revolute;
 
 public:
+    // OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world);
+    
+    OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world, bool constrained_problem=false, int robot_idx=0);
+
     VectorX random_sample_nearby(VectorX const &start_state);
 
-    OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world);
-
     void build_state_space();
+
+    void build_constrained_state_space();
 
     PlanningWorldTpl_ptr<DATATYPE> get_world() { return world; }
 
