@@ -25,7 +25,8 @@ class Planner:
         srdf: str = "",
         package_keyword_replacement: str = "",
         user_link_names: Sequence[str] = [],
-        user_joint_names: Sequence[str] = []
+        user_joint_names: Sequence[str] = [],
+        constrained_problem: bool = False
     ):
         r"""Motion planner for robots.
 
@@ -99,7 +100,7 @@ class Planner:
             f"number of total joints ({len(self.joint_limits)})"
         
         self.planning_world = planning_world.PlanningWorld([self.robot], ["robot"], [], [])
-        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+        self.planner = ompl.OMPLPlanner(world=self.planning_world, constrained_problem=constrained_problem)
 
 
     def replace_package_keyword(self, package_keyword_replacement):

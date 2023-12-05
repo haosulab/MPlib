@@ -50,6 +50,17 @@ std::vector <DATATYPE> state2vector(const ob::State *state_raw, ob::SpaceInforma
     return ret;
 }
 
+template<typename DATATYPE>
+std::vector<DATATYPE> rvssstate2vector(const ob::State *state_raw, ob::SpaceInformation *const &si_) {
+    auto state = state_raw->as<ob::RealVectorStateSpace::StateType>();
+    auto state_space_ptr = si_->getStateSpace()->as<ob::RealVectorStateSpace>();
+    std::vector<DATATYPE> ret;
+    for (size_t i = 0; i < state_space_ptr->getDimension(); i++) {
+        ret.push_back((DATATYPE) state->values[i]);
+    }
+    return ret;
+}
+
 template<typename IN_TYPE, typename OUT_TYPE>
 std::vector <OUT_TYPE> eigen2vector(Eigen::Matrix<IN_TYPE, Eigen::Dynamic, 1> const &x) {
     std::vector <OUT_TYPE> ret;
@@ -68,8 +79,10 @@ Eigen::Matrix<OUT_TYPE, Eigen::Dynamic, 1> vector2eigen(std::vector<IN_TYPE> con
 
 
 template<typename DATATYPE>
-Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> state2eigen(const ob::State *state_raw, ob::SpaceInformation *const &si_) {
-    auto vec_ret = state2vector<DATATYPE>(state_raw, si_);
+Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> state2eigen(const ob::State *state_raw,
+                                                       ob::SpaceInformation *const &si_,
+                                                       bool using_rssv=false) {
+    std::vector<DATATYPE> vec_ret = using_rssv ? rvssstate2vector<DATATYPE>(state_raw, si_) : state2vector<DATATYPE>(state_raw, si_);
     /*for (size_t i = 0; i < vec_ret.size(); i++)
         std::cout << vec_ret[i] << " ";
     std::cout << std::endl;
@@ -88,15 +101,16 @@ template<typename DATATYPE>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
     typedef Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> VectorX;
     PlanningWorldTpl_ptr<DATATYPE> world;
+    bool using_rvss;
 
 public:
-    ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world, const ob::SpaceInformationPtr &si)
-            : ob::StateValidityChecker(si), world(world) {}
+    ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world, const ob::SpaceInformationPtr &si, bool using_rvss=false)
+        : ob::StateValidityChecker(si), world(world), using_rvss(using_rvss) {}
 
     bool isValid(const ob::State *state_raw) const {
         //std::cout << "Begin to check state" << std::endl;
         //std::cout << "check " << state2eigen<DATATYPE>(state_raw, si_) << std::endl;
-        world->setQposAll(state2eigen<DATATYPE>(state_raw, si_));
+        world->setQposAll(state2eigen<DATATYPE>(state_raw, si_, using_rvss));
         return !world->collide();
     }
 
@@ -134,18 +148,32 @@ public:
         model->setQpos(x);  // not full cuz we don't care about non-movegroup joints
         auto ee_z = getEndEffectorZ();
         out[0] = ee_z.dot(v) - k;
+        // std::cout << "ee_z: " << ee_z.transpose() << " " << " | v: " << v.transpose() << " | k: " << k << " | out: " << out[0] << std::endl;
     }
 
-    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override{
+    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
         model->setQpos(x);
         auto ee_z = getEndEffectorZ();
         auto &pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
+        pinocchio_model.computeFullJacobian(model->getQpos());
         auto link_jacobian = pinocchio_model.getLinkJacobian(dim-1);
         auto rot_jacobian = link_jacobian.bottomRows<3>();
+        
+        // need to select only the move group joints using model->getMoveGroupJointIndices()
+        auto move_group_joint_indices = model->getMoveGroupJointIndices();
+        // for (auto itm : model->getMoveGroupJointIndices()) {
+        //     std::cout << itm << " ";
+        // }
+        // std::cout << std::endl;
+        auto rot_jacobian_move_group = rot_jacobian(Eigen::all, move_group_joint_indices);
+
+        std::cout << rot_jacobian_move_group << std::endl;
+        std::cout << std::endl;
         for (size_t i = 0; i < dim; i++) {
-            out(0, i) = rot_jacobian.col(i).cross(ee_z).dot(v);
+            out(0, i) = rot_jacobian_move_group.col(i).cross(ee_z).dot(v);
         }
+        
     }
 };
 
@@ -187,10 +215,12 @@ class OMPLPlannerTpl {
     std::vector<DATATYPE> lower_joint_limits, upper_joint_limits;
     std::vector<bool> is_revolute;
 
+    bool constrained_problem = false;
+
 public:
     // OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world);
     
-    OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world, bool constrained_problem=false, int robot_idx=0);
+    OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world, int robot_idx=0, bool constrained_problem=false);
 
     VectorX random_sample_nearby(VectorX const &start_state);
 

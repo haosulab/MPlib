@@ -18,6 +18,7 @@ private:
     std::vector<std::string> user_link_names;
     std::vector<std::string> user_joint_names;  // all links and joints you want to control. order matters
 
+    // move_group_user_joints is the pinocchio joint indices of the move group joints
     std::vector<size_t> move_group_user_joints;
     std::vector<std::string> move_group_end_effectors;
     VectorX current_qpos; // The planning world only update the state in planning group.
