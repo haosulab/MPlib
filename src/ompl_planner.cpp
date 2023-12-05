@@ -58,6 +58,7 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
     p_ambient_space = std::make_shared<ob::RealVectorStateSpace>(dim);
     ob::RealVectorBounds ambient_space_bounds(dim);
     for (size_t i = 0; i < dim; i++) {
+        std::cout << "joint " << i << " lower limit: " << lower_joint_limits[i] << " upper limit: " << upper_joint_limits[i] << std::endl;
         ambient_space_bounds.setLow(i, lower_joint_limits[i]);
         ambient_space_bounds.setHigh(i, upper_joint_limits[i]);
     }
@@ -72,7 +73,7 @@ OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &w
     build_state_space();
     si = std::make_shared<SpaceInformation>(p_ambient_space);
     valid_checker = std::make_shared<ValidityChecker>(world, si);
-    si->setStateValidityChecker(valid_checker);
+    // si->setStateValidityChecker(valid_checker);
 
     pdef = std::make_shared<ob::ProblemDefinition>(si);
 }
@@ -125,59 +126,62 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
         start = eigen2vector<DATATYPE, double>(new_start_state);
     }
 
-    auto goals = std::make_shared<ob::GoalStates>(si);
+    // auto goals = std::make_shared<ob::GoalStates>(si);
 
-    int tot_enum_states = 1, tot_goal_state = 0;
-    for (int i = 0; i < dim; i++) 
-        tot_enum_states *= 3;
+    // int tot_enum_states = 1, tot_goal_state = 0;
+    // for (int i = 0; i < dim; i++) 
+    //     tot_enum_states *= 3;
 
-    for (int ii = 0; ii < goal_states.size(); ii++)
-        for (int i = 0; i < tot_enum_states; i++) {
-            std::vector<double> tmp_state;
-            int tmp = i;
-            bool flag = true;
-            for (int j = 0; j < dim; j++) {
-                tmp_state.push_back(goal_states[ii](j));
-                int dir = tmp % 3;
-                tmp /= 3;
-                if (dir != 0 && is_revolute[j] == false) {
-                    flag = false;
-                    break;
-                }
-                if (dir == 1) {
-                    if (tmp_state[j] - 2 * PI > lower_joint_limits[j]) 
-                        tmp_state[j] -= 2 * PI;
-                    else {
-                        flag = false;
-                        break;
-                    }
-                }
-                else if (dir == 2) {
-                    if (tmp_state[j] + 2 * PI < upper_joint_limits[j]) 
-                        tmp_state[j] += 2 * PI;
-                    else {
-                        flag = false;
-                        break;
-                    }                
-                }
-            }
-            if (flag) {
-                ob::ScopedState<> goal(p_ambient_space);
-                goal = tmp_state; 
-                goals->addState(goal);
-                tot_goal_state += 1;
-            }
-        }
-    if (verbose)
-        std::cout << "number of goal state: " << tot_goal_state << std::endl;
+    // for (int ii = 0; ii < goal_states.size(); ii++)
+    //     for (int i = 0; i < tot_enum_states; i++) {
+    //         std::vector<double> tmp_state;
+    //         int tmp = i;
+    //         bool flag = true;
+    //         for (int j = 0; j < dim; j++) {
+    //             tmp_state.push_back(goal_states[ii](j));
+    //             int dir = tmp % 3;
+    //             tmp /= 3;
+    //             if (dir != 0 && is_revolute[j] == false) {
+    //                 flag = false;
+    //                 break;
+    //             }
+    //             if (dir == 1) {
+    //                 if (tmp_state[j] - 2 * PI > lower_joint_limits[j]) 
+    //                     tmp_state[j] -= 2 * PI;
+    //                 else {
+    //                     flag = false;
+    //                     break;
+    //                 }
+    //             }
+    //             else if (dir == 2) {
+    //                 if (tmp_state[j] + 2 * PI < upper_joint_limits[j]) 
+    //                     tmp_state[j] += 2 * PI;
+    //                 else {
+    //                     flag = false;
+    //                     break;
+    //                 }                
+    //             }
+    //         }
+    //         if (flag) {
+    //             ob::ScopedState<> goal(p_ambient_space);
+    //             goal = tmp_state; 
+    //             goals->addState(goal);
+    //             tot_goal_state += 1;
+    //         }
+    //     }
+    // if (verbose)
+    //     std::cout << "number of goal state: " << tot_goal_state << std::endl;
+    ob::ScopedState<> goal(p_ambient_space);
+    goal = eigen2vector<DATATYPE, double>(goal_states[0]);
 
     pdef->clearStartStates();
     pdef->clearGoal();
     pdef->clearSolutionPaths();
     pdef->clearSolutionNonExistenceProof();
-    //pdef->setStartAndGoalStates(start, goal);
-    pdef->setGoal(goals);
-    pdef->addStartState(start);
+    pdef->setStartAndGoalStates(start, goal);
+    // pdef->setGoal(goals);
+    // pdef->addStartState(start);
+    std::cout << start << "\n" << goal << "\n" << std::endl;
     ob::PlannerPtr planner;
     if (planner_name == "RRTConnect") {
         auto rrt_connect = std::make_shared<og::RRTConnect>(si);
@@ -202,12 +206,17 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
         if (verbose) std::cout << "Solved!" << std::endl;
 
         // obtain the path
+        std::cout << "here" << std::endl;
         ob::PathPtr path = pdef->getSolutionPath();
+        std::cout << "here" << std::endl;
         auto geoPathPtr = std::dynamic_pointer_cast<og::PathGeometric>(path);
 
         // try to simply the path and restore if new path contains collision
+        std::cout << "here" << std::endl;
         auto geoPathBackup = *geoPathPtr;
+        std::cout << "here" << std::endl;
         og::PathSimplifier simplifer(si);
+        std::cout << "here" << std::endl;
         if (!simplifer.simplifyMax(*geoPathPtr)) *geoPathPtr = geoPathBackup;
 
         if (verbose) {
@@ -215,14 +224,18 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
             std::cout << "Path length after simplification: " << geoPathPtr->getStateCount() << std::endl;
         }
 
+        std::cout << "here" << std::endl;
         size_t len = geoPathPtr->getStateCount();
+        std::cout << "here" << std::endl;
         Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret(len + invalid_start, dim);
+        std::cout << "here" << std::endl;
         if (verbose)
             std::cout << "Result size " << len << " " << dim << std::endl;
         if (invalid_start) {
             for (int j = 0; j < dim; j++)
                 ret(0, j) = start_state(j);
         }
+        std::cout << "here" << std::endl;
         for (size_t i = 0; i < len; i++) {
             auto res_i = state2eigen<DATATYPE>(geoPathPtr->getState(i), si.get());
             //std::cout << "Size_i " << res_i.rows() << std::endl;
@@ -230,6 +243,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
             for (size_t j = 0; j < dim; j++)
                 ret(invalid_start + i, j) = res_i[j];
         }
+        std::cout << "here" << std::endl;
         return std::make_pair(solved.asString(), ret);
     }
     else {
