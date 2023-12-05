@@ -46,6 +46,17 @@ std::vector <DATATYPE> state2vector(const ob::State *state_raw, ob::SpaceInforma
     return ret;
 }
 
+template<typename DATATYPE>
+std::vector<DATATYPE> rvssstate2vector(const ob::State *state_raw, ob::SpaceInformation *const &si_) {
+    auto state = state_raw->as<ob::RealVectorStateSpace::StateType>();
+    auto state_space_ptr = si_->getStateSpace()->as<ob::RealVectorStateSpace>();
+    std::vector<DATATYPE> ret;
+    for (size_t i = 0; i < state_space_ptr->getDimension(); i++) {
+        ret.push_back((DATATYPE) state->values[i]);
+    }
+    return ret;
+}
+
 template<typename IN_TYPE, typename OUT_TYPE>
 std::vector <OUT_TYPE> eigen2vector(Eigen::Matrix<IN_TYPE, Eigen::Dynamic, 1> const &x) {
     std::vector <OUT_TYPE> ret;
@@ -65,7 +76,7 @@ Eigen::Matrix<OUT_TYPE, Eigen::Dynamic, 1> vector2eigen(std::vector<IN_TYPE> con
 
 template<typename DATATYPE>
 Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> state2eigen(const ob::State *state_raw, ob::SpaceInformation *const &si_) {
-    auto vec_ret = state2vector<DATATYPE>(state_raw, si_);
+    auto vec_ret = rvssstate2vector<DATATYPE>(state_raw, si_);
     /*for (size_t i = 0; i < vec_ret.size(); i++)
         std::cout << vec_ret[i] << " ";
     std::cout << std::endl;

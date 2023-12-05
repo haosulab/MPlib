@@ -73,7 +73,7 @@ OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &w
     build_state_space();
     si = std::make_shared<SpaceInformation>(p_ambient_space);
     valid_checker = std::make_shared<ValidityChecker>(world, si);
-    // si->setStateValidityChecker(valid_checker);
+    si->setStateValidityChecker(valid_checker);
 
     pdef = std::make_shared<ob::ProblemDefinition>(si);
 }
@@ -126,51 +126,51 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
         start = eigen2vector<DATATYPE, double>(new_start_state);
     }
 
-    // auto goals = std::make_shared<ob::GoalStates>(si);
+    auto goals = std::make_shared<ob::GoalStates>(si);
 
-    // int tot_enum_states = 1, tot_goal_state = 0;
-    // for (int i = 0; i < dim; i++) 
-    //     tot_enum_states *= 3;
+    int tot_enum_states = 1, tot_goal_state = 0;
+    for (int i = 0; i < dim; i++) 
+        tot_enum_states *= 3;
 
-    // for (int ii = 0; ii < goal_states.size(); ii++)
-    //     for (int i = 0; i < tot_enum_states; i++) {
-    //         std::vector<double> tmp_state;
-    //         int tmp = i;
-    //         bool flag = true;
-    //         for (int j = 0; j < dim; j++) {
-    //             tmp_state.push_back(goal_states[ii](j));
-    //             int dir = tmp % 3;
-    //             tmp /= 3;
-    //             if (dir != 0 && is_revolute[j] == false) {
-    //                 flag = false;
-    //                 break;
-    //             }
-    //             if (dir == 1) {
-    //                 if (tmp_state[j] - 2 * PI > lower_joint_limits[j]) 
-    //                     tmp_state[j] -= 2 * PI;
-    //                 else {
-    //                     flag = false;
-    //                     break;
-    //                 }
-    //             }
-    //             else if (dir == 2) {
-    //                 if (tmp_state[j] + 2 * PI < upper_joint_limits[j]) 
-    //                     tmp_state[j] += 2 * PI;
-    //                 else {
-    //                     flag = false;
-    //                     break;
-    //                 }                
-    //             }
-    //         }
-    //         if (flag) {
-    //             ob::ScopedState<> goal(p_ambient_space);
-    //             goal = tmp_state; 
-    //             goals->addState(goal);
-    //             tot_goal_state += 1;
-    //         }
-    //     }
-    // if (verbose)
-    //     std::cout << "number of goal state: " << tot_goal_state << std::endl;
+    for (int ii = 0; ii < goal_states.size(); ii++)
+        for (int i = 0; i < tot_enum_states; i++) {
+            std::vector<double> tmp_state;
+            int tmp = i;
+            bool flag = true;
+            for (int j = 0; j < dim; j++) {
+                tmp_state.push_back(goal_states[ii](j));
+                int dir = tmp % 3;
+                tmp /= 3;
+                if (dir != 0 && is_revolute[j] == false) {
+                    flag = false;
+                    break;
+                }
+                if (dir == 1) {
+                    if (tmp_state[j] - 2 * PI > lower_joint_limits[j]) 
+                        tmp_state[j] -= 2 * PI;
+                    else {
+                        flag = false;
+                        break;
+                    }
+                }
+                else if (dir == 2) {
+                    if (tmp_state[j] + 2 * PI < upper_joint_limits[j]) 
+                        tmp_state[j] += 2 * PI;
+                    else {
+                        flag = false;
+                        break;
+                    }                
+                }
+            }
+            if (flag) {
+                ob::ScopedState<> goal(p_ambient_space);
+                goal = tmp_state; 
+                goals->addState(goal);
+                tot_goal_state += 1;
+            }
+        }
+    if (verbose)
+        std::cout << "number of goal state: " << tot_goal_state << std::endl;
     ob::ScopedState<> goal(p_ambient_space);
     goal = eigen2vector<DATATYPE, double>(goal_states[0]);
 
@@ -178,9 +178,9 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
     pdef->clearGoal();
     pdef->clearSolutionPaths();
     pdef->clearSolutionNonExistenceProof();
-    pdef->setStartAndGoalStates(start, goal);
-    // pdef->setGoal(goals);
-    // pdef->addStartState(start);
+    // pdef->setStartAndGoalStates(start, goal);
+    pdef->setGoal(goals);
+    pdef->addStartState(start);
     std::cout << start << "\n" << goal << "\n" << std::endl;
     ob::PlannerPtr planner;
     if (planner_name == "RRTConnect") {
