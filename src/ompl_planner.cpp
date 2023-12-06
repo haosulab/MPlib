@@ -15,7 +15,7 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
     std::string const joint_prefix = "JointModel";
     for (auto robot: world->getArticulations()) {
         auto dim_i = 0;
-        auto &model = robot->getPinocchioModel();
+        auto model = robot->getPinocchioModel();
         auto joint_types = model.getJointTypes();
         auto d = robot->getQposDim(); // TODO!!! only construct for move group joints
         auto indices = robot->getMoveGroupJointIndices();
@@ -54,7 +54,7 @@ void OMPLPlannerTpl<DATATYPE>::build_constrained_state_space(void) {
     dim = robot->getQposDim();  // this getQposDim() is really getMoveGroupQposDim()
     p_ambient_space = std::make_shared<ob::RealVectorStateSpace>(dim);
     ob::RealVectorBounds ambient_space_bounds(dim);
-    auto &pinocchio_model = robot->getPinocchioModel();
+    auto pinocchio_model = robot->getPinocchioModel();
     auto joint_types = pinocchio_model.getJointTypes();
     auto indices = robot->getMoveGroupJointIndices();
     ASSERT(dim == indices.size(), "movegroupQposDim != size of the movegroup joints");
@@ -109,7 +109,7 @@ OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &w
     }
     valid_checker = std::make_shared<ValidityChecker>(world, si, constrained_problem);
     ss = std::make_shared<ompl::geometric::SimpleSetup>(si);
-    // ss->setStateValidityChecker(valid_checker);
+    ss->setStateValidityChecker(valid_checker);
 }
 
 template<typename DATATYPE>

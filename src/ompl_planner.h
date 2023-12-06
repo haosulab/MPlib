@@ -134,7 +134,7 @@ public:
     }
 
     Eigen::Vector3d getEndEffectorZ() const {
-        auto &pinocchio_model = model->getPinocchioModel();
+        auto pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
         // auto ee_idx = model->getMoveGroupJointIndices()[dim-1];
         auto ee_pose = model->getPinocchioModel().getLinkPose(9);  // this 9 is hardcoded for now
@@ -154,7 +154,7 @@ public:
     void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
         model->setQpos(x);
         auto ee_z = getEndEffectorZ();
-        auto &pinocchio_model = model->getPinocchioModel();
+        auto pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
         pinocchio_model.computeFullJacobian(model->getQpos());
         auto link_jacobian = pinocchio_model.getLinkJacobian(dim-1);
@@ -168,8 +168,8 @@ public:
         // std::cout << std::endl;
         auto rot_jacobian_move_group = rot_jacobian(Eigen::all, move_group_joint_indices);
 
-        std::cout << rot_jacobian_move_group << std::endl;
-        std::cout << std::endl;
+        // std::cout << rot_jacobian_move_group << std::endl;
+        // std::cout << std::endl;
         for (size_t i = 0; i < dim; i++) {
             out(0, i) = rot_jacobian_move_group.col(i).cross(ee_z).dot(v);
         }

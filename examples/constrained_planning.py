@@ -9,7 +9,9 @@ from demo_setup import DemoSetup
 class ConstrainedPlanningDemo(DemoSetup):
   def __init__(self):
     super().__init__()
-    self.setup_planner(constrained_problem=True)
+    self.setup_scene()
+    self.load_robot()
+    self.setup_planner(constrained_problem=False)
 
   def demo(self):
     starting_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78]
@@ -26,7 +28,9 @@ class ConstrainedPlanningDemo(DemoSetup):
         use_attach=False,
         planner_name="RRTConnect"
       )
-      print(result)
+      if result['status'] == "Success":
+        print(result)
+        self.follow_path(result)
 
 if __name__ == '__main__':
   demo = ConstrainedPlanningDemo()
