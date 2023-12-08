@@ -89,7 +89,7 @@ std::string compute_IK_CLIK_doc = R"(
           index: index of the link (in the order you passed to the constructor or the default order)
           pose: desired pose of the link [x,y,z,qw,qx,qy,qz]
           q_init: initial joint configuration
-          mask: mask of the joints to use for the IK
+          mask: if the value at a given index is True, the joint is *not* used in the IK
           eps: tolerance for the IK
           maxIter: maximum number of iterations
           dt: time step for the CLIK
