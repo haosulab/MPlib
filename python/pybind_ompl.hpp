@@ -28,7 +28,7 @@ void build_pyompl(py::module &m_all) {
     auto m = m_all.def_submodule("ompl");
 
     auto PyOMPLPlanner = py::class_<OMPLPlanner, std::shared_ptr<OMPLPlanner>>(m, "OMPLPlanner");
-    PyOMPLPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &, int, bool>(),
+    PyOMPLPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &, int>(),
                       py::arg("world"),
                       py::arg("robot_idx")=0)
                  .def("plan", &OMPLPlanner::plan,
@@ -37,5 +37,8 @@ void build_pyompl(py::module &m_all) {
                       py::arg("planner_name")="RRTConnect",
                       py::arg("time")=1.0,
                       py::arg("range")=0.0,
-                      py::arg("verbose")=false);
+                      py::arg("verbose")=false,
+                      py::arg("align_axis")=Eigen::Vector3d(0,0,0),
+                      py::arg("align_angle")=0.0,
+                      py::arg("no_simplification")=false);
 }

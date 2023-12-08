@@ -25,7 +25,7 @@ namespace og = ompl::geometric;
 
 
 template<typename DATATYPE>
-std::vector <DATATYPE> state2vector(const ob::State *state_raw, ob::SpaceInformation *const &si_) {
+std::vector <DATATYPE> compoundstate2vector(const ob::State *state_raw, ob::SpaceInformation *const &si_) {
     auto state = state_raw->as<ob::CompoundState>();
     std::vector <DATATYPE> ret;
     auto si = si_->getStateSpace()->as<ob::CompoundStateSpace>();
@@ -81,18 +81,10 @@ Eigen::Matrix<OUT_TYPE, Eigen::Dynamic, 1> vector2eigen(std::vector<IN_TYPE> con
 template<typename DATATYPE>
 Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> state2eigen(const ob::State *state_raw,
                                                        ob::SpaceInformation *const &si_,
-                                                       bool using_rssv=false) {
-    std::vector<DATATYPE> vec_ret = using_rssv ? rvssstate2vector<DATATYPE>(state_raw, si_) : state2vector<DATATYPE>(state_raw, si_);
-    /*for (size_t i = 0; i < vec_ret.size(); i++)
-        std::cout << vec_ret[i] << " ";
-    std::cout << std::endl;
-    */
-     auto ret = vector2eigen<DATATYPE, DATATYPE>(vec_ret);
-    /*std::cout << ret.rows() << " " << ret.cols() << std::endl;
-    for (size_t i = 0; i < ret.rows(); i++)
-        std::cout << ret[i] << " ";
-    std::cout << std::endl;
-    */
+                                                       bool is_rvss=false) {
+    std::vector<DATATYPE> vec_ret = is_rvss ? rvssstate2vector<DATATYPE>(state_raw, si_)
+                                            : compoundstate2vector<DATATYPE>(state_raw, si_);
+    auto ret = vector2eigen<DATATYPE, DATATYPE>(vec_ret);
     return ret;
 }
 
@@ -101,45 +93,42 @@ template<typename DATATYPE>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
     typedef Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> VectorX;
     PlanningWorldTpl_ptr<DATATYPE> world;
-    bool using_rvss;
+    bool is_rvss;
 
 public:
-    ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world, const ob::SpaceInformationPtr &si, bool using_rvss=false)
-        : ob::StateValidityChecker(si), world(world), using_rvss(using_rvss) {}
-
-    bool isValid(const ob::State *state_raw) const {
-        //std::cout << "Begin to check state" << std::endl;
-        //std::cout << "check " << state2eigen<DATATYPE>(state_raw, si_) << std::endl;
-        auto state = state2eigen<DATATYPE>(state_raw, si_, using_rvss);
-        std::cout << state.transpose() << std::endl;
+    ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world, const ob::SpaceInformationPtr &si, bool is_rvss)
+        : ob::StateValidityChecker(si), world(world), is_rvss(is_rvss) {}
+    bool _isValid(VectorX state) const {
         world->setQposAll(state);
         return !world->collide();
     }
 
-    bool _isValid(VectorX state) const {
-        world->setQposAll(state);
-        return !world->collide();
+    bool isValid(const ob::State *state_raw) const {
+        auto state = state2eigen<DATATYPE>(state_raw, si_, is_rvss);
+        return _isValid(state);
     }
 };
 
 class LevelConstraint : public ob::Constraint {
     ArticulatedModeld_ptr model;
+    size_t link_idx;
     Eigen::Vector3d v;  // the unit vector we want the constraint to align to
     double k;  // if k = 1, then we want the z axis of the end effector to be exactly v
 public:
-    LevelConstraint(ArticulatedModeld_ptr model, Eigen::Vector3d v, double k=1)
+    LevelConstraint(ArticulatedModeld_ptr model, size_t link_idx, Eigen::Vector3d v, double k=1)
     : ob::Constraint(model->getQposDim(), 1),
       model(model),
+      link_idx(link_idx),
       v(v),
       k(k) {
-        assert(0.99 < v.norm() && v.norm() < 1.01);
+        ASSERT(0.99 < v.norm() && v.norm() < 1.01, "The align axis must be a unit vector.");
     }
 
     Eigen::Vector3d getEndEffectorZ() const {
         auto pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
         // auto ee_idx = model->getMoveGroupJointIndices()[dim-1];
-        auto ee_pose = model->getPinocchioModel().getLinkPose(9);  // this 9 is hardcoded for now
+        auto ee_pose = model->getPinocchioModel().getLinkPose(link_idx);
         auto ee_quat = ee_pose.tail(4);
         auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
         auto ee_z = ee_rot.col(2);
@@ -150,7 +139,6 @@ public:
         model->setQpos(x);  // not full cuz we don't care about non-movegroup joints
         auto ee_z = getEndEffectorZ();
         out[0] = ee_z.dot(v) - k;
-        // std::cout << "ee_z: " << ee_z.transpose() << " " << " | v: " << v.transpose() << " | k: " << k << " | out: " << out[0] << std::endl;
     }
 
     void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
@@ -164,18 +152,11 @@ public:
         
         // need to select only the move group joints using model->getMoveGroupJointIndices()
         auto move_group_joint_indices = model->getMoveGroupJointIndices();
-        // for (auto itm : model->getMoveGroupJointIndices()) {
-        //     std::cout << itm << " ";
-        // }
-        // std::cout << std::endl;
         auto rot_jacobian_move_group = rot_jacobian(Eigen::all, move_group_joint_indices);
 
-        // std::cout << rot_jacobian_move_group << std::endl;
-        // std::cout << std::endl;
         for (size_t i = 0; i < dim; i++) {
             out(0, i) = rot_jacobian_move_group.col(i).cross(ee_z).dot(v);
         }
-        
     }
 };
 
@@ -209,33 +190,50 @@ class OMPLPlannerTpl {
     CompoundStateSpace_ptr cs;
     ob::StateSpacePtr state_space;
     std::shared_ptr<ompl::geometric::SimpleSetup> ss;
+    SpaceInformation_ptr p_compound_si;
+    SpaceInformation_ptr p_constrained_si;
     SpaceInformation_ptr si;
     PlanningWorldTpl_ptr<DATATYPE> world;
     ValidityCheckerTpl_ptr<DATATYPE> valid_checker;
     size_t dim;
     std::vector<DATATYPE> lower_joint_limits, upper_joint_limits;
     std::vector<bool> is_revolute;
+    
+    /** Certain joint configurations are the same if some joints are the same fmod 2pi. */
+    std::shared_ptr<ob::GoalStates> make_goal_states(std::vector<VectorX> const &goal_states);
+    
+    /** build a real vector state space for the robot */
+    void build_constrained_ambient_state_space();
 
-    bool constrained_problem = false;
+    /**
+     * ss depends on si so every time we change that need to redo it.
+     * also need to store the space type since ompl loses it -_-
+     */
+    void update_ss(bool is_rvss=false);
 
 public:
     // OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world);
     
-    OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world, int robot_idx=0, bool constrained_problem=false);
+    OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world, int robot_idx=0);
 
     VectorX random_sample_nearby(VectorX const &start_state);
 
     void build_state_space();
-
-    void build_constrained_state_space();
 
     PlanningWorldTpl_ptr<DATATYPE> get_world() { return world; }
 
     size_t get_dim() { return dim; }
 
     std::pair <std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
-    plan(VectorX const &start_state, std::vector<VectorX> const &goal_states, const std::string &planner_name = "RRTConnect",
-        const double &time = 1.0, const double& range = 0.0, const bool &verbose = false);
+    plan(VectorX const &start_state,
+         std::vector<VectorX> const &goal_states,
+         const std::string &planner_name = "RRTConnect",
+         const double &time = 1.0,
+         const double &range = 0.0,
+         const bool verbose = false,
+         const Eigen::Vector3d &align_axis = Eigen::Vector3d(0, 0, 0),
+         const double &align_angle = 0.0,
+         const bool no_simplification = false);
 };
 
 

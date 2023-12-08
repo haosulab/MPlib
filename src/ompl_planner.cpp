@@ -56,7 +56,7 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
 }
 
 template<typename DATATYPE>
-void OMPLPlannerTpl<DATATYPE>::build_constrained_state_space(void) {
+void OMPLPlannerTpl<DATATYPE>::build_constrained_ambient_state_space(void) {
     std::string const joint_prefix = "JointModel";
     ASSERT (world->getArticulations().size() == 1, "only support one robot for constrained planning");
     auto robot = world->getArticulations()[0];
@@ -80,37 +80,22 @@ void OMPLPlannerTpl<DATATYPE>::build_constrained_state_space(void) {
             auto bound = pinocchio_model.getJointLimit(pinocchio_id);
             ASSERT(bound.rows() == 1, "Only support simple joint with dim of joint being one");
             auto lower_joint_limit = bound(0, 0), upper_joint_limit = bound(0, 1);
-            lower_joint_limits.push_back(lower_joint_limit);
-            upper_joint_limits.push_back(upper_joint_limit);
             ambient_space_bounds.setLow(i, lower_joint_limit);
             ambient_space_bounds.setHigh(i, upper_joint_limit);
-            is_revolute.push_back(joint_type[joint_prefix.size()] == 'R');
         }
     }
     p_ambient_space->setBounds(ambient_space_bounds);
 }
 
 template<typename DATATYPE>
-OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world,
-                                         int robot_idx,
-                                         bool constrained_problem)
-                                         : world(world), constrained_problem(constrained_problem) {
-    if (constrained_problem) {
-        build_constrained_state_space();
-        Eigen::Vector3d v(0, 0, -1);
-        auto level_constraint = std::make_shared<LevelConstraint>(world->getArticulations()[robot_idx], v);
-        level_constraint->setTolerance(1e-2);
-        p_constrained_space = std::make_shared<ob::ProjectedStateSpace>(p_ambient_space, level_constraint);
-        si = std::make_shared<ob::ConstrainedSpaceInformation>(p_constrained_space);
-        state_space = p_constrained_space;
-    } else {
-        build_state_space();
-        si = std::make_shared<SpaceInformation>(cs);  // using compound space
-        state_space = cs;
-    }
-    valid_checker = std::make_shared<ValidityChecker>(world, si, constrained_problem);
-    ss = std::make_shared<ompl::geometric::SimpleSetup>(si);
-    ss->setStateValidityChecker(valid_checker);
+OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world, int robot_idx) : world(world) {
+    build_state_space();
+    build_constrained_ambient_state_space();
+    
+    p_compound_si = std::make_shared<SpaceInformation>(cs);  // using compound space to begin with
+    state_space = cs;
+    si = p_compound_si;
+    update_ss();
 }
 
 template<typename DATATYPE>
@@ -138,40 +123,14 @@ Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> OMPLPlannerTpl<DATATYPE>::random_samp
 }
 
 template<typename DATATYPE>
-std::pair<std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
-OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
-                               std::vector<VectorX> const &goal_states,
-                               const std::string &planner_name,
-                               const double &time,
-                               const double& range,
-                               const bool& verbose) {
-    ASSERT(start_state.rows() == goal_states[0].rows(),
-        "Length of start state " + std::to_string(start_state.rows()) +
-        " =/= length of goal state " + std::to_string(goal_states[0].rows()));
-    ASSERT(start_state.rows() == dim,
-        "Length of start state " + std::to_string(start_state.rows()) +
-        " =/= dimension of sample space " + std::to_string(dim) +
-        ". Please only provide the move group joints.");
-    if (verbose == false)
-        ompl::msg::noOutputHandler();
-
-    ob::ScopedState<> start(state_space);
-    start = eigen2vector<DATATYPE, double>(start_state);
-
-    bool invalid_start = !valid_checker->_isValid(start_state);
-    if (invalid_start) {
-        std::cout << "invalid start state!! (collision)" << std::endl;
-        VectorX new_start_state = random_sample_nearby(start_state);
-        start = eigen2vector<DATATYPE, double>(new_start_state);
-    }
-
+std::shared_ptr<ob::GoalStates> OMPLPlannerTpl<DATATYPE>::make_goal_states(std::vector<VectorX> const &goal_states) {
     auto goals = std::make_shared<ob::GoalStates>(si);
 
     int tot_enum_states = 1, tot_goal_state = 0;
     for (int i = 0; i < dim; i++) 
         tot_enum_states *= 3;
 
-    for (int ii = 0; ii < goal_states.size(); ii++)
+    for (int ii = 0; ii < goal_states.size(); ii++) {
         for (int i = 0; i < tot_enum_states; i++) {
             std::vector<double> tmp_state;
             int tmp = i;
@@ -208,6 +167,69 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
                 tot_goal_state += 1;
             }
         }
+    }
+
+    return goals;
+}
+
+template<typename DATATYPE>
+void OMPLPlannerTpl<DATATYPE>::update_ss(bool is_rvss) {
+    valid_checker = std::make_shared<ValidityChecker>(world, si, is_rvss);
+    ss = std::make_shared<ompl::geometric::SimpleSetup>(si);
+    ss->setStateValidityChecker(valid_checker);
+}
+
+template<typename DATATYPE>
+std::pair<std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
+OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
+                               std::vector<VectorX> const &goal_states,
+                               const std::string &planner_name,
+                               const double &time,
+                               const double &range,
+                               const bool verbose,
+                               const Eigen::Vector3d &align_axis,
+                               const double &align_angle,
+                               const bool no_simplification) {
+    ASSERT(start_state.rows() == goal_states[0].rows(),
+        "Length of start state " + std::to_string(start_state.rows()) +
+        " =/= length of goal state " + std::to_string(goal_states[0].rows()));
+    ASSERT(start_state.rows() == dim,
+        "Length of start state " + std::to_string(start_state.rows()) +
+        " =/= dimension of sample space " + std::to_string(dim) +
+        ". Please only provide the move group joints.");
+    if (verbose == false)
+        ompl::msg::noOutputHandler();
+
+    if (align_axis != Eigen::Vector3d(0,0,0)) {  // we have a constraint
+        auto level_constraint = std::make_shared<LevelConstraint>(world->getArticulations()[0],
+                                                                  world->getArticulations()[0]->getEEFrameIndex(),
+                                                                  align_axis,
+                                                                  std::cos(align_angle));
+        level_constraint->setTolerance(1e-3);
+        p_constrained_space = std::make_shared<ob::ProjectedStateSpace>(p_ambient_space, level_constraint);
+        state_space = p_constrained_space;
+        p_constrained_si = std::make_shared<ob::ConstrainedSpaceInformation>(p_constrained_space);
+        si = p_constrained_si;
+        update_ss(true);
+    } else {
+        state_space = cs;
+        if (si != p_compound_si) {
+            si = p_compound_si;
+            update_ss();
+        }
+    }
+
+    ob::ScopedState<> start(state_space);
+    start = eigen2vector<DATATYPE, double>(start_state);
+
+    bool invalid_start = !valid_checker->_isValid(start_state);
+    if (invalid_start) {
+        std::cout << "invalid start state!! (collision)" << std::endl;
+        VectorX new_start_state = random_sample_nearby(start_state);
+        start = eigen2vector<DATATYPE, double>(new_start_state);
+    }
+
+    auto goals = make_goal_states(goal_states);
 
     ss->clear();  // must clear!!! otherwise the planner stitch together the previous path and the new path
     ss->setStartState(start);
@@ -240,7 +262,10 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
         // try to simply the path and restore if new path contains collision
         auto pathBackup = path;
         og::PathSimplifier simplifer(si);
-        if (!simplifer.simplifyMax(path)) path = pathBackup;
+        // do not simplify if the state space is constrained space
+        if (no_simplification || state_space == p_constrained_space || !simplifer.simplifyMax(path)) {
+            path = pathBackup;
+        }
 
         if (verbose) {
             std::cout << "Path length before simplification: " << pathBackup.getStateCount() << std::endl;
@@ -256,7 +281,8 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
                 ret(0, j) = start_state(j);
         }
         for (size_t i = 0; i < len; i++) {
-            auto res_i = state2eigen<DATATYPE>(path.getState(i), si.get(), this->constrained_problem);
+            // the ambient space of the constrained space is a real vector space
+            auto res_i = state2eigen<DATATYPE>(path.getState(i), si.get(), state_space == p_constrained_space);
             ASSERT(res_i.rows() == dim, "Result dimension is not correct!");
             for (size_t j = 0; j < dim; j++)
                 ret(invalid_start + i, j) = res_i[j];
