@@ -43,7 +43,7 @@ class ArticulatedModel():
         """
             Get the joint indices of the move group.
             Returns:
-                list of pinocchio joint indices of the move group. note that pinocchio joint indices are not necessarily contiguous so we need some sort of map to go between pinocchio joint indices and move group joint indices
+                list of user joint indices of the move group
         """
     def get_move_group_joint_names(self) -> list[str]: 
         """
