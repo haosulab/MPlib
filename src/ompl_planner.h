@@ -210,7 +210,6 @@ class OMPLPlannerTpl {
     ob::StateSpacePtr state_space;
     std::shared_ptr<ompl::geometric::SimpleSetup> ss;
     SpaceInformation_ptr si;
-    ProblemDefinition_ptr pdef;
     PlanningWorldTpl_ptr<DATATYPE> world;
     ValidityCheckerTpl_ptr<DATATYPE> valid_checker;
     size_t dim;

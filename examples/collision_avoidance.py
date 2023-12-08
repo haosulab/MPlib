@@ -8,7 +8,7 @@ class PlanningDemo(DemoSetup):
         super().__init__()
         self.setup_scene()
         self.load_robot()
-        self.setup_planner(constrained_problem=True)
+        self.setup_planner()
 
         # Set initial joint positions
         init_qpos = [0, 0.19634954084936207, 0.0, -2.617993877991494, 0.0, 2.941592653589793, 0.7853981633974483, 0, 0]

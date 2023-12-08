@@ -37,8 +37,18 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
                 }
                 subspcae->setBounds(ob_bounds);
                 cs->addSubspace(subspcae, 1.0);
+            } else if (joint_type[joint_prefix.size()] == 'R' && joint_type[joint_prefix.size() + 1] == 'U') {
+                cs->addSubspace(std::make_shared<ob::SO2StateSpace>(), 1.0);
+                lower_joint_limits.push_back(-PI);
+                upper_joint_limits.push_back(PI);
+                dim_i += 1;
             }
-            is_revolute.push_back(joint_type[joint_prefix.size()] == 'R');
+            if (joint_type[joint_prefix.size()] == 'R' || joint_type[joint_prefix.size()] == 'P') {
+                if (joint_type[joint_prefix.size()] == 'R' && joint_type[joint_prefix.size() + 1] != 'U')
+                    is_revolute.push_back(true);
+                else
+                    is_revolute.push_back(false);
+            }
         }
         ASSERT(dim_i == robot->getQposDim(), "Dim of bound is different from dim of qpos " +  std::to_string(dim_i) + " " + std::to_string(robot->getQposDim()));
         dim += dim_i;
@@ -78,7 +88,6 @@ void OMPLPlannerTpl<DATATYPE>::build_constrained_state_space(void) {
         }
     }
     p_ambient_space->setBounds(ambient_space_bounds);
-    // set tolerance
 }
 
 template<typename DATATYPE>
@@ -252,8 +261,6 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
             for (size_t j = 0; j < dim; j++)
                 ret(invalid_start + i, j) = res_i[j];
         }
-        // std::cout << ret << std::endl;
-        // std::cout << std::endl;
         return std::make_pair(solved.asString(), ret);
     }
     else {

@@ -30,8 +30,7 @@ void build_pyompl(py::module &m_all) {
     auto PyOMPLPlanner = py::class_<OMPLPlanner, std::shared_ptr<OMPLPlanner>>(m, "OMPLPlanner");
     PyOMPLPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &, int, bool>(),
                       py::arg("world"),
-                      py::arg("robot_idx")=0,
-                      py::arg("constrained_problem")=false)
+                      py::arg("robot_idx")=0)
                  .def("plan", &OMPLPlanner::plan,
                       py::arg("start_state"),
                       py::arg("goal_states"),
