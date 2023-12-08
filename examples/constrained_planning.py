@@ -31,6 +31,7 @@ class ConstrainedPlanningDemo(DemoSetup):
     self.add_point_cloud()
 
     # with constraint
+    print("with constraint")
     for pose in poses:
       result = self.planner.plan(
         pose,
@@ -47,6 +48,7 @@ class ConstrainedPlanningDemo(DemoSetup):
       self.follow_path(result)
 
     # without constraint
+    print("without constraint")
     for pose in poses:
       result = self.planner.plan(
         pose,
