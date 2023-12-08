@@ -53,7 +53,7 @@ std::string set_move_group_doc2 = R"(
 std::string get_move_group_joint_indices_doc = R"(
     Get the joint indices of the move group.
     Returns:
-        list of pinocchio joint indices of the move group. note that pinocchio joint indices are not necessarily contiguous so we need some sort of map to go between pinocchio joint indices and move group joint indices)";
+        list of user joint indices of the move group)";
 
 std::string get_move_group_joint_names_doc = R"(
     Get the joint names of the move group.
