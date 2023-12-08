@@ -52,11 +52,11 @@ std::vector <DATATYPE> state2vector(const ob::State *state_raw, ob::SpaceInforma
 
 template<typename DATATYPE>
 std::vector<DATATYPE> rvssstate2vector(const ob::State *state_raw, ob::SpaceInformation *const &si_) {
-    auto state = state_raw->as<ob::RealVectorStateSpace::StateType>();
-    auto state_space_ptr = si_->getStateSpace()->as<ob::RealVectorStateSpace>();
+    auto dim = si_->getStateDimension();
+    auto state = state_raw->as<ob::ProjectedStateSpace::StateType>();
     std::vector<DATATYPE> ret;
-    for (size_t i = 0; i < state_space_ptr->getDimension(); i++) {
-        ret.push_back((DATATYPE) state->values[i]);
+    for (size_t i = 0; i < dim; i++) {
+        ret.push_back((DATATYPE)(*state)[i]);
     }
     return ret;
 }
@@ -110,7 +110,9 @@ public:
     bool isValid(const ob::State *state_raw) const {
         //std::cout << "Begin to check state" << std::endl;
         //std::cout << "check " << state2eigen<DATATYPE>(state_raw, si_) << std::endl;
-        world->setQposAll(state2eigen<DATATYPE>(state_raw, si_, using_rvss));
+        auto state = state2eigen<DATATYPE>(state_raw, si_, using_rvss);
+        std::cout << state.transpose() << std::endl;
+        world->setQposAll(state);
         return !world->collide();
     }
 

@@ -78,17 +78,8 @@ void OMPLPlannerTpl<DATATYPE>::build_constrained_state_space(void) {
         }
     }
     p_ambient_space->setBounds(ambient_space_bounds);
+    // set tolerance
 }
-
-// template<typename DATATYPE>
-// OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world):world(world) {
-//     build_state_space();
-//     si = std::make_shared<SpaceInformation>(cs);
-//     valid_checker = std::make_shared<ValidityChecker>(world, si);
-//     si->setStateValidityChecker(valid_checker);
-
-//     pdef = std::make_shared<ob::ProblemDefinition>(si);
-// }
 
 template<typename DATATYPE>
 OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world,
@@ -99,6 +90,7 @@ OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &w
         build_constrained_state_space();
         Eigen::Vector3d v(0, 0, -1);
         auto level_constraint = std::make_shared<LevelConstraint>(world->getArticulations()[robot_idx], v);
+        level_constraint->setTolerance(1e-2);
         p_constrained_space = std::make_shared<ob::ProjectedStateSpace>(p_ambient_space, level_constraint);
         si = std::make_shared<ob::ConstrainedSpaceInformation>(p_constrained_space);
         state_space = p_constrained_space;
@@ -208,6 +200,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
             }
         }
 
+    ss->clear();  // must clear!!! otherwise the planner stitch together the previous path and the new path
     ss->setStartState(start);
     ss->setGoal(goals);
 
@@ -255,11 +248,12 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
         }
         for (size_t i = 0; i < len; i++) {
             auto res_i = state2eigen<DATATYPE>(path.getState(i), si.get(), this->constrained_problem);
-            //std::cout << "Size_i " << res_i.rows() << std::endl;
             ASSERT(res_i.rows() == dim, "Result dimension is not correct!");
             for (size_t j = 0; j < dim; j++)
                 ret(invalid_start + i, j) = res_i[j];
         }
+        // std::cout << ret << std::endl;
+        // std::cout << std::endl;
         return std::make_pair(solved.asString(), ret);
     }
     else {

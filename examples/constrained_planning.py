@@ -2,7 +2,6 @@
 
 import mplib
 import numpy as np
-import trimesh
 
 from demo_setup import DemoSetup
 
@@ -11,26 +10,17 @@ class ConstrainedPlanningDemo(DemoSetup):
     super().__init__()
     self.setup_scene()
     self.load_robot()
-    self.setup_planner(constrained_problem=False)
+    self.setup_planner(constrained_problem=True)
 
   def demo(self):
-    starting_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78]
-    self.planner.robot.set_qpos(starting_qpos)
-    poses = [[0.4, 0.3, 0.12, 0, 1, 0, 0],
-             [0.2, -0.3, 0.08, 0, 1, 0, 0],
-             [0.6, 0.1, 0.14, 0, 1, 0, 0]]
+    starting_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78, 0, 0]
+    self.robot.set_qpos(starting_qpos)
+    self.planner.robot.set_qpos(starting_qpos[:7])
+    poses = [[0.4, 0.3, 0.22, 0, 1, 0, 0],
+             [0.2, -0.3, 0.18, 0, 1, 0, 0],
+             [0.6, 0.1, 0.24, 0, 1, 0, 0]]
     for i in range(3):
-      result = self.planner.plan(
-        poses[i],
-        self.planner.robot.get_qpos(),
-        time_step=1/250,
-        use_point_cloud=False,
-        use_attach=False,
-        planner_name="RRTConnect"
-      )
-      if result['status'] == "Success":
-        print(result)
-        self.follow_path(result)
+      self.move_to_pose_with_RRTConnect(poses[i])
 
 if __name__ == '__main__':
   demo = ConstrainedPlanningDemo()
