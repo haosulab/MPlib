@@ -314,7 +314,7 @@ void build_pyfcl(py::module &m_all) {
                 octomap::OcTree* tree = new octomap::OcTree(resolution);
 
                 // insert some measurements of occupied cells
-                for (size_t i = 0; i < vertices.rows(); i++)
+                for (auto i = 0; i < vertices.rows(); i++)
                         tree->updateNode(octomap::point3d(vertices(i, 0), vertices(i, 1), vertices(i, 2)), true);
 
                 auto tree_ptr = std::shared_ptr<const octomap::OcTree>(tree);
@@ -329,7 +329,7 @@ void build_pyfcl(py::module &m_all) {
              .def(py::init([](Matrixx3 const& vertices, Matrixx3I const &faces, bool const& throw_if_invalid){
                     auto vertices_new = std::make_shared<std::vector<Vector3>>();
                     auto faces_new = std::make_shared<std::vector<int>>();
-                     for (size_t i = 0; i < vertices.rows(); i++)
+                     for (auto i = 0; i < vertices.rows(); i++)
                      {
                          Vector3 tmp_i;
                          tmp_i(0) = vertices(i, 0);
@@ -337,7 +337,7 @@ void build_pyfcl(py::module &m_all) {
                          tmp_i(2) = vertices(i, 2);
                          vertices_new->push_back(tmp_i);
                      }
-                     for (size_t i = 0; i < faces.rows(); i++)
+                     for (auto i = 0; i < faces.rows(); i++)
                      {
                          faces_new->push_back(3);
                          for (size_t j = 0; j < 3; j++)
@@ -373,13 +373,13 @@ void build_pyfcl(py::module &m_all) {
                  }, py::arg("vertices"), py::arg("faces"))
             .def("get_vertices", [](BVHModel_OBBRSS &a) {
                 std::vector<Vector3> ret;
-                for (size_t i = 0; i < a.num_vertices; i++)
+                for (auto i = 0; i < a.num_vertices; i++)
                     ret.push_back(*(a.vertices + i));
                 return ret;
             }, BVHModel_OBBRSS_get_vertices_doc.c_str())
             .def("get_faces", [](BVHModel_OBBRSS &a) {
                 std::vector<Triangle> ret;
-                for (size_t i = 0; i < a.num_tris; i++)
+                for (auto i = 0; i < a.num_tris; i++)
                     ret.push_back(*(a.tri_indices + i));
                 return ret;
             }, BVHModel_OBBRSS_get_faces_doc.c_str())

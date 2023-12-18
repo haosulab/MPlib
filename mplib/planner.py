@@ -25,7 +25,8 @@ class Planner:
         srdf: str = "",
         package_keyword_replacement: str = "",
         user_link_names: Sequence[str] = [],
-        user_joint_names: Sequence[str] = []
+        user_joint_names: Sequence[str] = [],
+        **kwargs
     ):
         r"""Motion planner for robots.
 
@@ -59,6 +60,14 @@ class Planner:
             user_link_names,
             verbose=False,
             convex=True,
+        )
+        self.pinocchio_model = self.robot.get_pinocchio_model()
+
+        self.planning_world = planning_world.PlanningWorld(
+            [self.robot],
+            ["robot"],
+            kwargs.get("normal_objects", []),
+            kwargs.get("normal_object_names", [])
         )
 
         if srdf == "":
@@ -256,17 +265,29 @@ class Planner:
         """
         return self.check_for_collision(self.planning_world.self_collide, articulation, qpos)
 
-    def check_for_env_collision(self, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None):
+    def check_for_env_collision(self, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None, with_point_cloud=False, use_attach=False) -> list:
         """Check if the robot is in collision with the environment
 
         Args:
             articulation: robot model. if none will be self.robot
             qpos: robot configuration. if none will be the current pose
-
+            with_point_cloud: whether to check collision against point cloud
+            use_attach: whether to include the object attached to the end effector in collision checking
         Returns:
             A list of collisions.
         """
-        return self.check_for_collision(self.planning_world.collide_with_others, articulation, qpos)
+        # store previous results
+        prev_use_point_cloud = self.planning_world.use_point_cloud
+        prev_use_attach = self.planning_world.use_attach
+        self.planning_world.set_use_point_cloud(with_point_cloud)
+        self.planning_world.set_use_attach(use_attach)
+
+        results = self.check_for_collision(self.planning_world.collide_with_others, articulation, qpos)
+
+        # restore
+        self.planning_world.set_use_point_cloud(prev_use_point_cloud)
+        self.planning_world.set_use_attach(prev_use_attach)
+        return results
 
     def IK(self, goal_pose, start_qpos, mask = [], n_init_qpos=20, threshold=1e-3):
         """
@@ -412,6 +433,14 @@ class Planner:
         if link_id == -1:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
+
+    def set_normal_object(self, name, collision_object):
+        """ adds or updates a non-articulated collision object in the scene """
+        self.planning_world.set_normal_object(name, collision_object)
+    
+    def remove_normal_object(self, name):
+        """ returns true if the object was removed, false if it was not found """
+        return self.planning_world.remove_normal_object(name)
 
     def plan(
         self,

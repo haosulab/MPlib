@@ -63,19 +63,18 @@ std::string add_articulations_doc = R"(
     Returns:
         None)";
 
-std::string add_normal_object_doc = R"(
+std::string set_normal_object_doc = R"(
     Add a non-articulated collision object to the planning world.
     Args:
-        collision_object: non-articulated collision object to be added
         name: name of the non-articulated collision object
+        collision_object: non-articulated collision object to be added
     Returns:
         None)";
 
-std::string add_normal_objects_doc = R"(
-    Add a list of non-articulated collision objects to the planning world.
+std::string remove_normal_object_doc = R"(
+    Remove a non-articulated collision object from the planning world.
     Args:
-        collision_objects: list of non-articulated collision objects to be added
-        names: list of names of the non-articulated collision objects
+        name: name of the non-articulated collision object
     Returns:
         None)";
 
@@ -215,27 +214,28 @@ void build_planning_world(py::module &m_all) {
                       py::arg("normal_objects"), py::arg("normal_object_names"),
                       py::arg("plan_articulation_id") = 0, planning_world_doc.c_str())
     .def("get_articulations", &PlanningWorld::getArticulations, get_articulations_doc.c_str())
-    //.def("get_articulation_flags", &PlanningWorld::getArticulationFlags)
-    .def("get_normal_objects", &PlanningWorld::getNormalObjects, get_normal_objects_doc.c_str())
     .def("add_articulation", &PlanningWorld::addArticulation, py::arg("model"), py::arg("name"), add_articulation_doc.c_str())
     .def("add_articulations", &PlanningWorld::addArticulations, py::arg("models"), py::arg("names"), add_articulations_doc.c_str())
-    .def("add_normal_object", &PlanningWorld::addNormalObject, py::arg("collision_object"), py::arg("name"), add_normal_object_doc.c_str())
-    .def("add_normal_objects", &PlanningWorld::addNormalObjects, py::arg("collision_objects"), py::arg("names"), add_normal_objects_doc.c_str())
+    .def("get_normal_objects", &PlanningWorld::getNormalObjects, get_normal_objects_doc.c_str())
+    .def("set_normal_object", &PlanningWorld::setNormalObject, py::arg("collision_object"), py::arg("name"), set_normal_object_doc.c_str())
+    .def("remove_normal_object", &PlanningWorld::removeNormalObject, py::arg("name"), remove_normal_object_doc.c_str())
     .def("set_qpos", &PlanningWorld::setQpos, py::arg("index"), py::arg("qpos"), set_qpos_single_doc.c_str())
     .def("set_qpos_all", &PlanningWorld::setQposAll, py::arg("qpos"), set_qpos_all_doc.c_str())
     .def("collide", &PlanningWorld::collide, collide_doc.c_str())
     .def("self_collide", &PlanningWorld::selfCollide, py::arg("index")=0, py::arg("request")=CollisionRequest(), self_collide_doc.c_str())
     .def("collide_with_others", &PlanningWorld::collideWithOthers, py::arg("index")=0, py::arg("request")=CollisionRequest(), collide_with_others_doc.c_str())
     .def("collide_full", &PlanningWorld::collideFull, py::arg("index")=0, py::arg("request")=CollisionRequest(), collide_full_doc.c_str())
-    .def("set_use_point_cloud", &PlanningWorld::setUsePointCloud, py::arg("use") = false, set_use_point_cloud_doc.c_str())
+    .def("set_use_point_cloud", &PlanningWorld::setUsePointCloud, py::arg("use"), set_use_point_cloud_doc.c_str())
     .def("update_point_cloud", &PlanningWorld::updatePointCloud, py::arg("vertices"), py::arg("radius"), update_point_cloud_doc.c_str())
-    .def("set_use_attach", &PlanningWorld::setUseAttach, py::arg("use") = false, set_use_attach_doc.c_str())
+    .def("set_use_attach", &PlanningWorld::setUseAttach, py::arg("use"), set_use_attach_doc.c_str())
     .def("remove_attach", &PlanningWorld::removeAttach, remove_attach_doc.c_str())
     .def("update_attached_tool", &PlanningWorld::updateAttachedTool, py::arg("p_geom"), py::arg("link_id"), py::arg("pose"), update_attached_tool_doc.c_str())
     .def("update_attached_sphere", &PlanningWorld::updateAttachedSphere, py::arg("radius"), py::arg("link_id"), py::arg("pose"), update_attached_sphere_doc.c_str())
     .def("update_attached_box", &PlanningWorld::updateAttachedBox, py::arg("size"), py::arg("link_id"), py::arg("pose"))
     .def("update_attached_mesh", &PlanningWorld::updateAttachedMesh, py::arg("mesh_path"), py::arg("link_id"), py::arg("pose"), update_attached_mesh_doc.c_str())
-    .def("print_attached_tool_pose", &PlanningWorld::printAttachedToolPose, print_attached_tool_pose_doc.c_str());
+    .def("print_attached_tool_pose", &PlanningWorld::printAttachedToolPose, print_attached_tool_pose_doc.c_str())
+    .def_readonly("use_point_cloud", &PlanningWorld::use_point_cloud)
+    .def_readonly("use_attach", &PlanningWorld::use_attach);
 
   auto PyWorldCollisionResult = py::class_<WorldCollisionResult, std::shared_ptr<WorldCollisionResult>>(m, "WorldCollisionResult", world_collision_result_doc.c_str());
   PyWorldCollisionResult.def_readonly("res", &WorldCollisionResult::res)

@@ -42,24 +42,6 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def add_normal_object(self, collision_object: mplib.pymp.fcl.CollisionObject, name: str) -> None: 
-        """
-            Add a non-articulated collision object to the planning world.
-            Args:
-                collision_object: non-articulated collision object to be added
-                name: name of the non-articulated collision object
-            Returns:
-                None
-        """
-    def add_normal_objects(self, collision_objects: list[mplib.pymp.fcl.CollisionObject], names: list[str]) -> None: 
-        """
-            Add a list of non-articulated collision objects to the planning world.
-            Args:
-                collision_objects: list of non-articulated collision objects to be added
-                names: list of names of the non-articulated collision objects
-            Returns:
-                None
-        """
     def collide(self) -> bool: 
         """
             Check collision between all objects.
@@ -110,6 +92,14 @@ class PlanningWorld():
             Returns:
                 None
         """
+    def remove_normal_object(self, name: str) -> bool: 
+        """
+            Remove a non-articulated collision object from the planning world.
+            Args:
+                name: name of the non-articulated collision object
+            Returns:
+                None
+        """
     @staticmethod
     def self_collide(*args, **kwargs) -> typing.Any: 
         """
@@ -119,6 +109,15 @@ class PlanningWorld():
                 request: collision request params. can leave empty for default value
             Returns:
                 List of WorldCollisionResult objects
+        """
+    def set_normal_object(self, collision_object: str, name: mplib.pymp.fcl.CollisionObject) -> None: 
+        """
+            Add a non-articulated collision object to the planning world.
+            Args:
+                name: name of the non-articulated collision object
+                collision_object: non-articulated collision object to be added
+            Returns:
+                None
         """
     def set_qpos(self, index: int, qpos: numpy.ndarray[numpy.float64, _Shape[m, 1]]) -> None: 
         """
@@ -137,7 +136,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def set_use_attach(self, use: bool = False) -> None: 
+    def set_use_attach(self, use: bool) -> None: 
         """
             Set whether to use attached tool for collision checking.
             Args:
@@ -145,7 +144,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def set_use_point_cloud(self, use: bool = False) -> None: 
+    def set_use_point_cloud(self, use: bool) -> None: 
         """
             Set whether to use point cloud for collision checking.
             Args:
@@ -192,6 +191,16 @@ class PlanningWorld():
                 radius: radius of each point in the point cloud
             Returns:
                 None
+        """
+    @property
+    def use_attach(self) -> bool:
+        """
+        :type: bool
+        """
+    @property
+    def use_point_cloud(self) -> bool:
+        """
+        :type: bool
         """
     pass
 class WorldCollisionResult():
