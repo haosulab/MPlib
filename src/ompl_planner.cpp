@@ -95,8 +95,12 @@ Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> OMPLPlannerTpl<DATATYPE>::random_samp
 
 template<typename DATATYPE>
 std::pair<std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
-OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> const &goal_states, const std::string &planner_name,
-                                const double &time, const double& range, const bool& verbose) {
+OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
+                               std::vector<VectorX> const &goal_states,
+                               const std::string &planner_name,
+                               const double &time,
+                               const double& range,
+                               const bool& verbose) {
     ASSERT(start_state.rows() == goal_states[0].rows(),
         "Length of start state " + std::to_string(start_state.rows()) +
         " =/= length of goal state " + std::to_string(goal_states[0].rows()));
