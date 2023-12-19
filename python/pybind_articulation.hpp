@@ -96,6 +96,16 @@ std::string update_srdf_doc = R"(
     Args:
         srdf: path to SRDF file, can be relative to the current working directory)";
 
+std::string set_base_pose_doc = R"(
+    Set the base pose of the robot.
+    Args:
+        pose: base pose of the robot in [x, y, z, qw, qx, qy, qz] format)";
+
+std::string get_base_pose_doc = R"(
+    Get the base pose of the robot.
+    Returns:
+        base pose of the robot in [x, y, z, qw, qx, qy, qz] format)";
+
 void build_pyarticulation(py::module &m_all) {
     auto m = m_all.def_submodule("articulation", "articulated model submodule, i.e. models with moving parts");
     auto PyArticulatedModel = py::class_<ArticulatedModel, std::shared_ptr<ArticulatedModel>>(m, "ArticulatedModel",
@@ -115,6 +125,8 @@ void build_pyarticulation(py::module &m_all) {
                  py::arg("end_effector"), set_move_group_doc1.c_str())
             .def("set_move_group", py::overload_cast<std::vector<std::string> const &>(&ArticulatedModel::setMoveGroup),
                  py::arg("end_effectors"), set_move_group_doc2.c_str())
+            .def("set_base_pose", &ArticulatedModel::setBasePose, py::arg("pose"), set_base_pose_doc.c_str())
+            .def("get_base_pose", &ArticulatedModel::getBasePose, get_base_pose_doc.c_str())
             .def("get_move_group_joint_indices", &ArticulatedModel::getMoveGroupJointIndices, get_move_group_joint_indices_doc.c_str())
             .def("get_move_group_joint_names", &ArticulatedModel::getMoveGroupJointName, get_move_group_joint_names_doc.c_str())
             .def("get_user_joint_names", &ArticulatedModel::getUserJointNames, get_user_joint_names_doc.c_str())
@@ -123,7 +135,7 @@ void build_pyarticulation(py::module &m_all) {
             .def("get_qpos", &ArticulatedModel::getQpos, get_qpos_doc.c_str())
             .def("get_move_group_qpos_dim", &ArticulatedModel::getQposDim, get_move_group_qpos_dim_doc.c_str())
             .def("set_qpos", &ArticulatedModel::setQpos,
-                 py::arg("qpos"), py::arg("full") = false, set_qpos_doc.c_str())
+                 py::arg("qpos"), py::arg("full")=false, set_qpos_doc.c_str())
             .def("update_SRDF", &ArticulatedModel::updateSRDF,
                  py::arg("SRDF"), update_srdf_doc.c_str());
 }

@@ -27,6 +27,12 @@ class ArticulatedModel():
                 verbose: print debug information
                 convex: use convex decomposition for collision objects
         """
+    def get_base_pose(self) -> numpy.ndarray[numpy.float64, _Shape[7, 1]]: 
+        """
+            Get the base pose of the robot.
+            Returns:
+                base pose of the robot in [x, y, z, qw, qx, qy, qz] format
+        """
     def get_fcl_model(self) -> mplib.pymp.fcl.FCLModel: 
         """
             Get the underlying FCL model.
@@ -80,6 +86,12 @@ class ArticulatedModel():
             Get the link names that the user has provided for planning.
             Returns:
                 list of link names of the user
+        """
+    def set_base_pose(self, pose: numpy.ndarray[numpy.float64, _Shape[7, 1]]) -> None: 
+        """
+            Set the base pose of the robot.
+            Args:
+                pose: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
         """
     @typing.overload
     def set_move_group(self, end_effector: str) -> None: 

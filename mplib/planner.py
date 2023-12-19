@@ -2,7 +2,7 @@ from typing import Sequence, Tuple, Union
 
 import os
 import numpy as np
-from transforms3d.quaternions import quat2mat
+from transforms3d.quaternions import quat2mat, mat2quat
 import toppra as ta
 import toppra.constraint as constraint
 import toppra.algorithm as algo
@@ -434,6 +434,9 @@ class Planner:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
 
+    def set_base_pose(self, pose):
+        self.robot.set_base_pose(pose)
+
     def set_normal_object(self, name, collision_object):
         """ adds or updates a non-articulated collision object in the scene """
         self.planning_world.set_normal_object(name, collision_object)
@@ -454,6 +457,7 @@ class Planner:
         use_point_cloud=False,
         use_attach=False,
         verbose=False,
+        wrt_world=False,
         planner_name="RRTConnect"
     ):
         """
@@ -470,6 +474,7 @@ class Planner:
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will use the attached tool to avoid collision
             verbose: if True, will print the log of OMPL and TOPPRA
+            wrt_world: if True, will plan wrt the world frame. Otherwise, will plan wrt the base frame.
             planner_name: name of the planner to use. Options: RRTConnect, RRT*
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
@@ -491,7 +496,20 @@ class Planner:
             for collision in collisions:
                 print("%s and %s collide!" % (collision.link_name1, collision.link_name2))
 
+        if wrt_world:
+            base_pose = self.robot.get_base_pose()
+            base_tf = np.eye(4)
+            base_tf[0:3, 3] = base_pose[:3]
+            base_tf[0:3, 0:3] = quat2mat(base_pose[3:])
+            goal_tf = np.eye(4)
+            goal_tf[0:3, 3] = goal_pose[:3]
+            goal_tf[0:3, 0:3] = quat2mat(goal_pose[3:])
+            goal_tf = np.linalg.inv(base_tf).dot(goal_tf)
+            goal_pose[:3] = goal_tf[0:3, 3]
+            goal_pose[3:] = mat2quat(goal_tf[0:3, 0:3])
+
         idx = self.move_group_joint_indices  # we need to take only the move_group joints when planning
+
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
             return {"status": ik_status}
