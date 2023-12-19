@@ -30,4 +30,11 @@ class OMPLPlanner():
             Returns:
                 pair of planner status and path. If planner succeeds, status is "Exact solution."
         """
+    def simplify_path(self, path: numpy.ndarray[numpy.float64, _Shape[m, n]]) -> numpy.ndarray[numpy.float64, _Shape[m, n]]: 
+        """
+            Args:
+                path: path to be simplified (numpy array of shape (n, dim))
+            Returns:
+                simplified path
+        """
     pass
