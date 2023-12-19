@@ -300,8 +300,8 @@ void PinocchioModelTpl<DATATYPE>::setJointOrder(std::vector<std::string> const &
     size_t len_v = 0, len_q = 0;
     for (size_t i = 0; i < names.size(); i++) {
         auto pinocchio_idx = model.getJointId(names[i]);
-        if (i == model.njoints)
-            throw std::invalid_argument(names[i] + " is a invalid name in setJointOrder");
+        if (pinocchio_idx == model.njoints)
+            throw std::invalid_argument(names[i] + " is either an invalid or unsupported joint in your URDF");
         vidx[i] = len_v;
         qidx[i] = len_q;
         nvs[i] = model.nvs[pinocchio_idx];

@@ -19,20 +19,21 @@ class Planner:
     def __init__(
         self,
         urdf: str,
-        user_link_names: Sequence[str],
-        user_joint_names: Sequence[str],
         move_group: str,
         joint_vel_limits: Union[Sequence[float], np.ndarray],
         joint_acc_limits: Union[Sequence[float], np.ndarray],
         srdf: str = "",
-        package_keyword_replacement: str = ""
+        package_keyword_replacement: str = "",
+        user_link_names: Sequence[str] = [],
+        user_joint_names: Sequence[str] = [],
+        **kwargs
     ):
         r"""Motion planner for robots.
 
         Args:
             urdf: Unified Robot Description Format file.
-            user_link_names: names of links, the order
-            user_joint_names: names of the joints to plan
+            user_link_names: names of links, the order. if empty, all links will be used.
+            user_joint_names: names of the joints to plan.  if empty, all active joints will be used.
             move_group: target link to move, usually the end-effector.
             joint_vel_limits: maximum joint velocities for time parameterization,
                 which should have the same length as
@@ -45,12 +46,37 @@ class Planner:
         """
         self.urdf = urdf
         if srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
-            srdf = urdf.replace(".urdf", ".srdf")
-            print("No SRDF file provided. Try to load %s." % srdf)
+            self.srdf = urdf.replace(".urdf", ".srdf")
+            print(f"No SRDF file provided but found {self.srdf}")
             
-        self.srdf = srdf
-        self.user_link_names = user_link_names
-        self.user_joint_names = user_joint_names
+        # replace package:// keyword if exists
+        urdf = self.replace_package_keyword(package_keyword_replacement)
+
+        self.robot = articulation.ArticulatedModel(
+            urdf,
+            srdf,
+            [0, 0, -9.81],
+            user_joint_names,
+            user_link_names,
+            verbose=False,
+            convex=True,
+        )
+        self.pinocchio_model = self.robot.get_pinocchio_model()
+
+        self.planning_world = planning_world.PlanningWorld(
+            [self.robot],
+            ["robot"],
+            kwargs.get("normal_objects", []),
+            kwargs.get("normal_object_names", [])
+        )
+
+        if srdf == "":
+            self.generate_collision_pair()
+            self.robot.update_SRDF(self.srdf)
+
+        self.pinocchio_model = self.robot.get_pinocchio_model()
+        self.user_link_names = self.pinocchio_model.get_link_names()
+        self.user_joint_names = self.pinocchio_model.get_joint_names()
 
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
@@ -59,49 +85,39 @@ class Planner:
         for i, link in enumerate(self.user_link_names):
             self.link_name_2_idx[link] = i
 
-        # replace package:// keyword if exists
-        urdf = self.replace_package_keyword(package_keyword_replacement)
-
-        self.robot = articulation.ArticulatedModel(
-            urdf,
-            srdf,
-            [0, 0, -9.81],
-            self.user_joint_names,
-            self.user_link_names,
-            verbose=False,
-            convex=True,
-        )
-        self.pinocchio_model = self.robot.get_pinocchio_model()
-
-        self.planning_world = planning_world.PlanningWorld(
-            [self.robot], ["robot"], [], []
-        )
-
-        if srdf == "":
-            self.generate_collision_pair()
-            self.robot.update_SRDF(self.srdf)
-
-        assert(move_group in self.user_link_names)
+        assert move_group in self.user_link_names,\
+            f"end-effector not found as one of the links in {self.user_link_names}"
         self.move_group = move_group
         self.robot.set_move_group(self.move_group)
-        self.move_group_joint_indices = (
-            self.robot.get_move_group_joint_indices()
-        )
+        self.move_group_joint_indices = self.robot.get_move_group_joint_indices()
 
         self.joint_types = self.pinocchio_model.get_joint_types()
-        self.joint_limits = np.concatenate(
-            self.pinocchio_model.get_joint_limits()
-        )
-        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+        self.joint_limits = np.concatenate(self.pinocchio_model.get_joint_limits())
         self.joint_vel_limits = joint_vel_limits
         self.joint_acc_limits = joint_acc_limits
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
-        assert len(self.joint_vel_limits) == len(
-            self.move_group_joint_indices
-        ), len(self.move_group_joint_indices)
-        assert len(self.joint_acc_limits) == len(self.move_group_joint_indices)
+        assert len(self.joint_vel_limits) == len(self.joint_acc_limits),\
+            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "\
+            f"length of joint_acc_limits ({len(self.joint_acc_limits)})"
+        assert len(self.joint_vel_limits) == len(self.move_group_joint_indices),\
+            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "\
+            f"length of move_group ({len(self.move_group_joint_indices)})"
+        assert len(self.joint_vel_limits) <= len(self.joint_limits),\
+            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) > "\
+            f"number of total joints ({len(self.joint_limits)})"
+        
+        self.planning_world = planning_world.PlanningWorld([self.robot], ["robot"], [], [])
+        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+
 
     def replace_package_keyword(self, package_keyword_replacement):
+        """
+        some ROS URDF files use package:// keyword to refer the package dir
+        replace it with the given string (default is empty)
+
+        Args:
+            package_keyword_replacement: the string to replace 'package://' keyword
+        """
         rtn_urdf = self.urdf
         with open(self.urdf, "r") as in_f:
             content = in_f.read()
@@ -114,6 +130,10 @@ class Planner:
         return rtn_urdf
 
     def generate_collision_pair(self, sample_time = 1000000, echo_freq = 100000):
+        """
+        we read the srdf file to get the link pairs that should not collide.
+        if not provided, we need to randomly sample configurations to find the link pairs that will always collide.
+        """
         print("Since no SRDF file is provided. We will first detect link pairs that will always collide. This may take several minutes.")
         n_link = len(self.user_link_names)
         cnt = np.zeros((n_link, n_link), dtype=np.int32)
@@ -152,11 +172,29 @@ class Planner:
         print("Saving the SRDF file to %s" % self.srdf)
 
     def distance_6D(self, p1, q1, p2, q2):
+        """
+        compute the distance between two poses
+        
+        Args:
+            p1: position of pose 1
+            q1: quaternion of pose 1
+            p2: position of pose 2
+            q2: quaternion of pose 2
+        """
         return np.linalg.norm(p1 - p2) + min(
             np.linalg.norm(q1 - q2), np.linalg.norm(q1 + q2)
         )
 
     def check_joint_limit(self, q):
+        """
+        check if the joint configuration is within the joint limits
+
+        Args:
+            q: joint configuration
+        
+        Returns:
+            True if the joint configuration is within the joint limits
+        """
         n = len(q)
         flag = True
         for i in range(n):
@@ -178,17 +216,30 @@ class Planner:
                     flag = False
         return flag
 
+    def pad_qpos(self, qpos, articulation=None):
+        """
+        if the user does not provide the full qpos but only the move_group joints,
+        pad the qpos with the rest of the joints
+        """
+        if len(qpos) == len(self.move_group_joint_indices):
+            tmp = articulation.get_qpos() if articulation is not None else self.robot.get_qpos()
+            tmp[:len(qpos)] = qpos
+            qpos = tmp
+
+        assert len(qpos) == len(self.joint_limits),\
+            f"length of qpos ({len(qpos)}) =/= "\
+            f"number of total joints ({len(self.joint_limits)})"
+
+        return qpos
+
     def check_for_collision(self, collision_function, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None) -> list:
+        """ helper function to check for collision """
         # handle no user input
         if articulation is None:
             articulation = self.robot
         if qpos is None:
             qpos = articulation.get_qpos()
-        # if the user does not specify the end-effector joints, append them to the qpos
-        if len(qpos) == len(self.move_group_joint_indices):
-            tmp = articulation.get_qpos()
-            tmp[:len(qpos)] = qpos
-            qpos = tmp
+        qpos = self.pad_qpos(qpos, articulation)
 
         # first save the current qpos
         old_qpos = articulation.get_qpos()
@@ -214,20 +265,42 @@ class Planner:
         """
         return self.check_for_collision(self.planning_world.self_collide, articulation, qpos)
 
-    def check_for_env_collision(self, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None):
+    def check_for_env_collision(self, articulation: articulation.ArticulatedModel=None, qpos: np.ndarray=None, with_point_cloud=False, use_attach=False) -> list:
         """Check if the robot is in collision with the environment
 
         Args:
             articulation: robot model. if none will be self.robot
             qpos: robot configuration. if none will be the current pose
-
+            with_point_cloud: whether to check collision against point cloud
+            use_attach: whether to include the object attached to the end effector in collision checking
         Returns:
             A list of collisions.
         """
-        return self.check_for_collision(self.planning_world.collide_with_others, articulation, qpos)
+        # store previous results
+        prev_use_point_cloud = self.planning_world.use_point_cloud
+        prev_use_attach = self.planning_world.use_attach
+        self.planning_world.set_use_point_cloud(with_point_cloud)
+        self.planning_world.set_use_attach(use_attach)
 
+        results = self.check_for_collision(self.planning_world.collide_with_others, articulation, qpos)
+
+        # restore
+        self.planning_world.set_use_point_cloud(prev_use_point_cloud)
+        self.planning_world.set_use_attach(prev_use_attach)
+        return results
 
     def IK(self, goal_pose, start_qpos, mask = [], n_init_qpos=20, threshold=1e-3):
+        """
+        Inverse kinematics
+
+        Args:
+            goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
+            start_qpos: initial configuration
+            mask: if the value at a given index is True, the joint is *not* used in the IK
+            n_init_qpos: number of random initial configurations
+            threshold: threshold for the distance between the goal pose and the result pose
+        """
+
         index = self.link_name_2_idx[self.move_group]
         min_dis = 1e9
         idx = self.move_group_joint_indices
@@ -279,6 +352,15 @@ class Planner:
         return status, results
 
     def TOPP(self, path, step=0.1, verbose=False):
+        """
+        Time-Optimal Path Parameterization
+
+        Args:
+            path: numpy array of shape (n, dof)
+            step: step size for the discretization
+            verbose: if True, will print the log of TOPPRA
+        """
+
         N_samples = path.shape[0]
         dof = path.shape[1]
         assert dof == len(self.joint_vel_limits)
@@ -299,31 +381,69 @@ class Planner:
         qdds_sample = jnt_traj(ts_sample, 2)
         return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration
 
-    def update_point_cloud(self, pc, resolution=1e-3):
-        self.planning_world.update_point_cloud(pc, resolution)
+    def update_point_cloud(self, pc, radius=1e-3):
+        """ 
+        Args:
+            pc: numpy array of shape (n, 3)
+            radius: radius of each point. This gives a buffer around each point that planner will avoid
+        """
+        self.planning_world.update_point_cloud(pc, radius)
 
     def update_attached_tool(self, fcl_collision_geometry, pose, link_id=-1):
+        """ helper function to update the attached tool """
         if link_id == -1:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_tool(fcl_collision_geometry, link_id, pose)
 
     def update_attached_sphere(self, radius, pose, link_id=-1):
+        """
+        attach a sphere to some link
+
+        Args:
+            radius: radius of the sphere
+            pose: [x,y,z,qw,qx,qy,qz] pose of the sphere
+            link_id: if not provided, the end effector will be the target.
+        """
         if link_id == -1:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_sphere(radius, link_id, pose)
 
     def update_attached_box(self, size, pose, link_id=-1):
+        """
+        attach a box to some link
+
+        Args:
+            size: [x,y,z] size of the box
+            pose: [x,y,z,qw,qx,qy,qz] pose of the box
+            link_id: if not provided, the end effector will be the target.
+        """
         if link_id == -1:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_box(size, link_id, pose)
     
     def update_attached_mesh(self, mesh_path, pose, link_id=-1):
+        """
+        attach a mesh to some link
+
+        Args:
+            mesh_path: path to the mesh
+            pose: [x,y,z,qw,qx,qy,qz] pose of the mesh
+            link_id: if not provided, the end effector will be the target.
+        """
         if link_id == -1:
             link_id = self.move_group_link_id
         self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
 
     def set_base_pose(self, pose):
         self.robot.set_base_pose(pose)
+
+    def set_normal_object(self, name, collision_object):
+        """ adds or updates a non-articulated collision object in the scene """
+        self.planning_world.set_normal_object(name, collision_object)
+    
+    def remove_normal_object(self, name):
+        """ returns true if the object was removed, false if it was not found """
+        return self.planning_world.remove_normal_object(name)
 
     def plan(
         self,
@@ -337,8 +457,26 @@ class Planner:
         use_point_cloud=False,
         use_attach=False,
         verbose=False,
-        wrt_world=False
+        wrt_world=False,
+        planner_name="RRTConnect"
     ):
+        """
+        plan from a start configuration to a goal pose of the end-effector
+
+        Args:
+            goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
+            current_qpos: current joint configuration (either full or move_group joints)
+            mask: if the value at a given index is True, the joint is *not* used in the IK
+            time_step: time step for the discretization
+            rrt_range: size of the random step for RRT
+            planning_time: maximum planning time
+            fix_joint_limits: if True, will clip the joint configuration to be within the joint limits
+            use_point_cloud: if True, will use the point cloud to avoid collision
+            use_attach: if True, will use the attached tool to avoid collision
+            verbose: if True, will print the log of OMPL and TOPPRA
+            wrt_world: if True, will plan wrt the world frame. Otherwise, will plan wrt the base frame.
+            planner_name: name of the planner to use. Options: RRTConnect, RRT*
+        """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
         n = current_qpos.shape[0]
@@ -349,6 +487,7 @@ class Planner:
                 if current_qpos[i] > self.joint_limits[i][1]:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
+        current_qpos = self.pad_qpos(current_qpos)
 
         self.robot.set_qpos(current_qpos, True)
         collisions = self.planning_world.collide_full()
@@ -369,7 +508,8 @@ class Planner:
             goal_pose[:3] = goal_tf[0:3, 3]
             goal_pose[3:] = mat2quat(goal_tf[0:3, 0:3])
 
-        idx = self.move_group_joint_indices
+        idx = self.move_group_joint_indices  # we need to take only the move_group joints when planning
+
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
             return {"status": ik_status}
@@ -390,6 +530,7 @@ class Planner:
             range=rrt_range,
             verbose=verbose,
             time=planning_time,
+            planner_name=planner_name
         )
 
         if status == "Exact solution":
@@ -420,9 +561,21 @@ class Planner:
         use_attach=False,
         verbose=False,
     ):
+        """
+        plan from a start configuration to a goal pose of the end-effector using screw motion
+
+        Args:
+            target_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
+            qpos: current joint configuration (either full or move_group joints)
+            qpos_step: size of the random step for RRT
+            time_step: time step for the discretization
+            use_point_cloud: if True, will use the point cloud to avoid collision
+            use_attach: if True, will use the attached tool to avoid collision
+            verbose: if True, will print the log of TOPPRA
+        """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
-        qpos = np.copy(qpos)
+        qpos = self.pad_qpos(qpos.copy())
         self.robot.set_qpos(qpos, True)
 
         def pose7D2mat(pose):

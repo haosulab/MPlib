@@ -22,7 +22,7 @@ private:
     std::vector<std::string> move_group_end_effectors;
     VectorX current_qpos; // The planning world only update the state in planning group.
 
-    int qpos_dim;
+    size_t move_group_qpos_dim;
     bool verbose;
 
     // the base pose of the robot
@@ -56,7 +56,7 @@ public:
 
     std::vector<std::string> getMoveGroupEndEffectors(void) { return move_group_end_effectors; }
 
-    size_t getQposDim(void) { return qpos_dim; }
+    size_t getQposDim(void) { return move_group_qpos_dim; }
 
     VectorX getQpos(void) { return current_qpos; }
 

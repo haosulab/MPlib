@@ -48,8 +48,8 @@ void FCLModelTpl<DATATYPE>::dfs_parse_tree(urdf::LinkConstSharedPtr const &link,
                     std::cout << scale << " " << collision_geometry << std::endl;
             } else if (geom_model->type == urdf::Geometry::CYLINDER) {
                 const urdf::CylinderSharedPtr cylinder = urdf::dynamic_pointer_cast<urdf::Cylinder>(geom_model);
-                collision_geometry = std::make_shared<Capsule>((DATATYPE) cylinder->radius,
-                                                               (DATATYPE) cylinder->length);
+                collision_geometry = std::make_shared<Cylinder>((DATATYPE) cylinder->radius,
+                                                                (DATATYPE) cylinder->length);
             } else if (geom_model->type == urdf::Geometry::BOX) {
                 const urdf::BoxSharedPtr box = urdf::dynamic_pointer_cast<urdf::Box>(geom_model);
                 collision_geometry = std::make_shared<Box>((DATATYPE) box->dim.x, (DATATYPE) box->dim.y,

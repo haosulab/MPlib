@@ -71,9 +71,9 @@ void ArticulatedModelTpl<DATATYPE>::setMoveGroup(std::vector<std::string> const 
     std::sort(move_group_user_joints.begin(), move_group_user_joints.end());
     auto end_unique = std::unique(move_group_user_joints.begin(), move_group_user_joints.end());
     move_group_user_joints.erase(end_unique, move_group_user_joints.end());
-    qpos_dim = 0;
+    move_group_qpos_dim = 0;
     for (auto i: move_group_user_joints)
-        qpos_dim += pinocchio_model.getJointDim(i);
+        move_group_qpos_dim += pinocchio_model.getJointDim(i);
 }
 
 template<typename DATATYPE>
@@ -89,9 +89,9 @@ void ArticulatedModelTpl<DATATYPE>::setQpos(VectorX const &qpos, bool const& ful
     if (full)
         current_qpos = qpos;
     else {
-        ASSERT(qpos.size() == qpos_dim,
-               "Length is not correct, Dim of Q: " + std::to_string(qpos_dim) + " ,Len of qpos: " +
-               std::to_string(qpos.size()));
+        ASSERT(qpos.size() == move_group_qpos_dim,
+               "Length of provided qpos " + std::to_string(qpos.size()) +
+               " =/= dimension of move_group qpos: " + std::to_string(move_group_qpos_dim));
         size_t len = 0;
         for (auto i: move_group_user_joints) {
             auto start_idx = pinocchio_model.getJointId(i), dim_i = pinocchio_model.getJointDim(i);
