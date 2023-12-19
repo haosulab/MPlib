@@ -136,6 +136,8 @@ class OMPLPlannerTpl {
     std::vector<DATATYPE> lower_joint_limits, upper_joint_limits;
     std::vector<bool> is_revolute;
 
+    void _simplify_path(og::PathGeometricPtr path);  // keep this private to avoid confusion
+
 public:
     VectorX random_sample_nearby(VectorX const &start_state);
 
@@ -146,6 +148,8 @@ public:
     PlanningWorldTpl_ptr<DATATYPE> get_world() { return world; }
 
     size_t get_dim() { return dim; }
+
+    Eigen::MatrixXd simplify_path(Eigen::MatrixXd &path);
 
     std::pair <std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
     plan(VectorX const &start_state, std::vector<VectorX> const &goal_states, const std::string &planner_name = "RRTConnect",

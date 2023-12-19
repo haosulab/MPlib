@@ -11,12 +11,7 @@
 
 namespace py = pybind11;
 
-#ifdef USE_SINGLE
-using DATATYPE = float;
-#else
 using DATATYPE = double;
-#endif
-
 
 using OMPLPlanner = OMPLPlannerTpl<DATATYPE>;
 using PlannerStatus = ob::PlannerStatus;
@@ -41,6 +36,12 @@ std::string ompl_ctor_doc = R"(
     Returns:
         OMPLPlanner object)";
 
+std::string simplify_path_doc = R"(
+    Args:
+        path: path to be simplified (numpy array of shape (n, dim))
+    Returns:
+        simplified path)";
+
 template<typename T>
 py::array_t<T> make_array(std::vector<T> const &values) {
     return py::array_t<T>(values.size(), values.data());
@@ -57,6 +58,6 @@ void build_pyompl(py::module &m_all) {
                               py::arg("planner_name") = "RRTConnect", 
                               py::arg("time") = 1.0,
                               py::arg("range") = 0.0,
-                              py::arg("verbose") = false, plan_doc.c_str());
-
+                              py::arg("verbose") = false, plan_doc.c_str())
+                 .def("simplify_path", &OMPLPlanner::simplify_path, py::arg("path"));
 }

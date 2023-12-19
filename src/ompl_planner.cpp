@@ -6,7 +6,7 @@
 
 DEFINE_TEMPLATE_OMPL(double)
 
-DEFINE_TEMPLATE_OMPL(float)
+// DEFINE_TEMPLATE_OMPL(float)
 
 #define PI 3.14159265359
 
@@ -91,6 +91,31 @@ Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> OMPLPlannerTpl<DATATYPE>::random_samp
         if (cnt > 1000)
             return start_state;
     }
+}
+
+template<typename DATATYPE>
+void OMPLPlannerTpl<DATATYPE>::_simplify_path(og::PathGeometricPtr path) {
+    // try to simply the path and restore if new path contains collision
+    og::PathSimplifier simplifer(si);
+    og::PathGeometric backup_path = *path;
+    if (!simplifer.simplifyMax(*path)) *path = backup_path;
+}
+
+template<typename DATATYPE>
+Eigen::MatrixXd OMPLPlannerTpl<DATATYPE>::simplify_path(Eigen::MatrixXd &path) {
+    og::PathGeometricPtr geo_path_ptr = std::make_shared<og::PathGeometric>(si);
+    for (size_t i = 0; i < path.rows(); i++) {
+        ob::ScopedState<> state(cs);
+        state = eigen2vector<DATATYPE, double>(path.row(i));
+        geo_path_ptr->append(state.get());
+    }
+    _simplify_path(geo_path_ptr);
+    Eigen::MatrixXd ret(geo_path_ptr->getStateCount(), dim);
+    for (size_t i = 0; i < geo_path_ptr->getStateCount(); i++) {
+        auto waypoint = state2vector<DATATYPE>(geo_path_ptr->getState(i), si.get());
+        ret.row(i) = vector2eigen<DATATYPE, double>(waypoint);
+    }
+    return ret;
 }
 
 template<typename DATATYPE>
@@ -201,15 +226,8 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
         ob::PathPtr path = pdef->getSolutionPath();
         auto geoPathPtr = std::dynamic_pointer_cast<og::PathGeometric>(path);
 
-        // try to simply the path and restore if new path contains collision
-        auto geoPathBackup = *geoPathPtr;
-        og::PathSimplifier simplifer(si);
-        if (!simplifer.simplifyMax(*geoPathPtr)) *geoPathPtr = geoPathBackup;
-
-        if (verbose) {
-            std::cout << "Path length before simplification: " << geoPathBackup.getStateCount() << std::endl;
-            std::cout << "Path length after simplification: " << geoPathPtr->getStateCount() << std::endl;
-        }
+        // simplify the path
+        _simplify_path(geoPathPtr);
 
         size_t len = geoPathPtr->getStateCount();
         Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret(len + invalid_start, dim);
