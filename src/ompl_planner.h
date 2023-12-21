@@ -211,6 +211,8 @@ class OMPLPlannerTpl {
      */
     void update_ss(bool is_rvss=false);
 
+    void _simplify_path(og::PathGeometric &path);  // keep this private to avoid confusion
+
 public:
     // OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world);
     
@@ -223,6 +225,8 @@ public:
     PlanningWorldTpl_ptr<DATATYPE> get_world() { return world; }
 
     size_t get_dim() { return dim; }
+
+    Eigen::MatrixXd simplify_path(Eigen::MatrixXd &path);
 
     std::pair <std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
     plan(VectorX const &start_state,

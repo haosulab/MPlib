@@ -123,6 +123,31 @@ Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> OMPLPlannerTpl<DATATYPE>::random_samp
 }
 
 template<typename DATATYPE>
+void OMPLPlannerTpl<DATATYPE>::_simplify_path(og::PathGeometric &path) {
+    // try to simply the path and restore if new path contains collision
+    og::PathSimplifier simplifer(si);
+    og::PathGeometric backup_path = path;
+    if (!simplifer.simplifyMax(path)) path = backup_path;
+}
+
+template<typename DATATYPE>
+Eigen::MatrixXd OMPLPlannerTpl<DATATYPE>::simplify_path(Eigen::MatrixXd &path) {
+    og::PathGeometric geo_path(si);
+    for (size_t i = 0; i < path.rows(); i++) {
+        ob::ScopedState<> state(cs);
+        state = eigen2vector<DATATYPE, double>(path.row(i));
+        geo_path.append(state.get());
+    }
+    _simplify_path(geo_path);
+    Eigen::MatrixXd ret(geo_path.getStateCount(), dim);
+    for (size_t i = 0; i < geo_path.getStateCount(); i++) {
+        // we should only simplify the path when not doing constrained planning
+        ret.row(i) = state2eigen<DATATYPE>(geo_path.getState(i), si.get(), false);
+    }
+    return ret;
+}
+
+template<typename DATATYPE>
 std::shared_ptr<ob::GoalStates> OMPLPlannerTpl<DATATYPE>::make_goal_states(std::vector<VectorX> const &goal_states) {
     auto goals = std::make_shared<ob::GoalStates>(si);
 
@@ -259,18 +284,8 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
         // obtain the path
         auto path = ss->getSolutionPath();
 
-        // try to simply the path and restore if new path contains collision
-        auto pathBackup = path;
-        og::PathSimplifier simplifer(si);
-        // do not simplify if the state space is constrained space
-        if (no_simplification || state_space == p_constrained_space || !simplifer.simplifyMax(path)) {
-            path = pathBackup;
-        }
-
-        if (verbose) {
-            std::cout << "Path length before simplification: " << pathBackup.getStateCount() << std::endl;
-            std::cout << "Path length after simplification: " << path.getStateCount() << std::endl;
-        }
+        // simplify the path if not planning in constrained space
+        if (!no_simplification && state_space != p_constrained_space) _simplify_path(path);
 
         size_t len = path.getStateCount();
         Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret(len + invalid_start, dim);

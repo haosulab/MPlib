@@ -33,6 +33,10 @@ __all__ = [
 
 
 class CollisionGeometry():
+    """
+        Collision geometry base class.
+        This is an FCL class so you can refer to the FCL doc here https://flexible-collision-library.github.io/d6/d5d/classfcl_1_1CollisionGeometry.html
+    """
     def computeCOM(self) -> numpy.ndarray[numpy.float64, _Shape[3, 1]]: ...
     def computeLocalAABB(self) -> None: ...
     def computeMomentofInertia(self) -> numpy.ndarray[numpy.float64, _Shape[3, 3]]: ...
@@ -67,8 +71,24 @@ class CollisionGeometry():
         pass
     pass
 class Box(CollisionGeometry):
+    """
+        Box collision geometry.
+        Inheriting from CollisionGeometry, this class specializes to a box geometry.
+    """
     @typing.overload
-    def __init__(self, side: numpy.ndarray[numpy.float64, _Shape[3, 1]]) -> None: ...
+    def __init__(self, side: numpy.ndarray[numpy.float64, _Shape[3, 1]]) -> None: 
+        """
+            Construct a box with given side length.
+            Args:
+                side: side length of the box in an array [x, y, z]
+
+
+            Construct a box with given side length.
+            Args:
+                x: side length of the box in x direction
+                y: side length of the box in y direction
+                z: side length of the box in z direction
+        """
     @typing.overload
     def __init__(self, x: float, y: float, z: float) -> None: ...
     @property
@@ -81,7 +101,17 @@ class Box(CollisionGeometry):
         pass
     pass
 class Capsule(CollisionGeometry):
-    def __init__(self, radius: float, lz: float) -> None: ...
+    """
+        Capsule collision geometry.
+        Inheriting from CollisionGeometry, this class specializes to a capsule geometry.
+    """
+    def __init__(self, radius: float, lz: float) -> None: 
+        """
+            Construct a capsule with given radius and height.
+            Args:
+                radius: radius of the capsule
+                lz: height of the capsule
+        """
     @property
     def lz(self) -> float:
         """
@@ -100,17 +130,52 @@ class Capsule(CollisionGeometry):
         pass
     pass
 class BVHModel(CollisionGeometry):
+    """
+        BVHModel collision geometry.
+        Inheriting from CollisionGeometry, this class specializes to a mesh geometry represented by a BVH tree.
+    """
     def __init__(self) -> None: ...
     @typing.overload
-    def addSubModel(self, vertices: list[numpy.ndarray[numpy.float64, _Shape[3, 1]]]) -> int: ...
+    def addSubModel(self, vertices: list[numpy.ndarray[numpy.float64, _Shape[3, 1]]]) -> int: 
+        """
+            Add a sub-model to the BVHModel.
+            Args:
+                vertices: vertices of the sub-model
+                faces: faces of the sub-model represented by a list of vertex indices
+
+
+            Add a sub-model to the BVHModel.
+            Args:
+                vertices: vertices of the sub-model
+                faces: faces of the sub-model represented by a list of vertex indices
+        """
     @typing.overload
     def addSubModel(self, vertices: list[numpy.ndarray[numpy.float64, _Shape[3, 1]]], faces: list[Triangle]) -> int: ...
     @typing.overload
     def addSubModel(self, vertices: list[numpy.ndarray[numpy.float64, _Shape[3, 1]]], faces: list[numpy.ndarray[numpy.int32, _Shape[3, 1]]]) -> None: ...
-    def beginModel(self, num_faces: int = 0, num_vertices: int = 0) -> int: ...
-    def endModel(self) -> int: ...
-    def get_faces(self) -> list[Triangle]: ...
-    def get_vertices(self) -> list[numpy.ndarray[numpy.float64, _Shape[3, 1]]]: ...
+    def beginModel(self, num_faces: int = 0, num_vertices: int = 0) -> int: 
+        """
+            Begin to construct a BVHModel.
+            Args:
+                num_faces: number of faces of the mesh
+                num_vertices: number of vertices of the mesh
+        """
+    def endModel(self) -> int: 
+        """
+            End the construction of a BVHModel.
+        """
+    def get_faces(self) -> list[Triangle]: 
+        """
+            Get the faces of the BVHModel.
+            Returns:
+                faces of the BVHModel
+        """
+    def get_vertices(self) -> list[numpy.ndarray[numpy.float64, _Shape[3, 1]]]: 
+        """
+            Get the vertices of the BVHModel.
+            Returns:
+                vertices of the BVHModel
+        """
     @property
     def num_faces(self) -> int:
         """
@@ -123,7 +188,18 @@ class BVHModel(CollisionGeometry):
         """
     pass
 class CollisionObject():
-    def __init__(self, arg0: CollisionGeometry, arg1: numpy.ndarray[numpy.float64, _Shape[3, 1]], arg2: numpy.ndarray[numpy.float64, _Shape[4, 1]]) -> None: ...
+    """
+        Collision object class.
+        This class contains the collision geometry and the transformation of the geometry.
+    """
+    def __init__(self, collision_geometry: CollisionGeometry, translation: numpy.ndarray[numpy.float64, _Shape[3, 1]], rotation: numpy.ndarray[numpy.float64, _Shape[4, 1]]) -> None: 
+        """
+            Construct a collision object with given collision geometry and transformation.
+            Args:
+                collision_geometry: collision geometry of the object
+                translation: translation of the object
+                rotation: rotation of the object
+        """
     def get_collision_geometry(self) -> CollisionGeometry: ...
     def get_rotation(self) -> numpy.ndarray[numpy.float64, _Shape[3, 3]]: ...
     def get_translation(self) -> numpy.ndarray[numpy.float64, _Shape[3, 1]]: ...
@@ -196,16 +272,60 @@ class ContactPoint():
         """
     pass
 class Convex(CollisionGeometry):
+    """
+        Convex collision geometry.
+        Inheriting from CollisionGeometry, this class specializes to a convex geometry.
+    """
     @staticmethod
     @typing.overload
-    def __init__(*args, **kwargs) -> typing.Any: ...
+    def __init__(*args, **kwargs) -> typing.Any: 
+        """
+            Construct a convex with given vertices and faces.
+            Args:
+                vertices: vertices of the convex
+                num_faces: number of faces of the convex
+                faces: faces of the convex geometry represented by a list of vertex indices
+                throw_if_invalid: if true, throw an exception if the convex is invalid
+
+
+            Construct a convex with given vertices and faces.
+            Args:
+                vertices: vertices of the convex
+                faces: faces of the convex geometry represented by a list of vertex indices
+                throw_if_invalid: if true, throw an exception if the convex is invalid
+        """
     @typing.overload
     def __init__(self, vertices: numpy.ndarray[numpy.float64, _Shape[m, 3]], faces: numpy.ndarray[numpy.int32, _Shape[m, 3]], throw_if_invalid: bool = True) -> None: ...
-    def compute_volume(self) -> float: ...
-    def get_face_count(self) -> int: ...
-    def get_faces(self) -> list[int]: ...
-    def get_interior_point(self) -> numpy.ndarray[numpy.float64, _Shape[3, 1]]: ...
-    def get_vertices(self) -> list[numpy.ndarray[numpy.float64, _Shape[3, 1]]]: ...
+    def compute_volume(self) -> float: 
+        """
+            Compute the volume of the convex.
+            Returns:
+                volume of the convex
+        """
+    def get_face_count(self) -> int: 
+        """
+            Get the number of faces of the convex.
+            Returns:
+                number of faces of the convex
+        """
+    def get_faces(self) -> list[int]: 
+        """
+            Get the faces of the convex.
+            Returns:
+                faces of the convex represented by a list of vertex indices
+        """
+    def get_interior_point(self) -> numpy.ndarray[numpy.float64, _Shape[3, 1]]: 
+        """
+            Sample a random interior point of the convex geometry
+            Returns:
+                interior point of the convex
+        """
+    def get_vertices(self) -> list[numpy.ndarray[numpy.float64, _Shape[3, 1]]]: 
+        """
+            Get the vertices of the convex.
+            Returns:
+                vertices of the convex
+        """
     pass
 class CostSource():
     @typing.overload
@@ -234,7 +354,17 @@ class CostSource():
         """
     pass
 class Cylinder(CollisionGeometry):
-    def __init__(self, radius: float, lz: float) -> None: ...
+    """
+        Cylinder collision geometry.
+        Inheriting from CollisionGeometry, this class specializes to a cylinder geometry.
+    """
+    def __init__(self, radius: float, lz: float) -> None: 
+        """
+            Construct a cylinder with given radius and height.
+            Args:
+                radius: radius of the cylinder
+                lz: height of the cylinder
+        """
     @property
     def lz(self) -> float:
         """
@@ -272,15 +402,54 @@ class DistanceResult():
         """
     pass
 class FCLModel():
-    def __init__(self, urdf_filename: str, verbose: bool = True, convex: bool = False) -> None: ...
-    def collide(self, request: CollisionRequest = ...) -> bool: ...
+    def __init__(self, urdf_filename: str, verbose: bool = True, convex: bool = False) -> None: 
+        """
+            Construct an FCL model from URDF and SRDF files.
+            Args:
+                urdf_filename: path to URDF file, can be relative to the current working directory
+                verbose: print debug information
+                convex: use convex decomposition for collision objects
+        """
+    def collide(self, request: CollisionRequest = ...) -> bool: 
+        """
+            Perform collision checking.
+            Args:
+                request: collision request
+            Returns:
+                true if collision happens
+        """
     def collide_full(self, request: CollisionRequest = ...) -> list[CollisionResult]: ...
     def get_collision_link_names(self) -> list[str]: ...
-    def get_collision_objects(self) -> list[CollisionObject]: ...
-    def get_collision_pairs(self) -> list[tuple[int, int]]: ...
-    def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None: ...
-    def set_link_order(self, names: list[str]) -> None: ...
-    def update_collision_objects(self, link_poses: list[numpy.ndarray[numpy.float64, _Shape[7, 1]]]) -> None: ...
+    def get_collision_objects(self) -> list[CollisionObject]: 
+        """
+            Get the collision objects of the FCL model.
+            Returns:
+                all collision objects of the FCL model
+        """
+    def get_collision_pairs(self) -> list[tuple[int, int]]: 
+        """
+            Get the collision pairs of the FCL model.
+            Returns:
+                collision pairs of the FCL model. if the FCL model has N collision objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled collision pairs
+        """
+    def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None: 
+        """
+            Remove collision pairs from SRDF.
+            Args:
+                srdf_filename: path to SRDF file, can be relative to the current working directory
+        """
+    def set_link_order(self, names: list[str]) -> None: 
+        """
+            Set the link order of the FCL model.
+            Args:
+                names: list of link names in the order that you want to set.
+        """
+    def update_collision_objects(self, link_poses: list[numpy.ndarray[numpy.float64, _Shape[7, 1]]]) -> None: 
+        """
+            Update the collision objects of the FCL model.
+            Args:
+                link_poses: list of link poses in the order of the link order
+        """
     pass
 class GJKSolverType():
     """
@@ -315,8 +484,23 @@ class GJKSolverType():
     __members__: dict # value = {'GST_LIBCCD': <GJKSolverType.GST_LIBCCD: 0>, 'GST_INDEP': <GJKSolverType.GST_INDEP: 1>}
     pass
 class OcTree(CollisionGeometry):
+    """
+        OcTree collision geometry.
+        Inheriting from CollisionGeometry, this class specializes to a point cloud geometry represented by an Octree.
+    """
     @typing.overload
-    def __init__(self, resolution: float) -> None: ...
+    def __init__(self, resolution: float) -> None: 
+        """
+            Construct an OcTree with given resolution.
+            Args:
+                resolution: resolution of the OcTree (smallest size of a voxel). you can treat this is as the diameter of a point
+
+
+            Construct an OcTree with given vertices and resolution.
+            Args:
+                vertices: vertices of the point cloud
+                resolution: resolution of the OcTree
+        """
     @typing.overload
     def __init__(self, vertices: numpy.ndarray[numpy.float64, _Shape[m, 3]], resolution: float) -> None: ...
     pass
