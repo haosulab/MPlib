@@ -461,7 +461,8 @@ class Planner:
         planner_name="RRTConnect",
         align_axis=None,
         align_angle=0,
-        no_simplification=False
+        no_simplification=False,
+        wrt_world=False
     ):
         """
         plan a path from a specified joint position to a goal pose
@@ -480,6 +481,7 @@ class Planner:
             planner_name: planner name pick from {"RRTConnect", "RRT*"}
             align_axis: constrained planning special. If set, the z-axis of the end-effector will be aligned to the specified unit vector throughout its movement at a specified angle
             align_angle: align_angle to align the z-axis to
+            wrt_world: if true, interpret the target pose with respect to the world frame instead of the base frame
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)

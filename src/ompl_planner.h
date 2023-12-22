@@ -127,7 +127,6 @@ public:
     Eigen::Vector3d getEndEffectorZ() const {
         auto pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
-        // auto ee_idx = model->getMoveGroupJointIndices()[dim-1];
         auto ee_pose = model->getPinocchioModel().getLinkPose(link_idx);
         auto ee_quat = ee_pose.tail(4);
         auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
@@ -147,7 +146,7 @@ public:
         auto pinocchio_model = model->getPinocchioModel();
         auto dim = model->getQposDim();
         pinocchio_model.computeFullJacobian(model->getQpos());
-        auto link_jacobian = pinocchio_model.getLinkJacobian(dim-1);
+        auto link_jacobian = pinocchio_model.computeSingleLinkJacobian(model->getQpos(), dim-1);
         auto rot_jacobian = link_jacobian.bottomRows<3>();
         
         // need to select only the move group joints using model->getMoveGroupJointIndices()
