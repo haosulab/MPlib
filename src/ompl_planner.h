@@ -109,6 +109,55 @@ public:
     }
 };
 
+class GeneralConstraint : public ob::Constraint {
+    ArticulatedModeld_ptr model;
+    std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> f, j;
+public:
+    GeneralConstraint(ArticulatedModeld_ptr model, size_t dim, std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &f,
+                      std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &j)
+        : ob::Constraint(dim, 1),
+          model(model),
+          f(f),
+          j(j) {}
+
+    void function(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::VectorXd> out) const override {
+        f(x, out);
+    }
+
+    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
+        j(x, out);
+    }
+
+    // Eigen::Vector3d getEndEffectorZ() const {
+    //     auto pinocchio_model = model->getPinocchioModel();
+    //     auto dim = model->getQposDim();
+    //     auto ee_pose = model->getPinocchioModel().getLinkPose(9);
+    //     auto ee_quat = ee_pose.tail(4);
+    //     auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
+    //     auto ee_z = ee_rot.col(2);
+    //     return ee_z;
+    // }
+
+    // void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
+    //     model->setQpos(x);
+    //     auto ee_z = getEndEffectorZ();
+    //     auto pinocchio_model = model->getPinocchioModel();
+    //     auto dim = model->getQposDim();
+    //     pinocchio_model.computeFullJacobian(model->getQpos());
+    //     auto link_jacobian = pinocchio_model.computeSingleLinkJacobian(model->getQpos(), dim-1);
+    //     auto rot_jacobian = link_jacobian.bottomRows<3>();
+        
+    //     // need to select only the move group joints using model->getMoveGroupJointIndices()
+    //     auto move_group_joint_indices = model->getMoveGroupJointIndices();
+    //     auto rot_jacobian_move_group = rot_jacobian(Eigen::all, move_group_joint_indices);
+
+    //     Eigen::Vector3d v(0,0,-1);
+    //     for (size_t i = 0; i < dim; i++) {
+    //         out(0, i) = rot_jacobian_move_group.col(i).cross(ee_z).dot(v);
+    //     }
+    // }
+};
+
 class LevelConstraint : public ob::Constraint {
     ArticulatedModeld_ptr model;
     size_t link_idx;
@@ -234,9 +283,10 @@ public:
          const double &time = 1.0,
          const double &range = 0.0,
          const bool verbose = false,
-         const Eigen::Vector3d &align_axis = Eigen::Vector3d(0, 0, 0),
-         const double &align_angle = 0.0,
-         const bool no_simplification = false);
+         const bool no_simplification = false,
+         std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_function=nullptr,
+         std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_jacobian=nullptr,
+         double constraint_tolerance=1e-3);
 };
 
 

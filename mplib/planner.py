@@ -459,10 +459,11 @@ class Planner:
         use_attach=False,
         verbose=False,
         planner_name="RRTConnect",
-        align_axis=None,
-        align_angle=0,
         no_simplification=False,
-        wrt_world=False
+        wrt_world=False,
+        constraint_function=None,
+        constraint_jacobian=None,
+        constraint_tolerance=1e-3
     ):
         """
         plan a path from a specified joint position to a goal pose
@@ -479,8 +480,6 @@ class Planner:
             use_attach: if True, will consider the attached tool collision when planning
             verbose: if True, will print the log of OMPL and TOPPRA
             planner_name: planner name pick from {"RRTConnect", "RRT*"}
-            align_axis: constrained planning special. If set, the z-axis of the end-effector will be aligned to the specified unit vector throughout its movement at a specified angle
-            align_angle: align_angle to align the z-axis to
             wrt_world: if true, interpret the target pose with respect to the world frame instead of the base frame
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
@@ -530,13 +529,6 @@ class Planner:
             goal_qpos_.append(goal_qpos[i][idx])
         self.robot.set_qpos(current_qpos, True)
         
-        if align_axis is None:
-            align_axis = np.zeros(3)
-        else:
-            assert len(align_axis) == 3, "align_axis must be a 3D vector"
-            align_axis = np.asarray(align_axis)
-            align_axis /= np.linalg.norm(align_axis)
-
         status, path = self.planner.plan(
             current_qpos[idx],
             goal_qpos_, 
@@ -544,9 +536,10 @@ class Planner:
             verbose=verbose,
             time=planning_time,
             planner_name=planner_name,
-            align_axis=align_axis,
-            align_angle=align_angle,
-            no_simplification=no_simplification
+            no_simplification=no_simplification,
+            constraint_function=constraint_function,
+            constraint_jacobian=constraint_jacobian,
+            constraint_tolerance=constraint_tolerance
         )
 
         if status == "Exact solution":

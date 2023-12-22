@@ -212,9 +212,10 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
                                const double &time,
                                const double &range,
                                const bool verbose,
-                               const Eigen::Vector3d &align_axis,
-                               const double &align_angle,
-                               const bool no_simplification) {
+                               const bool no_simplification,
+                               std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_function,
+                               std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_jacobian,
+                               double constraint_tolerance) {
     ASSERT(start_state.rows() == goal_states[0].rows(),
         "Length of start state " + std::to_string(start_state.rows()) +
         " =/= length of goal state " + std::to_string(goal_states[0].rows()));
@@ -225,13 +226,11 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
     if (verbose == false)
         ompl::msg::noOutputHandler();
 
-    if (align_axis != Eigen::Vector3d(0,0,0)) {  // we have a constraint
-        auto level_constraint = std::make_shared<LevelConstraint>(world->getArticulations()[0],
-                                                                  world->getArticulations()[0]->getEEFrameIndex(),
-                                                                  align_axis,
-                                                                  std::cos(align_angle));
-        level_constraint->setTolerance(1e-3);
-        p_constrained_space = std::make_shared<ob::ProjectedStateSpace>(p_ambient_space, level_constraint);
+    if (constraint_function != nullptr && constraint_jacobian != nullptr) {  // we have a constraint
+        std::cout << world->getArticulations()[0]->getEEFrameIndex() << std::endl;
+        auto general_constraint = std::make_shared<GeneralConstraint>(world->getArticulations()[0], dim, constraint_function, constraint_jacobian);
+        general_constraint->setTolerance(constraint_tolerance);
+        p_constrained_space = std::make_shared<ob::ProjectedStateSpace>(p_ambient_space, general_constraint);
         state_space = p_constrained_space;
         p_constrained_si = std::make_shared<ob::ConstrainedSpaceInformation>(p_constrained_space);
         si = p_constrained_si;

@@ -165,7 +165,7 @@ void build_pypinocchio(py::module &m_all) {
             .def("compute_full_jacobian", &PinocchioModel::computeFullJacobian, py::arg("qpos"), compute_full_jacobian_doc.c_str())
             .def("get_link_jacobian", &PinocchioModel::getLinkJacobian, py::arg("index"), py::arg("local") = false, get_link_jacobian_doc.c_str())
             .def("compute_single_link_jacobian", &PinocchioModel::computeSingleLinkJacobian, py::arg("qpos"),
-                 py::arg("index"), py::arg("local"), compute_single_link_jacobian_doc.c_str())
+                 py::arg("index"), py::arg("local")=false, compute_single_link_jacobian_doc.c_str())
             .def("compute_IK_CLIK", &PinocchioModel::computeIKCLIK,
                  py::arg("index"), py::arg("pose"), py::arg("q_init"), py::arg("mask") = std::vector<bool>(),  py::arg("eps") = 1e-5,
                  py::arg("maxIter") = 1000, py::arg("dt") = 1e-1, py::arg("damp") = 1e-12, compute_IK_CLIK_doc.c_str())
