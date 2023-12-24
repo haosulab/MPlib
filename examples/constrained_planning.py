@@ -75,7 +75,7 @@ class ConstrainedPlanningDemo(DemoSetup):
 
   def get_eef_z(self):
     ee_idx = self.planner.link_name_2_idx[self.planner.move_group]
-    ee_pose = self.planner.pinocchio_model.get_link_pose(ee_idx)
+    ee_pose = self.planner.robot.get_pinocchio_model().get_link_pose(ee_idx)
     mat = transforms3d.quaternions.quat2mat(ee_pose[3:])
     return mat[:,2]
 
