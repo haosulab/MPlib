@@ -132,6 +132,10 @@ void OMPLPlannerTpl<DATATYPE>::_simplify_path(og::PathGeometric &path) {
 
 template<typename DATATYPE>
 Eigen::MatrixXd OMPLPlannerTpl<DATATYPE>::simplify_path(Eigen::MatrixXd &path) {
+    if (si == p_constrained_si) {  // warning
+        std::cout << "Current space information is for constrained planning" << std::endl;
+        std::cout << "doing simplification in non-constrained space" << std::endl;
+    }
     og::PathGeometric geo_path(si);
     for (size_t i = 0; i < path.rows(); i++) {
         ob::ScopedState<> state(cs);
@@ -227,8 +231,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
         ompl::msg::noOutputHandler();
 
     if (constraint_function != nullptr && constraint_jacobian != nullptr) {  // we have a constraint
-        std::cout << world->getArticulations()[0]->getEEFrameIndex() << std::endl;
-        auto general_constraint = std::make_shared<GeneralConstraint>(world->getArticulations()[0], dim, constraint_function, constraint_jacobian);
+        auto general_constraint = std::make_shared<GeneralConstraint>(dim, constraint_function, constraint_jacobian);
         general_constraint->setTolerance(constraint_tolerance);
         p_constrained_space = std::make_shared<ob::ProjectedStateSpace>(p_ambient_space, general_constraint);
         state_space = p_constrained_space;

@@ -65,12 +65,13 @@ class PinocchioModel():
              Returns:
                   None. If you want the result you need to call get_link_jacobian
         """
-    def compute_single_link_local_jacobian(self, qpos: numpy.ndarray[numpy.float64, _Shape[m, 1]], index: int) -> numpy.ndarray[numpy.float64, _Shape[6, n]]: 
+    def compute_single_link_jacobian(self, qpos: numpy.ndarray[numpy.float64, _Shape[m, 1]], index: int, local: bool = False) -> numpy.ndarray[numpy.float64, _Shape[6, n]]: 
         """
              Compute the jacobian of the given link.
              Args:
                   qpos: joint configuration. Needs to be full configuration, not just the movegroup joints.
                   index: index of the link (in the order you passed to the constructor or the default order)
+                  local: if true return the jacobian w.r.t. the instantaneous local frame of the link
              Returns:
                   6 x n jacobian of the link
         """

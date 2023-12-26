@@ -110,13 +110,11 @@ public:
 };
 
 class GeneralConstraint : public ob::Constraint {
-    ArticulatedModeld_ptr model;
     std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> f, j;
 public:
-    GeneralConstraint(ArticulatedModeld_ptr model, size_t dim, std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &f,
+    GeneralConstraint(size_t dim, std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &f,
                       std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &j)
         : ob::Constraint(dim, 1),
-          model(model),
           f(f),
           j(j) {}
 
@@ -127,87 +125,7 @@ public:
     void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
         j(x, out);
     }
-
-    // Eigen::Vector3d getEndEffectorZ() const {
-    //     auto pinocchio_model = model->getPinocchioModel();
-    //     auto dim = model->getQposDim();
-    //     auto ee_pose = model->getPinocchioModel().getLinkPose(9);
-    //     auto ee_quat = ee_pose.tail(4);
-    //     auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
-    //     auto ee_z = ee_rot.col(2);
-    //     return ee_z;
-    // }
-
-    // void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
-    //     model->setQpos(x);
-    //     auto ee_z = getEndEffectorZ();
-    //     auto pinocchio_model = model->getPinocchioModel();
-    //     auto dim = model->getQposDim();
-    //     pinocchio_model.computeFullJacobian(model->getQpos());
-    //     auto link_jacobian = pinocchio_model.computeSingleLinkJacobian(model->getQpos(), dim-1);
-    //     auto rot_jacobian = link_jacobian.bottomRows<3>();
-        
-    //     // need to select only the move group joints using model->getMoveGroupJointIndices()
-    //     auto move_group_joint_indices = model->getMoveGroupJointIndices();
-    //     auto rot_jacobian_move_group = rot_jacobian(Eigen::all, move_group_joint_indices);
-
-    //     Eigen::Vector3d v(0,0,-1);
-    //     for (size_t i = 0; i < dim; i++) {
-    //         out(0, i) = rot_jacobian_move_group.col(i).cross(ee_z).dot(v);
-    //     }
-    // }
 };
-
-class LevelConstraint : public ob::Constraint {
-    ArticulatedModeld_ptr model;
-    size_t link_idx;
-    Eigen::Vector3d v;  // the unit vector we want the constraint to align to
-    double k;  // if k = 1, then we want the z axis of the end effector to be exactly v
-public:
-    LevelConstraint(ArticulatedModeld_ptr model, size_t link_idx, Eigen::Vector3d v, double k=1)
-    : ob::Constraint(model->getQposDim(), 1),
-      model(model),
-      link_idx(link_idx),
-      v(v),
-      k(k) {
-        ASSERT(0.99 < v.norm() && v.norm() < 1.01, "The align axis must be a unit vector.");
-    }
-
-    Eigen::Vector3d getEndEffectorZ() const {
-        auto pinocchio_model = model->getPinocchioModel();
-        auto dim = model->getQposDim();
-        auto ee_pose = model->getPinocchioModel().getLinkPose(link_idx);
-        auto ee_quat = ee_pose.tail(4);
-        auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
-        auto ee_z = ee_rot.col(2);
-        return ee_z;
-    }
-
-    void function(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::VectorXd> out) const override {
-        model->setQpos(x);  // not full cuz we don't care about non-movegroup joints
-        auto ee_z = getEndEffectorZ();
-        out[0] = ee_z.dot(v) - k;
-    }
-
-    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
-        model->setQpos(x);
-        auto ee_z = getEndEffectorZ();
-        auto pinocchio_model = model->getPinocchioModel();
-        auto dim = model->getQposDim();
-        pinocchio_model.computeFullJacobian(model->getQpos());
-        auto link_jacobian = pinocchio_model.computeSingleLinkJacobian(model->getQpos(), dim-1);
-        auto rot_jacobian = link_jacobian.bottomRows<3>();
-        
-        // need to select only the move group joints using model->getMoveGroupJointIndices()
-        auto move_group_joint_indices = model->getMoveGroupJointIndices();
-        auto rot_jacobian_move_group = rot_jacobian(Eigen::all, move_group_joint_indices);
-
-        for (size_t i = 0; i < dim; i++) {
-            out(0, i) = rot_jacobian_move_group.col(i).cross(ee_z).dot(v);
-        }
-    }
-};
-
 
 template<typename DATATYPE>
 using ValidityCheckerTpl_ptr = std::shared_ptr<ValidityCheckerTpl<DATATYPE>>;

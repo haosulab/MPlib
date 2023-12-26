@@ -6,58 +6,6 @@ import transforms3d
 
 from demo_setup import DemoSetup
 
-"""
-class LevelConstraint : public ob::Constraint {
-    ArticulatedModeld_ptr model;
-    size_t link_idx;
-    Eigen::Vector3d v;  // the unit vector we want the constraint to align to
-    double k;  // if k = 1, then we want the z axis of the end effector to be exactly v
-public:
-    LevelConstraint(ArticulatedModeld_ptr model, size_t link_idx, Eigen::Vector3d v, double k=1)
-    : ob::Constraint(model->getQposDim(), 1),
-      model(model),
-      link_idx(link_idx),
-      v(v),
-      k(k) {
-        ASSERT(0.99 < v.norm() && v.norm() < 1.01, "The align axis must be a unit vector.");
-    }
-
-    Eigen::Vector3d getEndEffectorZ() const {
-        auto pinocchio_model = model->getPinocchioModel();
-        auto dim = model->getQposDim();
-        auto ee_pose = model->getPinocchioModel().getLinkPose(link_idx);
-        auto ee_quat = ee_pose.tail(4);
-        auto ee_rot = Eigen::Quaternion(ee_quat[0], ee_quat[1], ee_quat[2], ee_quat[3]).matrix();
-        auto ee_z = ee_rot.col(2);
-        return ee_z;
-    }
-
-    void function(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::VectorXd> out) const override {
-        model->setQpos(x);  // not full cuz we don't care about non-movegroup joints
-        auto ee_z = getEndEffectorZ();
-        out[0] = ee_z.dot(v) - k;
-    }
-
-    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
-        model->setQpos(x);
-        auto ee_z = getEndEffectorZ();
-        auto pinocchio_model = model->getPinocchioModel();
-        auto dim = model->getQposDim();
-        pinocchio_model.computeFullJacobian(model->getQpos());
-        auto link_jacobian = pinocchio_model.computeSingleLinkJacobian(model->getQpos(), dim-1);
-        auto rot_jacobian = link_jacobian.bottomRows<3>();
-        
-        // need to select only the move group joints using model->getMoveGroupJointIndices()
-        auto move_group_joint_indices = model->getMoveGroupJointIndices();
-        auto rot_jacobian_move_group = rot_jacobian(Eigen::all, move_group_joint_indices);
-
-        for (size_t i = 0; i < dim; i++) {
-            out(0, i) = rot_jacobian_move_group.col(i).cross(ee_z).dot(v);
-        }
-    }
-};
-"""
-
 class ConstrainedPlanningDemo(DemoSetup):
   def __init__(self):
     super().__init__()
@@ -82,7 +30,7 @@ class ConstrainedPlanningDemo(DemoSetup):
   def make_f(self):
     def f(x, out):
       self.planner.robot.set_qpos(x)
-      out[0] = self.get_eef_z().dot(np.array([0,0,-1]))-1
+      out[0] = self.get_eef_z().dot(np.array([0,0,-1]))-0.966  # maintain 15 degrees w.r.t. -z axis
     return f
 
   def make_j(self):
@@ -95,17 +43,20 @@ class ConstrainedPlanningDemo(DemoSetup):
     return j
 
   def demo(self):
-    starting_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78, 0, 0]
+    # this starting pose has the end effector tilted roughly 15 degrees
+    starting_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.88, 0.78, 0, 0]
     self.robot.set_qpos(starting_qpos)
     self.planner.robot.set_qpos(starting_qpos[:7])
-    poses = [[-0.4, -0.3, 0.28, 0.0000563, -0.0707372, -0.9974947, -0.0007943],
-             [0.6, 0.1, 0.44, 0.0006988, -0.8775823, -0.4794254, -0.0003818],
-             [0, -0.3, 0.5, 0, 1, 0, 0]]
+    # all these poses are constrain compatible (roughly 15 degrees w.r.t. -z axis)
+    poses = [[-0.4, -0.3, 0.28, 0.0704682, -0.5356872, 0.8342834, 0.1097478],
+             [0.6, 0.1, 0.44, 0.0704682, -0.5356872, -0.8342834, -0.1097478],
+             [0, -0.3, 0.5, 0.1304237, -0.9914583, 0, 0]]
     
+    # add some point cloud to make the planning more challenging so we can see the effect of no constraint
     self.add_point_cloud()
 
     # with constraint
-    print("with constraint")
+    print("with constraint. all movements roughly maintain 15 degrees w.r.t. -z axis")
     for pose in poses:
       result = self.planner.plan(
         pose,
@@ -115,7 +66,8 @@ class ConstrainedPlanningDemo(DemoSetup):
         use_attach=False,
         planner_name="RRTConnect",
         constraint_function=self.make_f(),
-        constraint_jacobian=self.make_j()
+        constraint_jacobian=self.make_j(),
+        constraint_tolerance=0.05,
       )
       if result['status'] != "Success":
         print(result['status'])
@@ -123,7 +75,7 @@ class ConstrainedPlanningDemo(DemoSetup):
       self.follow_path(result)
 
     # without constraint
-    print("without constraint")
+    print("without constraint. some movements tilt the end effector almost upside down")
     for pose in poses:
       result = self.planner.plan(
         pose,
