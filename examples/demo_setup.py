@@ -105,14 +105,15 @@ class DemoSetup():
   def close_gripper(self):
     self.set_gripper(0)
 
-  def move_to_pose_with_RRTConnect(self, pose, use_point_cloud=False, use_attach=False):
+  def move_to_pose_with_RRTConnect(self, pose, use_point_cloud=False, use_attach=False, level=False):
     result = self.planner.plan(
       pose,
       self.robot.get_qpos(),
       time_step=1/250,
       use_point_cloud=use_point_cloud,
       use_attach=use_attach,
-      planner_name="RRTConnect"
+      planner_name="RRTConnect",
+      align_axis=[0.0,0.0,-1.0] if level else None
     )
     if result['status'] != "Success":
       print(result['status'])
@@ -130,8 +131,8 @@ class DemoSetup():
       return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach)
 
 
-  def move_to_pose(self, pose, with_screw=True, use_point_cloud=False, use_attach=False):
+  def move_to_pose(self, pose, with_screw=True, use_point_cloud=False, use_attach=False, level=False):
     if with_screw:
       return self.move_to_pose_with_screw(pose, use_point_cloud, use_attach)
     else:
-      return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach)
+      return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach, level)

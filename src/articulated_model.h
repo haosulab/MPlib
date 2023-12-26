@@ -62,6 +62,11 @@ public:
 
     void setQpos(VectorX const& qpos, bool const& full=false);
 
+    /** only support one end effector case */
+    size_t getEEFrameIndex() { 
+        return std::find(user_link_names.begin(), user_link_names.end(),
+                         move_group_end_effectors[0]) - user_link_names.begin();
+    }
     void updateSRDF(std::string const &srdf) { fcl_model.removeCollisionPairsFromSrdf(srdf); }
 
     void setBasePose(const Vector7 &pose);

@@ -7,6 +7,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
 #include "../src/ompl_planner.h"
 
 namespace py = pybind11;
@@ -27,6 +28,10 @@ std::string plan_doc = R"(
         time: planning time limit
         range: planning range (for RRT family of planners and represents the maximum step size)
         verbose: print debug information
+        no_simplification: if true, the path will not be simplified
+        constraint_function: a R^d to R^1 function that evals to 0 when constraint is satisfied
+        constraint_jacobian: the jacobian of the constraint w.r.t. the joint angles
+        constraint_tolerance: tolerance of what level of deviation from 0 is acceptable
     Returns:
         pair of planner status and path. If planner succeeds, status is "Exact solution.")";
 
@@ -51,13 +56,21 @@ void build_pyompl(py::module &m_all) {
     auto m = m_all.def_submodule("ompl");
 
     auto PyOMPLPlanner = py::class_<OMPLPlanner, std::shared_ptr<OMPLPlanner>>(m, "OMPLPlanner");
-    PyOMPLPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &>(), py::arg("world"), ompl_ctor_doc.c_str())
+    PyOMPLPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &, int>(),
+                      py::arg("world"),
+                      py::arg("robot_idx")=0,
+                      ompl_ctor_doc.c_str())
                  .def("plan", &OMPLPlanner::plan,
-                              py::arg("start_state"),
-                              py::arg("goal_states"),
-                              py::arg("planner_name") = "RRTConnect", 
-                              py::arg("time") = 1.0,
-                              py::arg("range") = 0.0,
-                              py::arg("verbose") = false, plan_doc.c_str())
+                      py::arg("start_state"),
+                      py::arg("goal_states"),
+                      py::arg("planner_name")="RRTConnect",
+                      py::arg("time")=1.0,
+                      py::arg("range")=0.0,
+                      py::arg("verbose")=false,
+                      py::arg("no_simplification")=false,
+                      py::arg("constraint_function")=nullptr,
+                      py::arg("constraint_jacobian")=nullptr,
+                      py::arg("constraint_tolerance")=1e-3,
+                      plan_doc.c_str())
                  .def("simplify_path", &OMPLPlanner::simplify_path, py::arg("path"), simplify_path_doc.c_str());
 }

@@ -83,6 +83,7 @@ class Planner:
             self.joint_name_2_idx[joint] = i
         self.link_name_2_idx = {}
         for i, link in enumerate(self.user_link_names):
+            # looks like a bug here! we need the pinocchio link index, not the user link index
             self.link_name_2_idx[link] = i
 
         assert move_group in self.user_link_names,\
@@ -457,25 +458,29 @@ class Planner:
         use_point_cloud=False,
         use_attach=False,
         verbose=False,
+        planner_name="RRTConnect",
+        no_simplification=False,
         wrt_world=False,
-        planner_name="RRTConnect"
+        constraint_function=None,
+        constraint_jacobian=None,
+        constraint_tolerance=1e-3
     ):
         """
-        plan from a start configuration to a goal pose of the end-effector
+        plan a path from a specified joint position to a goal pose
 
         Args:
-            goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
+            goal_pose: 7D pose of the end-effector [x,y,z,qw,qx,qy,qz]
             current_qpos: current joint configuration (either full or move_group joints)
-            mask: if the value at a given index is True, the joint is *not* used in the IK
-            time_step: time step for the discretization
-            rrt_range: size of the random step for RRT
-            planning_time: maximum planning time
+            mask: mask for IK. When set, the IK will leave certain joints out of planning
+            time_step: time step for TOPP
+            rrt_range: step size for RRT
+            planning_time: time limit for RRT
             fix_joint_limits: if True, will clip the joint configuration to be within the joint limits
             use_point_cloud: if True, will use the point cloud to avoid collision
-            use_attach: if True, will use the attached tool to avoid collision
+            use_attach: if True, will consider the attached tool collision when planning
             verbose: if True, will print the log of OMPL and TOPPRA
-            wrt_world: if True, will plan wrt the world frame. Otherwise, will plan wrt the base frame.
-            planner_name: name of the planner to use. Options: RRTConnect, RRT*
+            planner_name: planner name pick from {"RRTConnect", "RRT*"}
+            wrt_world: if true, interpret the target pose with respect to the world frame instead of the base frame
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
@@ -530,7 +535,11 @@ class Planner:
             range=rrt_range,
             verbose=verbose,
             time=planning_time,
-            planner_name=planner_name
+            planner_name=planner_name,
+            no_simplification=no_simplification,
+            constraint_function=constraint_function,
+            constraint_jacobian=constraint_jacobian,
+            constraint_tolerance=constraint_tolerance
         )
 
         if status == "Exact solution":

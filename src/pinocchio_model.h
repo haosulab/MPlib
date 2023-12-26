@@ -237,7 +237,7 @@ public:
 
     Matrix6x getLinkJacobian(size_t const &index, bool const &local = false);
 
-    Matrix6x computeSingleLinkLocalJacobian(VectorX const &qpos, size_t const &index);
+    Matrix6x computeSingleLinkJacobian(VectorX const &qpos, size_t const &index, bool local=false);
 
     std::tuple<VectorX, bool, Vector6>
     computeIKCLIK(size_t const &index, Vector7 const &pose, VectorX const &q_init, std::vector<bool> const &mask, double const &eps = 1e-5,

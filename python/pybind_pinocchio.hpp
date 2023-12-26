@@ -75,11 +75,12 @@ std::string get_link_jacobian_doc = R"(
      Returns:
           6 x n jacobian of the link)";
 
-std::string compute_single_link_local_jacobian_doc = R"(
+std::string compute_single_link_jacobian_doc = R"(
      Compute the jacobian of the given link.
      Args:
           qpos: joint configuration. Needs to be full configuration, not just the movegroup joints.
           index: index of the link (in the order you passed to the constructor or the default order)
+          local: if true return the jacobian w.r.t. the instantaneous local frame of the link
      Returns:
           6 x n jacobian of the link)";
 
@@ -163,8 +164,8 @@ void build_pypinocchio(py::module &m_all) {
             .def("get_random_configuration", &PinocchioModel::getRandomConfiguration, get_random_configuration_doc.c_str())
             .def("compute_full_jacobian", &PinocchioModel::computeFullJacobian, py::arg("qpos"), compute_full_jacobian_doc.c_str())
             .def("get_link_jacobian", &PinocchioModel::getLinkJacobian, py::arg("index"), py::arg("local") = false, get_link_jacobian_doc.c_str())
-            .def("compute_single_link_local_jacobian", &PinocchioModel::computeSingleLinkLocalJacobian, py::arg("qpos"),
-                 py::arg("index"), compute_single_link_local_jacobian_doc.c_str())
+            .def("compute_single_link_jacobian", &PinocchioModel::computeSingleLinkJacobian, py::arg("qpos"),
+                 py::arg("index"), py::arg("local")=false, compute_single_link_jacobian_doc.c_str())
             .def("compute_IK_CLIK", &PinocchioModel::computeIKCLIK,
                  py::arg("index"), py::arg("pose"), py::arg("q_init"), py::arg("mask") = std::vector<bool>(),  py::arg("eps") = 1e-5,
                  py::arg("maxIter") = 1000, py::arg("dt") = 1e-1, py::arg("damp") = 1e-12, compute_IK_CLIK_doc.c_str())
