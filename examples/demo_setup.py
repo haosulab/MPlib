@@ -61,16 +61,9 @@ class DemoSetup():
       )
 
   def setup_planner(self, **kwargs):
-    """
-    link and joint names are the one you are actively planning with
-    """
-    link_names = ["panda_link0", "panda_link1", "panda_link2", "panda_link3", "panda_link4", "panda_link5", "panda_link6", "panda_link7", "panda_hand", "panda_leftfinger", "panda_rightfinger"]
-    joint_names = ["panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"]
     self.planner = mplib.Planner(
       urdf=kwargs.get('urdf_path', "./data/panda/panda.urdf"),
       srdf=kwargs.get('srdf_path', "./data/panda/panda.srdf"),
-      user_link_names=kwargs.get("link_names", link_names),
-      user_joint_names=kwargs.get("joint_names", joint_names),
       move_group=kwargs.get('move_group', 'panda_hand'),
       joint_vel_limits=kwargs.get('joint_vel_limits', np.ones(7)),
       joint_acc_limits=kwargs.get('joint_acc_limits', np.ones(7))
@@ -112,16 +105,22 @@ class DemoSetup():
   def close_gripper(self):
     self.set_gripper(0)
 
-  def move_to_pose_with_RRTConnect(self, pose, use_point_cloud=True, use_attach=True):
+  def move_to_pose_with_RRTConnect(self, pose, use_point_cloud=False, use_attach=False):
     result = self.planner.plan_qpos_to_pose(
-      pose, self.robot.get_qpos(), time_step=1/250, use_point_cloud=use_point_cloud, use_attach=use_attach)
+      pose,
+      self.robot.get_qpos(),
+      time_step=1/250,
+      use_point_cloud=use_point_cloud,
+      use_attach=use_attach,
+      planner_name="RRTConnect"
+    )
     if result['status'] != "Success":
       print(result['status'])
       return -1
     self.follow_path(result)
     return 0
 
-  def move_to_pose_with_screw(self, pose, use_point_cloud=True, use_attach=True):
+  def move_to_pose_with_screw(self, pose, use_point_cloud=False, use_attach=False):
     result = self.planner.plan_screw(
       pose, self.robot.get_qpos(), time_step=1/250, use_point_cloud=use_point_cloud, use_attach=use_attach)
     if result['status'] == "Success":
@@ -131,7 +130,7 @@ class DemoSetup():
       return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach)
 
 
-  def move_to_pose(self, pose, with_screw=True, use_point_cloud=True, use_attach=True):
+  def move_to_pose(self, pose, with_screw=True, use_point_cloud=False, use_attach=False):
     if with_screw:
       return self.move_to_pose_with_screw(pose, use_point_cloud, use_attach)
     else:

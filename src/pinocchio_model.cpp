@@ -300,8 +300,8 @@ void PinocchioModelTpl<DATATYPE>::setJointOrder(std::vector<std::string> const &
     size_t len_v = 0, len_q = 0;
     for (size_t i = 0; i < names.size(); i++) {
         auto pinocchio_idx = model.getJointId(names[i]);
-        if (i == model.njoints)
-            throw std::invalid_argument(names[i] + " is a invalid name in setJointOrder");
+        if (pinocchio_idx == model.njoints)
+            throw std::invalid_argument(names[i] + " is either an invalid or unsupported joint in your URDF");
         vidx[i] = len_v;
         qidx[i] = len_q;
         nvs[i] = model.nvs[pinocchio_idx];
@@ -478,7 +478,7 @@ Eigen::Matrix<DATATYPE, 6, Eigen::Dynamic> PinocchioModelTpl<DATATYPE>::getLinkJ
 
 template<typename DATATYPE>
 Eigen::Matrix<DATATYPE, 6, Eigen::Dynamic>
-PinocchioModelTpl<DATATYPE>::computeSingleLinkLocalJacobian(VectorX const &qpos, size_t const &index) {
+PinocchioModelTpl<DATATYPE>::computeSingleLinkJacobian(VectorX const &qpos, size_t const &index, bool local) {
     ASSERT(index < link_index_user2pinocchio.size(), "link index out of bound");
     auto frameId = link_index_user2pinocchio[index];
     auto jointId = model.frames[frameId].parent;
@@ -487,7 +487,13 @@ PinocchioModelTpl<DATATYPE>::computeSingleLinkLocalJacobian(VectorX const &qpos,
     Eigen::Matrix<DATATYPE, 6, Eigen::Dynamic> J(6, model.nv);
     J.fill(0);
     pinocchio::computeJointJacobian(model, data, qposUser2Pinocchio(qpos), jointId, J);
-    return link2joint.toActionMatrixInverse() * J * v_map_user2pinocchio;
+    if (local) {
+        J = link2joint.toActionMatrixInverse() * J;   
+    } else {
+        auto joint2world = data.oMi[jointId];
+        J = joint2world.toActionMatrix() * J;
+    }
+    return J * v_map_user2pinocchio;
 }
 
 

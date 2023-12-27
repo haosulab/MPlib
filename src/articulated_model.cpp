@@ -34,9 +34,12 @@ DEFINE_TEMPLATE_AM(double)
 
 template<typename DATATYPE>
 ArticulatedModelTpl<DATATYPE>::
-ArticulatedModelTpl(std::string const &urdf_filename, std::string const &srdf_filename, Vector3 const &gravity,
-                    std::vector<std::string> const &joint_names, std::vector<std::string> const &link_names,
-                    bool const &verbose, bool const& convex) :verbose(verbose),
+ArticulatedModelTpl(std::string const &urdf_filename,
+                    std::string const &srdf_filename, Vector3 const &gravity,
+                    std::vector<std::string> const &joint_names,
+                    std::vector<std::string> const &link_names,
+                    bool const &verbose, bool const& convex) :
+                    verbose(verbose),
                     pinocchio_model(urdf_filename, gravity, verbose),
                     fcl_model(urdf_filename, verbose, convex) {
     user_link_names = link_names.size() == 0 ? pinocchio_model.getLinkNames(false) : link_names;
@@ -47,6 +50,7 @@ ArticulatedModelTpl(std::string const &urdf_filename, std::string const &srdf_fi
     fcl_model.removeCollisionPairsFromSrdf(srdf_filename);
     current_qpos = VectorX::Constant(pinocchio_model.getModel().nv, 0);
     setMoveGroup(user_link_names);
+    base_tf = Transform3::Identity();
 }
 
 template<typename DATATYPE>
@@ -67,9 +71,9 @@ void ArticulatedModelTpl<DATATYPE>::setMoveGroup(std::vector<std::string> const 
     std::sort(move_group_user_joints.begin(), move_group_user_joints.end());
     auto end_unique = std::unique(move_group_user_joints.begin(), move_group_user_joints.end());
     move_group_user_joints.erase(end_unique, move_group_user_joints.end());
-    qpos_dim = 0;
+    move_group_qpos_dim = 0;
     for (auto i: move_group_user_joints)
-        qpos_dim += pinocchio_model.getJointDim(i);
+        move_group_qpos_dim += pinocchio_model.getJointDim(i);
 }
 
 template<typename DATATYPE>
@@ -85,9 +89,9 @@ void ArticulatedModelTpl<DATATYPE>::setQpos(VectorX const &qpos, bool const& ful
     if (full)
         current_qpos = qpos;
     else {
-        ASSERT(qpos.size() == qpos_dim,
-               "Length is not correct, Dim of Q: " + std::to_string(qpos_dim) + " ,Len of qpos: " +
-               std::to_string(qpos.size()));
+        ASSERT(qpos.size() == move_group_qpos_dim,
+               "Length of provided qpos " + std::to_string(qpos.size()) +
+               " =/= dimension of move_group qpos: " + std::to_string(move_group_qpos_dim));
         size_t len = 0;
         for (auto i: move_group_user_joints) {
             auto start_idx = pinocchio_model.getJointId(i), dim_i = pinocchio_model.getJointDim(i);
@@ -103,10 +107,16 @@ void ArticulatedModelTpl<DATATYPE>::setQpos(VectorX const &qpos, bool const& ful
         Transform3 tmp_i;
         tmp_i.linear() = Quaternion(pose_i[3], pose_i[4], pose_i[5], pose_i[6]).matrix();
         tmp_i.translation() = pose_i.head(3);
-        //std::cout << pose_i << std::endl;
+        tmp_i = base_tf * tmp_i;  // base_tf is the pose of the robot base
         link_pose.push_back(tmp_i);
     }
     fcl_model.updateCollisionObjects(link_pose);
 }
 
-
+template<typename DATATYPE>
+void ArticulatedModelTpl<DATATYPE>::setBasePose(const Vector7 &pose) {
+    base_pose = pose;
+    base_tf.translation() = pose.head(3);
+    base_tf.linear() = Eigen::Quaternion<DATATYPE>(pose[3], pose[4], pose[5], pose[6]).toRotationMatrix();
+    setQpos(current_qpos, true);  // we don't need to update Qpos, but this also updates fcl, which we need
+}

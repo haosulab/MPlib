@@ -45,10 +45,10 @@ class PlanningDemo(DemoSetup):
         box = trimesh.creation.box([0.1, 0.4, 0.2])
         points, _ = trimesh.sample.sample_surface(box, 1000)
         points += [0.55, 0, 0.1]
-        self.planner.update_point_cloud(points)
+        self.planner.update_point_cloud(points, radius=0.02)
         return 
 
-    def demo(self, with_screw = True, use_point_cloud = True, use_attach = True):
+    def demo(self, with_screw=True, use_point_cloud=True, use_attach=True):
         pickup_pose = [0.7, 0, 0.12, 0, 1, 0, 0]
         delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]
         

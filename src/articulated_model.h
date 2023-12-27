@@ -22,14 +22,21 @@ private:
     std::vector<std::string> move_group_end_effectors;
     VectorX current_qpos; // The planning world only update the state in planning group.
 
-    int qpos_dim;
+    size_t move_group_qpos_dim;
     bool verbose;
 
+    // the base pose of the robot
+    Vector7 base_pose;
+    Transform3 base_tf;
 
 public:
-    ArticulatedModelTpl(std::string const &urdf_filename, std::string const &srdf_filename, Vector3 const &gravity,
-                        std::vector<std::string> const &joint_names = {}, std::vector<std::string> const &link_names = {},
-                        bool const &verbose=true, bool const &convex=false);
+    ArticulatedModelTpl(std::string const &urdf_filename,
+                        std::string const &srdf_filename,
+                        Vector3 const &gravity,
+                        std::vector<std::string> const &joint_names = {},
+                        std::vector<std::string> const &link_names = {},
+                        bool const &verbose=true,
+                        bool const &convex=false);
 
     PinocchioModelTpl<DATATYPE>& getPinocchioModel() { return pinocchio_model; }
 
@@ -49,13 +56,22 @@ public:
 
     std::vector<std::string> getMoveGroupEndEffectors(void) { return move_group_end_effectors; }
 
-    size_t getQposDim(void) { return qpos_dim; }
+    size_t getQposDim(void) { return move_group_qpos_dim; }
 
     VectorX getQpos(void) { return current_qpos; }
 
     void setQpos(VectorX const& qpos, bool const& full=false);
 
-    void updateSRDF(std::string const &srdf) {fcl_model.removeCollisionPairsFromSrdf(srdf);}
+    /** only support one end effector case */
+    size_t getEEFrameIndex() { 
+        return std::find(user_link_names.begin(), user_link_names.end(),
+                         move_group_end_effectors[0]) - user_link_names.begin();
+    }
+    void updateSRDF(std::string const &srdf) { fcl_model.removeCollisionPairsFromSrdf(srdf); }
+
+    void setBasePose(const Vector7 &pose);
+
+    Vector7 getBasePose() { return base_pose; }
 };
 
 template<typename T>
