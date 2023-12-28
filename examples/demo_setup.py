@@ -71,13 +71,13 @@ class DemoSetup():
 
   def follow_path(self, result):
     n_step = result['position'].shape[0]
-    for i in range(n_step):  
+    for i in range(n_step):
       qf = self.robot.compute_passive_force(
         external=False,
         gravity=True, 
         coriolis_and_centrifugal=True)
       self.robot.set_qf(qf)
-      for j in range(7):
+      for j in range(len(self.planner.move_group_joint_indices)):
         self.active_joints[j].set_drive_target(result['position'][i][j])
         self.active_joints[j].set_drive_velocity_target(result['velocity'][i][j])
       self.scene.step()
@@ -105,15 +105,14 @@ class DemoSetup():
   def close_gripper(self):
     self.set_gripper(0)
 
-  def move_to_pose_with_RRTConnect(self, pose, use_point_cloud=False, use_attach=False, level=False):
-    result = self.planner.plan(
+  def move_to_pose_with_RRTConnect(self, pose, use_point_cloud=False, use_attach=False):
+    result = self.planner.plan_qpos_to_pose(
       pose,
       self.robot.get_qpos(),
       time_step=1/250,
       use_point_cloud=use_point_cloud,
       use_attach=use_attach,
-      planner_name="RRTConnect",
-      align_axis=[0.0,0.0,-1.0] if level else None
+      planner_name="RRTConnect"
     )
     if result['status'] != "Success":
       print(result['status'])
@@ -131,8 +130,8 @@ class DemoSetup():
       return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach)
 
 
-  def move_to_pose(self, pose, with_screw=True, use_point_cloud=False, use_attach=False, level=False):
+  def move_to_pose(self, pose, with_screw=True, use_point_cloud=False, use_attach=False):
     if with_screw:
       return self.move_to_pose_with_screw(pose, use_point_cloud, use_attach)
     else:
-      return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach, level)
+      return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach)

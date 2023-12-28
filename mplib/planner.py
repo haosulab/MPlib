@@ -83,7 +83,6 @@ class Planner:
             self.joint_name_2_idx[joint] = i
         self.link_name_2_idx = {}
         for i, link in enumerate(self.user_link_names):
-            # looks like a bug here! we need the pinocchio link index, not the user link index
             self.link_name_2_idx[link] = i
 
         assert move_group in self.user_link_names,\
@@ -446,11 +445,10 @@ class Planner:
         """ returns true if the object was removed, false if it was not found """
         return self.planning_world.remove_normal_object(name)
 
-    def plan(
+    def plan_qpos_to_qpos(
         self,
-        goal_pose,
+        goal_qposes: list,
         current_qpos,
-        mask = [],
         time_step=0.1,
         rrt_range=0.1,
         planning_time=1,
@@ -460,10 +458,10 @@ class Planner:
         verbose=False,
         planner_name="RRTConnect",
         no_simplification=False,
-        wrt_world=False,
         constraint_function=None,
         constraint_jacobian=None,
-        constraint_tolerance=1e-3
+        constraint_tolerance=1e-3,
+        fixed_joint_indices=[]
     ):
         """
         plan a path from a specified joint position to a goal pose
@@ -480,7 +478,11 @@ class Planner:
             use_attach: if True, will consider the attached tool collision when planning
             verbose: if True, will print the log of OMPL and TOPPRA
             planner_name: planner name pick from {"RRTConnect", "RRT*"}
-            wrt_world: if true, interpret the target pose with respect to the world frame instead of the base frame
+            fixed_joint_indices: list of indices of joints that are fixed during planning
+            constraint_function: evals to 0 when constraint is satisfied
+            constraint_jacobian: jacobian of constraint_function
+            constraint_tolerance: tolerance for constraint_function
+            no_simplification: if true, will not simplify the path. constraint planning does not support simplification
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
@@ -500,6 +502,89 @@ class Planner:
             print("Invalid start state!")
             for collision in collisions:
                 print("%s and %s collide!" % (collision.link_name1, collision.link_name2))
+
+        idx = self.move_group_joint_indices
+        
+        goal_qpos_ = []
+        for i in range(len(goal_qposes)):
+            goal_qpos_.append(goal_qposes[i][idx])
+        
+        fixed_joints = set()
+        for joint_idx in fixed_joint_indices:
+            fixed_joints.add(ompl.FixedJoint(0, joint_idx, current_qpos[joint_idx]))
+
+        assert len(current_qpos[idx]) == len(goal_qpos_[0])
+        status, path = self.planner.plan(
+            current_qpos[idx],
+            goal_qpos_,
+            range=rrt_range,
+            time=planning_time,
+            fixed_joints=fixed_joints,
+            verbose=verbose,
+            planner_name=planner_name,
+            no_simplification=no_simplification,
+            constraint_function=constraint_function,
+            constraint_jacobian=constraint_jacobian,
+            constraint_tolerance=constraint_tolerance
+        )
+
+        if status == "Exact solution":
+            if verbose: ta.setup_logging("INFO")
+            else: ta.setup_logging("WARNING")
+            times, pos, vel, acc, duration = self.TOPP(path, time_step)
+            return {
+                "status": "Success",
+                "time": times,
+                "position": pos,
+                "velocity": vel,
+                "acceleration": acc,
+                "duration": duration,
+            }
+        else:
+            return {"status": "RRT Failed. %s" % status}
+
+    def plan_qpos_to_pose(
+        self,
+        goal_pose,
+        current_qpos,
+        mask = [],
+        time_step=0.1,
+        rrt_range=0.1,
+        planning_time=1,
+        fix_joint_limits=True,
+        use_point_cloud=False,
+        use_attach=False,
+        verbose=False,
+        wrt_world=False,
+        planner_name="RRTConnect",
+        no_simplification=False,
+        constraint_function=None,
+        constraint_jacobian=None,
+        constraint_tolerance=1e-3
+    ):
+        """
+        plan from a start configuration to a goal pose of the end-effector
+
+        Args:
+            goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
+            current_qpos: current joint configuration (either full or move_group joints)
+            mask: if the value at a given index is True, the joint is *not* used in the IK
+            time_step: time step for TOPP
+            rrt_range: step size for RRT
+            planning_time: time limit for RRT
+            fix_joint_limits: if True, will clip the joint configuration to be within the joint limits
+            use_point_cloud: if True, will use the point cloud to avoid collision
+            use_attach: if True, will consider the attached tool collision when planning
+            verbose: if True, will print the log of OMPL and TOPPRA
+            wrt_world: if true, interpret the target pose with respect to the world frame instead of the base frame
+        """
+        n = current_qpos.shape[0]
+        if fix_joint_limits:
+            for i in range(n):
+                if current_qpos[i] < self.joint_limits[i][0]:
+                    current_qpos[i] = self.joint_limits[i][0] + 1e-3
+                if current_qpos[i] > self.joint_limits[i][1]:
+                    current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
         if wrt_world:
             base_pose = self.robot.get_base_pose()
@@ -528,37 +613,32 @@ class Planner:
         for i in range(len(goal_qpos)):
             goal_qpos_.append(goal_qpos[i][idx])
         self.robot.set_qpos(current_qpos, True)
-        
-        status, path = self.planner.plan(
-            current_qpos[idx],
-            goal_qpos_, 
-            range=rrt_range,
-            verbose=verbose,
-            time=planning_time,
-            planner_name=planner_name,
-            no_simplification=no_simplification,
-            constraint_function=constraint_function,
-            constraint_jacobian=constraint_jacobian,
-            constraint_tolerance=constraint_tolerance
+
+        ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
+        if ik_status != "Success":
+            return {"status": ik_status}
+
+        if verbose:
+            print("IK results:")
+            for i in range(len(goal_qpos)):
+               print(goal_qpos[i])
+
+        return self.plan_qpos_to_qpos(
+            goal_qpos,
+            current_qpos,
+            time_step,
+            rrt_range,
+            planning_time,
+            fix_joint_limits,
+            use_point_cloud,
+            use_attach,
+            verbose,
+            planner_name,
+            no_simplification,
+            constraint_function,
+            constraint_jacobian,
+            constraint_tolerance
         )
-
-        if status == "Exact solution":
-            if verbose:
-                ta.setup_logging("INFO")
-            else:
-                ta.setup_logging("WARNING")
-
-            times, pos, vel, acc, duration = self.TOPP(path, time_step)
-            return {
-                "status": "Success",
-                "time": times,
-                "position": pos,
-                "velocity": vel,
-                "acceleration": acc,
-                "duration": duration,
-            }
-        else:
-            return {"status": "RRT Failed. %s" % status}
 
     def plan_screw(
         self,

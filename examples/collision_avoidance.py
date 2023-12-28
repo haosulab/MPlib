@@ -11,7 +11,7 @@ class PlanningDemo(DemoSetup):
         self.setup_planner()
 
         # Set initial joint positions
-        init_qpos = [0, 0.19634954084936207, 0.0, -2.617993877991494, 0.0, 2.941592653589793, 0.7853981633974483, 0, 0]
+        init_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78, 0, 0]
         self.robot.set_qpos(init_qpos)
 
         # table top
@@ -48,7 +48,7 @@ class PlanningDemo(DemoSetup):
         self.planner.update_point_cloud(points, radius=0.02)
         return 
 
-    def demo(self, with_screw=True, use_point_cloud=True, use_attach=True, level=False):
+    def demo(self, with_screw=True, use_point_cloud=True, use_attach=True):
         pickup_pose = [0.7, 0, 0.12, 0, 1, 0, 0]
         delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]
         
@@ -57,26 +57,26 @@ class PlanningDemo(DemoSetup):
         
         pickup_pose[2] += 0.2
         # no attach since nothing picked up yet
-        self.move_to_pose(pickup_pose, with_screw, use_point_cloud, use_attach=False, level=False) 
+        self.move_to_pose(pickup_pose, with_screw, use_point_cloud, use_attach=False) 
         self.open_gripper()
         pickup_pose[2] -= 0.12
         # no attach since nothing picked up yet
-        self.move_to_pose(pickup_pose, with_screw, use_point_cloud, use_attach=False, level=False) 
+        self.move_to_pose(pickup_pose, with_screw, use_point_cloud, use_attach=False) 
         self.close_gripper()
 
         if use_attach:
             self.planner.update_attached_box([0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0])
 
         pickup_pose[2] += 0.12
-        self.move_to_pose(pickup_pose, with_screw, use_point_cloud, use_attach, level=False) 
+        self.move_to_pose(pickup_pose, with_screw, use_point_cloud, use_attach) 
         delivery_pose[2] += 0.2
-        self.move_to_pose(delivery_pose, with_screw, use_point_cloud, use_attach, level=level) 
+        self.move_to_pose(delivery_pose, with_screw, use_point_cloud, use_attach) 
         delivery_pose[2] -= 0.12
-        self.move_to_pose(delivery_pose, with_screw, use_point_cloud, use_attach, level=False) 
+        self.move_to_pose(delivery_pose, with_screw, use_point_cloud, use_attach) 
         self.open_gripper()
         delivery_pose[2] += 0.12
-        self.move_to_pose(delivery_pose, with_screw, use_point_cloud, use_attach=False, level=False) 
+        self.move_to_pose(delivery_pose, with_screw, use_point_cloud, use_attach=False) 
 
 if __name__ == '__main__':
     demo = PlanningDemo()
-    demo.demo(False, True, True, False)
+    demo.demo(False, True, True)

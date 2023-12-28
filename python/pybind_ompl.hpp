@@ -28,8 +28,9 @@ std::string plan_doc = R"(
         time: planning time limit
         range: planning range (for RRT family of planners and represents the maximum step size)
         verbose: print debug information
-        no_simplification: if true, the path will not be simplified
-        constraint_function: a R^d to R^1 function that evals to 0 when constraint is satisfied
+        fixed_joints: list of fixed joints not considered in planning for this particular call
+        no_simplification: if true, the path will not be simplified (constained planning does not support simplification)
+        constraint_function: a R^d to R^1 function that evals to 0 when constraint is satisfied. constraint ignored if fixed joints not empty
         constraint_jacobian: the jacobian of the constraint w.r.t. the joint angles
         constraint_tolerance: tolerance of what level of deviation from 0 is acceptable
     Returns:
@@ -56,6 +57,7 @@ void build_pyompl(py::module &m_all) {
     auto m = m_all.def_submodule("ompl");
 
     auto PyOMPLPlanner = py::class_<OMPLPlanner, std::shared_ptr<OMPLPlanner>>(m, "OMPLPlanner");
+
     PyOMPLPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &, int>(),
                       py::arg("world"),
                       py::arg("robot_idx")=0,
@@ -67,10 +69,20 @@ void build_pyompl(py::module &m_all) {
                       py::arg("time")=1.0,
                       py::arg("range")=0.0,
                       py::arg("verbose")=false,
+                      py::arg("fixed_joints") = FixedJoints(),
                       py::arg("no_simplification")=false,
                       py::arg("constraint_function")=nullptr,
                       py::arg("constraint_jacobian")=nullptr,
                       py::arg("constraint_tolerance")=1e-3,
                       plan_doc.c_str())
                  .def("simplify_path", &OMPLPlanner::simplify_path, py::arg("path"), simplify_path_doc.c_str());
+
+    auto PyFixedJoint = py::class_<FixedJoint, std::shared_ptr<FixedJoint>>(m, "FixedJoint");
+    PyFixedJoint.def(py::init<size_t, size_t, double>(),
+                     py::arg("articulation_idx"),
+                     py::arg("joint_idx"),
+                     py::arg("value"));
+    PyFixedJoint.def_readwrite("articulation_idx", &FixedJoint::articulation_idx);
+    PyFixedJoint.def_readwrite("joint_idx", &FixedJoint::joint_idx);
+    PyFixedJoint.def_readwrite("value", &FixedJoint::value);
 }

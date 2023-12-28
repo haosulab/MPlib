@@ -10,6 +10,7 @@ class PlanningDemo(DemoSetup):
         self.load_robot(robot_origin_xyz=[1, 1, 0])
         self.setup_planner()
 
+        # We also need to tell the planner where the base is since the sim and planner don't share info
         self.planner.set_base_pose([1, 1, 0, 1, 0, 0, 0])
 
         # Set initial joint positions

@@ -83,7 +83,8 @@ public:
         size_t pinocchio_idx = user ? joint_index_user2pinocchio[index] : index;
         size_t start_idx = model.idx_qs[pinocchio_idx], nq = model.nqs[pinocchio_idx], dim_joint = getJointDim(index, user);
         Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret;
-        ASSERT(dim_joint == 1, "Only support simple joint the dim of joint is not 1!");
+        ASSERT(dim_joint == 1, "Only support joint with dim 1 but joint" + getJointNames(user)[index] + " has dim " +
+            std::to_string(dim_joint));
         //std::cout << joint_type << " " << joint_type[joint_prefix.size()] << " " << joint_type[joint_prefix.size() + 1] << " " <<  nq << " " << dim_joint << " " << std::endl;
         if (joint_type[joint_prefix.size()] == 'P' || (joint_type[joint_prefix.size()] == 'R' &&
                                                        joint_type[joint_prefix.size() + 1] != 'U')) {

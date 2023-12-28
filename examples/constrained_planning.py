@@ -58,7 +58,7 @@ class ConstrainedPlanningDemo(DemoSetup):
     # with constraint
     print("with constraint. all movements roughly maintain 15 degrees w.r.t. -z axis")
     for pose in poses:
-      result = self.planner.plan(
+      result = self.planner.plan_qpos_to_pose(
         pose,
         self.robot.get_qpos(),
         time_step=1/250,
@@ -77,7 +77,7 @@ class ConstrainedPlanningDemo(DemoSetup):
     # without constraint
     print("without constraint. some movements tilt the end effector almost upside down")
     for pose in poses:
-      result = self.planner.plan(
+      result = self.planner.plan_qpos_to_pose(
         pose,
         self.robot.get_qpos(),
         time_step=1/250,

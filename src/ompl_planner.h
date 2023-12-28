@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pinocchio/fwd.hpp>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/PathSimplifier.h>
@@ -64,7 +66,7 @@ std::vector<DATATYPE> rvssstate2vector(const ob::State *state_raw, ob::SpaceInfo
 template<typename IN_TYPE, typename OUT_TYPE>
 std::vector <OUT_TYPE> eigen2vector(Eigen::Matrix<IN_TYPE, Eigen::Dynamic, 1> const &x) {
     std::vector <OUT_TYPE> ret;
-    for (size_t i = 0; i < x.rows(); i++)
+    for (auto i = 0; i < x.rows(); i++)
         ret.push_back((OUT_TYPE) x[i]);
     return ret;
 }
@@ -77,7 +79,6 @@ Eigen::Matrix<OUT_TYPE, Eigen::Dynamic, 1> vector2eigen(std::vector<IN_TYPE> con
     return ret;
 }
 
-
 template<typename DATATYPE>
 Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> state2eigen(const ob::State *state_raw,
                                                        ob::SpaceInformation *const &si_,
@@ -88,18 +89,50 @@ Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> state2eigen(const ob::State *state_ra
     return ret;
 }
 
+typedef struct FixedJoint {
+    size_t articulation_idx;  // which robot in the planning world does the fixed joint belong to?
+    size_t joint_idx;  // what is the index of the joint you want it fixed?
+    double value;  // what is the value of the fixed joint?  we are actively trying to get rid of the DATATYPE template
+
+    FixedJoint(size_t articulation_idx, size_t joint_idx, double value)
+            : articulation_idx(articulation_idx), joint_idx(joint_idx), value(value) {}
+
+    bool operator==(const FixedJoint &other) const {
+        return articulation_idx == other.articulation_idx && joint_idx == other.joint_idx;
+    }
+
+    bool operator<(const FixedJoint &other) const {
+        return articulation_idx < other.articulation_idx ||
+               (articulation_idx == other.articulation_idx && joint_idx < other.joint_idx);
+    }
+}  FixedJoint;
+
+typedef std::set<FixedJoint> FixedJoints;
+
+bool is_fixed_joint(const FixedJoints &fixed_joints, size_t articulation_idx, size_t joint_idx);
+
+Eigen::VectorXd remove_fixed_joints(const FixedJoints &fixed_joints, Eigen::VectorXd const &state);
+
+Eigen::VectorXd add_fixed_joints(const FixedJoints &fixed_joints, Eigen::VectorXd const &state);
 
 template<typename DATATYPE>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
     typedef Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> VectorX;
     PlanningWorldTpl_ptr<DATATYPE> world;
     bool is_rvss;
+    FixedJoints fixed_joints;
 
 public:
-    ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world, const ob::SpaceInformationPtr &si, bool is_rvss)
-        : ob::StateValidityChecker(si), world(world), is_rvss(is_rvss) {}
+    ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world, const ob::SpaceInformationPtr &si,
+                       bool is_rvss, const FixedJoints &fixed_joints=FixedJoints())
+            : ob::StateValidityChecker(si), world(world), is_rvss(is_rvss), fixed_joints(fixed_joints) {}
+
+    void update_fixed_joints(const FixedJoints &fixed_joints) {
+        this->fixed_joints = fixed_joints;
+    }
+
     bool _isValid(VectorX state) const {
-        world->setQposAll(state);
+        world->setQposAll(add_fixed_joints(fixed_joints, state));
         return !world->collide();
     }
 
@@ -148,7 +181,6 @@ class OMPLPlannerTpl {
     using ValidityChecker = ValidityCheckerTpl<DATATYPE>;
     using ValidityChecker_ptr = ValidityCheckerTpl_ptr<DATATYPE>;
 
-
     DEFINE_TEMPLATE_EIGEN(DATATYPE)
 
     std::shared_ptr<ob::RealVectorStateSpace> p_ambient_space;
@@ -164,6 +196,7 @@ class OMPLPlannerTpl {
     size_t dim;
     std::vector<DATATYPE> lower_joint_limits, upper_joint_limits;
     std::vector<bool> is_revolute;
+    FixedJoints last_fixed_joints;  // if not empty, then we need to update the state space
     
     /** Certain joint configurations are the same if some joints are the same fmod 2pi. */
     std::shared_ptr<ob::GoalStates> make_goal_states(std::vector<VectorX> const &goal_states);
@@ -186,7 +219,13 @@ public:
 
     VectorX random_sample_nearby(VectorX const &start_state);
 
-    void build_state_space();
+    /**
+     * @brief build a new state space given the current planning world
+     *        and a set of fixed joints
+     * 
+     * @param fixed_joints a vector of FixedJoint
+     */
+    void build_compound_state_space(FixedJoints const &fixed_joints = FixedJoints());
 
     PlanningWorldTpl_ptr<DATATYPE> get_world() { return world; }
 
@@ -201,6 +240,7 @@ public:
          const double &time = 1.0,
          const double &range = 0.0,
          const bool verbose = false,
+         const FixedJoints &fixed_joints = FixedJoints(),
          const bool no_simplification = false,
          std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_function=nullptr,
          std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_jacobian=nullptr,
