@@ -5,7 +5,7 @@
 #include "articulated_model.h"
 #include "fcl_model.h"
 #include "macros_utils.hpp"
-
+#include "color_printing.h"
 
 template<typename DATATYPE>
 struct WorldCollisionResultTpl {
@@ -155,7 +155,7 @@ public:
     void printAttachedToolPose() {
         auto tmp1 = attached_tool.get()->getTranslation();
         auto tmp2 = attached_tool.get()->getRotation();
-        std::cout << tmp1 << ' ' << tmp2 << std::endl;
+        print_info("Attached tool pose: ", tmp1.transpose(), " ", tmp2);
     }
 
     void addArticulation(ArticulatedModel_ptr const &model, std::string const &name) { //bool const &planning = true) {

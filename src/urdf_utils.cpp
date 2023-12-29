@@ -280,8 +280,7 @@ KDL::RigidBodyInertia toKdl(urdf::InertialSharedPtr i) {
 // recursive function to walk through tree
 bool addChildrenToTree(const urdf::LinkConstSharedPtr &root, KDL::Tree &tree, bool const &verbose) {
     std::vector<urdf::LinkSharedPtr> children = root->child_links;
-    if (verbose)
-        std::cout << "Link " + root->name + " had " << children.size() << " children" << std::endl;
+    if (verbose) print_verbose("Link ", root->name, " has ", children.size(), " children");
 
     // constructs the optional inertia
     KDL::RigidBodyInertia inert(0);

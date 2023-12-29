@@ -17,8 +17,7 @@ DEFINE_TEMPLATE_PM(float)
 template<typename DATATYPE>
 void PinocchioModelTpl<DATATYPE>::dfs_parse_tree(urdf::LinkConstSharedPtr link, UrdfVisitorBase &visitor) {
     const urdf::JointConstSharedPtr joint = urdf::const_pointer_cast<urdf::Joint>(link->parent_joint);
-    if (verbose)
-        std::cout << link->name << " " << joint.get() << std::endl;
+    if (verbose) print_verbose("Joint ", joint->name, " ", joint.get());
     if (joint) {
         PINOCCHIO_CHECK_INPUT_ARGUMENT(link->getParent() && link);
 
@@ -183,9 +182,8 @@ void PinocchioModelTpl<DATATYPE>::init(urdf::ModelInterfaceSharedPtr const &urdf
     urdf_model = urdfTree;
 
     pinocchio::urdf::details::UrdfVisitor<DATATYPE, 0, pinocchio::JointCollectionDefaultTpl> visitor(model);
-    if (verbose)
-    {
-        std::cout << "Begin to parse URDF" << std::endl;
+    if (verbose) {
+        print_verbose("Begin to parse URDF");
         visitor.log = &std::cout;
     }
     if (not urdf_model)
@@ -199,8 +197,7 @@ void PinocchioModelTpl<DATATYPE>::init(urdf::ModelInterfaceSharedPtr const &urdf
 
     model.gravity = {gravity, Vector3{0, 0, 0}};
     data = Data(model);
-    if (verbose)
-        std::cout << "Begin to set joint order and link order" << std::endl;
+    if (verbose) print_verbose("Begin to set joint order and link order");
     setJointOrder(getJointNames(false));
     setLinkOrder(getLinkNames(false));
 }
@@ -209,7 +206,6 @@ void PinocchioModelTpl<DATATYPE>::init(urdf::ModelInterfaceSharedPtr const &urdf
 template<typename DATATYPE>
 PinocchioModelTpl<DATATYPE>::PinocchioModelTpl(std::string const &urdf_filename, Vector3 const &gravity,
                                                bool const &verbose) : verbose(verbose) {
-    //std::cout << "Verbose" << verbose << std::endl;
     urdf::ModelInterfaceSharedPtr urdf = urdf::parseURDFFile(urdf_filename);
     init(urdf, gravity);
 }
@@ -258,7 +254,6 @@ PinocchioModelTpl<DATATYPE>::qposPinocchio2User(VectorX const &q_pinocchio) {
     uint32_t count = 0;
     for (size_t i = 0; i < joint_index_user2pinocchio.size(); i++) {
         auto start_idx = model.idx_qs[joint_index_user2pinocchio[i]];
-        //std::cout << "Joint " << i << " " << start_idx << " " << joint_tangent_dim[i] << " " << count << std::endl;
         switch (nqs[i]) {
             case 0: // FIX
                 break;
@@ -333,9 +328,9 @@ void PinocchioModelTpl<DATATYPE>::setLinkOrder(std::vector<std::string> const &n
 
 template<typename DATATYPE>
 void PinocchioModelTpl<DATATYPE>::printFrames(void) {
-    std::cout << "Joint dim " << model.joints.size() << " " << model.nv << " " << model.nvs.size() << " " << model.idx_vs.size() << std::endl;
-    std::cout << "Joint Tangent dim " << model.nq << " " << model.nqs.size() << " " << model.idx_qs.size() << std::endl;
-    std::cout << "Joint Limit " << model.lowerPositionLimit.size() << " " << model.upperPositionLimit.size() << std::endl;
+    print_info("Joint dim ", model.joints.size(), " ", model.nv, " ", model.nvs.size(), " ", model.idx_vs.size());
+    print_info("Joint Tangent dim ", model.nq, " ", model.nqs.size(), " ", model.idx_qs.size());
+    print_info("Joint Limit ", model.lowerPositionLimit.transpose(), " ", model.upperPositionLimit.transpose());
     for (size_t i = 0; i < model.frames.size(); i++) {
         std::string type_name = "NONE";
         auto frame = model.frames[i];
@@ -349,9 +344,7 @@ void PinocchioModelTpl<DATATYPE>::printFrames(void) {
             type_name = "BODY";
         else if (frame.type == pinocchio::SENSOR)
             type_name = "BODY";
-        std::cout << "Frame " << i << " " << frame.name << " " << frame.parent << " " << type_name << " "
-                  << frame.previousFrame
-                  << std::endl;
+        print_info("Frame ", i, " ", frame.name, " ", frame.parent, " ", type_name, " ", frame.previousFrame);
     }
 }
 

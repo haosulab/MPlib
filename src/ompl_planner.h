@@ -15,11 +15,12 @@
 #include <ompl/base/objectives/MaximizeMinClearanceObjective.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SO2StateSpace.h>
-#include "planning_world.h"
 #include <ompl/base/Constraint.h>
 #include <ompl/base/spaces/constraint/ProjectedStateSpace.h>
 #include <ompl/base/ConstrainedSpaceInformation.h>
 #include <ompl/geometric/SimpleSetup.h>
+#include "planning_world.h"
+#include "color_printing.h"
 
 namespace ob = ompl::base;
 //namespace oc = ompl::control;

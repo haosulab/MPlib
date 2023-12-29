@@ -3,7 +3,7 @@
 #include "macros_utils.hpp"
 #include "pinocchio_model.h"
 #include "fcl_model.h"
-
+#include "color_printing.h"
 
 template<typename DATATYPE>
 class ArticulatedModelTpl {

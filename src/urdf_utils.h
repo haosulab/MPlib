@@ -26,6 +26,7 @@
 
 #include <kdl/tree.hpp>
 
+#include "color_printing.h"
 
 template<typename DATATYPE>
 Eigen::Transform<DATATYPE, 3, Eigen::Isometry> se3_to_transform(const pinocchio::SE3Tpl<DATATYPE, 0> &T);

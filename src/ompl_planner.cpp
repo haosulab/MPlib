@@ -164,8 +164,7 @@ OMPLPlannerTpl<DATATYPE>::random_sample_nearby(VectorX const &start_state) {
                 new_state[i] = upper_joint_limits[i];
         }
         if (valid_checker->_isValid(new_state)) {
-            std::cout << "successfully sampled a new state with a perturbation of "
-                      << ratio * 100 << "% joint limits." << std::endl;
+            print_warning("sampled a new state with a perturbation of ", ratio * 100, "% joint limits.");
             return new_state;
         }
     }
@@ -183,8 +182,8 @@ void OMPLPlannerTpl<DATATYPE>::_simplify_path(og::PathGeometric &path) {
 template<typename DATATYPE>
 Eigen::MatrixXd OMPLPlannerTpl<DATATYPE>::simplify_path(Eigen::MatrixXd &path) {
     if (si == p_constrained_si) {  // warning
-        std::cout << "Current space information is for constrained planning" << std::endl;
-        std::cout << "doing simplification in non-constrained space" << std::endl;
+        print_warning("Current space information is for constrained planning");
+        print_warning("doing simplification in non-constrained space");
     }
     og::PathGeometric geo_path(si);
     for (size_t i = 0; i < path.rows(); i++) {
@@ -296,7 +295,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
 
     bool invalid_start = !valid_checker->_isValid(reduced_start_state);
     if (invalid_start) {
-        std::cout << "invalid start state!! (collision)" << std::endl;
+        print_warning("invalid start state!! (collision)");
         VectorX new_reduced_start_state = random_sample_nearby(reduced_start_state);
         start = eigen2vector<DATATYPE, double>(new_reduced_start_state);
     }
@@ -326,7 +325,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
     ss->setup();
     ob::PlannerStatus solved = ss->solve(time);
     if (solved) {
-        if (verbose) std::cout << "Solved!" << std::endl;
+        if (verbose) print_verbose("Found solution");
 
         // obtain the path
         auto path = ss->getSolutionPath();
@@ -336,7 +335,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
 
         size_t len = path.getStateCount();
         Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret(len + invalid_start, start_state.rows());
-        if (verbose) std::cout << "Result size " << len << " " << start_state.rows() << std::endl;
+        if (verbose) print_verbose("Result size ", len, " ", start_state.rows());
         if (invalid_start) {
             for (auto j = 0; j < start_state.rows(); j++)
                 ret(0, j) = start_state(j);

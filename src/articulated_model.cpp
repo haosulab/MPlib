@@ -100,7 +100,7 @@ void ArticulatedModelTpl<DATATYPE>::setQpos(VectorX const &qpos, bool const& ful
         }
     }
     pinocchio_model.computeForwardKinematics(current_qpos);
-    //std::cout << "current_qpos " << current_qpos << std::endl;
+    if (verbose) print_verbose("current_qpos ", current_qpos);
     std::vector<Transform3> link_pose;
     for (size_t i = 0; i < user_link_names.size(); i++) {
         Vector7 pose_i = pinocchio_model.getLinkPose(i);

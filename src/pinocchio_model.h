@@ -10,6 +10,7 @@
 #include <urdf_model/types.h>
 #include <vector>
 
+#include "color_printing.h"
 
 template<typename DATATYPE>
 class PinocchioModelTpl {

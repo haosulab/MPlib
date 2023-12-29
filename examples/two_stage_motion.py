@@ -92,12 +92,17 @@ class PlanningDemo(DemoSetup):
         delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]
         
         self.add_point_cloud()
+        # also add the target as a collision object so we don't hit it
+        fcl_red_cube = mplib.planner.fcl.Box([0.04, 0.04, 0.14])
+        collision_object = mplib.planner.fcl.CollisionObject(fcl_red_cube, [0.7, 0, 0.07], [1, 0, 0, 0])
+        self.planner.planning_world.set_normal_object("target", collision_object)
         
         # go above the target
         pickup_pose[2] += 0.2
         self.move_in_two_stage(pickup_pose)
         self.open_gripper()
         # move down to pick
+        self.planner.planning_world.remove_normal_object("target")  # remove the object so we don't report collision
         pickup_pose[2] -= 0.12
         result = self.plan_without_base(pickup_pose)
         self.follow_path(result)

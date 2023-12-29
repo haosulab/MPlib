@@ -14,7 +14,7 @@
 #include "fcl/narrowphase/collision_request.h"
 #include "fcl/narrowphase/gjk_solver_type.h"
 #include "macros_utils.hpp"
-
+#include "color_printing.h"
 
 template<typename DATATYPE>
 class FCLModelTpl {

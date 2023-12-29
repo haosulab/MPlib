@@ -169,7 +169,7 @@ std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::colli
 
     if (use_point_cloud) {
         if (has_point_cloud == false) {
-            std::cout << "No Point Cloud Provided!" << std::endl; 
+            print_warning("No Point Cloud Provided!");
         }
         else {
             for (size_t i = 0; i < CollisionObjects.size(); i++) {
@@ -192,12 +192,11 @@ std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::colli
 
     if (use_attach && use_point_cloud) { // TODO: attached box with other articulated objects
         if (has_attach == false) {
-            std::cout << "No Attached Box Provided!" << std::endl; 
+            print_warning("No Attached Box Provided but use_attach is true!");
         }
-        else if (has_point_cloud == false) {
-            std::cout << "No Point Cloud Provided!" << std::endl; 
-        }
-        else { // currently, only collide with the point cloud, only support one articulation
+        if (has_point_cloud == false) {
+            print_warning("No Point Cloud Provided!");
+        } else { // currently, only collide with the point cloud, only support one articulation
             Vector7 link_pose = pinocchio_model.getLinkPose(attach_link_id);
             Transform3 pose;
             pose.linear() = Quaternion(link_pose[3], link_pose[4], link_pose[5], link_pose[6]).matrix();
@@ -221,7 +220,6 @@ std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::colli
                 ret.push_back(tmp);
             } 
         }
-
     }
     return ret;
 }

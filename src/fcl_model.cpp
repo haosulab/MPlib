@@ -36,16 +36,14 @@ void FCLModelTpl<DATATYPE>::dfs_parse_tree(urdf::LinkConstSharedPtr const &link,
                     ss << "Mesh " << file_name << " could not be found.";
                     throw std::invalid_argument(ss.str());
                 }
-                if (verbose)
-                    std::cout << "File name " << file_name << std::endl;
+                if (verbose) print_verbose("File name ", file_name);
                 Vector3 scale = {(DATATYPE) urdf_mesh->scale.x, (DATATYPE) urdf_mesh->scale.y,
                                  (DATATYPE) urdf_mesh->scale.z};
                 if (use_convex)
                     collision_geometry = load_mesh_as_Convex(mesh_path, scale);
                 else
                     collision_geometry = load_mesh_as_BVH(mesh_path, scale);
-                if (verbose)
-                    std::cout << scale << " " << collision_geometry << std::endl;
+                if (verbose) print_verbose(scale, " ", collision_geometry);
             } else if (geom_model->type == urdf::Geometry::CYLINDER) {
                 const urdf::CylinderSharedPtr cylinder = urdf::dynamic_pointer_cast<urdf::Cylinder>(geom_model);
                 collision_geometry = std::make_shared<Cylinder>((DATATYPE) cylinder->radius,
@@ -128,8 +126,7 @@ FCLModelTpl<DATATYPE>::setLinkOrder(const std::vector<std::string> &names) {
     user_link_names = names;
     collision_link_user_indices = {};
     for (size_t i = 0; i < collision_link_names.size(); i++) {
-        if (verbose)
-            std::cout << collision_link_names[i] << " " << names[i] << std::endl;
+        if (verbose) print_verbose(collision_link_names[i], " ", names[i]);
         auto iter = std::find(names.begin(), names.end(), collision_link_names[i]);
         if (iter == names.end())
             throw std::invalid_argument("The names does not contain link " + collision_link_names[i]);
@@ -143,8 +140,8 @@ template<typename DATATYPE>
 void FCLModelTpl<DATATYPE>::removeCollisionPairsFromSrdf(std::string const &srdf_filename) {
     const std::string extension = srdf_filename.substr(srdf_filename.find_last_of('.') + 1);
     if (srdf_filename == "") {
-        std::cout << "No SRDF file provided!" << std::endl;
-        return ;
+        print_warning("No SRDF file provided!");
+        return;
     }
 
     ASSERT(extension == "srdf", srdf_filename + " does not have the right extension.");
@@ -184,9 +181,7 @@ void FCLModelTpl<DATATYPE>::removeCollisionPairsFromSrdf(std::string const &srdf
             } else if (frame_id1 > frame_id2)
                 std::swap(frame_id1, frame_id2);
             */
-            if (verbose) {
-                std::cout << "Try to Remove collision parts:" << link1 << " " << link2 << std::endl;
-            }
+            if (verbose) print_verbose("Try to Remove collision parts: ", link1, " ", link2);
             for (auto iter = collision_pairs.begin(); iter != collision_pairs.end();) {
                 if (collision_link_names[iter->first] == link1 && collision_link_names[iter->second] == link2 ||
                     collision_link_names[iter->first] == link2 && collision_link_names[iter->second] == link1) {
@@ -282,6 +277,6 @@ template<typename DATATYPE>
 void FCLModelTpl<DATATYPE>::printCollisionPairs(void) {
     for (auto cp: collision_pairs) {
         auto i = cp.first, j = cp.second;
-        std::cout << collision_link_names[i] << " " << collision_link_names[j] << std::endl;
+        print_info(collision_link_names[i], " ", collision_link_names[j]);
     }
 }
