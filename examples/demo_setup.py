@@ -64,9 +64,7 @@ class DemoSetup():
     self.planner = mplib.Planner(
       urdf=kwargs.get('urdf_path', "./data/panda/panda.urdf"),
       srdf=kwargs.get('srdf_path', "./data/panda/panda.srdf"),
-      move_group=kwargs.get('move_group', 'panda_hand'),
-      joint_vel_limits=kwargs.get('joint_vel_limits', np.ones(7)),
-      joint_acc_limits=kwargs.get('joint_acc_limits', np.ones(7))
+      move_group=kwargs.get('move_group', 'panda_hand')
     )
 
   def follow_path(self, result):

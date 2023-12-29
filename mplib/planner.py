@@ -20,12 +20,12 @@ class Planner:
         self,
         urdf: str,
         move_group: str,
-        joint_vel_limits: Union[Sequence[float], np.ndarray],
-        joint_acc_limits: Union[Sequence[float], np.ndarray],
         srdf: str = "",
         package_keyword_replacement: str = "",
         user_link_names: Sequence[str] = [],
         user_joint_names: Sequence[str] = [],
+        joint_vel_limits: Union[Sequence[float], np.ndarray] = [],
+        joint_acc_limits: Union[Sequence[float], np.ndarray] = [],
         **kwargs
     ):
         r"""Motion planner for robots.
@@ -93,8 +93,8 @@ class Planner:
 
         self.joint_types = self.pinocchio_model.get_joint_types()
         self.joint_limits = np.concatenate(self.pinocchio_model.get_joint_limits())
-        self.joint_vel_limits = joint_vel_limits
-        self.joint_acc_limits = joint_acc_limits
+        self.joint_vel_limits = joint_vel_limits if len(joint_vel_limits) else np.ones(len(self.move_group_joint_indices))
+        self.joint_acc_limits = joint_acc_limits if len(joint_acc_limits) else np.ones(len(self.move_group_joint_indices))
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
         assert len(self.joint_vel_limits) == len(self.joint_acc_limits),\
             f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "\
@@ -569,7 +569,7 @@ class Planner:
             goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
             current_qpos: current joint configuration (either full or move_group joints)
             mask: if the value at a given index is True, the joint is *not* used in the IK
-            time_step: time step for TOPP
+            time_step: time step for TOPPRA (time parameterization of path)
             rrt_range: step size for RRT
             planning_time: time limit for RRT
             fix_joint_limits: if True, will clip the joint configuration to be within the joint limits
