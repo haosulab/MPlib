@@ -114,7 +114,7 @@ template<typename DATATYPE>
 FCLModelTpl<DATATYPE>::FCLModelTpl(std::string const &urdf_filename, bool const &verbose, bool const &convex)
         : verbose(verbose), use_convex(convex) {
     auto found = urdf_filename.find_last_of("/\\");
-    auto urdf_dir = urdf_filename.substr(0, found);
+    auto urdf_dir = found != urdf_filename.npos ? urdf_filename.substr(0, found) : ".";
     urdf::ModelInterfaceSharedPtr urdfTree = urdf::parseURDFFile(urdf_filename);
     init(urdfTree, urdf_dir);
 }
