@@ -92,6 +92,7 @@ AssimpLoader::~AssimpLoader() {
 }
 
 void AssimpLoader::load(const std::string &file_name) {
+    importer->SetPropertyBool(AI_CONFIG_IMPORT_COLLADA_IGNORE_UP_DIRECTION, true);
     scene = importer->ReadFile(file_name.c_str(),
                                aiProcess_SortByPType |
                                aiProcess_Triangulate |
@@ -101,6 +102,7 @@ void AssimpLoader::load(const std::string &file_name) {
                                // properly handled. Enabling aiProcess_FindDegenerates would throw an
                                // exception when that happens. Is it too conservative ?
                                // aiProcess_FindDegenerates |
+                               aiProcess_PreTransformVertices |
                                aiProcess_JoinIdenticalVertices
     );
 
@@ -113,6 +115,9 @@ void AssimpLoader::load(const std::string &file_name) {
 
     if (!scene->HasMeshes())
         throw std::invalid_argument(std::string("No meshes found in file ") + file_name);
+    
+    // cast away the const since we need to give it a name
+    const_cast<aiString &>(scene->mName) = file_name;
 }
 
 
@@ -136,11 +141,16 @@ int dfs_build_mesh(const aiScene *scene, const aiNode *node, const Eigen::Matrix
         aiMesh *input_mesh = scene->mMeshes[node->mMeshes[i]];
 
         // Add the vertices
+        DATATYPE max_dim = 0;
         for (uint32_t j = 0; j < input_mesh->mNumVertices; j++) {
             aiVector3D p = input_mesh->mVertices[j];
             p *= transform;
             vertices.push_back(fcl::Vector3<DATATYPE>(
                     (DATATYPE) p.x * scale[0], (DATATYPE) p.y * scale[1], (DATATYPE) p.z * scale[2]));
+            max_dim = std::max({max_dim, std::abs(p.x)*scale[0], std::abs(p.y)*scale[1], std::abs(p.z)*scale[2]});
+        }
+        if (max_dim < 1e-2 || max_dim > 1e1) {
+            print_warning("Mesh ", scene->mName.C_Str(), " has side length ", max_dim, "m which is suspiciously large or small. If this is indeed a unit or scaling error, you can set the scale factor in the urdf file.");
         }
 
         // add the indices
