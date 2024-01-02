@@ -144,10 +144,11 @@ public:
 };
 
 class GeneralConstraint : public ob::Constraint {
-    std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> f, j;
+    std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> f;
+    std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::MatrixXd>)> j;
 public:
     GeneralConstraint(size_t dim, std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &f,
-                      std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &j)
+                      std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::MatrixXd>)> &j)
         : ob::Constraint(dim, 1),
           f(f),
           j(j) {}
@@ -156,7 +157,7 @@ public:
         f(x, out);
     }
 
-    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::VectorXd> out) const override {
+    void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x, Eigen::Ref<Eigen::MatrixXd> out) const override {
         j(x, out);
     }
 };
@@ -244,7 +245,7 @@ public:
          const FixedJoints &fixed_joints = FixedJoints(),
          const bool no_simplification = false,
          std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_function=nullptr,
-         std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_jacobian=nullptr,
+         std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::MatrixXd>)> &constraint_jacobian=nullptr,
          double constraint_tolerance=1e-3);
 };
 

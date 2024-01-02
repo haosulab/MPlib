@@ -260,7 +260,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state,
          const FixedJoints &fixed_joints,
          const bool no_simplification,
          std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_function,
-         std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &constraint_jacobian,
+         std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::MatrixXd>)> &constraint_jacobian,
          double constraint_tolerance) {
     if (fixed_joints.size() || last_fixed_joints.size()) {
         ASSERT(constraint_function == nullptr && constraint_jacobian == nullptr,

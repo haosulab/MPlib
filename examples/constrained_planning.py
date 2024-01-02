@@ -39,7 +39,7 @@ class ConstrainedPlanningDemo(DemoSetup):
       jac = self.planner.robot.get_pinocchio_model().compute_single_link_jacobian(full_qpos, len(self.planner.move_group_joint_indices)-1)
       rot_jac = jac[3:, self.planner.move_group_joint_indices]
       for i in range(len(self.planner.move_group_joint_indices)):
-        out[i] = np.cross(rot_jac[:,i], self.get_eef_z()).dot(np.array([0,0,-1]))
+        out[0][i] = np.cross(rot_jac[:,i], self.get_eef_z()).dot(np.array([0,0,-1]))
     return j
 
   def demo(self):
