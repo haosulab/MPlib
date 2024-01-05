@@ -79,6 +79,25 @@ std::string CollisionGeometry_doc = R"(
     Collision geometry base class.
     This is an FCL class so you can refer to the FCL doc here https://flexible-collision-library.github.io/d6/d5d/classfcl_1_1CollisionGeometry.html)";
 
+std::string Sphere_doc = R"(
+    Sphere collision geometry.
+    Inheriting from CollisionGeometry, this class specializes to a sphere geometry.)";
+
+std::string Sphere_constructor_doc = R"(
+    Construct a sphere with given radius.
+    Args:
+        radius: radius of the sphere)";
+
+std::string Plane_doc = R"(
+    Plane collision geometry.
+    Inheriting from CollisionGeometry, this class specializes to a plane geometry.)";
+
+std::string Plane_constructor_doc = R"(
+    Construct a plane with given normal and offset.
+    Args:
+        normal: normal vector of the plane
+        offset: offset scalar of the plane)";
+
 std::string Box_doc = R"(
     Box collision geometry.
     Inheriting from CollisionGeometry, this class specializes to a box geometry.)";
@@ -288,6 +307,13 @@ void build_pyfcl(py::module &m_all) {
         .def_readwrite("cost_density", &CollisionGeometry::cost_density);
 
     // collision geometries
+    auto PySphere = py::class_<Sphere, std::shared_ptr<Sphere>>(m, "Sphere", PyCollisionGeometry, Sphere_doc.c_str());
+    PySphere.def(py::init<DATATYPE>(), py::arg("radius"), Sphere_constructor_doc.c_str())
+            .def_readwrite("radius", &Sphere::radius);
+    auto PyPlane = py::class_<Plane, std::shared_ptr<Plane>>(m, "Plane", PyCollisionGeometry, Plane_doc.c_str());
+    PyPlane.def(py::init<const Vector3 &, DATATYPE>(), py::arg("normal"), py::arg("offset"), Plane_constructor_doc.c_str())
+            .def_readwrite("normal", &Plane::n)
+            .def_readwrite("offset", &Plane::d);
     auto PyBox = py::class_<Box, std::shared_ptr<Box>>(m, "Box", PyCollisionGeometry, Box_doc.c_str());
     PyBox.def(py::init<const Vector3 &>(), py::arg("side"), Box_constructor_doc.c_str())
         .def(py::init<DATATYPE, DATATYPE, DATATYPE>(), py::arg("x"), py::arg("y"), py::arg("z"), Box_constructor_doc2.c_str())

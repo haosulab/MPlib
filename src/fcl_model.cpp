@@ -55,7 +55,7 @@ void FCLModelTpl<DATATYPE>::dfs_parse_tree(urdf::LinkConstSharedPtr const &link,
             } else if (geom_model->type == ::urdf::Geometry::SPHERE) {
                 const urdf::SphereSharedPtr sphere = urdf::dynamic_pointer_cast<urdf::Sphere>(geom_model);
                 collision_geometry = std::make_shared<Sphere>((DATATYPE) sphere->radius);
-            } else throw std::invalid_argument("Unknown geometry type :");
+            } else throw std::invalid_argument("Unknown geometry type during parsing urdf for collision geometry");
 
             if (!collision_geometry)
                 throw std::invalid_argument("The polyhedron retrived is empty");
@@ -205,6 +205,7 @@ bool FCLModelTpl<DATATYPE>::collide(CollisionRequest const& request) {
         if (result.isCollision())
             return true;
     }
+    std::cout << "num: " << result.numContacts() << std::endl;
     return false;
 }
 

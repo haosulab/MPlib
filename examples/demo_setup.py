@@ -71,8 +71,7 @@ class DemoSetup():
     n_step = result['position'].shape[0]
     for i in range(n_step):
       qf = self.robot.compute_passive_force(
-        external=False,
-        gravity=True, 
+        gravity=True,
         coriolis_and_centrifugal=True)
       self.robot.set_qf(qf)
       for j in range(len(self.planner.move_group_joint_indices)):

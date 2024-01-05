@@ -74,6 +74,14 @@ class PlanningWorld():
             Returns:
                 list of articulated models as pointers
         """
+    def get_normal_object(self, arg0: str) -> mplib.pymp.fcl.CollisionObject: 
+        """
+            Get the non-articulated collision object.
+            Args:
+                name: name of the non-articulated collision object
+            Returns:
+                non-articulated collision object or nullptr if not found
+        """
     def get_normal_objects(self) -> list[mplib.pymp.fcl.CollisionObject]: 
         """
             Get the list of non-articulated collision objects.

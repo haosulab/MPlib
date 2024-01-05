@@ -38,6 +38,13 @@ std::string get_articulations_doc = R"(
     Returns:
         list of articulated models as pointers)";
 
+std::string get_normal_object_doc = R"(
+    Get the non-articulated collision object.
+    Args:
+        name: name of the non-articulated collision object
+    Returns:
+        non-articulated collision object or nullptr if not found)";
+
 std::string get_normal_objects_doc = R"(
     Get the list of non-articulated collision objects.
     Returns:
@@ -212,6 +219,7 @@ void build_planning_world(py::module &m_all) {
     .def("get_articulations", &PlanningWorld::getArticulations, get_articulations_doc.c_str())
     .def("add_articulation", &PlanningWorld::addArticulation, py::arg("model"), py::arg("name"), add_articulation_doc.c_str())
     .def("add_articulations", &PlanningWorld::addArticulations, py::arg("models"), py::arg("names"), add_articulations_doc.c_str())
+    .def("get_normal_object", &PlanningWorld::getNormalObject, get_normal_object_doc.c_str())
     .def("get_normal_objects", &PlanningWorld::getNormalObjects, get_normal_objects_doc.c_str())
     .def("set_normal_object", &PlanningWorld::setNormalObject, py::arg("collision_object"), py::arg("name"), set_normal_object_doc.c_str())
     .def("remove_normal_object", &PlanningWorld::removeNormalObject, py::arg("name"), remove_normal_object_doc.c_str())

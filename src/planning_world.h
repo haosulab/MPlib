@@ -75,6 +75,14 @@ public:
 
     std::vector<ArticulatedModel_ptr> getArticulations(void) {return articulations;}
 
+    CollisionObject_ptr getNormalObject(const std::string &name) {
+        if (!normal_object_map.count(name)) {
+            print_error("No object named ", name);
+            return nullptr;
+        }
+        return normal_object_map[name];
+    }
+
     std::vector<CollisionObject_ptr> getNormalObjects(void) {
         std::vector<CollisionObject_ptr> ret;
         for (const auto &itm : normal_object_map) ret.push_back(itm.second);

@@ -24,6 +24,8 @@ __all__ = [
     "GST_INDEP",
     "GST_LIBCCD",
     "OcTree",
+    "Plane",
+    "Sphere",
     "Triangle",
     "collide",
     "distance",
@@ -503,6 +505,55 @@ class OcTree(CollisionGeometry):
         """
     @typing.overload
     def __init__(self, vertices: numpy.ndarray[numpy.float64, _Shape[m, 3]], resolution: float) -> None: ...
+    pass
+class Plane(CollisionGeometry):
+    """
+        Plane collision geometry.
+        Inheriting from CollisionGeometry, this class specializes to a plane geometry.
+    """
+    def __init__(self, normal: numpy.ndarray[numpy.float64, _Shape[3, 1]], offset: float) -> None: 
+        """
+            Construct a plane with given normal and offset.
+            Args:
+                normal: normal vector of the plane
+                offset: offset scalar of the plane
+        """
+    @property
+    def normal(self) -> numpy.ndarray[numpy.float64, _Shape[3, 1]]:
+        """
+        :type: numpy.ndarray[numpy.float64, _Shape[3, 1]]
+        """
+    @normal.setter
+    def normal(self, arg0: numpy.ndarray[numpy.float64, _Shape[3, 1]]) -> None:
+        pass
+    @property
+    def offset(self) -> float:
+        """
+        :type: float
+        """
+    @offset.setter
+    def offset(self, arg0: float) -> None:
+        pass
+    pass
+class Sphere(CollisionGeometry):
+    """
+        Sphere collision geometry.
+        Inheriting from CollisionGeometry, this class specializes to a sphere geometry.
+    """
+    def __init__(self, radius: float) -> None: 
+        """
+            Construct a sphere with given radius.
+            Args:
+                radius: radius of the sphere
+        """
+    @property
+    def radius(self) -> float:
+        """
+        :type: float
+        """
+    @radius.setter
+    def radius(self, arg0: float) -> None:
+        pass
     pass
 class Triangle():
     def __getitem__(self, arg0: int) -> int: ...
