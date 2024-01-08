@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 
-import mplib
 import numpy as np
 import transforms3d
-
 from demo_setup import DemoSetup
 
 class ConstrainedPlanningDemo(DemoSetup):
+  """
+  This demo shows the planner's ability to plan with constraints.
+  For this particular demo, we move to several poses while pointing the end effector roughly 15 degrees w.r.t. -z axis
+  """
   def __init__(self):
+    """ set up the scene and load the robot """
     super().__init__()
     self.setup_scene()
     self.load_robot()
     self.setup_planner()
 
   def add_point_cloud(self):
+    """ add some random obstacles to make the planning more challenging """
     import trimesh
     box = trimesh.creation.box([0.1, 0.4, 0.2])
     points, _ = trimesh.sample.sample_surface(box, 1000)
@@ -22,18 +26,28 @@ class ConstrainedPlanningDemo(DemoSetup):
     return
 
   def get_eef_z(self):
+    """ helper function for constraint """
     ee_idx = self.planner.link_name_2_idx[self.planner.move_group]
     ee_pose = self.planner.robot.get_pinocchio_model().get_link_pose(ee_idx)
     mat = transforms3d.quaternions.quat2mat(ee_pose[3:])
     return mat[:,2]
 
   def make_f(self):
+    """
+    create a constraint function that takes in a qpos and outputs a scalar
+    A valid constraint function should evaluates to 0 when the constraint is satisfied
+    See [ompl constrained planning](https://ompl.kavrakilab.org/constrainedPlanning.html) for more details
+    """
     def f(x, out):
       self.planner.robot.set_qpos(x)
       out[0] = self.get_eef_z().dot(np.array([0,0,-1]))-0.966  # maintain 15 degrees w.r.t. -z axis
     return f
 
   def make_j(self):
+    """
+    create the jacobian of the constraint function w.r.t. qpos
+    This is needed because the planner uses the jacobian to project a random sample to the constraint manifold
+    """
     def j(x, out):
       full_qpos = self.planner.pad_qpos(x)
       jac = self.planner.robot.get_pinocchio_model().compute_single_link_jacobian(full_qpos, len(self.planner.move_group_joint_indices)-1)
@@ -43,6 +57,10 @@ class ConstrainedPlanningDemo(DemoSetup):
     return j
 
   def demo(self):
+    """
+    We first plan with constraints to three poses, then plan without constraints to the same poses
+    While not always the case, sometimes without constraints, the end effector will tilt almost upside down
+    """
     # this starting pose has the end effector tilted roughly 15 degrees
     starting_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.88, 0.78, 0, 0]
     self.robot.set_qpos(starting_qpos)
@@ -75,7 +93,7 @@ class ConstrainedPlanningDemo(DemoSetup):
       self.follow_path(result)
 
     # without constraint
-    print("without constraint. some movements tilt the end effector almost upside down")
+    print("without constraint. certain movements can sometimes tilt the end effector almost upside down")
     for pose in poses:
       result = self.planner.plan_qpos_to_pose(
         pose,

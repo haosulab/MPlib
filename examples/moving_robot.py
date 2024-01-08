@@ -1,10 +1,15 @@
 import sapien.core as sapien
-import mplib
-import numpy as np
 from demo_setup import DemoSetup
 
 class PlanningDemo(DemoSetup):
+    """ This is identical to demo.py except the whole scene is shifted to the bottom right by 1 meter respectively """
     def __init__(self):
+        """
+        Setting up the scene, the planner, and adding some objects to the scene
+        Note that we place the robot at [1,1,0] in the simulation and also tell the planner that the robot is at [1,1,0]
+        Afterwards, put down a table and three boxes. For details on how to do this, see the sapien documentation
+        Compared to demo.py, all the props are shifted by 1 meter in the x and y direction
+        """
         super().__init__()
         self.setup_scene()
         self.load_robot(robot_origin_xyz=[1, 1, 0])
@@ -14,7 +19,7 @@ class PlanningDemo(DemoSetup):
         self.planner.set_base_pose([1, 1, 0, 1, 0, 0, 0])
 
         # Set initial joint positions
-        init_qpos = [0, 0.19634954084936207, 0.0, -2.617993877991494, 0.0, 2.941592653589793, 0.7853981633974483, 0, 0]
+        init_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78, 0, 0]
         self.robot.set_qpos(init_qpos)
 
         # table top
@@ -44,6 +49,12 @@ class PlanningDemo(DemoSetup):
         self.blue_cube.set_pose(sapien.Pose([1.6, 1.1, 0.07]))
 
     def demo(self):
+        """
+        Same demo as demo.py.
+        Although we shifted everything, the poses have not changed because these are w.r.t. the robot base
+        Alternatively, we can also shift the poses by 1 meter in the x and y direction and tell the planner
+        the poses are specified with respect to the world
+        """
         poses = [[0.4, 0.3, 0.12, 0, 1, 0, 0],
                 [0.2, -0.3, 0.08, 0, 1, 0, 0],
                 [0.6, 0.1, 0.14, 0, 1, 0, 0]]
@@ -65,6 +76,24 @@ class PlanningDemo(DemoSetup):
             pose[2] += 0.12
             self.move_to_pose(pose)
 
+        # convert the poses to be w.r.t. the world
+        for pose in poses:
+            pose[0] += 1
+            pose[1] += 1
+
+        # plan a path to the first pose
+        result = self.planner.plan_qpos_to_pose(
+            poses[0],
+            self.planner.robot.get_qpos(),
+            time_step=1/250,
+            wrt_world=True
+        )
+        if result['status'] != "Success":
+            print(result['status'])
+            return -1
+        self.follow_path(result)
+
 if __name__ == '__main__':
+    """ Driver code """
     demo = PlanningDemo()
     demo.demo()

@@ -4,7 +4,18 @@ import numpy as np
 from demo_setup import DemoSetup
 
 class PlanningDemo(DemoSetup):
+    """
+    This demo is the same as collision_avoidance.py except we added a track for the robot to move along
+    We reach the target in two stages:
+    1. First, we move the base while fixing the arm joints
+    2. Then, we move the arm while fixing the base joints
+    This corresponds to a mobile robot which can move in the x and y direction with a manipulator on top
+    """
     def __init__(self):
+        """
+        We have modified the urdf file to include a track for the robot to move along
+        Otherwise, the setup is the same as collision_avoidance.py
+        """
         super().__init__()
         self.setup_scene()
         self.load_robot(urdf_path="./data/panda/panda_on_rail.urdf")
@@ -50,6 +61,7 @@ class PlanningDemo(DemoSetup):
         self.blue_cube.set_pose(sapien.Pose([0.55, 0, 0.1]))
 
     def add_point_cloud(self):
+        """ see collision_avoidance.py for details """
         import trimesh
         box = trimesh.creation.box([0.1, 0.4, 0.2])
         points, _ = trimesh.sample.sample_surface(box, 1000)
@@ -58,6 +70,7 @@ class PlanningDemo(DemoSetup):
         return 
 
     def plan_without_base(self, pose, has_attach=False):
+        """ a subroutine to plan a path without moving the base """
         # now do a partial ik to the pose with the base fixed
         status, goal_qposes = self.planner.IK(pose, self.robot.get_qpos(), mask=[1,1,0,0,0,0,0,0,0])
         if status != "Success":
@@ -88,6 +101,9 @@ class PlanningDemo(DemoSetup):
         self.follow_path(result)
 
     def demo(self):
+        """
+        We reach the pick up and drop off poses in two stages, first by moving the base only and then the arm only
+        """
         pickup_pose = [0.7, 0, 0.12, 0, 1, 0, 0]
         delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]
         
