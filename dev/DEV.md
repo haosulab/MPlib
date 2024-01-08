@@ -54,6 +54,14 @@ Depending on your python version, you will get a file called `pymp.cpython-310-x
 
 To install the entire package along with python glue code, do `python3.[version] -m pip install .` inside the root directory of the project.
 
-### Stub generation
+## Documentation Generation
+
+### Stub Generation
 
 Stubs are useful for type checking and IDE autocompletion. To generate stubs, you **first need to have mplib compiled and installed**. Then, do `python3.[version] -m pip install pybind11_stubgen` and then run `bash dev/generate_stubs.sh`. This will generate stubs for the entire project in the `stubs/` directory. Note that you might need to change the version of the python inside the script. The default is 3.11.
+
+### Documentation Generation
+
+We use `pdoc` to generate the documentation. First install a version of mplib referring to the section above.
+
+Then, you will need to install `pdoc` with `python3.[version] -m pip install pdoc`. The reason the version is important is because `pdoc` will actually do analysis on the files, so it will scrape through the mplib installed in the site package. Then, run `bash dev/generate_docs.sh`. This will generate the documentation in the `docs/` directory. Note that you might need to change the version of the python inside the script. The default is 3.11.

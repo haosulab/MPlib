@@ -7,7 +7,7 @@ import toppra as ta
 import toppra.constraint as constraint
 import toppra.algorithm as algo
 
-from .pymp import *
+from mplib.pymp import *
 
 
 class Planner:
