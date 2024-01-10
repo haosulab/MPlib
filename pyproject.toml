@@ -45,4 +45,14 @@ dirty_template = "{tag}.dev{timestamp:%Y%m%d}+git.{sha}.dirty"
 tag_filter = "v.*"
 
 [tool.black]
-line_length = 79
+line-length = 88
+required-version = "23.12.1"
+preview = true  # FIXME: This behavior is only in 24.* release: https://github.com/psf/black/pull/3992
+extend-exclude = "third_party/"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+atomic = true
+skip_gitignore = true
+skip = ["third_party/"]
