@@ -2,7 +2,7 @@
 
 import numpy as np
 import transforms3d
-from demo_setup import DemoSetup
+from .demo_setup import DemoSetup
 
 class ConstrainedPlanningDemo(DemoSetup):
   """

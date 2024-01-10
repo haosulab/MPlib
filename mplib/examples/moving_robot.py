@@ -1,5 +1,5 @@
 import sapien.core as sapien
-from demo_setup import DemoSetup
+from .demo_setup import DemoSetup
 
 class PlanningDemo(DemoSetup):
     """ This is identical to demo.py except the whole scene is shifted to the bottom right by 1 meter respectively """

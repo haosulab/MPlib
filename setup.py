@@ -89,4 +89,6 @@ setup(
     ext_modules=[CMakeExtension("mplib.pymp")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
+    package_data={"mplib": ["README.md"]},
+    include_package_data=True,
 )

@@ -1,5 +1,5 @@
 import sapien.core as sapien
-from demo_setup import DemoSetup
+from .demo_setup import DemoSetup
 
 class PlanningDemo(DemoSetup):
     """

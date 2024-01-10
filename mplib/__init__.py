@@ -1,2 +1,5 @@
-from .planner import Planner
+"""
+.. include:: ./README.md
+"""
 
+from mplib.planner import Planner

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import mplib
-from demo_setup import DemoSetup
+from .demo_setup import DemoSetup
 
 class DetectCollisionDemo(DemoSetup):
   """

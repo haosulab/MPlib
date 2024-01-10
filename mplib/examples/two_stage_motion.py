@@ -1,7 +1,7 @@
 import sapien.core as sapien
 import mplib
 import numpy as np
-from demo_setup import DemoSetup
+from .demo_setup import DemoSetup
 
 class PlanningDemo(DemoSetup):
     """

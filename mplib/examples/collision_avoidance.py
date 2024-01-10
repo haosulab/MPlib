@@ -1,5 +1,5 @@
 import sapien.core as sapien
-from demo_setup import DemoSetup
+from .demo_setup import DemoSetup
 
 class PlanningDemo(DemoSetup):
     """ The shows the planner's ability to generate a collision free path with the straight path causes collisions """
