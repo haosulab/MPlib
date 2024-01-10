@@ -1,2 +1,40 @@
+[build-system]
+requires = ["setuptools>=59.6.0", "setuptools-git-versioning<2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mplib"
+dynamic = ["version"]
+dependencies = ["numpy", "toppra >= 0.4.0", "transforms3d >= 0.3.1"]
+requires-python = ">=3.6"
+authors = [
+  {email = "minghua@ucsd.edu"},
+]
+description = "A lightweight motion planning library"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["robotics", "motion planning"]
+classifiers=[
+  "Operating System :: POSIX :: Linux",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Other Audience",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Framework :: Robot Framework :: Tool",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Education",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Utilities",
+]
+
 [tool.black]
 line_length = 79
