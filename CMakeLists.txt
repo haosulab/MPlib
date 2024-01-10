@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project(mp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -23,7 +23,7 @@ endif(CCACHE_FOUND)
 # Pinocchio uses its own FindCppAD, but does not provide it.
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 3.4.0 REQUIRED)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(ompl REQUIRED)
 find_package(fcl REQUIRED)
@@ -33,11 +33,11 @@ find_package(orocos_kdl REQUIRED)
 find_package(urdfdom REQUIRED)
 
 include_directories("/usr/include/eigen3")
-include_directories("/usr/local/include/ompl-1.6")
+include_directories(${OMPL_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
 include_directories("src")
 
 # store libries in a variable
-set(LIBS ompl fcl assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
+set(LIBS ompl fcl pinocchio assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
 
 file(GLOB_RECURSE PROJECT_SRC "src/*.h" "src/*.cpp" "src/*.hpp")
 add_library(mp STATIC ${PROJECT_SRC})
