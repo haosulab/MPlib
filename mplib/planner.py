@@ -7,7 +7,7 @@ import toppra as ta
 import toppra.constraint as constraint
 import toppra.algorithm as algo
 
-from .pymp import *
+from mplib.pymp import *
 
 
 class Planner:
@@ -435,6 +435,12 @@ class Planner:
         self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
 
     def set_base_pose(self, pose):
+        """
+        tell the planner where the base of the robot is w.r.t the world frame
+
+        Args:
+            pose: [x,y,z,qw,qx,qy,qz] pose of the base
+        """
         self.robot.set_base_pose(pose)
 
     def set_normal_object(self, name, collision_object):
