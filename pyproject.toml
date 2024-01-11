@@ -36,5 +36,13 @@ classifiers=[
   "Topic :: Utilities",
 ]
 
+[tool.setuptools-git-versioning]
+enabled = true
+version_file = "VERSION"
+count_commits_from_version_file = true
+dev_template = "{tag}.dev{timestamp:%Y%m%d}+git.{sha}"
+dirty_template = "{tag}.dev{timestamp:%Y%m%d}+git.{sha}.dirty"
+tag_filter = "v.*"
+
 [tool.black]
 line_length = 79
