@@ -2,33 +2,28 @@
 
 ## Getting Started
 
-We have provided a docker image `haosulab/mplib-build` based on pypa base image, to compile and package the library.
+We have provided a docker image [`kolinguo/mplib-build`](https://hub.docker.com/r/kolinguo/mplib-build) based on
+`quay.io/pypa/manylinux2014_x86_64` base image, to compile and package the library.
 Most dependencies have been installed.
 The docker file can be found [here](../docker/Dockerfile).
 
-A typical workflow for development can be as follows:
-- Create a docker container: `bash dev/start_docker.sh`
-- Attach the VSCode to the container
-- Build a wheel in the container: `bash dev/build_wheels.sh --py 36`. The repaired wheel will be generated in the `dist/` by default. If you want to generate a repaired wheel, please provide the current version to the script, e.g., `bash dev/build_wheels.sh --py 36 --version 0.0.4`. The repaired wheel will be generated in the `wheelhouse/` by default.
-- The repaired wheel can be installed in the host.
+To building python wheels, run `./dev/build_wheels.sh --py 310`  
+This will install [`cibuildwheel`](https://cibuildwheel.readthedocs.io/en/stable/#how-it-works) via pip and use it to build wheel for the specified python version.  
+The wheel will be generated in the `wheelhouse/`
 
-## VSCode
+### Code Editor Setup
 
-It is suggested to install extensions relevant to: C/C++, CMake.
-
+For Visual Studio Code, it is suggested to install extensions relevant to: C/C++, CMake.  
 You could add the following entries in the setting for convenience:
-- `"compileCommands": "${workspaceFolder}/build/compile_commands.json"`: parse include directories from cmake results
 
-## FAQ
+- `"compileCommands": "${workspaceFolder}/build/compile_commands.json"`:
+parse include directories from cmake results
 
-<details>
-<summary>ImportError: dynamic module does not define module export function</summary>
+For other editors (*e.g.*, vim), use [`clangd`](https://clangd.llvm.org/design/compile-commands).  
+The `compile_commands.json` file can be generated with
+`CMAKE_EXPORT_COMPILE_COMMANDS=ON cmake ..`
 
-Please check whether your extension file `*.so` has the same name as `PYBIND11_MODULE(*, m)`
-
-</details>
-
-## Develop locally (use without docker and python)
+## Develop locally (use without docker)
 
 ### Dependencies
 
@@ -40,7 +35,7 @@ Please check whether your extension file `*.so` has the same name as `PYBIND11_M
 6. Flexible Collision Library `fcl`. This depends on `Eigen3` and `libccd`. Follow the instructions [here](https://github.com/flexible-collision-library/fcl/blob/master/INSTALL). Ubuntu users can also do `sudo apt install libfcl-dev`. (Note: you can also add in the faster hpp-fcl from [here](https://github.com/humanoid-path-planner/hpp-fcl/blob/devel/INSTALL))
 7. Asset import library `assimp`. Install instructions [here](https://github.com/assimp/assimp/blob/master/Build.md)
 8. URDF parser `urdfdom`. Clone from [this repo](https://github.com/ros/urdfdom) and do the usual cmake+make+make install. Ubuntu users can also do `sudo apt install liburdfdom-dev`.
-9.  Rigid-body dynamics library `pinocchio`. Full installation instructions [here](https://stack-of-tasks.github.io/pinocchio/download.html). It's recommended if you install from source as other methods might not configure the paths well.
+9. Rigid-body dynamics library `pinocchio`. Full installation instructions [here](https://stack-of-tasks.github.io/pinocchio/download.html). It's recommended if you install from source as other methods might not configure the paths well.
 10. Additional dynamics library `orocos_kdl`. Install by following the instructions [here](https://github.com/orocos/orocos_kinematics_dynamics/blob/master/orocos_kdl/INSTALL.md). Ubuntu users can also do `sudo apt install liborocos-kdl-dev`.
 
 ### Compile
@@ -48,7 +43,7 @@ Please check whether your extension file `*.so` has the same name as `PYBIND11_M
 One can compile the dynamic library by doing the following:
 
 1. `mkdir build && cd build`
-2. cmake .. && make -j8
+2. `cmake .. && make -j8`
 
 Depending on your python version, you will get a file called `pymp.cpython-310-x86_64-linux-gnu.so` or similar. This is directly importable in python by doing `import pymp`.
 
@@ -65,3 +60,12 @@ Stubs are useful for type checking and IDE autocompletion. To generate stubs, yo
 We use `pdoc` to generate the documentation. First install a version of mplib referring to the section above.
 
 Then, you will need to install `pdoc` with `python3.[version] -m pip install pdoc`. The reason the version is important is because `pdoc` will actually do analysis on the files, so it will scrape through the mplib installed in the site package. Then, run `bash dev/generate_pdoc.sh` from the root of MPlib. This will generate the documentation in the `docs/` directory. Note that you might need to change the version of the python inside the script. The default is 3.11.
+
+## FAQ
+
+<details>
+<summary>ImportError: dynamic module does not define module export function</summary>
+
+Please check whether your extension file `*.so` has the same name as `PYBIND11_MODULE(*, m)`
+
+</details>
