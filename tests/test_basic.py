@@ -1,4 +1,5 @@
 import numpy as np
+
 from mplib import Planner
 
 PANDA_SPEC = {
