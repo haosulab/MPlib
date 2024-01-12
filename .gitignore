@@ -5,7 +5,10 @@ _ext
 *.so
 build/
 dist/
+eggs/
+.eggs/
 *.egg-info/
+.cache
 wheelhouse/
 
 # pybind11-stubgen
