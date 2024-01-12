@@ -11,6 +11,8 @@ To building python wheels, run `./dev/build_wheels.sh --py 310`
 This will install [`cibuildwheel`](https://cibuildwheel.readthedocs.io/en/stable/#how-it-works) via pip and use it to build wheel for the specified python version.  
 The wheel will be generated in the `wheelhouse/`
 
+If you want to start a docker container for debugging, run `./dev/docker_setup.sh`
+
 ### Code Editor Setup
 
 For Visual Studio Code, it is suggested to install extensions relevant to: C/C++, CMake.  
