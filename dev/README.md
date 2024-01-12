@@ -13,6 +13,24 @@ The wheel will be generated in the `wheelhouse/`
 
 If you want to start a docker container for debugging, run `./dev/docker_setup.sh`
 
+### Versioning & Release Process
+Currently, the project is setup to use [`setuptools-git-versioning`](https://setuptools-git-versioning.readthedocs.io/en/v1.13.5/schemas/tag/tag_release.html)
+which automatically sets the python package version based on the latest tag.
+This means that there's no need to manually update the package version in `pyproject.toml` or `setup.py`.
+
+If there are no tags in the current branch, the package version will be determined based on the
+[VERSION](VERSION) file.
+
+#### Release Process
+* Tag commit in the `main` branch with the next release version (e.g., `v0.1.0`).
+  * When the tag is pushed, it triggers a GitHub action to build wheels
+  for all supported python versions and publish to PyPI.
+* Save the next release version (e.g., `v0.2.0`) in the [VERSION](VERSION) file.
+
+Future commits will trigger GitHub action to build nightly wheels with version `v0.2.0.dev{timestamp}+git.{sha}`.
+
+Please do not tag commits in any other branch other than `main`!
+
 ### Code Editor Setup
 
 For Visual Studio Code, it is suggested to install extensions relevant to: C/C++, CMake.  
@@ -62,6 +80,18 @@ Stubs are useful for type checking and IDE autocompletion. To generate stubs, yo
 We use `pdoc` to generate the documentation. First install a version of mplib referring to the section above.
 
 Then, you will need to install `pdoc` with `python3.[version] -m pip install pdoc`. The reason the version is important is because `pdoc` will actually do analysis on the files, so it will scrape through the mplib installed in the site package. Then, run `bash dev/generate_pdoc.sh` from the root of MPlib. This will generate the documentation in the `docs/` directory. Note that you might need to change the version of the python inside the script. The default is 3.11.
+
+## GitHub Action CI/CD
+Currently, a GitHub action is setup to build / release / publish python wheels.
+
+### Push to `main` branch
+This triggers building wheels for all supported python versions and
+creating a [nightly release](https://github.com/haosulab/MPlib/releases/tag/nightly)
+with the built wheels.
+
+### Push tag to branch
+This triggers building wheels for all supported python versions and
+publishing them to [MPlib PyPI](https://pypi.org/p/mplib/).
 
 ## FAQ
 
