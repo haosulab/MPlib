@@ -72,6 +72,7 @@ class CMakeBuild(build_ext):
 setup(
     name="mplib",
     packages=find_packages(include="mplib*"),
+    package_data={"": ["**/*.pyi"], "mplib": ["py.typed"]},
     ext_modules=[CMakeExtension("mplib.pymp")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
