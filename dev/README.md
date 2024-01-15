@@ -69,17 +69,20 @@ Depending on your python version, you will get a file called `pymp.cpython-310-x
 
 To install the entire package along with python glue code, do `python3.[version] -m pip install .` inside the root directory of the project.
 
-## Documentation Generation
+## Stubs & Documentation Generation
 
-### Stub Generation
+To generate stubs and documentations, run `./dev/generate_stub_and_doc.sh`.
+By default it uses `python3.10` in docker image [`kolinguo/mplib-build`](https://hub.docker.com/r/kolinguo/mplib-build).
 
-Stubs are useful for type checking and IDE autocompletion. To generate stubs, you **first need to have mplib compiled and installed**. Then, do `python3.[version] -m pip install pybind11_stubgen` and then run `bash dev/generate_stubs.sh`. This will generate stubs for the entire project in the `stubs/` directory. Note that you might need to change the version of the python inside the script. The default is 3.11.
-
-### Website Generation
-
-We use `pdoc` to generate the documentation. First install a version of mplib referring to the section above.
-
-Then, you will need to install `pdoc` with `python3.[version] -m pip install pdoc`. The reason the version is important is because `pdoc` will actually do analysis on the files, so it will scrape through the mplib installed in the site package. Then, run `bash dev/generate_pdoc.sh` from the root of MPlib. This will generate the documentation in the `docs/` directory. Note that you might need to change the version of the python inside the script. The default is 3.11.
+The script does the following:
+* Build a python wheel using [`cibuildwheel`](https://cibuildwheel.readthedocs.io/en/stable/#how-it-works).
+* In a docker container, install the python wheel and
+use [`pybind11-stubgen`](https://github.com/sizmailov/pybind11-stubgen)
+to generate stubs.  
+Copy the generated stubs into [`mplib`](../mplib/).
+* In a docker container, install the python wheel and
+use [`pdoc`](https://pdoc.dev/docs/pdoc.html) to generate documentations.  
+Copy the generated docs into [`docs`](../docs/).
 
 ## GitHub Action CI/CD
 Currently, a GitHub action is setup to build / release / publish python wheels.

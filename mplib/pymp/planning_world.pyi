@@ -1,18 +1,12 @@
-import mplib.pymp.planning_world
-import typing
+from __future__ import annotations
 import mplib.pymp.articulation
 import mplib.pymp.fcl
 import numpy
-_Shape = typing.Tuple[int, ...]
-
-__all__ = [
-    "PlanningWorld",
-    "WorldCollisionResult"
-]
-
-
-class PlanningWorld():
-    def __init__(self, articulations: list[mplib.pymp.articulation.ArticulatedModel], articulation_names: list[str], normal_objects: list[mplib.pymp.fcl.CollisionObject], normal_object_names: list[str], plan_articulation_id: int = 0) -> None: 
+import typing
+__all__ = ['PlanningWorld', 'WorldCollisionResult']
+M = typing.TypeVar("M", bound=int)
+class PlanningWorld:
+    def __init__(self, articulations: list[mplib.pymp.articulation.ArticulatedModel], articulation_names: list[str], normal_objects: list[mplib.pymp.fcl.CollisionObject], normal_object_names: list[str], plan_articulation_id: int = 0) -> None:
         """
             Planning world for collision checking.
             Args:
@@ -24,7 +18,7 @@ class PlanningWorld():
             Returns:
                 PlanningWorld object
         """
-    def add_articulation(self, model: mplib.pymp.articulation.ArticulatedModel, name: str) -> None: 
+    def add_articulation(self, model: mplib.pymp.articulation.ArticulatedModel, name: str) -> None:
         """
             Add an articulated model to the planning world.
             Args:
@@ -33,7 +27,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def add_articulations(self, models: list[mplib.pymp.articulation.ArticulatedModel], names: list[str]) -> None: 
+    def add_articulations(self, models: list[mplib.pymp.articulation.ArticulatedModel], names: list[str]) -> None:
         """
             Add a list of articulated models to the planning world.
             Args:
@@ -42,14 +36,13 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def collide(self) -> bool: 
+    def collide(self) -> bool:
         """
             Check collision between all objects.
             Returns:
                 True if collision happens
         """
-    @staticmethod
-    def collide_full(*args, **kwargs) -> typing.Any: 
+    def collide_full(self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...) -> list[...]:
         """
             Check collision between the articulated model and all objects.
             Args:
@@ -58,8 +51,7 @@ class PlanningWorld():
             Returns:
                 List of WorldCollisionResult objects
         """
-    @staticmethod
-    def collide_with_others(*args, **kwargs) -> typing.Any: 
+    def collide_with_others(self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...) -> list[...]:
         """
             Check collision between the articulated model and other objects.
             Args:
@@ -68,31 +60,31 @@ class PlanningWorld():
             Returns:
                 List of WorldCollisionResult objects
         """
-    def get_articulations(self) -> list[mplib.pymp.articulation.ArticulatedModel]: 
+    def get_articulations(self) -> list[mplib.pymp.articulation.ArticulatedModel]:
         """
             Get the list of articulated models.
             Returns:
                 list of articulated models as pointers
         """
-    def get_normal_objects(self) -> list[mplib.pymp.fcl.CollisionObject]: 
+    def get_normal_objects(self) -> list[mplib.pymp.fcl.CollisionObject]:
         """
             Get the list of non-articulated collision objects.
             Returns:
                 list of non-articulated collision objects
         """
-    def print_attached_tool_pose(self) -> None: 
+    def print_attached_tool_pose(self) -> None:
         """
             Print the pose of the attached tool.
             Returns:
                 None
         """
-    def remove_attach(self) -> None: 
+    def remove_attach(self) -> None:
         """
             Remove the attached tool.
             Returns:
                 None
         """
-    def remove_normal_object(self, name: str) -> bool: 
+    def remove_normal_object(self, name: str) -> bool:
         """
             Remove a non-articulated collision object from the planning world.
             Args:
@@ -100,8 +92,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    @staticmethod
-    def self_collide(*args, **kwargs) -> typing.Any: 
+    def self_collide(self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...) -> list[...]:
         """
             Check collision between the articulated model and itself.
             Args:
@@ -110,7 +101,7 @@ class PlanningWorld():
             Returns:
                 List of WorldCollisionResult objects
         """
-    def set_normal_object(self, collision_object: str, name: mplib.pymp.fcl.CollisionObject) -> None: 
+    def set_normal_object(self, collision_object: str, name: mplib.pymp.fcl.CollisionObject) -> None:
         """
             Add a non-articulated collision object to the planning world.
             Args:
@@ -119,7 +110,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def set_qpos(self, index: int, qpos: numpy.ndarray[numpy.float64, _Shape[m, 1]]) -> None: 
+    def set_qpos(self, index: int, qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
         """
             Set the joint qpos of the articulated model.
             Args:
@@ -128,7 +119,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def set_qpos_all(self, qpos: numpy.ndarray[numpy.float64, _Shape[m, 1]]) -> None: 
+    def set_qpos_all(self, qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
         """
             Set the joint qpos of all articulated models.
             Args:
@@ -136,7 +127,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def set_use_attach(self, use: bool) -> None: 
+    def set_use_attach(self, use: bool) -> None:
         """
             Set whether to use attached tool for collision checking.
             Args:
@@ -144,7 +135,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def set_use_point_cloud(self, use: bool) -> None: 
+    def set_use_point_cloud(self, use: bool) -> None:
         """
             Set whether to use point cloud for collision checking.
             Args:
@@ -152,8 +143,9 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def update_attached_box(self, size: numpy.ndarray[numpy.float64, _Shape[3, 1]], link_id: int, pose: numpy.ndarray[numpy.float64, _Shape[7, 1]]) -> None: ...
-    def update_attached_mesh(self, mesh_path: str, link_id: int, pose: numpy.ndarray[numpy.float64, _Shape[7, 1]]) -> None: 
+    def update_attached_box(self, size: numpy.ndarray[tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]], link_id: int, pose: numpy.ndarray[tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
+        ...
+    def update_attached_mesh(self, mesh_path: str, link_id: int, pose: numpy.ndarray[tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
         """
             Add mesh as the attached tool.
             Args:
@@ -163,7 +155,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def update_attached_sphere(self, radius: float, link_id: int, pose: numpy.ndarray[numpy.float64, _Shape[7, 1]]) -> None: 
+    def update_attached_sphere(self, radius: float, link_id: int, pose: numpy.ndarray[tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
         """
             Add sphere as the attached tool.
             Args:
@@ -173,7 +165,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def update_attached_tool(self, p_geom: mplib.pymp.fcl.CollisionGeometry, link_id: int, pose: numpy.ndarray[numpy.float64, _Shape[7, 1]]) -> None: 
+    def update_attached_tool(self, p_geom: mplib.pymp.fcl.CollisionGeometry, link_id: int, pose: numpy.ndarray[tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
         """
             Update the attached tool.
             Args:
@@ -183,7 +175,7 @@ class PlanningWorld():
             Returns:
                 None
         """
-    def update_point_cloud(self, vertices: numpy.ndarray[numpy.float64, _Shape[m, 3]], radius: float) -> None: 
+    def update_point_cloud(self, vertices: numpy.ndarray[tuple[M, typing.Literal[3]], numpy.dtype[numpy.float64]], radius: float) -> None:
         """
             Update the point cloud for collision checking.
             Args:
@@ -194,17 +186,13 @@ class PlanningWorld():
         """
     @property
     def use_attach(self) -> bool:
-        """
-        :type: bool
-        """
+        ...
     @property
     def use_point_cloud(self) -> bool:
-        """
-        :type: bool
-        """
-    pass
-class WorldCollisionResult():
+        ...
+class WorldCollisionResult:
     """
+    
         Result of the collision checking.
         Attributes:
             res: whether collision happens
@@ -216,32 +204,19 @@ class WorldCollisionResult():
     """
     @property
     def collision_type(self) -> str:
-        """
-        :type: str
-        """
+        ...
     @property
     def link_name1(self) -> str:
-        """
-        :type: str
-        """
+        ...
     @property
     def link_name2(self) -> str:
-        """
-        :type: str
-        """
+        ...
     @property
     def object_name1(self) -> str:
-        """
-        :type: str
-        """
+        ...
     @property
     def object_name2(self) -> str:
-        """
-        :type: str
-        """
+        ...
     @property
     def res(self) -> mplib.pymp.fcl.CollisionResult:
-        """
-        :type: mplib.pymp.fcl.CollisionResult
-        """
-    pass
+        ...
