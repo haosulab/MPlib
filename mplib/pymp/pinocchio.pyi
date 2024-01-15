@@ -1,4 +1,3 @@
-from __future__ import annotations
 import numpy
 import typing
 __all__ = ['PinocchioModel']

@@ -1,4 +1,3 @@
-from __future__ import annotations
 import numpy
 import typing
 __all__ = ['BVHModel', 'Box', 'Capsule', 'CollisionGeometry', 'CollisionObject', 'CollisionRequest', 'CollisionResult', 'Contact', 'ContactPoint', 'Convex', 'CostSource', 'Cylinder', 'DistanceRequest', 'DistanceResult', 'FCLModel', 'GJKSolverType', 'GST_INDEP', 'GST_LIBCCD', 'OcTree', 'Triangle', 'collide', 'distance', 'load_mesh_as_BVH', 'load_mesh_as_Convex']

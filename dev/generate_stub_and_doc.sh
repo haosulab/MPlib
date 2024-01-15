@@ -51,7 +51,7 @@ BUILD_STUB_CMD="\
   export PATH=\"/opt/python/cp${PY_VERSION}-cp${PY_VERSION}/bin:\${PATH}\" \
   && python3 -m pip install pybind11-stubgen \
   && python3 -m pip install wheelhouse/mplib*.whl \
-  && pybind11-stubgen --numpy-array-use-type-var mplib
+  && python3 dev/stubgen.py
 "
 # TODO: add ruff
 

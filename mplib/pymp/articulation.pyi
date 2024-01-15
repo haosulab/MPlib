@@ -1,7 +1,6 @@
 """
 articulated model submodule, i.e. models with moving parts
 """
-from __future__ import annotations
 import mplib.pymp.fcl
 import mplib.pymp.pinocchio
 import numpy

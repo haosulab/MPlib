@@ -1,4 +1,3 @@
-from __future__ import annotations
 import mplib.pymp.planning_world
 import numpy
 import typing

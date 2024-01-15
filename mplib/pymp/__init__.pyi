@@ -1,7 +1,6 @@
 """
 Motion planning python binding. To see its documentation, please see the stub files in your IDE.
 """
-from __future__ import annotations
 from . import articulation
 from . import fcl
 from . import kdl

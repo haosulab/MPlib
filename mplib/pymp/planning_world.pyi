@@ -1,4 +1,3 @@
-from __future__ import annotations
 import mplib.pymp.articulation
 import mplib.pymp.fcl
 import numpy

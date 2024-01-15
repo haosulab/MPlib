@@ -1,4 +1,3 @@
-from __future__ import annotations
 from mplib.pymp import articulation
 import mplib.pymp.articulation
 from mplib.pymp import fcl
@@ -6,8 +5,8 @@ from mplib.pymp import kdl
 from mplib.pymp import ompl
 from mplib.pymp import pinocchio
 from mplib.pymp import planning_world
-import numpy
 import numpy as np
+import numpy
 import os as os
 import toppra as ta
 from toppra import algorithm as algo
