@@ -15,7 +15,8 @@ wheelhouse/
 stubs/
 
 # ipython/jupyter notebooks
-#*.ipynb
+notebooks/
+*.ipynb
 **/.ipynb_checkpoints/
 
 # Editor temporaries
