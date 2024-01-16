@@ -2,6 +2,11 @@
 
 set -eEu -o pipefail
 
+# Move to the repo folder, so later commands can use relative paths
+SCRIPT_PATH=$(readlink -f "$0")
+REPO_DIR=$(dirname "$(dirname "$SCRIPT_PATH")")
+cd "$REPO_DIR"
+
 PY_VERSION=
 while (("$#")); do
   case "$1" in
@@ -31,7 +36,7 @@ if ! command -v "cibuildwheel" &>/dev/null; then
 fi
 
 if [ "$PY_VERSION" == "all" ]; then
-  cibuildwheel --platform linux
+  python3 -m cibuildwheel --platform linux
 else
-  CIBW_BUILD="cp${PY_VERSION}-*" cibuildwheel --platform linux
+  CIBW_BUILD="cp${PY_VERSION}-*" python3 -m cibuildwheel --platform linux
 fi
