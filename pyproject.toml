@@ -101,6 +101,7 @@ docstring-code-format = true
 skip = ["*-musllinux_*", "pp*"]
 build-frontend = "build"
 manylinux-x86_64-image = "kolinguo/mplib-build:latest"
+container-engine = { name = "docker", create-args = ["--rm"]}
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64"]
