@@ -594,6 +594,19 @@ class Planner:
         else:
             return {"status": "RRT Failed. %s" % status}
 
+    def transform_goal_to_wrt_base(self, goal_pose):
+        base_pose = self.robot.get_base_pose()
+        base_tf = np.eye(4)
+        base_tf[0:3, 3] = base_pose[:3]
+        base_tf[0:3, 0:3] = quat2mat(base_pose[3:])
+        goal_tf = np.eye(4)
+        goal_tf[0:3, 3] = goal_pose[:3]
+        goal_tf[0:3, 0:3] = quat2mat(goal_pose[3:])
+        goal_tf = np.linalg.inv(base_tf).dot(goal_tf)
+        goal_pose[:3] = goal_tf[0:3, 3]
+        goal_pose[3:] = mat2quat(goal_tf[0:3, 0:3])
+        return goal_pose
+
     def plan_qpos_to_pose(
         self,
         goal_pose,
@@ -606,7 +619,7 @@ class Planner:
         use_point_cloud=False,
         use_attach=False,
         verbose=False,
-        wrt_world=False,
+        wrt_world=True,
         planner_name="RRTConnect",
         no_simplification=False,
         constraint_function=None,
@@ -638,16 +651,7 @@ class Planner:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
         if wrt_world:
-            base_pose = self.robot.get_base_pose()
-            base_tf = np.eye(4)
-            base_tf[0:3, 3] = base_pose[:3]
-            base_tf[0:3, 0:3] = quat2mat(base_pose[3:])
-            goal_tf = np.eye(4)
-            goal_tf[0:3, 3] = goal_pose[:3]
-            goal_tf[0:3, 0:3] = quat2mat(goal_pose[3:])
-            goal_tf = np.linalg.inv(base_tf).dot(goal_tf)
-            goal_pose[:3] = goal_tf[0:3, 3]
-            goal_pose[3:] = mat2quat(goal_tf[0:3, 0:3])
+            goal_pose = self.transform_goal_to_wrt_base(goal_pose)
 
         idx = (
             self.move_group_joint_indices
@@ -702,6 +706,7 @@ class Planner:
         use_point_cloud=False,
         use_attach=False,
         verbose=False,
+        wrt_world=True,
     ):
         """
         plan from a start configuration to a goal pose of the end-effector using screw motion
@@ -714,11 +719,15 @@ class Planner:
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will use the attached tool to avoid collision
             verbose: if True, will print the log of TOPPRA
+            wrt_world: if true, interpret the target pose with respect to the world frame instead of the base frame
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
         qpos = self.pad_qpos(qpos.copy())
         self.robot.set_qpos(qpos, True)
+
+        if wrt_world:
+            target_pose = self.transform_goal_to_wrt_base(target_pose)
 
         def pose7D2mat(pose):
             mat = np.eye(4)
