@@ -59,9 +59,9 @@ class PlanningDemo(DemoSetup):
         the poses are specified with respect to the world
         """
         poses = [
-            [0.4, 0.3, 0.12, 0, 1, 0, 0],
-            [0.2, -0.3, 0.08, 0, 1, 0, 0],
-            [0.6, 0.1, 0.14, 0, 1, 0, 0],
+            [1.4, 1.3, 0.12, 0, 1, 0, 0],
+            [1.2, 0.7, 0.08, 0, 1, 0, 0],
+            [1.6, 1.1, 0.14, 0, 1, 0, 0],
         ]
         for i in range(3):
             pose = poses[i]
