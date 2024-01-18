@@ -167,7 +167,7 @@ SKIP_ACCESS = [
 job_count = cpu_count()
 job_semaphore = Semaphore(job_count)
 errors_detected = False
-docstring_width = 70
+docstring_width = 80
 
 
 class NoFilenamesError(ValueError):
