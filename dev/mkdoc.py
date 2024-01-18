@@ -4,7 +4,8 @@ pybind11_mkdoc: Extract documentation from C++ header files to use it in Python 
 
 Requires: libclang
 
-Derived from https://github.com/pybind/pybind11_mkdoc
+Derived from https://github.com/pybind/pybind11_mkdoc and
+https://github.com/RobotLocomotion/drake/blob/849d537302191f0be98875da359580d341836869/tools/workspace/pybind11/mkdoc.py#L642
 
   Copyright (c) 2016 Wenzel Jakob <wenzel.jakob@epfl.ch>,
   All rights reserved.
@@ -52,9 +53,24 @@ from multiprocessing import cpu_count
 from threading import Semaphore, Thread
 
 from clang import cindex
-from clang.cindex import CursorKind
+from clang.cindex import AccessSpecifier, CursorKind
 
 __version__ = "2.6.3"
+
+CLASS_KINDS = [
+    CursorKind.CLASS_DECL,
+    CursorKind.STRUCT_DECL,
+    CursorKind.CLASS_TEMPLATE,
+]
+
+FUNCTION_KINDS = [
+    CursorKind.FUNCTION_DECL,
+    CursorKind.FUNCTION_TEMPLATE,
+    CursorKind.CONVERSION_FUNCTION,
+    CursorKind.CXX_METHOD,
+    CursorKind.CONSTRUCTOR,
+]
+
 
 RECURSE_LIST = [
     CursorKind.TRANSLATION_UNIT,
@@ -65,19 +81,18 @@ RECURSE_LIST = [
     CursorKind.CLASS_TEMPLATE,
 ]
 
-PRINT_LIST = [
-    CursorKind.CLASS_DECL,
-    CursorKind.STRUCT_DECL,
-    CursorKind.ENUM_DECL,
-    CursorKind.ENUM_CONSTANT_DECL,
-    CursorKind.CLASS_TEMPLATE,
-    CursorKind.FUNCTION_DECL,
-    CursorKind.FUNCTION_TEMPLATE,
-    CursorKind.CONVERSION_FUNCTION,
-    CursorKind.CXX_METHOD,
-    CursorKind.CONSTRUCTOR,
-    CursorKind.FIELD_DECL,
-]
+PRINT_LIST = (
+    CLASS_KINDS
+    + FUNCTION_KINDS
+    + [
+        CursorKind.ENUM_DECL,
+        CursorKind.ENUM_CONSTANT_DECL,
+        CursorKind.FIELD_DECL,
+        # NOTE: drake also processes type alias and typedef
+        # CursorKind.TYPE_ALIAS_DECL,  # using x = y
+        # CursorKind.TYPEDEF_DECL,
+    ]
+)
 
 PREFIX_BLACKLIST = [CursorKind.TRANSLATION_UNIT]
 
@@ -120,6 +135,32 @@ CPP_OPERATORS = {
 
 CPP_OPERATORS = OrderedDict(sorted(CPP_OPERATORS.items(), key=lambda t: -len(t[0])))
 
+# 'Broadphase' culling; do not recurse inside these symbols.
+SKIP_RECURSE_NAMES = [
+    "Eigen",
+    "detail",
+    "dev",
+    "google",
+    "internal",
+    "std",
+    "tinyxml2",
+]
+
+# Filter based on partial names.
+SKIP_PARTIAL_NAMES = [
+    "operator new",
+    "operator delete",
+    "operator=",
+    "operator->",
+    "operator<<",
+    "operator>>",
+]
+
+# Filter based on access.
+SKIP_ACCESS = [
+    AccessSpecifier.PRIVATE,
+]
+
 job_count = cpu_count()
 job_semaphore = Semaphore(job_count)
 errors_detected = False
@@ -130,8 +171,32 @@ class NoFilenamesError(ValueError):
     pass
 
 
-def d(s):
+def d(s) -> str:
     return s if isinstance(s, str) else s.decode("utf8")
+
+
+def is_accepted_cursor(cursor, name_chain) -> bool:
+    """
+    Determines if a symbol should be visited or not, given the cursor and the
+    name chain.
+    """
+    name = cursor.spelling
+    # N.B. See TODO in `get_name_chain`.
+    for piece in name_chain + (name,):
+        if piece in SKIP_RECURSE_NAMES:
+            return False
+    for skip_partial_name in SKIP_PARTIAL_NAMES:
+        if skip_partial_name in name:
+            return False
+    if cursor.access_specifier in SKIP_ACCESS:
+        return False
+    # TODO(eric.cousineau): Remove `cursor.is_default_method()`? May make
+    # things unstable.
+    if cursor.kind in CLASS_KINDS and not cursor.is_definition():
+        # Don't process forward declarations.  If we did, we'd define the class
+        # overview documentation twice; both cursors have a .raw_comment value.
+        return False
+    return True
 
 
 def sanitize_name(name):
@@ -144,36 +209,97 @@ def sanitize_name(name):
     return "__doc_" + name
 
 
-def process_comment(comment):
-    result = ""
-
+def process_comment(comment: str) -> str:
     # Remove C++ comment syntax
+    s = remove_cpp_comment_syntax(comment)
+
+    # HTML tags. Support both lowercase and uppercase tags.
+    # TODO (betsymcphail): Not tested
+    s = replace_html_tags(s)
+
+    s = s.replace("``true``", "``True``")
+    s = s.replace("``false``", "``False``")
+
+    # Exceptions
+    s = replace_exceptions(s)
+
+    # Doxygen tags
+    s = process_doxygen_commands(s)
+
+    # Reflow text where appropriate.
+    s = reflow(s)
+    return s
+
+
+def remove_cpp_comment_syntax(comment: str) -> str:
+    result = ""
     leading_spaces = float("inf")
-    for s in comment.expandtabs(tabsize=4).splitlines():
-        s = s.strip()
-        if s.endswith("*/"):
-            s = s[:-2].rstrip("*")
-        if s.startswith("/*"):
-            s = s[2:].lstrip("*!<")
-        elif s.startswith("//"):
-            s = s[2:].lstrip("/!<")
-        elif s.startswith("*"):
-            s = s[1:]
-        if len(s) > 0:
-            leading_spaces = min(leading_spaces, len(s) - len(s.lstrip()))
-        result += s + "\n"
+    for line in comment.expandtabs(tabsize=4).splitlines():
+        line = line.strip()
+        if line.endswith("*/"):
+            line = line[:-2].rstrip("*")
+        if line.startswith("/*"):
+            line = line[2:].lstrip("*!<")
+        elif line.startswith("//"):
+            line = line[2:].lstrip("/!<")
+        elif line.startswith("*"):
+            line = line[1:]
+        if len(line) > 0:
+            leading_spaces = min(leading_spaces, len(line) - len(line.lstrip()))
+        result += line + "\n"
 
     if leading_spaces != float("inf"):
         result2 = ""
-        for s in result.splitlines():
-            result2 += s[leading_spaces:] + "\n"
+        for line in result.splitlines():
+            result2 += line[leading_spaces:] + "\n"
         result = result2
+    return result
 
+
+def replace_html_tags(s):
+    s = re.sub(r"<tt>(.*?)</tt>", r"``\1``", s, flags=re.DOTALL)
+    s = re.sub(r"<pre>(.*?)</pre>", r"```\n\1\n```\n", s, flags=re.DOTALL)
+    s = re.sub(r"<em>(.*?)</em>", r"*\1*", s, flags=re.DOTALL)
+    s = re.sub(r"<b>(.*?)</b>", r"**\1**", s, flags=re.DOTALL)
+    s = re.sub(r"[\\@]f\$(.*?)[\\@]f\$", r":math:`\1`", s, flags=re.DOTALL)
+    s = re.sub(r"<li>", r"\n\n* ", s)
+    s = re.sub(r"</?ul>", r"", s)
+    s = re.sub(r"</li>", r"\n\n", s)
+    return s
+
+
+def replace_exceptions(s):
+    s = s.replace("std::bad_alloc", "MemoryError")
+    s = s.replace("std::bad_any_cast", "RuntimeError")
+    s = s.replace("std::bad_array_new_length", "MemoryError")
+    s = s.replace("std::bad_cast", "RuntimeError")
+    s = s.replace("std::bad_exception", "RuntimeError")
+    s = s.replace("std::bad_function_call", "RuntimeError")
+    s = s.replace("std::bad_optional_access", "RuntimeError")
+    s = s.replace("std::bad_typeid", "RuntimeError")
+    s = s.replace("std::bad_variant_access", "RuntimeError")
+    s = s.replace("std::bad_weak_ptr", "RuntimeError")
+    s = s.replace("std::domain_error", "ValueError")
+    s = s.replace("std::exception", "RuntimeError")
+    s = s.replace("std::future_error", "RuntimeError")
+    s = s.replace("std::invalid_argument", "ValueError")
+    s = s.replace("std::length_error", "ValueError")
+    s = s.replace("std::logic_error", "RuntimeError")
+    s = s.replace("std::out_of_range", "ValueError")
+    s = s.replace("std::overflow_error", "RuntimeError")
+    s = s.replace("std::range_error", "ValueError")
+    s = s.replace("std::regex_error", "RuntimeError")
+    s = s.replace("std::runtime_error", "RuntimeError")
+    s = s.replace("std::system_error", "RuntimeError")
+    s = s.replace("std::underflow_error", "RuntimeError")
+    return s
+
+
+def process_doxygen_commands(s):
     # Doxygen tags
     cpp_group = r"([^\s]+)"
     param_group = r"([\[\w:,\]]+)"
 
-    s = result
     s = re.sub(r"[\\@][cp]\s+%s" % cpp_group, r"``\1``", s)
     s = re.sub(r"[\\@]a\s+%s" % cpp_group, r"*\1*", s)
     s = re.sub(r"[\\@]e\s+%s" % cpp_group, r"*\1*", s)
@@ -181,32 +307,48 @@ def process_comment(comment):
     s = re.sub(r"[\\@]b\s+%s" % cpp_group, r"**\1**", s)
     s = re.sub(r"[\\@]ingroup\s+%s" % cpp_group, r"", s)
     s = re.sub(
-        rf"[\\@]param{param_group}?\s+{cpp_group}", r"\n\n$Parameter ``\2``:\n\n", s
+        rf"[\\@]param{param_group}?\s+{cpp_group}:",
+        # r"\n\n$Parameter ``\2``:\n\n",
+        r"\n$:param \2:\n",
+        s,
     )
     s = re.sub(
-        rf"[\\@]tparam{param_group}?\s+{cpp_group}",
-        r"\n\n$Template parameter ``\2``:\n\n",
+        rf"[\\@]tparam{param_group}?\s+{cpp_group}:",
+        # r"\n\n$Template parameter ``\2``:\n\n",
+        r"\n$:tparam \2:\n",
         s,
     )
 
     # Remove class and struct tags
     s = re.sub(r"[\\@](class|struct)\s+.*", "", s)
 
-    for in_, out_ in {
-        "returns": "Returns",
-        "return": "Returns",
-        "authors": "Authors",
-        "author": "Author",
-        "copyright": "Copyright",
-        "date": "Date",
-        "remark": "Remark",
-        "sa": "See also",
-        "see": "See also",
-        "extends": "Extends",
-        "throws": "Throws",
-        "throw": "Throws",
-    }.items():
-        s = re.sub(r"[\\@]%s\s*" % in_, r"\n\n$%s:\n\n" % out_, s)
+    # Ordering is significant for command names with a common prefix.
+    for in_, out_ in (
+        ("returns", "return"),
+        ("return", "return"),
+        ("authors", "authors"),
+        ("author", "author"),
+        ("copyright", "copyright"),
+        ("date", "date"),
+        ("note", "note"),
+        ("remark", "remark"),
+        ("sa", "seealso"),
+        ("see", "seealso"),
+        ("extends", "base"),
+        ("throws", "raises"),
+        ("throw", "raises"),
+        ("version", "version"),
+    ):
+        if out_ == "raises":
+            s = re.sub(rf"[\\@]{in_}\s*(\w+Error):*", rf"\n:{out_} \1:\n", s)
+        else:
+            s = re.sub(
+                # r"[\\@]%s\s*" % in_,
+                rf"[\\@]{in_}\s*:*",
+                # r"\n\n$%s:\n\n" % out_,
+                rf"\n$:{out_}:\n",
+                s,
+            )
 
     s = re.sub(r"[\\@]details\s*", r"\n\n", s)
     s = re.sub(r"[\\@]brief\s*", r"", s)
@@ -232,24 +374,17 @@ def process_comment(comment):
     )
     s = re.sub(r"[\\@]todo\s?(.*?)\s?\n\n", r"$.. todo::\n\n\1\n\n", s, flags=re.DOTALL)
 
-    # HTML/TeX tags
-    s = re.sub(r"<tt>(.*?)</tt>", r"``\1``", s, flags=re.DOTALL)
-    s = re.sub(r"<pre>(.*?)</pre>", r"```\n\1\n```\n", s, flags=re.DOTALL)
-    s = re.sub(r"<em>(.*?)</em>", r"*\1*", s, flags=re.DOTALL)
-    s = re.sub(r"<b>(.*?)</b>", r"**\1**", s, flags=re.DOTALL)
-    s = re.sub(r"[\\@]f\$(.*?)[\\@]f\$", r":math:`\1`", s, flags=re.DOTALL)
-    s = re.sub(r"<li>", r"\n\n* ", s)
-    s = re.sub(r"</?ul>", r"", s)
-    s = re.sub(r"</li>", r"\n\n", s)
+    return s
 
-    s = s.replace("``true``", "``True``")
-    s = s.replace("``false``", "``False``")
 
+def reflow(s):
     # Re-flow text
     wrapper = textwrap.TextWrapper()
+    wrapper.break_long_words = False
+    wrapper.break_on_hyphens = False
+    wrapper.drop_whitespace = True
     wrapper.expand_tabs = True
     wrapper.replace_whitespace = True
-    wrapper.drop_whitespace = True
     wrapper.width = docstring_width
     wrapper.initial_indent = wrapper.subsequent_indent = ""
 
@@ -266,39 +401,78 @@ def process_comment(comment):
             result += x.strip()
         else:
             for y in re.split(r"(?: *\n *){2,}", x):
-                wrapped = wrapper.fill(re.sub(r"\s+", " ", y).strip())
-                if len(wrapped) > 0 and wrapped[0] == "$":
-                    result += wrapped[1:] + "\n"
-                    wrapper.initial_indent = wrapper.subsequent_indent = " " * 4
+                lines = re.split(r"(?: *\n *)", y)
+                # Do not reflow lists or section headings.
+                if re.match(r"^(?:[*+\-]|[0-9]+[.)]) ", lines[0]) or (
+                    len(lines) > 1
+                    and (
+                        lines[1] == "=" * len(lines[0])
+                        or lines[1] == "-" * len(lines[0])
+                    )
+                ):
+                    result += y + "\n\n"
                 else:
-                    if len(wrapped) > 0:
-                        result += wrapped + "\n\n"
-                    wrapper.initial_indent = wrapper.subsequent_indent = ""
+                    wrapped = wrapper.fill(re.sub(r"\s+", " ", y).strip())
+                    if len(wrapped) > 0 and wrapped[0] == "$":
+                        result += wrapped[1:] + "\n"
+                        # wrapper.initial_indent = wrapper.subsequent_indent = " " * 4
+                        wrapper.subsequent_indent = " " * 4
+                    else:
+                        if len(wrapped) > 0:
+                            result += wrapped + (
+                                "\n" if wrapped.startswith(":") else "\n\n"
+                            )
+                        wrapper.initial_indent = wrapper.subsequent_indent = ""
+
     return result.rstrip().lstrip("\n")
 
 
-def extract(filename, node, prefix, output):
+def get_name_chain(cursor):
+    """
+    Extracts the pieces for a namespace-qualified name for a symbol.
+    """
+    # TODO(eric.cousineau): Try to restrict the name_chain to end with name. I
+    # briefly tried this once by culling based on accepted cursors, but lost
+    # needed symbols because of it.
+    name = cursor.spelling
+    name_chain = [name]
+    p = cursor.semantic_parent
+    while p and not p.kind.is_translation_unit():
+        piece = p.spelling
+        name_chain.insert(0, piece)
+        p = p.semantic_parent
+    # Prune away the names of anonymous structs and enums.
+    name_chain = [x for x in name_chain if x != "" and not x.startswith("(unnamed")]
+    return tuple(name_chain)
+
+
+def extract(filename, cursor, prefix, output):
     if not (
-        node.location.file is None
-        or os.path.samefile(d(node.location.file.name), filename)
+        cursor.location.file is None
+        or os.path.samefile(d(cursor.location.file.name), filename)
     ):
         return 0
-    if node.kind in RECURSE_LIST:
+
+    name_chain = get_name_chain(cursor)
+    if not is_accepted_cursor(cursor, name_chain):
+        return
+
+    if cursor.kind in RECURSE_LIST:
         sub_prefix = prefix
-        if node.kind not in PREFIX_BLACKLIST:
+        if cursor.kind not in PREFIX_BLACKLIST:
             if len(sub_prefix) > 0:
                 sub_prefix += "_"
-            sub_prefix += d(node.spelling)
-        for i in node.get_children():
+            sub_prefix += d(cursor.spelling)
+        for i in cursor.get_children():
             extract(filename, i, sub_prefix, output)
-    if node.kind in PRINT_LIST:
-        comment = d(node.raw_comment) if node.raw_comment is not None else ""
+    if cursor.kind in PRINT_LIST:
+        comment = d(cursor.raw_comment) if cursor.raw_comment is not None else ""
         comment = process_comment(comment)
         sub_prefix = prefix
         if len(sub_prefix) > 0:
             sub_prefix += "_"
-        if len(node.spelling) > 0:
-            name = sanitize_name(sub_prefix + d(node.spelling))
+        if len(cursor.spelling) > 0:
+            name = sanitize_name(sub_prefix + d(cursor.spelling))
             output.append((name, filename, comment))
 
 
@@ -444,6 +618,7 @@ def read_args(args):
                 if os.path.exists(cpp_dir)
             ])
 
+        cpp_dirs = []  # NOTE: this causes issues in quay.io/pypa/manylinux2014_x86_64
         for cpp_dir in cpp_dirs:
             if cpp_dir is None:
                 continue
@@ -477,9 +652,12 @@ def extract_all(args):
 
 def write_header(comments, out_file=sys.stdout):
     print(
-        """/*
+        """\
+#pragma once
+
+/*
   This file contains docstrings for use in the Python bindings.
-  Do not edit! They were automatically extracted by pybind11_mkdoc.
+  Do not edit! They were automatically extracted by mkdoc.py.
  */
 
 #define __EXPAND(x)                                      x
@@ -499,8 +677,7 @@ def write_header(comments, out_file=sys.stdout):
 #if defined(__GNUG__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
-""",  # noqa: E501
+#endif""",  # noqa: E501
         file=out_file,
     )
 
@@ -524,8 +701,7 @@ def write_header(comments, out_file=sys.stdout):
         """
 #if defined(__GNUG__)
 #pragma GCC diagnostic pop
-#endif
-""",
+#endif""",
         file=out_file,
     )
 
