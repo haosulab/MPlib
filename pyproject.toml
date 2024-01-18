@@ -92,7 +92,18 @@ select = [
   "RUF016",  # type error non-integer index
   "RUF017",  # avoid quadratic list summation
 ]
+ignore = [
+  "EXE002",  # ntfs has no executable bit
+]
 exclude = ["third_party"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+  "F401",  # unused import
+]
+"*.pyi" = [
+  "PYI021",  # allow docstrings in stub files
+]
 
 [tool.ruff.format]
 docstring-code-format = true

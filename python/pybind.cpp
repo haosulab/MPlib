@@ -10,9 +10,7 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(pymp, m) {
-  m.doc() =
-      "Motion planning python binding. To see its documentation, please see the stub "
-      "files in your IDE.";
+  m.doc() = "Motion planning python binding";
   build_pyfcl(m);
   build_pypinocchio(m);
   build_pykdl(m);

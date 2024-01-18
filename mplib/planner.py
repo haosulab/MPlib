@@ -28,7 +28,7 @@ class Planner:
         joint_acc_limits: Union[Sequence[float], np.ndarray] = [],
         **kwargs,
     ):
-        r"""Motion planner for robots.
+        """Motion planner for robots.
 
         Args:
             urdf: Unified Robot Description Format file.
