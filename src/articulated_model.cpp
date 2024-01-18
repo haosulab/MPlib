@@ -45,7 +45,7 @@ ArticulatedModelTpl<DATATYPE>::ArticulatedModelTpl(
   fcl_model.removeCollisionPairsFromSrdf(srdf_filename);
   current_qpos = VectorX::Constant(pinocchio_model.getModel().nv, 0);
   setMoveGroup(user_link_names);
-  base_tf = Transform3::Identity();
+  setBasePose({0, 0, 0, 1, 0, 0, 0});  // initialize base pose to identity
 }
 
 template <typename DATATYPE>

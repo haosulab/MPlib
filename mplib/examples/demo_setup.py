@@ -4,7 +4,7 @@ import sapien.core as sapien
 from sapien.utils.viewer import Viewer
 
 import mplib
-
+import numpy as np
 
 class DemoSetup:
     """

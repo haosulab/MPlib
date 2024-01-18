@@ -1,6 +1,6 @@
 import sapien.core as sapien
 
-from .demo_setup import DemoSetup
+from mplib.examples.demo_setup import DemoSetup
 
 
 class PlanningDemo(DemoSetup):
@@ -54,14 +54,14 @@ class PlanningDemo(DemoSetup):
     def demo(self):
         """
         Same demo as demo.py.
-        Although we shifted everything, the poses have not changed because these are w.r.t. the robot base
-        Alternatively, we can also shift the poses by 1 meter in the x and y direction and tell the planner
-        the poses are specified with respect to the world
+        Since we shifted the robot, we also need to shift the poses by 1 meter in the x and y direction
+        Alternatively, we can keep the poses the same and tell the planner
+        the poses are specified with respect to the base of the robot
         """
         poses = [
-            [0.4, 0.3, 0.12, 0, 1, 0, 0],
-            [0.2, -0.3, 0.08, 0, 1, 0, 0],
-            [0.6, 0.1, 0.14, 0, 1, 0, 0],
+            [1.4, 1.3, 0.12, 0, 1, 0, 0],
+            [1.2, 0.7, 0.08, 0, 1, 0, 0],
+            [1.6, 1.1, 0.14, 0, 1, 0, 0],
         ]
         for i in range(3):
             pose = poses[i]
@@ -81,14 +81,14 @@ class PlanningDemo(DemoSetup):
             pose[2] += 0.12
             self.move_to_pose(pose)
 
-        # convert the poses to be w.r.t. the world
+        # convert the poses to be w.r.t. the base
         for pose in poses:
-            pose[0] += 1
-            pose[1] += 1
+            pose[0] -= 1
+            pose[1] -= 1
 
         # plan a path to the first pose
         result = self.planner.plan_qpos_to_pose(
-            poses[0], self.planner.robot.get_qpos(), time_step=1 / 250, wrt_world=True
+            poses[0], self.planner.robot.get_qpos(), time_step=1 / 250, wrt_world=False
         )
         if result["status"] != "Success":
             print(result["status"])
