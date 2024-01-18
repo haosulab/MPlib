@@ -37,7 +37,7 @@ include_directories(${OMPL_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
 include_directories("src")
 
 # store libries in a variable
-set(LIBS ompl fcl pinocchio assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
+set(LIBS ompl fcl assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
 
 file(GLOB_RECURSE PROJECT_SRC "src/*.h" "src/*.cpp" "src/*.hpp")
 add_library(mp STATIC ${PROJECT_SRC})

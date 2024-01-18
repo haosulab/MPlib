@@ -3,7 +3,7 @@ import sapien.core as sapien
 
 import mplib
 
-from .demo_setup import DemoSetup
+from mplib.examples.demo_setup import DemoSetup
 
 
 class PlanningDemo(DemoSetup):

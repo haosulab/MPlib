@@ -603,9 +603,10 @@ class Planner:
         goal_tf[0:3, 3] = goal_pose[:3]
         goal_tf[0:3, 0:3] = quat2mat(goal_pose[3:])
         goal_tf = np.linalg.inv(base_tf).dot(goal_tf)
-        goal_pose[:3] = goal_tf[0:3, 3]
-        goal_pose[3:] = mat2quat(goal_tf[0:3, 0:3])
-        return goal_pose
+        new_goal_pose = np.zeros(7)
+        new_goal_pose[:3] = goal_tf[0:3, 3]
+        new_goal_pose[3:] = mat2quat(goal_tf[0:3, 0:3])
+        return new_goal_pose
 
     def plan_qpos_to_pose(
         self,
