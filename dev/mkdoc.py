@@ -38,6 +38,7 @@ https://github.com/RobotLocomotion/drake/blob/849d537302191f0be98875da359580d341
 
 Syntax: mkdoc.py [-o <file>] [-I<dir> ..] [-D<macro>=<value> ..] [.. header files ..]
 """
+from __future__ import annotations
 
 import argparse
 import ctypes.util
@@ -50,7 +51,9 @@ import textwrap
 from collections import OrderedDict
 from glob import glob
 from multiprocessing import cpu_count
+from pathlib import Path
 from threading import Semaphore, Thread
+from typing import Optional
 
 from clang import cindex
 from clang.cindex import AccessSpecifier, CursorKind
@@ -650,7 +653,7 @@ def extract_all(args):
     return output
 
 
-def write_header(comments, out_file=sys.stdout):
+def write_header(comments, custom_lines: list[str], outfile=sys.stdout):
     print(
         """\
 #pragma once
@@ -678,7 +681,7 @@ def write_header(comments, out_file=sys.stdout):
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif""",  # noqa: E501
-        file=out_file,
+        file=outfile,
     )
 
     name_ctr = 1
@@ -694,19 +697,47 @@ def write_header(comments, out_file=sys.stdout):
             '\nstatic const char *{} ={}R"doc({})doc";'.format(
                 name, "\n" if "\n" in comment else " ", comment
             ),
-            file=out_file,
+            file=outfile,
         )
+
+    # Custom docstring section
+    print("\n" + "".join(custom_lines), end="", file=outfile)
 
     print(
         """
 #if defined(__GNUG__)
 #pragma GCC diagnostic pop
 #endif""",
-        file=out_file,
+        file=outfile,
     )
 
 
-def mkdoc(args, width, output=None):
+def read_custom_docstring(outfile_path: Path) -> list[str]:
+    start_line = "/* ----- Begin of custom docstring section ----- */\n"
+    end_line = "/* ----- End of custom docstring section ----- */\n"
+
+    custom_docstring_lines = []
+
+    is_custom_line = False
+    if outfile_path.is_file():
+        with outfile_path.open("r") as outfile:
+            for line in outfile:
+                if line == start_line:
+                    is_custom_line = True
+                elif line == end_line:
+                    is_custom_line = False
+                elif is_custom_line:
+                    custom_docstring_lines.append(line)
+    assert not is_custom_line, "Invalid custom docstring section: no end_line provided"
+
+    # Leave an empty section
+    if len(custom_docstring_lines) == 0:
+        custom_docstring_lines = ["\n"]
+
+    return [start_line] + custom_docstring_lines + [end_line]
+
+
+def mkdoc(args, width, output: Optional[str] = None):
     """
     :param args: mkdoc_args format: ["-Iinclude/", "-DDEBUG=1", "test.h", "foo.h"]
     """
@@ -718,13 +749,17 @@ def mkdoc(args, width, output=None):
         return
 
     if output:
+        outfile_path = Path(output).resolve()
+        outfile_path.parent.mkdir(exist_ok=True)
+
+        # Read custom docstring section (e.g., lambda functions in pybind11)
+        custom_lines = read_custom_docstring(outfile_path)
         try:
-            os.makedirs(os.path.dirname(os.path.abspath(output)), exist_ok=True)
-            with open(output, "w") as out_file:
-                write_header(comments, out_file)
+            with outfile_path.open("w") as outfile:
+                write_header(comments, custom_lines, outfile)
         except:
             # In the event of an error, don't leave a partially-written output file.
-            os.unlink(output)
+            outfile_path.unlink()
             raise
     else:
         write_header(comments)
