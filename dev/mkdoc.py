@@ -694,7 +694,7 @@ def write_header(comments, custom_lines: list[str], outfile=sys.stdout):
             name_prev = name
             name_ctr = 1
         print(
-            '\nstatic const char *{} ={}R"doc({})doc";'.format(
+            '\nstatic const char *{} ={}R"doc(\n{})doc";'.format(
                 name, "\n" if "\n" in comment else " ", comment
             ),
             file=outfile,
