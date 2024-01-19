@@ -558,7 +558,7 @@ def read_args(args):
         # Ability to override LLVM/libclang paths
         if "LLVM_DIR_PATH" in os.environ:
             llvm_dir = os.environ["LLVM_DIR_PATH"]
-        elif llvm_dir is None and cindex.Config.library_path is None:
+        elif llvm_dir is None:
             raise FileNotFoundError(
                 "Failed to find a LLVM installation providing the file "
                 "/usr/lib{32,64}/llvm-{VER}/lib/libclang.so.1. Make sure that "
@@ -600,15 +600,14 @@ def read_args(args):
             cpp_dirs.append(os.path.join(llvm_dir, "include", "c++", "v1"))
 
         if "CLANG_INCLUDE_DIR" in os.environ:
-            cpp_dirs.append(os.environ["CLANG_INCLUDE_DIR"])
-        elif llvm_dir is not None:
-            cpp_dirs.append(
-                max(
-                    glob(os.path.join(llvm_dir, "lib", "clang", "*", "include")),
-                    default=None,
-                    key=folder_version,
-                )
+            clang_include_dir = os.environ["CLANG_INCLUDE_DIR"]
+        else:
+            clang_include_dir = max(
+                glob(os.path.join(llvm_dir, "lib", "clang", "*", "include")),
+                default=None,
+                key=folder_version,
             )
+        cpp_dirs.append(clang_include_dir)
 
         cpp_dirs.append("/usr/include/%s-linux-gnu" % platform.machine())
         cpp_dirs.append("/usr/include")
@@ -626,6 +625,8 @@ def read_args(args):
             if cpp_dir is None:
                 continue
             parameters.extend(["-isystem", cpp_dir])
+        # Include clang header files
+        parameters.append(f"-I{clang_include_dir}")
 
     for item in args:
         if item.startswith("-"):
