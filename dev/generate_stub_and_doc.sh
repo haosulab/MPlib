@@ -48,7 +48,7 @@ dev/build_wheels.sh --py "$PY_VERSION"
 # Section 2: Build stubs                                   #
 ############################################################
 BUILD_STUB_CMD="\
-  export PATH=\"/opt/python/cp${PY_VERSION}-cp${PY_VERSION}/bin:\${PATH}\" \
+  export PATH=\"\$(find /opt/python -name \"cp${PY_VERSION}*\")/bin:\${PATH}\" \
   && python3 -m pip install pybind11-stubgen \
   && python3 -m pip install wheelhouse/mplib*.whl \
   && python3 dev/stubgen.py
@@ -74,7 +74,7 @@ rm -rfv stubs/
 # TODO: switch to other tools to generate docs, README.md should not be included in wheels
 # TODO: do we must install sapien to generate doc?
 BUILD_DOC_CMD="\
-  export PATH=\"/opt/python/cp${PY_VERSION}-cp${PY_VERSION}/bin:\${PATH}\" \
+  export PATH=\"\$(find /opt/python -name \"cp${PY_VERSION}*\")/bin:\${PATH}\" \
   && python3 -m pip install pdoc \
   && python3 -m pip install sapien==3.0.0.dev0 \
   && python3 -m pip install wheelhouse/mplib*.whl \
