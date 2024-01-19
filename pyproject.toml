@@ -36,6 +36,9 @@ classifiers=[
   "Topic :: Utilities",
 ]
 
+[tool.setuptools.package-data]
+mplib = ["examples/*.md", "examples/*.png"]  # include all md files in mplib/examples
+
 [tool.setuptools-git-versioning]
 enabled = true
 version_file = "VERSION"
