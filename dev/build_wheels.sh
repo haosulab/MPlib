@@ -83,13 +83,13 @@ fi
 
 if [ "$PY_VERSION" == "all" ]; then
   # python3 -m cibuildwheel --platform linux
-  for PY_VERSION in 36 37 38 39 310 311 312; do
+  for PY_VERSION in 37 38 39 310 311 312; do
     build_wheel
   done
 else
   # CIBW_BUILD="cp${PY_VERSION}-*" python3 -m cibuildwheel --platform linux
   case "$PY_VERSION" in
-    36|37|38|39|310|311|312) ;;
+    37|38|39|310|311|312) ;;
     *)
       echo "Error: Python version($PY_VERSION) not supported" >&2
       exit 4
