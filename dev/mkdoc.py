@@ -38,6 +38,7 @@ https://github.com/RobotLocomotion/drake/blob/849d537302191f0be98875da359580d341
 
 Syntax: mkdoc.py [-o <file>] [-I<dir> ..] [-D<macro>=<value> ..] [.. header files ..]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -343,7 +344,7 @@ def process_doxygen_commands(s):
         ("version", "version"),
     ):
         if out_ == "raises":
-            s = re.sub(rf"[\\@]{in_}\s*(\w+Error):*", rf"\n:{out_} \1:\n", s)
+            s = re.sub(rf"[\\@]{in_}\s*(\w+Error):*", rf"\n$:{out_} \1:\n", s)
         else:
             s = re.sub(
                 # r"[\\@]%s\s*" % in_,
@@ -415,17 +416,17 @@ def reflow(s):
                 ):
                     result += y + "\n\n"
                 else:
-                    wrapped = wrapper.fill(re.sub(r"\s+", " ", y).strip())
-                    if len(wrapped) > 0 and wrapped[0] == "$":
-                        result += wrapped[1:] + "\n"
+                    y_no_linebreak = re.sub(r"\s+", " ", y).strip()
+                    if len(y_no_linebreak) > 0 and y_no_linebreak[0] == "$":
                         # wrapper.initial_indent = wrapper.subsequent_indent = " " * 4
                         wrapper.subsequent_indent = " " * 4
+                        y_no_linebreak = y_no_linebreak[1:]
                     else:
-                        if len(wrapped) > 0:
-                            result += wrapped + (
-                                "\n" if wrapped.startswith(":") else "\n\n"
-                            )
-                        wrapper.initial_indent = wrapper.subsequent_indent = ""
+                        # wrapper.initial_indent = wrapper.subsequent_indent = ""
+                        wrapper.subsequent_indent = ""
+
+                    wrapped = wrapper.fill(y_no_linebreak)
+                    result += wrapped + ("\n" if wrapped.startswith(":") else "\n\n")
 
     return result.rstrip().lstrip("\n")
 

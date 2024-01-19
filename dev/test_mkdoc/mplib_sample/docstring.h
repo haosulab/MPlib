@@ -44,6 +44,8 @@ If the object is currently attached, disallow collision between the object and
 previous touch_links. Updates acm_ to allow collisions between attached object
 and touch_links.
 
+:param urdf_filename: path to URDF file, can be relative to the current working
+    directory
 :param name: normal object name to attach
 :param art_name: name of the planned articulation to attach to
 :param link_id: index of the link of the planned articulation to attach to.

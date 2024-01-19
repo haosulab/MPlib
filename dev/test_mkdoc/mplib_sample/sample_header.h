@@ -23,6 +23,8 @@ class PlanningWorld {
    * and previous touch_links.
    * Updates acm_ to allow collisions between attached object and touch_links.
    *
+   * @param urdf_filename: path to URDF file, can be relative to the current working
+   *  directory
    * @param[in] name: normal object name to attach
    * @param[in] art_name: name of the planned articulation to attach to
    * @param[in] link_id: index of the link of the planned articulation to attach to.
