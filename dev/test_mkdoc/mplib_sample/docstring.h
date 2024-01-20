@@ -25,8 +25,7 @@
 #endif
 
 static const char *__doc_mplib_PlanningWorld =
-R"doc(
-PlanningWorld
+R"doc(PlanningWorld
 
 - Begin first unordered list element. Volutpat blandit aliquam etiam erat
   velit scelerisque. End first unordered list element.

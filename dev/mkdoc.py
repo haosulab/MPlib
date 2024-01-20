@@ -472,6 +472,9 @@ def extract(filename, cursor, prefix, output):
     if cursor.kind in PRINT_LIST:
         comment = d(cursor.raw_comment) if cursor.raw_comment is not None else ""
         comment = process_comment(comment)
+        # Start on a new line for function comments
+        if cursor.kind in FUNCTION_KINDS:
+            comment = "\n" + comment
         sub_prefix = prefix
         if len(sub_prefix) > 0:
             sub_prefix += "_"
@@ -641,18 +644,18 @@ def read_args(args):
     return parameters, filenames
 
 
-def extract_all(args):
+def extract_all(args) -> list[str]:
     parameters, filenames = read_args(args)
-    output = []
+    comments = []
     for filename in filenames:
-        thr = ExtractionThread(filename, parameters, output)
+        thr = ExtractionThread(filename, parameters, comments)
         thr.start()
 
     print("Waiting for jobs to finish ..", file=sys.stderr)
     for _ in range(job_count):
         job_semaphore.acquire()
 
-    return output
+    return comments
 
 
 def write_header(comments, custom_lines: list[str], outfile=sys.stdout):
@@ -696,7 +699,7 @@ def write_header(comments, custom_lines: list[str], outfile=sys.stdout):
             name_prev = name
             name_ctr = 1
         print(
-            '\nstatic const char *{} ={}R"doc(\n{})doc";'.format(
+            '\nstatic const char *{} ={}R"doc({})doc";'.format(
                 name, "\n" if "\n" in comment else " ", comment
             ),
             file=outfile,

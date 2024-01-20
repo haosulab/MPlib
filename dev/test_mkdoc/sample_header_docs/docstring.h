@@ -24,12 +24,10 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_RootLevelSymbol = R"doc(
-Root-level symbol. Magna fermentum iaculis eu non diam phasellus vestibulum.)doc";
+static const char *__doc_RootLevelSymbol = R"doc(Root-level symbol. Magna fermentum iaculis eu non diam phasellus vestibulum.)doc";
 
 static const char *__doc_drake_MidLevelSymbol =
-R"doc(
-1. Begin first ordered list element. Rutrum quisque non tellus orci ac auctor.
+R"doc(1. Begin first ordered list element. Rutrum quisque non tellus orci ac auctor.
 End first ordered list element. 2. Begin second ordered list element. Ipsum
 faucibus vitae aliquet nec. Ligula ullamcorper malesuada proin libero. End
 second ordered list element. 3. Begin third ordered list element. Dictum sit
