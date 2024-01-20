@@ -32,9 +32,10 @@ M = typing.TypeVar("M", bound=int)
 
 class BVHModel(CollisionGeometry):
     """
-
     BVHModel collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a mesh geometry represented by a BVH tree.
+
+    Inheriting from CollisionGeometry, this class specializes to a mesh geometry
+    represented by a BVH tree.
     """
     def __init__(self) -> None: ...
     @typing.overload
@@ -48,9 +49,8 @@ class BVHModel(CollisionGeometry):
     ) -> int:
         """
         Add a sub-model to the BVHModel.
-        Args:
-            vertices: vertices of the sub-model
-            faces: faces of the sub-model represented by a list of vertex indices
+
+        :param vertices: vertices of the sub-model
         """
     @typing.overload
     def addSubModel(
@@ -64,9 +64,9 @@ class BVHModel(CollisionGeometry):
     ) -> int:
         """
         Add a sub-model to the BVHModel.
-        Args:
-            vertices: vertices of the sub-model
-            faces: faces of the sub-model represented by a list of vertex indices
+
+        :param vertices: vertices of the sub-model
+        :param faces: faces of the sub-model represented by a list of vertex indices
         """
     @typing.overload
     def addSubModel(
@@ -81,13 +81,19 @@ class BVHModel(CollisionGeometry):
                 tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.int32]
             ]
         ],
-    ) -> None: ...
+    ) -> None:
+        """
+        Add a sub-model to the BVHModel.
+
+        :param vertices: vertices of the sub-model
+        :param faces: faces of the sub-model represented by a list of vertex indices
+        """
     def beginModel(self, num_faces: int = 0, num_vertices: int = 0) -> int:
         """
         Begin to construct a BVHModel.
-        Args:
-            num_faces: number of faces of the mesh
-            num_vertices: number of vertices of the mesh
+
+        :param num_faces: number of faces of the mesh
+        :param num_vertices: number of vertices of the mesh
         """
     def endModel(self) -> int:
         """
@@ -96,8 +102,8 @@ class BVHModel(CollisionGeometry):
     def get_faces(self) -> list[Triangle]:
         """
         Get the faces of the BVHModel.
-        Returns:
-            faces of the BVHModel
+
+        :return: faces of the BVHModel
         """
     def get_vertices(
         self,
@@ -108,8 +114,8 @@ class BVHModel(CollisionGeometry):
     ]:
         """
         Get the vertices of the BVHModel.
-        Returns:
-            vertices of the BVHModel
+
+        :return: vertices of the BVHModel
         """
     @property
     def num_faces(self) -> int: ...
@@ -118,8 +124,8 @@ class BVHModel(CollisionGeometry):
 
 class Box(CollisionGeometry):
     """
-
     Box collision geometry.
+
     Inheriting from CollisionGeometry, this class specializes to a box geometry.
     """
 
@@ -135,23 +141,23 @@ class Box(CollisionGeometry):
     ) -> None:
         """
         Construct a box with given side length.
-        Args:
-            side: side length of the box in an array [x, y, z]
+
+        :param side: side length of the box in an array [x, y, z]
         """
     @typing.overload
     def __init__(self, x: float, y: float, z: float) -> None:
         """
         Construct a box with given side length.
-        Args:
-            x: side length of the box in x direction
-            y: side length of the box in y direction
-            z: side length of the box in z direction
+
+        :param x: side length of the box in x direction
+        :param y: side length of the box in y direction
+        :param z: side length of the box in z direction
         """
 
 class Capsule(CollisionGeometry):
     """
-
     Capsule collision geometry.
+
     Inheriting from CollisionGeometry, this class specializes to a capsule geometry.
     """
 
@@ -160,16 +166,17 @@ class Capsule(CollisionGeometry):
     def __init__(self, radius: float, lz: float) -> None:
         """
         Construct a capsule with given radius and height.
-        Args:
-            radius: radius of the capsule
-            lz: height of the capsule
+
+        :param radius: radius of the capsule
+        :param lz: height of the capsule
         """
 
 class CollisionGeometry:
     """
-
     Collision geometry base class.
-    This is an FCL class so you can refer to the FCL doc here https://flexible-collision-library.github.io/d6/d5d/classfcl_1_1CollisionGeometry.html
+
+    This is an FCL class so you can refer to the FCL doc here.
+    https://flexible-collision-library.github.io/d6/d5d/classfcl_1_1CollisionGeometry.html
     """
 
     aabb_center: numpy.ndarray[
@@ -200,9 +207,10 @@ class CollisionGeometry:
 
 class CollisionObject:
     """
-
     Collision object class.
-    This class contains the collision geometry and the transformation of the geometry.
+
+    This class contains the collision geometry and the transformation of the
+    geometry.
     """
     def __init__(
         self,
@@ -216,10 +224,10 @@ class CollisionObject:
     ) -> None:
         """
         Construct a collision object with given collision geometry and transformation.
-        Args:
-            collision_geometry: collision geometry of the object
-            translation: translation of the object
-            rotation: rotation of the object
+
+        :param collision_geometry: collision geometry of the object
+        :param translation: translation of the object
+        :param rotation: rotation of the object
         """
     def get_collision_geometry(self) -> CollisionGeometry: ...
     def get_rotation(
@@ -332,8 +340,8 @@ class ContactPoint:
 
 class Convex(CollisionGeometry):
     """
-
     Convex collision geometry.
+
     Inheriting from CollisionGeometry, this class specializes to a convex geometry.
     """
     @staticmethod
@@ -341,11 +349,13 @@ class Convex(CollisionGeometry):
     def __init__(*args, **kwargs) -> None:
         """
         Construct a convex with given vertices and faces.
-        Args:
-            vertices: vertices of the convex
-            num_faces: number of faces of the convex
-            faces: faces of the convex geometry represented by a list of vertex indices
-            throw_if_invalid: if true, throw an exception if the convex is invalid
+
+        :param vertices: vertices of the convex
+        :param num_faces: number of faces of the convex
+        :param faces: faces of the convex geometry represented by a list of vertex
+            indices
+        :param throw_if_invalid: if ``True``, throw an exception if the convex is
+            invalid
         """
     @typing.overload
     def __init__(
@@ -358,28 +368,30 @@ class Convex(CollisionGeometry):
     ) -> None:
         """
         Construct a convex with given vertices and faces.
-        Args:
-            vertices: vertices of the convex
-            faces: faces of the convex geometry represented by a list of vertex indices
-            throw_if_invalid: if true, throw an exception if the convex is invalid
+
+        :param vertices: vertices of the convex
+        :param faces: faces of the convex geometry represented by a list of vertex
+            indices
+        :param throw_if_invalid: if ``True``, throw an exception if the convex is
+            invalid
         """
     def compute_volume(self) -> float:
         """
         Compute the volume of the convex.
-        Returns:
-            volume of the convex
+
+        :return: volume of the convex
         """
     def get_face_count(self) -> int:
         """
         Get the number of faces of the convex.
-        Returns:
-            number of faces of the convex
+
+        :return: number of faces of the convex
         """
     def get_faces(self) -> list[int]:
         """
         Get the faces of the convex.
-        Returns:
-            faces of the convex represented by a list of vertex indices
+
+        :return: faces of the convex represented by a list of vertex indices
         """
     def get_interior_point(
         self,
@@ -388,8 +400,8 @@ class Convex(CollisionGeometry):
     ]:
         """
         Sample a random interior point of the convex geometry
-        Returns:
-            interior point of the convex
+
+        :return: interior point of the convex
         """
     def get_vertices(
         self,
@@ -400,8 +412,8 @@ class Convex(CollisionGeometry):
     ]:
         """
         Get the vertices of the convex.
-        Returns:
-            vertices of the convex
+
+        :return: vertices of the convex
         """
 
 class CostSource:
@@ -437,9 +449,10 @@ class CostSource:
 
 class Cylinder(CollisionGeometry):
     """
-
     Cylinder collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a cylinder geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a cylinder
+    geometry.
     """
 
     lz: float
@@ -447,9 +460,9 @@ class Cylinder(CollisionGeometry):
     def __init__(self, radius: float, lz: float) -> None:
         """
         Construct a cylinder with given radius and height.
-        Args:
-            radius: radius of the cylinder
-            lz: height of the cylinder
+
+        :param radius: radius of the cylinder
+        :param lz: height of the cylinder
         """
 
 class DistanceRequest:
@@ -477,23 +490,28 @@ class DistanceResult:
     ]: ...
 
 class FCLModel:
+    """
+    FCL collision model of an articulation
+
+    See https://github.com/flexible-collision-library/fcl
+    """
     def __init__(
         self, urdf_filename: str, verbose: bool = True, convex: bool = False
     ) -> None:
         """
         Construct an FCL model from URDF and SRDF files.
-        Args:
-            urdf_filename: path to URDF file, can be relative to the current working directory
-            verbose: print debug information
-            convex: use convex decomposition for collision objects
+
+        :param urdf_filename: path to URDF file, can be relative to the current working
+            directory
+        :param verbose: print debug information
+        :param convex: use convex decomposition for collision objects
         """
     def collide(self, request: CollisionRequest = ...) -> bool:
         """
         Perform collision checking.
-        Args:
-            request: collision request
-        Returns:
-            true if collision happens
+
+        :param request: collision request
+        :return: ``True`` if collision happens
         """
     def collide_full(
         self, request: CollisionRequest = ...
@@ -502,26 +520,29 @@ class FCLModel:
     def get_collision_objects(self) -> list[CollisionObject]:
         """
         Get the collision objects of the FCL model.
-        Returns:
-            all collision objects of the FCL model
+
+        :return: all collision objects of the FCL model
         """
     def get_collision_pairs(self) -> list[tuple[int, int]]:
         """
         Get the collision pairs of the FCL model.
-        Returns:
-            collision pairs of the FCL model. if the FCL model has N collision objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled collision pairs
+
+        :return: collision pairs of the FCL model. If the FCL model has N collision
+            objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled
+            collision pairs
         """
     def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None:
         """
         Remove collision pairs from SRDF.
-        Args:
-            srdf_filename: path to SRDF file, can be relative to the current working directory
+
+        :param srdf_filename: path to SRDF file, can be relative to the current working
+            directory
         """
     def set_link_order(self, names: list[str]) -> None:
         """
         Set the link order of the FCL model.
-        Args:
-            names: list of link names in the order that you want to set.
+
+        :param names: list of link names in the order that you want to set.
         """
     def update_collision_objects(
         self,
@@ -533,8 +554,8 @@ class FCLModel:
     ) -> None:
         """
         Update the collision objects of the FCL model.
-        Args:
-            link_poses: list of link poses in the order of the link order
+
+        :param link_poses: list of link poses in the order of the link order
         """
 
 class GJKSolverType:
@@ -568,16 +589,18 @@ class GJKSolverType:
 
 class OcTree(CollisionGeometry):
     """
-
     OcTree collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a point cloud geometry represented by an Octree.
+
+    Inheriting from CollisionGeometry, this class specializes to a point cloud
+    geometry represented by an OcTree.
     """
     @typing.overload
     def __init__(self, resolution: float) -> None:
         """
         Construct an OcTree with given resolution.
-        Args:
-            resolution: resolution of the OcTree (smallest size of a voxel). you can treat this is as the diameter of a point
+
+        :param resolution: resolution of the OcTree (smallest size of a voxel).
+            You can treat this is as the diameter of a point.
         """
     @typing.overload
     def __init__(
@@ -589,9 +612,9 @@ class OcTree(CollisionGeometry):
     ) -> None:
         """
         Construct an OcTree with given vertices and resolution.
-        Args:
-            vertices: vertices of the point cloud
-            resolution: resolution of the OcTree
+
+        :param vertices: vertices of the point cloud
+        :param resolution: resolution of the OcTree
         """
 
 class Triangle:
