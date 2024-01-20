@@ -47,13 +47,16 @@ dev/build_wheels.sh --py "$PY_VERSION"
 ############################################################
 # Section 2: Build stubs                                   #
 ############################################################
+# Build stub and run ruff isort / formatter
 BUILD_STUB_CMD="\
   export PATH=\"\$(find /opt/python -name \"cp${PY_VERSION}*\")/bin:\${PATH}\" \
   && python3 -m pip install pybind11-stubgen \
   && python3 -m pip install wheelhouse/mplib*.whl \
-  && python3 dev/stubgen.py
+  && python3 dev/stubgen.py \
+  && python3 -m pip install ruff \
+  && ruff check --select I --fix ./stubs \
+  && ruff format ./stubs
 "
-# TODO: add ruff
 
 echo_info "Building stubs in docker '${IMGNAME}'"
 docker run -it --rm \
