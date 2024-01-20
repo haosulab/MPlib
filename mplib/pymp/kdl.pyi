@@ -6,6 +6,11 @@ __all__ = ["KDLModel"]
 M = typing.TypeVar("M", bound=int)
 
 class KDLModel:
+    """
+    KDL model of an articulation
+
+    See https://github.com/orocos/orocos_kinematics_dynamics
+    """
     def __init__(
         self,
         urdf_filename: str,
