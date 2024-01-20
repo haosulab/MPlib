@@ -183,6 +183,7 @@ using ValidityCheckerf_ptr = ValidityCheckerTpl_ptr<float>;
 using ValidityCheckerd = ValidityCheckerTpl<double>;
 using ValidityCheckerf = ValidityCheckerTpl<float>;
 
+/// OMPL Planner
 template <typename DATATYPE>
 class OMPLPlannerTpl {
   typedef std::shared_ptr<ob::CompoundStateSpace> CompoundStateSpace_ptr;
@@ -229,17 +230,20 @@ class OMPLPlannerTpl {
   void _simplify_path(og::PathGeometric &path);  // keep this private to avoid confusion
 
  public:
-  // OMPLPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world);
-
+  /**
+   * Construct an OMPLPlanner from a PlanningWorld
+   *
+   * @param world: planning world
+   */
   OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world, int robot_idx = 0);
 
   VectorX random_sample_nearby(const VectorX &start_state);
 
   /**
-   * @brief build a new state space given the current planning world
+   * @brief Build a new state space given the current planning world
    *        and a set of fixed joints
    *
-   * @param fixed_joints a vector of FixedJoint
+   * @param fixed_joints: a vector of FixedJoint
    */
   void build_compound_state_space(const FixedJoints &fixed_joints = FixedJoints());
 
@@ -247,8 +251,38 @@ class OMPLPlannerTpl {
 
   size_t get_dim() { return dim; }
 
+  /**
+   * Simplify the provided path.
+   *
+   * @param path: path to be simplified (numpy array of shape (n, dim))
+   * @return: simplified path
+   */
   Eigen::MatrixXd simplify_path(Eigen::MatrixXd &path);
 
+  /**
+   * Plan a path from start state to goal states.
+   *
+   * @param start_state: start state of the movegroup joints
+   * @param goal_states: list of goal states. Planner will stop when one of them is
+   *                     reached
+   * @param planner_name: name of the planner pick between {RRTConnect, RRT*}
+   * @param time: planning time limit
+   * @param range: planning range (for RRT family of planners and represents the maximum
+   *               step size)
+   * @param verbose: print debug information
+   * @param fixed_joints: list of fixed joints not considered in planning for this
+   *                      particular call
+   * @param no_simplification: if ``true``, the path will not be simplified (constained
+   *                           planning does not support simplification)
+   * @param constraint_function: a R^d to R^1 function that evals to 0 when constraint
+   *                             is satisfied. Constraint ignored if fixed joints not
+   *                             empty
+   * @param constraint_jacobian: the jacobian of the constraint w.r.t. the joint angles
+   * @param constraint_tolerance: tolerance of what level of deviation from 0 is
+   *                              acceptable
+   * @return: pair of planner status and path. If planner succeeds, status is "Exact
+   *          solution."
+   */
   std::pair<std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>> plan(
       const VectorX &start_state, const std::vector<VectorX> &goal_states,
       const std::string &planner_name = "RRTConnect", const double &time = 1.0,

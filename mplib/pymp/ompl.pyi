@@ -9,20 +9,24 @@ M = typing.TypeVar("M", bound=int)
 N = typing.TypeVar("N", bound=int)
 
 class FixedJoint:
+    """ """
+
     articulation_idx: int
     joint_idx: int
     value: float
     def __init__(self, articulation_idx: int, joint_idx: int, value: float) -> None: ...
 
 class OMPLPlanner:
+    """
+    OMPL Planner
+    """
     def __init__(
         self, world: mplib.pymp.planning_world.PlanningWorld, robot_idx: int = 0
     ) -> None:
         """
-        Args:
-            world: planning world
-        Returns:
-            OMPLPlanner object
+        Construct an OMPLPlanner from a PlanningWorld
+
+        :param world: planning world
         """
     def plan(
         self,
@@ -56,27 +60,34 @@ class OMPLPlanner:
     ) -> tuple[str, numpy.ndarray[tuple[M, N], numpy.dtype[numpy.float64]]]:
         """
         Plan a path from start state to goal states.
-        Args:
-            start_state: start state of the movegroup joints
-            goal_states: list of goal states. planner will stop when one of them is reached
-            planner_name: name of the planner pick between {RRTConnect, RRT*}
-            time: planning time limit
-            range: planning range (for RRT family of planners and represents the maximum step size)
-            verbose: print debug information
-            fixed_joints: list of fixed joints not considered in planning for this particular call
-            no_simplification: if true, the path will not be simplified (constained planning does not support simplification)
-            constraint_function: a R^d to R^1 function that evals to 0 when constraint is satisfied. constraint ignored if fixed joints not empty
-            constraint_jacobian: the jacobian of the constraint w.r.t. the joint angles
-            constraint_tolerance: tolerance of what level of deviation from 0 is acceptable
-        Returns:
-            pair of planner status and path. If planner succeeds, status is "Exact solution."
+
+        :param start_state: start state of the movegroup joints
+        :param goal_states: list of goal states. Planner will stop when one of them is
+            reached
+        :param planner_name: name of the planner pick between {RRTConnect, RRT*}
+        :param time: planning time limit
+        :param range: planning range (for RRT family of planners and represents the
+            maximum step size)
+        :param verbose: print debug information
+        :param fixed_joints: list of fixed joints not considered in planning for this
+            particular call
+        :param no_simplification: if ``True``, the path will not be simplified
+            (constained planning does not support simplification)
+        :param constraint_function: a R^d to R^1 function that evals to 0 when
+            constraint is satisfied. Constraint ignored if fixed joints not empty
+        :param constraint_jacobian: the jacobian of the constraint w.r.t. the joint
+            angles
+        :param constraint_tolerance: tolerance of what level of deviation from 0 is
+            acceptable
+        :return: pair of planner status and path. If planner succeeds, status is "Exact
+            solution."
         """
     def simplify_path(
         self, path: numpy.ndarray[tuple[M, N], numpy.dtype[numpy.float64]]
     ) -> numpy.ndarray[tuple[M, N], numpy.dtype[numpy.float64]]:
         """
-        Args:
-            path: path to be simplified (numpy array of shape (n, dim))
-        Returns:
-            simplified path
+        Simplify the provided path.
+
+        :param path: path to be simplified (numpy array of shape (n, dim))
+        :return: simplified path
         """
