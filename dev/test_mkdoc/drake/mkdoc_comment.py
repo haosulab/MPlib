@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 #  Derived from https://github.com/pybind/pybind11/
 #
 #  Copyright (c) 2016 Wenzel Jakob <wenzel.jakob@epfl.ch>,
@@ -97,7 +95,7 @@ def remove_cpp_comment_syntax(s):
         # http://www.doxygen.nl/manual/docblocks.html#memberdoc
         if line.startswith("///<"):
             line = line[4:]
-        if line.startswith("///") or line.startswith("//!"):
+        if line.startswith(("///", "//!")):
             line = line[3:]
         if line.startswith("*"):
             line = line[1:]
@@ -158,7 +156,7 @@ def markdown_to_restructuredtext(s):
 
 def replace_with_header(pattern, token, s, **kwargs):
     def repl(match):
-        return "\n{}\n{}\n".format(match.group(1), token * len(match.group(1)))
+        return f"\n{match.group(1)}\n{token * len(match.group(1))}\n"
 
     return re.sub(pattern, repl, s, **kwargs)
 
@@ -232,12 +230,12 @@ def process_doxygen_commands(s):
     s = re.sub(r"[@\\](?:a|e|em)\s+%s" % cpp_group, r"*\1*", s)
     s = re.sub(r"[@\\]b\s+%s" % cpp_group, r"**\1**", s)
     s = re.sub(
-        r"[@\\]param%s?\s+%s" % (param_group, cpp_group),
+        rf"[@\\]param{param_group}?\s+{cpp_group}",
         r"\n\n$Parameter ``\2``:\n\n",
         s,
     )
     s = re.sub(
-        r"[@\\]tparam%s?\s+%s" % (param_group, cpp_group),
+        rf"[@\\]tparam{param_group}?\s+{cpp_group}",
         r"\n\n$Template parameter ``\2``:\n\n",
         s,
     )
@@ -291,7 +289,7 @@ def process_doxygen_commands(s):
     #  ```
     for start_, end_ in (("code", "endcode"), ("verbatim", "endverbatim")):
         s = re.sub(
-            r"[@\\]%s(?:\{\.(\w+)\})?\s?(.*?)\s?[@\\]%s" % (start_, end_),
+            rf"[@\\]{start_}(?:\{{\.(\w+)\}})?\s?(.*?)\s?[@\\]{end_}",
             r"```\1\n\2\n```\n",
             s,
             flags=re.DOTALL,
@@ -332,9 +330,13 @@ def process_doxygen_commands(s):
     s = re.sub(r"[@\\]default\s+", r"\n$*Default:* ", s)
     s = re.sub(
         r"[@\\]experimental\s+",
-        "\n\n$Warning:\n\nThis feature is considered to be **experimental** and may change or be removed at any time, without any deprecation notice ahead of time.\n\n",
+        (
+            "\n\n$Warning:\n\nThis feature is considered to be **experimental** and "
+            "may change or be removed at any time, "
+            "without any deprecation notice ahead of time.\n\n"
+        ),
         s,
-    )  # noqa
+    )
     # In pydrake docs, "python details" are not actually details; erase the
     # markers for `<detail>` so that it is always shown.
     s = re.sub(r"[@\\]python_details_(?:begin|end)", r"", s)
@@ -496,7 +498,7 @@ def process_doxygen_commands(s):
         ("xmlonly", "endxmlonly"),
     ):
         s = re.sub(
-            r"[@\\]%s\s?(.*?)\s?[@\\]%s" % (start_, end_), r"", s, flags=re.DOTALL
+            rf"[@\\]{start_}\s?(.*?)\s?[@\\]{end_}", r"", s, flags=re.DOTALL
         )
 
         # Some command pairs may bridge multiple comment blocks, so individual

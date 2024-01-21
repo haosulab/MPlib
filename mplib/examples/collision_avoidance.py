@@ -4,14 +4,18 @@ from mplib.examples.demo_setup import DemoSetup
 
 
 class PlanningDemo(DemoSetup):
-    """The shows the planner's ability to generate a collision free path with the straight path causes collisions"""
+    """
+    The shows the planner's ability to generate a collision free path
+    with the straight path causes collisions.
+    """
 
     def __init__(self):
         """
-        Same setup as demo.py except the boxes are of difference sizes and different use
-        Red box is the target we want to grab
-        Blue box is the obstacle we want to avoid
-        green box is the landing pad on which we want to place the red box
+        Same setup as demo.py, except the boxes are of difference sizes and
+        different uses.
+        Red box is the target we want to grab.
+        Blue box is the obstacle we want to avoid.
+        Green box is the landing pad on which we want to place the red box.
         """
         super().__init__()
         self.setup_scene()
@@ -51,7 +55,7 @@ class PlanningDemo(DemoSetup):
         self.blue_cube.set_pose(sapien.Pose([0.55, 0, 0.1]))
 
     def add_point_cloud(self):
-        """we tell the planner about the obstacle through a point cloud"""
+        """We tell the planner about the obstacle through a point cloud"""
         import trimesh
 
         box = trimesh.creation.box([0.1, 0.4, 0.2])
@@ -62,7 +66,8 @@ class PlanningDemo(DemoSetup):
 
     def demo(self, with_screw=True, use_point_cloud=True, use_attach=True):
         """
-        We pick up the red box while avoiding the blue box and place it back down on top of the green box
+        We pick up the red box while avoiding the blue box and
+        place it back down on top of the green box.
         """
         pickup_pose = [0.7, 0, 0.12, 0, 1, 0, 0]
         delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]
@@ -100,9 +105,12 @@ class PlanningDemo(DemoSetup):
 
 if __name__ == "__main__":
     """
-    As you change some of the parameters, you will see different behaviors
-    In particular, when point cloud is not used, the robot will attemt to go through the blue box
-    If attach is not used, the robot will avoid the blue box on its way to the pickup pose but will knock it over with the attached red cube on its way to the delivery pose
+    As you change some of the parameters, you will see different behaviors.
+    In particular, when point cloud is not used, the robot will attemt to go through
+    the blue box.
+    If attach is not used, the robot will avoid the blue box on its way to
+    the pickup pose but will knock it over with the attached red cube on its way to
+    the delivery pose
     """
     demo = PlanningDemo()
     demo.demo(False, True, True)

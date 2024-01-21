@@ -87,12 +87,15 @@ select = [
   "TRY200",
   "TRY302",
   "RUF008",  # mutable dataclass default
+  "RUF013",  # implicit typing.Optional is disallowed
   "RUF015",  # access first ele in constant time
   "RUF016",  # type error non-integer index
   "RUF017",  # avoid quadratic list summation
 ]
 ignore = [
+  "UP007",   # allow typing.Optional[int], instead of forcing int | None
   "EXE002",  # ntfs has no executable bit
+  "SIM105",  # allow try-except-pass blocks
 ]
 exclude = ["third_party"]
 
@@ -101,7 +104,25 @@ exclude = ["third_party"]
   "F401",  # unused import
 ]
 "*.pyi" = [
+  "F821",  # allow undefined name
+  "E501",  # line too long
+  "PYI001",  # allow TypeVar name without '_' prefix
   "PYI021",  # allow docstrings in stub files
+  "PYI029",  # allow __str__ and __repr__ in stubs
+  "PYI032",  # allow typing.Any annotations for __eq__ and __ne__
+  "PYI054",  # allow long numeric literals
+]
+# TODO: might be fixable
+# related to fixed_joints, constraint_function, constraint_jacobian
+"mplib/pymp/ompl.pyi" = [
+  "B006",
+  "PYI011",
+  "RUF013",
+]
+# TODO: might be fixable
+# related to compute_IK_CLIK() input argument mask = []
+"mplib/pymp/pinocchio.pyi" = [
+  "B006",
 ]
 
 [tool.ruff.format]
