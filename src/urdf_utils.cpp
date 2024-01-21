@@ -192,8 +192,8 @@ std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<DATATYPE>>> load_mesh_as_BVH(
   std::vector<fcl::Vector3<DATATYPE>> vertices;
   std::vector<fcl::Triangle> triangles;
 
-  int nbVertices = dfs_build_mesh<DATATYPE>(loader.scene, loader.scene->mRootNode,
-                                            scale, 0, vertices, triangles);
+  dfs_build_mesh<DATATYPE>(loader.scene, loader.scene->mRootNode, scale, 0, vertices,
+                           triangles);
   // std::cout << "Num of vertex " << nbVertices << " " << vertices.size() << " " <<
   // triangles.size() << std::endl;
   using Model = fcl::BVHModel<fcl::OBBRSS<DATATYPE>>;
@@ -217,8 +217,8 @@ std::shared_ptr<fcl::Convex<DATATYPE>> load_mesh_as_Convex(
           int num_faces, const std::shared_ptr<const std::vector<int>>& faces,
   bool throw_if_invalid = false);
   */
-  int nbVertices = dfs_build_mesh<DATATYPE>(loader.scene, loader.scene->mRootNode,
-                                            scale, 0, vertices, triangles);
+  dfs_build_mesh<DATATYPE>(loader.scene, loader.scene->mRootNode, scale, 0, vertices,
+                           triangles);
 
   auto faces = std::make_shared<std::vector<int>>();
   for (size_t i = 0; i < triangles.size(); i++) {

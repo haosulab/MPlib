@@ -32,9 +32,9 @@ ArticulatedModelTpl<DATATYPE>::ArticulatedModelTpl(
     const std::string &urdf_filename, const std::string &srdf_filename,
     const Vector3 &gravity, const std::vector<std::string> &joint_names,
     const std::vector<std::string> &link_names, const bool &verbose, const bool &convex)
-    : verbose(verbose),
-      pinocchio_model(urdf_filename, gravity, verbose),
-      fcl_model(urdf_filename, verbose, convex) {
+    : pinocchio_model(urdf_filename, gravity, verbose),
+      fcl_model(urdf_filename, verbose, convex),
+      verbose(verbose) {
   user_link_names =
       link_names.size() == 0 ? pinocchio_model.getLinkNames(false) : link_names;
   user_joint_names =
@@ -85,7 +85,7 @@ void ArticulatedModelTpl<DATATYPE>::setQpos(const VectorX &qpos, const bool &ful
   if (full)
     current_qpos = qpos;
   else {
-    ASSERT(qpos.size() == move_group_qpos_dim,
+    ASSERT(static_cast<size_t>(qpos.size()) == move_group_qpos_dim,
            "Length of provided qpos " + std::to_string(qpos.size()) +
                " =/= dimension of move_group qpos: " +
                std::to_string(move_group_qpos_dim));

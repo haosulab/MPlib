@@ -24,7 +24,6 @@ void FCLModelTpl<DATATYPE>::dfs_parse_tree(const urdf::LinkConstSharedPtr &link,
 
   if (link->collision) {
     for (auto geom : link->collision_array) {
-      const std::string &geom_name = geom->name;
       auto geom_model = geom->geometry;
       CollisionGeometry_ptr collision_geometry = nullptr;
       auto pose = Transform3::Identity();
@@ -116,14 +115,14 @@ template <typename DATATYPE>
 FCLModelTpl<DATATYPE>::FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdfTree,
                                    const std::string &package_dir, const bool &verbose,
                                    const bool &convex)
-    : verbose(verbose), use_convex(convex) {
+    : use_convex(convex), verbose(verbose) {
   init(urdfTree, package_dir);
 }
 
 template <typename DATATYPE>
 FCLModelTpl<DATATYPE>::FCLModelTpl(const std::string &urdf_filename,
                                    const bool &verbose, const bool &convex)
-    : verbose(verbose), use_convex(convex) {
+    : use_convex(convex), verbose(verbose) {
   auto found = urdf_filename.find_last_of("/\\");
   auto urdf_dir = found != urdf_filename.npos ? urdf_filename.substr(0, found) : ".";
   urdf::ModelInterfaceSharedPtr urdfTree = urdf::parseURDFFile(urdf_filename);
@@ -168,35 +167,12 @@ void FCLModelTpl<DATATYPE>::removeCollisionPairsFromSrdf(
     if (node.first == "disable_collisions") {
       const std::string link1 = node.second.get<std::string>("<xmlattr>.link1");
       const std::string link2 = node.second.get<std::string>("<xmlattr>.link2");
-      /*
-      // Check first if the two bodies exist in model
-      if (!model.existBodyName(link1) || !model.existBodyName(link2)) {
-          if (verbose)
-              std::cout << "It seems that " << link1 << " or " << link2 <<
-                  " do not exist in model. Skip." << std::endl;
-          continue;
-      }
-
-      FrameIndex frame_id1 = model.getBodyId(link1);
-      FrameIndex frame_id2 = model.getBodyId(link2);
-
-      if ((frame_id1 == model.nframes || frame_id2 == model.nframes) && logging_level >
-      90) { std::cout << "Links do not exist " << link1 << " " << link2 << std::endl;
-          continue;
-      }
-      // Malformed SRDF
-      if (frame_id1 == frame_id2) {
-          if (verbose)
-              std::cout << "Cannot disable collision between " << link1 << " and " <<
-      link2 << std::endl; continue; } else if (frame_id1 > frame_id2)
-          std::swap(frame_id1, frame_id2);
-      */
       if (verbose) print_verbose("Try to Remove collision parts: ", link1, " ", link2);
       for (auto iter = collision_pairs.begin(); iter != collision_pairs.end();) {
-        if (collision_link_names[iter->first] == link1 &&
-                collision_link_names[iter->second] == link2 ||
-            collision_link_names[iter->first] == link2 &&
-                collision_link_names[iter->second] == link1) {
+        if ((collision_link_names[iter->first] == link1 &&
+             collision_link_names[iter->second] == link2) ||
+            (collision_link_names[iter->first] == link2 &&
+             collision_link_names[iter->second] == link1)) {
           iter = collision_pairs.erase(iter);
         } else
           iter++;

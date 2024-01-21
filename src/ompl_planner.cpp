@@ -207,7 +207,7 @@ Eigen::MatrixXd OMPLPlannerTpl<DATATYPE>::simplify_path(Eigen::MatrixXd &path) {
     print_warning("doing simplification in non-constrained space");
   }
   og::PathGeometric geo_path(si);
-  for (size_t i = 0; i < path.rows(); i++) {
+  for (size_t i = 0; i < static_cast<size_t>(path.rows()); i++) {
     ob::ScopedState<> state(cs);
     state = eigen2vector<DATATYPE, double>(path.row(i));
     geo_path.append(state.get());
@@ -229,7 +229,7 @@ std::shared_ptr<ob::GoalStates> OMPLPlannerTpl<DATATYPE>::make_goal_states(
   int tot_enum_states = 1, tot_goal_state = 0;
   for (size_t i = 0; i < dim; i++) tot_enum_states *= 3;
 
-  for (int ii = 0; ii < goal_states.size(); ii++) {
+  for (size_t ii = 0; ii < goal_states.size(); ii++) {
     for (int i = 0; i < tot_enum_states; i++) {
       std::vector<double> tmp_state;
       int tmp = i;
@@ -275,9 +275,9 @@ OMPLPlannerTpl<DATATYPE>::plan(
     const VectorX &start_state, const std::vector<VectorX> &goal_states,
     const std::string &planner_name, const double &time, const double &range,
     const bool verbose, const FixedJoints &fixed_joints, const bool no_simplification,
-    std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+    const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
         &constraint_function,
-    std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+    const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
         &constraint_jacobian,
     double constraint_tolerance) {
   if (fixed_joints.size() || last_fixed_joints.size()) {
@@ -308,7 +308,7 @@ OMPLPlannerTpl<DATATYPE>::plan(
 
   ASSERT(reduced_start_state.rows() == reduced_goal_states[0].rows(),
          "Length of start state and goal state should be equal");
-  ASSERT(reduced_start_state.rows() == dim,
+  ASSERT(static_cast<size_t>(reduced_start_state.rows()) == dim,
          "Length of start state and problem dimension should be equal");
   if (verbose == false) ompl::msg::noOutputHandler();
 
@@ -365,9 +365,10 @@ OMPLPlannerTpl<DATATYPE>::plan(
     for (size_t i = 0; i < len; i++) {
       auto res_i = state2eigen<DATATYPE>(path.getState(i), si.get(),
                                          state_space == p_constrained_space);
-      ASSERT(res_i.rows() == dim, "Result dimension is not correct!");
+      ASSERT(static_cast<size_t>(res_i.rows()) == dim,
+             "Result dimension is not correct!");
       res_i = add_fixed_joints(fixed_joints, res_i);
-      for (size_t j = 0; j < start_state.rows(); j++)
+      for (size_t j = 0; j < static_cast<size_t>(start_state.rows()); j++)
         ret(invalid_start + i, j) = res_i[j];
     }
     return std::make_pair(solved.asString(), ret);
