@@ -11,11 +11,11 @@
 
 namespace mplib::fcl {
 
-#define DEFINE_TEMPLATE_FM(S) template class FCLModelTpl<S>;
+// Explicit Template Instantiation Definition ==========================================
+#define DEFINE_TEMPLATE_FCL_MODEL(S) template class FCLModelTpl<S>
 
-DEFINE_TEMPLATE_FM(double)
-
-DEFINE_TEMPLATE_FM(float)
+DEFINE_TEMPLATE_FCL_MODEL(float);
+DEFINE_TEMPLATE_FCL_MODEL(double);
 
 template <typename S>
 void FCLModelTpl<S>::dfs_parse_tree(const urdf::LinkConstSharedPtr &link,

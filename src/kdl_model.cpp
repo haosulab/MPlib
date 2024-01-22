@@ -4,11 +4,11 @@
 
 namespace mplib::kdl {
 
-#define DEFINE_TEMPLATE_FM(S) template class KDLModelTpl<S>;
+// Explicit Template Instantiation Definition ==========================================
+#define DEFINE_TEMPLATE_KDL_MODEL(S) template class KDLModelTpl<S>
 
-DEFINE_TEMPLATE_FM(double)
-
-DEFINE_TEMPLATE_FM(float)
+DEFINE_TEMPLATE_KDL_MODEL(float);
+DEFINE_TEMPLATE_KDL_MODEL(double);
 
 template <typename S>
 KDLModelTpl<S>::KDLModelTpl(const std::string &urdf_filename,

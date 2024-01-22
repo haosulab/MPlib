@@ -9,11 +9,11 @@
 
 namespace mplib::pinocchio {
 
-#define DEFINE_TEMPLATE_PM(S) template class PinocchioModelTpl<S>;
+// Explicit Template Instantiation Definition ==========================================
+#define DEFINE_TEMPLATE_PINOCCHIO_MODEL(S) template class PinocchioModelTpl<S>
 
-DEFINE_TEMPLATE_PM(double)
-
-DEFINE_TEMPLATE_PM(float)
+DEFINE_TEMPLATE_PINOCCHIO_MODEL(float);
+DEFINE_TEMPLATE_PINOCCHIO_MODEL(double);
 
 template <typename S>
 void PinocchioModelTpl<S>::dfs_parse_tree(urdf::LinkConstSharedPtr link,

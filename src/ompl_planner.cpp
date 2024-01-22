@@ -4,11 +4,17 @@
 
 namespace mplib::ompl {
 
-#define DEFINE_TEMPLATE_OMPL(S)         \
-  template class ValidityCheckerTpl<S>; \
-  template class OMPLPlannerTpl<S>;
+// Explicit Template Instantiation Definition ==========================================
+#define DEFINE_TEMPLATE_OMPL_PLANNER(S)                                              \
+  template std::vector<S> compoundstate2vector<S>(const ob::State *state_raw,        \
+                                                  ob::SpaceInformation *const &si_); \
+  template std::vector<S> rvssstate2vector<S>(const ob::State *state_raw,            \
+                                              ob::SpaceInformation *const &si_);     \
+  template class ValidityCheckerTpl<S>;                                              \
+  template class OMPLPlannerTpl<S>
 
-DEFINE_TEMPLATE_OMPL(double)
+DEFINE_TEMPLATE_OMPL_PLANNER(float);
+DEFINE_TEMPLATE_OMPL_PLANNER(double);
 
 #define PI 3.14159265359
 

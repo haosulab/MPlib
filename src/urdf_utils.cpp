@@ -4,22 +4,22 @@
 
 namespace mplib {
 
+// Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_URDF_UTILS(S)                                          \
+  template Transform3<S> se3_to_transform<S>(const pinocchio::SE3<S> &T);      \
+  template pinocchio::SE3<S> transform_to_se3<S>(const Transform3<S> &T);      \
+  template Transform3<S> pose_to_transform<S>(const urdf::Pose &M);            \
+  template pinocchio::SE3<S> pose_to_se3<S>(const urdf::Pose &M);              \
   template pinocchio::Inertia<S> convert_inertial<S>(const urdf::Inertial &Y); \
   template pinocchio::Inertia<S> convert_inertial<S>(                          \
       const urdf::InertialSharedPtr &Y);                                       \
-  template pinocchio::SE3<S> pose_to_se3<S>(const urdf::Pose &M);              \
-  template Transform3<S> se3_to_transform<S>(const pinocchio::SE3<S> &T);      \
-  template Transform3<S> pose_to_transform<S>(const urdf::Pose &M);            \
-  template pinocchio::SE3<S> transform_to_se3<S>(const Transform3<S> &T);      \
   template std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH<S>( \
       const std::string &mesh_path, const Vector3<S> &scale);                  \
   template std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex<S>(             \
-      const std::string &mesh_path, const Vector3<S> &scale);
+      const std::string &mesh_path, const Vector3<S> &scale)
 
-DEFINE_TEMPLATE_URDF_UTILS(float)
-
-DEFINE_TEMPLATE_URDF_UTILS(double)
+DEFINE_TEMPLATE_URDF_UTILS(float);
+DEFINE_TEMPLATE_URDF_UTILS(double);
 
 // copy code from pinocchio/src/parsers/urdf/model.cpp and add template to support float
 

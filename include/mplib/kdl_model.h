@@ -68,4 +68,10 @@ using KDLModeld = KDLModelTpl<double>;
 using KDLModelfPtr = KDLModelTplPtr<float>;
 using KDLModeldPtr = KDLModelTplPtr<double>;
 
+// Explicit Template Instantiation Declaration =========================================
+#define DECLARE_TEMPLATE_KDL_MODEL(S) extern template class KDLModelTpl<S>
+
+DECLARE_TEMPLATE_KDL_MODEL(float);
+DECLARE_TEMPLATE_KDL_MODEL(double);
+
 }  // namespace mplib::kdl

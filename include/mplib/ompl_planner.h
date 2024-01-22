@@ -286,4 +286,16 @@ using OMPLPlannerTpld = OMPLPlannerTpl<double>;
 using OMPLPlannerTplfPtr = OMPLPlannerTplPtr<float>;
 using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
 
+// Explicit Template Instantiation Declaration =========================================
+#define DECLARE_TEMPLATE_OMPL_PLANNER(S)                             \
+  extern template std::vector<S> compoundstate2vector<S>(            \
+      const ob::State *state_raw, ob::SpaceInformation *const &si_); \
+  extern template std::vector<S> rvssstate2vector<S>(                \
+      const ob::State *state_raw, ob::SpaceInformation *const &si_); \
+  extern template class ValidityCheckerTpl<S>;                       \
+  extern template class OMPLPlannerTpl<S>
+
+DECLARE_TEMPLATE_OMPL_PLANNER(float);
+DECLARE_TEMPLATE_OMPL_PLANNER(double);
+
 }  // namespace mplib::ompl

@@ -7,13 +7,13 @@
 
 namespace mplib {
 
-#define DEFINE_TEMPLATE_PW(S)         \
-  template class PlanningWorldTpl<S>; \
-  template class WorldCollisionResultTpl<S>;
+// Explicit Template Instantiation Definition ==========================================
+#define DEFINE_TEMPLATE_PLANNING_WORLD(S)     \
+  template struct WorldCollisionResultTpl<S>; \
+  template class PlanningWorldTpl<S>
 
-DEFINE_TEMPLATE_PW(double)
-
-DEFINE_TEMPLATE_PW(float)
+DEFINE_TEMPLATE_PLANNING_WORLD(float);
+DEFINE_TEMPLATE_PLANNING_WORLD(double);
 
 template <typename S>
 PlanningWorldTpl<S>::PlanningWorldTpl(
