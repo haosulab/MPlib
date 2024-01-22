@@ -4,7 +4,8 @@
 
 from importlib.metadata import version
 
-from .planner import Planner
+from mplib.planner import Planner
+from mplib.pymp import *
 
 # from .pymp import set_global_seed
 
