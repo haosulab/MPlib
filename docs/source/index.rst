@@ -6,11 +6,14 @@
 Welcome to mplib's documentation!
 =================================
 
+.. include:: ../../README.md
+   :parser: myst_parser.sphinx_
+
 Planner Documentation
 ---------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    mplib
 
@@ -18,7 +21,7 @@ Examples
 -----------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    ../motion_planning/examples
 
@@ -26,7 +29,7 @@ API Reference
 -------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    mplib.pymp
 
