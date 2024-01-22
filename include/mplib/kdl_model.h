@@ -15,7 +15,7 @@
 #include <kdl/utilities/svd_eigen_HH.hpp>
 #include <urdf_parser/urdf_parser.h>
 
-#include "macros_utils.hpp"
+#include "macros_utils.h"
 #include "urdf_utils.h"
 
 /**
@@ -29,11 +29,11 @@ class KDLModelTpl {
   DEFINE_TEMPLATE_EIGEN(DATATYPE)
   KDL::Tree tree;
   std::string tree_root_name;
-  bool verbose;
   std::vector<std::string> user_link_names;
   std::vector<std::string> user_joint_names;
   std::vector<int> joint_mapping_kdl_2_user;
   std::map<std::string, int> user_joint_idx_mapping;
+  bool verbose;
 
  public:
   KDLModelTpl(const std::string &urdf_filename,

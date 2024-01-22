@@ -2,7 +2,7 @@
 
 #include "color_printing.h"
 #include "fcl_model.h"
-#include "macros_utils.hpp"
+#include "macros_utils.h"
 #include "pinocchio_model.h"
 
 /**

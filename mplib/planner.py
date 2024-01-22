@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import os
-from typing import Sequence, Tuple, Union
+from typing import Optional, Sequence
 
 import numpy as np
 import toppra as ta
@@ -7,11 +9,11 @@ import toppra.algorithm as algo
 import toppra.constraint as constraint
 from transforms3d.quaternions import mat2quat, quat2mat
 
-from mplib.pymp import *
+from mplib.pymp import articulation, ompl, planning_world
 
 
 class Planner:
-    """Motion planner."""
+    """Motion planner"""
 
     # TODO(jigu): default joint vel and acc limits
     # TODO(jigu): how does user link names and joint names are exactly used?
@@ -24,16 +26,18 @@ class Planner:
         package_keyword_replacement: str = "",
         user_link_names: Sequence[str] = [],
         user_joint_names: Sequence[str] = [],
-        joint_vel_limits: Union[Sequence[float], np.ndarray] = [],
-        joint_acc_limits: Union[Sequence[float], np.ndarray] = [],
+        joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
+        joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
         **kwargs,
     ):
         """Motion planner for robots.
 
         Args:
             urdf: Unified Robot Description Format file.
-            user_link_names: names of links, the order. if empty, all links will be used.
-            user_joint_names: names of the joints to plan.  if empty, all active joints will be used.
+            user_link_names: names of links, the order matters.
+                If empty, all links will be used.
+            user_joint_names: names of the joints to plan.
+                If empty, all active joints will be used.
             move_group: target link to move, usually the end-effector.
             joint_vel_limits: maximum joint velocities for time parameterization,
                 which should have the same length as
@@ -44,6 +48,10 @@ class Planner:
             http://docs.ros.org/en/kinetic/api/moveit_tutorials/html/doc/urdf_srdf/urdf_srdf_tutorial.html
 
         """
+        if joint_vel_limits is None:
+            joint_vel_limits = []
+        if joint_acc_limits is None:
+            joint_acc_limits = []
         self.urdf = urdf
         if srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
             self.srdf = urdf.replace(".urdf", ".srdf")
@@ -132,7 +140,7 @@ class Planner:
             package_keyword_replacement: the string to replace 'package://' keyword
         """
         rtn_urdf = self.urdf
-        with open(self.urdf, "r") as in_f:
+        with open(self.urdf) as in_f:
             content = in_f.read()
             if "package://" in content:
                 rtn_urdf = self.urdf.replace(".urdf", "_package_keyword_replaced.urdf")
@@ -144,8 +152,9 @@ class Planner:
 
     def generate_collision_pair(self, sample_time=1000000, echo_freq=100000):
         """
-        we read the srdf file to get the link pairs that should not collide.
-        if not provided, we need to randomly sample configurations to find the link pairs that will always collide.
+        We read the srdf file to get the link pairs that should not collide.
+        If not provided, we need to randomly sample configurations
+        to find the link pairs that will always collide.
         """
         print(
             "Since no SRDF file is provided. We will first detect link pairs that will"
@@ -178,18 +187,18 @@ class Planner:
                     link1 = self.user_link_names[i]
                     link2 = self.user_link_names[j]
                     print(
-                        "Ignore collision pair: (%s, %s), reason:  always collide"
-                        % (link1, link2)
+                        f"Ignore collision pair: ({link1}, {link2}), "
+                        "reason: always collide"
                     )
                     collision = ET.SubElement(root, "disable_collisions")
                     collision.set("link1", link1)
                     collision.set("link2", link2)
                     collision.set("reason", "Default")
-        srdffile = open(self.srdf, "w")
-        srdffile.write(
-            minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
-        )
-        srdffile.close()
+        with open(self.srdf, "w") as srdf_file:
+            srdf_file.write(
+                minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+            )
+            srdf_file.close()
         print("Saving the SRDF file to %s" % self.srdf)
 
     def distance_6D(self, p1, q1, p2, q2):
@@ -313,7 +322,8 @@ class Planner:
             articulation: robot model. if none will be self.robot
             qpos: robot configuration. if none will be the current pose
             with_point_cloud: whether to check collision against point cloud
-            use_attach: whether to include the object attached to the end effector in collision checking
+            use_attach: whether to include the object attached to the end effector
+                in collision checking
         Returns:
             A list of collisions.
         """
@@ -332,25 +342,29 @@ class Planner:
         self.planning_world.set_use_attach(prev_use_attach)
         return results
 
-    def IK(self, goal_pose, start_qpos, mask=[], n_init_qpos=20, threshold=1e-3):
+    def IK(self, goal_pose, start_qpos, mask=None, n_init_qpos=20, threshold=1e-3):
         """
         Inverse kinematics
 
         Args:
             goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
             start_qpos: initial configuration
-            mask: if the value at a given index is True, the joint is *not* used in the IK
+            mask: if the value at a given index is True,
+                the joint is *not* used in the IK
             n_init_qpos: number of random initial configurations
-            threshold: threshold for the distance between the goal pose and the result pose
+            threshold: threshold for the distance between the goal pose and
+                the result pose
         """
 
+        if mask is None:
+            mask = []
         index = self.link_name_2_idx[self.move_group]
         min_dis = 1e9
         idx = self.move_group_joint_indices
         qpos0 = np.copy(start_qpos)
         results = []
         self.robot.set_qpos(start_qpos, True)
-        for i in range(n_init_qpos):
+        for _ in range(n_init_qpos):
             ik_results = self.pinocchio_model.compute_IK_CLIK(
                 index, goal_pose, start_qpos, mask
             )
@@ -386,7 +400,7 @@ class Planner:
         if len(results) != 0:
             status = "Success"
         elif min_dis != 1e9:
-            status = "IK Failed! Distance %lf is greater than threshold %lf." % (
+            status = "IK Failed! Distance {:f} is greater than threshold {:f}.".format(
                 min_dis,
                 threshold,
             )
@@ -416,6 +430,8 @@ class Planner:
             [pc_vel, pc_acc], path, parametrizer="ParametrizeConstAccel"
         )
         jnt_traj = instance.compute_trajectory()
+        if jnt_traj is None:
+            raise RuntimeError("Fail to parameterize path")
         ts_sample = np.linspace(0, jnt_traj.duration, int(jnt_traj.duration / step))
         qs_sample = jnt_traj(ts_sample)
         qds_sample = jnt_traj(ts_sample, 1)
@@ -426,7 +442,8 @@ class Planner:
         """
         Args:
             pc: numpy array of shape (n, 3)
-            radius: radius of each point. This gives a buffer around each point that planner will avoid
+            radius: radius of each point. This gives a buffer around each point
+                that planner will avoid
         """
         self.planning_world.update_point_cloud(pc, radius)
 
@@ -508,7 +525,7 @@ class Planner:
         constraint_function=None,
         constraint_jacobian=None,
         constraint_tolerance=1e-3,
-        fixed_joint_indices=[],
+        fixed_joint_indices=None,
     ):
         """
         plan a path from a specified joint position to a goal pose
@@ -516,21 +533,27 @@ class Planner:
         Args:
             goal_pose: 7D pose of the end-effector [x,y,z,qw,qx,qy,qz]
             current_qpos: current joint configuration (either full or move_group joints)
-            mask: mask for IK. When set, the IK will leave certain joints out of planning
+            mask: mask for IK. When set, the IK will leave certain joints out of
+                planning
             time_step: time step for TOPP
             rrt_range: step size for RRT
             planning_time: time limit for RRT
-            fix_joint_limits: if True, will clip the joint configuration to be within the joint limits
+            fix_joint_limits: if True, will clip the joint configuration to be within
+                the joint limits
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will consider the attached tool collision when planning
             verbose: if True, will print the log of OMPL and TOPPRA
             planner_name: planner name pick from {"RRTConnect", "RRT*"}
-            fixed_joint_indices: list of indices of joints that are fixed during planning
+            fixed_joint_indices: list of indices of joints that are fixed during
+                planning
             constraint_function: evals to 0 when constraint is satisfied
             constraint_jacobian: jacobian of constraint_function
             constraint_tolerance: tolerance for constraint_function
-            no_simplification: if true, will not simplify the path. constraint planning does not support simplification
+            no_simplification: if true, will not simplify the path. constraint planning
+                does not support simplification
         """
+        if fixed_joint_indices is None:
+            fixed_joint_indices = []
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
         n = current_qpos.shape[0]
@@ -548,15 +571,11 @@ class Planner:
         if len(collisions) != 0:
             print("Invalid start state!")
             for collision in collisions:
-                print(
-                    "%s and %s collide!" % (collision.link_name1, collision.link_name2)
-                )
+                print(f"{collision.link_name1} and {collision.link_name2} collide!")
 
         idx = self.move_group_joint_indices
 
-        goal_qpos_ = []
-        for i in range(len(goal_qposes)):
-            goal_qpos_.append(goal_qposes[i][idx])
+        goal_qpos_ = [goal_qposes[i][idx] for i in range(len(goal_qposes))]
 
         fixed_joints = set()
         for joint_idx in fixed_joint_indices:
@@ -612,7 +631,7 @@ class Planner:
         self,
         goal_pose,
         current_qpos,
-        mask=[],
+        mask=None,
         time_step=0.1,
         rrt_range=0.1,
         planning_time=1,
@@ -633,16 +652,21 @@ class Planner:
         Args:
             goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
             current_qpos: current joint configuration (either full or move_group joints)
-            mask: if the value at a given index is True, the joint is *not* used in the IK
+            mask: if the value at a given index is True, the joint is *not* used in the
+                IK
             time_step: time step for TOPPRA (time parameterization of path)
             rrt_range: step size for RRT
             planning_time: time limit for RRT
-            fix_joint_limits: if True, will clip the joint configuration to be within the joint limits
+            fix_joint_limits: if True, will clip the joint configuration to be within
+                the joint limits
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will consider the attached tool collision when planning
             verbose: if True, will print the log of OMPL and TOPPRA
-            wrt_world: if true, interpret the target pose with respect to the world frame instead of the base frame
+            wrt_world: if true, interpret the target pose with respect to
+                the world frame instead of the base frame
         """
+        if mask is None:
+            mask = []
         n = current_qpos.shape[0]
         if fix_joint_limits:
             for i in range(n):
@@ -654,9 +678,8 @@ class Planner:
         if wrt_world:
             goal_pose = self.transform_goal_to_wrt_base(goal_pose)
 
-        idx = (
-            self.move_group_joint_indices
-        )  # we need to take only the move_group joints when planning
+        # we need to take only the move_group joints when planning
+        # idx = self.move_group_joint_indices
 
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
@@ -667,9 +690,7 @@ class Planner:
             for i in range(len(goal_qpos)):
                 print(goal_qpos[i])
 
-        goal_qpos_ = []
-        for i in range(len(goal_qpos)):
-            goal_qpos_.append(goal_qpos[i][idx])
+        # goal_qpos_ = [goal_qpos[i][idx] for i in range(len(goal_qpos))]
         self.robot.set_qpos(current_qpos, True)
 
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
@@ -710,17 +731,19 @@ class Planner:
         wrt_world=True,
     ):
         """
-        plan from a start configuration to a goal pose of the end-effector using screw motion
+        Plan from a start configuration to a goal pose of the end-effector using
+        screw motion
 
         Args:
-            target_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
+            target_pose: [x, y, z, qw, qx, qy, qz] pose of the goal
             qpos: current joint configuration (either full or move_group joints)
             qpos_step: size of the random step for RRT
             time_step: time step for the discretization
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will use the attached tool to avoid collision
             verbose: if True, will print the log of TOPPRA
-            wrt_world: if true, interpret the target pose with respect to the world frame instead of the base frame
+            wrt_world: if True, interpret the target pose with respect to the
+                world frame instead of the base frame
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
@@ -743,7 +766,7 @@ class Planner:
                 [-vec[1], vec[0], 0],
             ])
 
-        def pose2exp_coordinate(pose: np.ndarray) -> Tuple[np.ndarray, float]:
+        def pose2exp_coordinate(pose: np.ndarray) -> tuple[np.ndarray, float]:
             def rot2so3(rotation: np.ndarray):
                 assert rotation.shape == (3, 3)
                 if np.isclose(rotation.trace(), 3):
@@ -821,11 +844,7 @@ class Planner:
             self.planning_world.set_qpos_all(qpos[index])
             collide = self.planning_world.collide()
 
-            if (
-                np.linalg.norm(delta_twist) < 1e-4
-                or collide
-                or within_joint_limit == False
-            ):
+            if np.linalg.norm(delta_twist) < 1e-4 or collide or not within_joint_limit:
                 return {"status": "screw plan failed"}
 
             path.append(np.copy(qpos[index]))

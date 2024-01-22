@@ -8,9 +8,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "../src/kdl_model.h"
-#include "../src/macros_utils.hpp"
 #include "docstring/kdl_model.h"
+#include "mplib/kdl_model.h"
+#include "mplib/macros_utils.h"
 
 namespace py = pybind11;
 

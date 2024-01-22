@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <ompl/base/ConstrainedSpaceInformation.h>
 #include <ompl/base/Constraint.h>
 #include <ompl/base/SpaceInformation.h>
@@ -160,8 +162,10 @@ class GeneralConstraint : public ob::Constraint {
  public:
   GeneralConstraint(
       size_t dim,
-      std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &f,
-      std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> &j)
+      const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+          &f,
+      const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+          &j)
       : ob::Constraint(dim, 1), f(f), j(j) {}
 
   void function(const Eigen::Ref<const Eigen::VectorXd> &x,
@@ -289,9 +293,9 @@ class OMPLPlannerTpl {
       const double &range = 0.0, const bool verbose = false,
       const FixedJoints &fixed_joints = FixedJoints(),
       const bool no_simplification = false,
-      std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+      const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
           &constraint_function = nullptr,
-      std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+      const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
           &constraint_jacobian = nullptr,
       double constraint_tolerance = 1e-3);
 };

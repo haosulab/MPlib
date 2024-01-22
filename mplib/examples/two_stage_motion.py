@@ -1,18 +1,22 @@
+import sys
+
 import numpy as np
 import sapien.core as sapien
 
 import mplib
-
 from mplib.examples.demo_setup import DemoSetup
 
 
 class PlanningDemo(DemoSetup):
     """
-    This demo is the same as collision_avoidance.py except we added a track for the robot to move along
+    This demo is the same as collision_avoidance.py except we added a track
+    for the robot to move along.
+
     We reach the target in two stages:
     1. First, we move the base while fixing the arm joints
     2. Then, we move the arm while fixing the base joints
-    This corresponds to a mobile robot which can move in the x and y direction with a manipulator on top
+    This corresponds to a mobile robot which can move in the x and y direction
+    with a manipulator on top
     """
 
     def __init__(self):
@@ -108,7 +112,7 @@ class PlanningDemo(DemoSetup):
         )
         if status != "Success":
             print("IK failed")
-            exit(1)
+            sys.exit(1)
         # now fix base and plan a path to the goal
         result = self.planner.plan_qpos_to_qpos(
             goal_qposes,
@@ -129,7 +133,7 @@ class PlanningDemo(DemoSetup):
         status, goal_qposes = self.planner.IK(pose, self.robot.get_qpos())
         if status != "Success":
             print("IK failed")
-            exit(1)
+            sys.exit(1)
         # now fix arm joints and plan a path to the goal
         result = self.planner.plan_qpos_to_qpos(
             goal_qposes,
@@ -147,7 +151,8 @@ class PlanningDemo(DemoSetup):
 
     def demo(self):
         """
-        We reach the pick up and drop off poses in two stages, first by moving the base only and then the arm only
+        We reach the pick up and drop off poses in two stages,
+        first by moving the base only and then the arm only
         """
         pickup_pose = [0.7, 0, 0.12, 0, 1, 0, 0]
         delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]

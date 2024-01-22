@@ -8,10 +8,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "../src/planning_world.h"
 #include "docstring/planning_world.h"
 #include "fcl/narrowphase/collision_request.h"
-#include "macros_utils.hpp"
+#include "mplib/macros_utils.h"
+#include "mplib/planning_world.h"
 
 namespace py = pybind11;
 

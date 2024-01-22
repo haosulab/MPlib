@@ -1,9 +1,9 @@
-#include "planning_world.h"
+#include "mplib/planning_world.h"
 
 #include "fcl/geometry/octree/octree.h"
-#include "fcl_model.h"
-#include "macros_utils.hpp"
-#include "urdf_utils.h"
+#include "mplib/fcl_model.h"
+#include "mplib/macros_utils.h"
+#include "mplib/urdf_utils.h"
 
 #define DEFINE_TEMPLATE_PW(DATATYPE)         \
   template class PlanningWorldTpl<DATATYPE>; \
@@ -23,8 +23,8 @@ PlanningWorldTpl<DATATYPE>::PlanningWorldTpl(
       articulation_names(articulation_names),
       move_articulation_id(move_articulation_id),
       has_point_cloud(false),
-      use_point_cloud(false),
       has_attach(false),
+      use_point_cloud(false),
       use_attach(false) {
   ASSERT(articulations.size() == articulation_names.size(),
          "articulations and articulation_names should have the same size");
@@ -44,9 +44,8 @@ template <typename DATATYPE>
 void PlanningWorldTpl<DATATYPE>::updatePointCloud(const Matrixx3 &vertices,
                                                   const double &radius) {
   std::shared_ptr<octomap::OcTree> p_octree = std::make_shared<octomap::OcTree>(radius);
-  for (size_t i = 0; i < vertices.rows(); i++) {
-    p_octree->updateNode(vertices(i, 0), vertices(i, 1), vertices(i, 2), true);
-  }
+  for (const auto &row : vertices.rowwise())
+    p_octree->updateNode(octomap::point3d(row(0), row(1), row(2)), true);
   point_cloud = std::make_shared<CollisionObject>(
       std::make_shared<fcl::OcTree<DATATYPE>>(p_octree), Transform3::Identity());
   has_point_cloud = true;
@@ -96,17 +95,18 @@ void PlanningWorldTpl<DATATYPE>::setQposAll(const VectorX &state) {
     auto n = articulations[i]->getQposDim();
     auto segment =
         state.segment(total_dim, total_dim + n);  //[total_dim, total_dim + n)
-    ASSERT(segment.size() == n,
+    ASSERT(static_cast<size_t>(segment.size()) == n,
            "Bug with size " + std::to_string(segment.size()) + " " + std::to_string(n));
     setQpos(i, segment);
     total_dim += n;
   }
-  ASSERT(total_dim == state.size(), "State dimension is not correct");
+  ASSERT(total_dim == static_cast<size_t>(state.size()),
+         "State dimension is not correct");
 }
 
 template <typename DATATYPE>
 std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::selfCollide(
-    int index, const CollisionRequest &request) {
+    size_t index, const CollisionRequest &request) {
   std::vector<WorldCollisionResult> ret;
   auto fcl_model = articulations[index]->getFCLModel();
   auto results = fcl_model.collideFull(request);
@@ -130,7 +130,7 @@ std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::selfC
 
 template <typename DATATYPE>
 std::vector<WorldCollisionResultTpl<DATATYPE>>
-PlanningWorldTpl<DATATYPE>::collideWithOthers(int index,
+PlanningWorldTpl<DATATYPE>::collideWithOthers(size_t index,
                                               const CollisionRequest &request) {
   std::vector<WorldCollisionResult> ret;
   auto pinocchio_model = articulations[index]->getPinocchioModel();
@@ -246,7 +246,7 @@ PlanningWorldTpl<DATATYPE>::collideWithOthers(int index,
 
 template <typename DATATYPE>
 std::vector<WorldCollisionResultTpl<DATATYPE>> PlanningWorldTpl<DATATYPE>::collideFull(
-    int index, const CollisionRequest &request) {
+    size_t index, const CollisionRequest &request) {
   std::vector<WorldCollisionResult> ret1 = selfCollide(index, request);
   std::vector<WorldCollisionResult> ret2 = collideWithOthers(index, request);
   ret1.insert(ret1.end(), ret2.begin(), ret2.end());
