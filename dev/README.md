@@ -8,8 +8,10 @@ Most dependencies have been installed.
 The docker file can be found [here](../docker/Dockerfile).
 
 To building python wheels, run `./dev/build_wheels.sh --py 310`  
-This will install [`cibuildwheel`](https://cibuildwheel.readthedocs.io/en/stable/#how-it-works) via pip and use it to build wheel for the specified python version.  
-The wheel will be generated in the `wheelhouse/`
+This will create a docker container from [`kolinguo/mplib-build`](https://hub.docker.com/r/kolinguo/mplib-build)
+and use it to build wheel for the specified python version.  
+The wheel will be generated in the `wheelhouse/` and the generated pybind11 docstring
+will be in `python/docstring/`.
 
 If you want to start a docker container for debugging, run `./dev/docker_setup.sh`
 
@@ -69,13 +71,29 @@ Depending on your python version, you will get a file called `pymp.cpython-310-x
 
 To install the entire package along with python glue code, do `python3.[version] -m pip install .` inside the root directory of the project.
 
+## Docstring Generation from C++ Comments
+Based on [`pybind11_mkdoc`](https://github.com/pybind/pybind11_mkdoc), we created
+[`./dev/mkdoc.py`](./mkdoc.py) to automatically generate pybind11 docstrings from
+C++ code comments. In [`CMakeLists.txt`](../CMakeLists.txt), a custom target will run
+[`./dev/mkdoc.sh`](./mkdoc.sh) which calls `./dev/mkdoc.py` for all header files.
+The generated docstrings will be stored in [`./python/docstring/`](../python/docstring/).
+
+The expected C++ code comments should follow the [`doxygen`](https://doxygen.nl/manual/docblocks.html) format
+([an example header file](./test_mkdoc/mplib_sample/sample_header.h))
+and the generated pybind11 docstrings (which will be used to generate python docstrings)
+will be in Sphinx [`reStructuredText (reST)`](https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html) format.
+
+To run on local environment, please install `python3 -m pip install libclang=={clang-version}`
+where the `clang-version` should match your local LLVM installation
+`/usr/lib/llvm-{ver}/lib/clang/{clang-version}/`.
+
 ## Stubs & Documentation Generation
 
-To generate stubs and documentations, run `./dev/generate_stub_and_doc.sh`.
+To generate stubs and documentations, run [`./dev/generate_stub_and_doc.sh`](./generate_stub_and_doc.sh).
 By default it uses `python3.10` in docker image [`kolinguo/mplib-build`](https://hub.docker.com/r/kolinguo/mplib-build).
 
 The script does the following:
-* Build a python wheel using [`cibuildwheel`](https://cibuildwheel.readthedocs.io/en/stable/#how-it-works).
+* Build a python wheel using [`./dev/build_wheels.sh`](./build_wheels.sh).
 * In a docker container, install the python wheel and
 use [`pybind11-stubgen`](https://github.com/sizmailov/pybind11-stubgen)
 to generate stubs.  
@@ -86,6 +104,7 @@ Copy the generated docs into [`docs`](../docs/).
 
 ## GitHub Action CI/CD
 Currently, a GitHub action is setup to build / release / publish python wheels.
+Building wheels are done using [`cibuildwheel`](https://cibuildwheel.readthedocs.io/en/stable/#how-it-works).
 
 ### Push to `main` branch
 This triggers building wheels for all supported python versions and

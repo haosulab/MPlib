@@ -12,6 +12,11 @@
 #include "color_printing.h"
 #include "macros_utils.hpp"
 
+/**
+ * Pinocchio model of an articulation
+ *
+ * See https://github.com/stack-of-tasks/pinocchio
+ */
 template <typename DATATYPE>
 class PinocchioModelTpl {
  private:
@@ -50,6 +55,13 @@ class PinocchioModelTpl {
   PinocchioModelTpl(const urdf::ModelInterfaceSharedPtr &urdfTree,
                     const Vector3 &gravity, const bool &verbose = true);
 
+  /**
+   * Construct a Pinocchio model from the given URDF file.
+   *
+   * @param urdf_filename: path to the URDF file
+   * @param gravity: gravity vector
+   * @param verbose: print debug information
+   */
   PinocchioModelTpl(const std::string &urdf_filename, const Vector3 &gravity,
                     const bool &verbose = true);
 
@@ -57,8 +69,21 @@ class PinocchioModelTpl {
 
   inline Data &getData(void) { return data; }
 
+  /**
+   * Get the leaf links (links without child) of the kinematic tree.
+   *
+   * @return: list of leaf links
+   */
   std::vector<std::string> getLeafLinks() { return leaf_links; }
 
+  /**
+   * Get the type of the joint with the given index.
+   *
+   * @param index: joint index to query
+   * @param user: if ``true``, the joint index follows the order you passed to the
+   *    constructor or the default order
+   * @return: type of the joint with the given index
+   */
   inline std::string getJointType(const size_t &index, const bool &user = true) {
     if (user)
       return model.joints[joint_index_user2pinocchio[index]].shortname();
@@ -66,6 +91,14 @@ class PinocchioModelTpl {
       return model.joints[index].shortname();
   }
 
+  /**
+   * Get the type of all the joints. Again, Pinocchio might split a joint into
+   * multiple joints.
+   *
+   * @param user: if ``true``, we get the type of the joints in the order you passed to
+   *    the constructor or the default order
+   * @return: type of the joints
+   */
   inline std::vector<std::string> getJointTypes(const bool &user = true) {
     std::vector<std::string> ret;
     auto njoints = user ? user_joint_names.size() : model.joints.size();
@@ -73,6 +106,14 @@ class PinocchioModelTpl {
     return ret;
   }
 
+  /**
+   * Get the limit of all the joints. Again, Pinocchio might split a joint into
+   * multiple joints.
+   *
+   * @param user: if ``true``, we get the limit of the joints in the order you passed to
+   *    the constructor or the default order
+   * @return: limit of the joints
+   */
   inline std::vector<Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
   getJointLimits(const bool &user = true) {
     std::vector<Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>> ret;
@@ -81,6 +122,14 @@ class PinocchioModelTpl {
     return ret;
   }
 
+  /**
+   * Get the limit of the joint with the given index.
+   *
+   * @param index: joint index to query
+   * @param user: if ``true``, the joint index follows the order you passed to the
+   *    constructor or the default order
+   * @return: limit of the joint with the given index
+   */
   inline Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> getJointLimit(
       const size_t &index, const bool &user = true) {
     auto joint_type = getJointType(index, user);
@@ -110,10 +159,26 @@ class PinocchioModelTpl {
     return ret;
   }
 
+  /**
+   * Get the id of the joint with the given index.
+   *
+   * @param index: joint index to query
+   * @param user: if ``true``, the joint index follows the order you passed to the
+   *    constructor or the default order
+   * @return: id of the joint with the given index
+   */
   inline size_t getJointId(const size_t &index, const bool &user = true) {
     return user ? vidx[index] : model.idx_vs[index];
   }
 
+  /**
+   * Get the id of all the joints. Again, Pinocchio might split a joint into
+   * multiple joints.
+   *
+   * @param user: if ``true``, we get the id of the joints in the order you passed to
+   *    the constructor or the default order
+   * @return: id of the joints
+   */
   inline VectorXI getJointIds(const bool &user = true) {
     if (user)
       return vidx;
@@ -124,10 +189,26 @@ class PinocchioModelTpl {
     }
   }
 
+  /**
+   * Get the dimension of the joint with the given index.
+   *
+   * @param index: joint index to query
+   * @param user: if ``true``, the joint index follows the order you passed to the
+   *    constructor or the default order
+   * @return: dimension of the joint with the given index
+   */
   inline size_t getJointDim(const size_t &index, const bool &user = true) {
     return user ? nvs[index] : model.nvs[index];
   }
 
+  /**
+   * Get the dimension of all the joints. Again, Pinocchio might split a joint into
+   * multiple joints.
+   *
+   * @param user: if ``true``, we get the dimension of the joints in the order you
+   *    passed to the constructor or the default order
+   * @return: dimention of the joints
+   */
   inline VectorXI getJointDims(const bool &user = true) {
     if (user)
       return nvs;
@@ -138,10 +219,26 @@ class PinocchioModelTpl {
     }
   }
 
+  /**
+   * Get the parent of the joint with the given index.
+   *
+   * @param index: joint index to query
+   * @param user: if ``true``, the joint index follows the order you passed to the
+   *    constructor or the default order
+   * @return: parent of the joint with the given index
+   */
   inline size_t getParent(const size_t &index, const bool &user = true) {
     return user ? parents[index] : model.parents[index];
   }
 
+  /**
+   * Get the parent of all the joints. Again, Pinocchio might split a joint into
+   * multiple joints.
+   *
+   * @param user: if ``true``, we get the parent of the joints in the order you passed
+   *    to the constructor or the default order
+   * @return: parent of the joints
+   */
   inline VectorXI getParents(const bool &user = true) {
     if (user)
       return parents;
@@ -152,6 +249,13 @@ class PinocchioModelTpl {
     }
   }
 
+  /**
+   * Get the name of all the links.
+   *
+   * @param user: if ``true``, we get the name of the links in the order you passed
+   *    to the constructor or the default order
+   * @return: name of the links
+   */
   inline std::vector<std::string> getLinkNames(const bool &user = true) {
     if (user)
       return user_link_names;
@@ -164,6 +268,14 @@ class PinocchioModelTpl {
     }
   }
 
+  /**
+   * Get the name of all the joints. Again, Pinocchio might split a joint into
+   * multiple joints.
+   *
+   * @param user: if ``true``, we get the name of the joints in the order you passed
+   *    to the constructor or the default order
+   * @return: name of the joints
+   */
   inline std::vector<std::string> getJointNames(const bool &user = true) {
     if (user) return user_joint_names;
     // we need to ignore the "universe" joint
@@ -186,7 +298,7 @@ class PinocchioModelTpl {
       return model.subtrees;
   }
 
-  // Frame is a Pinocchio internal data type which is not supported outside this class.
+  /// Frame is a Pinocchio internal data type which is not supported outside this class.
   void printFrames(void);
 
   int getNFrames(void) { return model.nframes; }
@@ -227,37 +339,146 @@ class PinocchioModelTpl {
 
       std::vector<size_t> getParents(void) { return model.parents; }
 
-      void printFrames(void);*/
-  //
+      void printFrames(void);
+  */
 
+  /**
+   * Pinocchio might have a different joint order or it might add additional joints.
+   *
+   * If you do not pass the the list of joint names, the default order might not be the
+   * one you want.
+   *
+   * @param names: list of joint names in the order you want
+   */
   void setJointOrder(const std::vector<std::string> &names);
 
+  /**
+   * Pinocchio might have a different link order or it might add additional links.
+   *
+   * If you do not pass the the list of link names, the default order might not be the
+   * one you want.
+   *
+   * @param names: list of link names in the order you want
+   */
   void setLinkOrder(const std::vector<std::string> &names);
 
+  /**
+   * Get the joint indices of the joints in the chain from the root to the given link.
+   *
+   * @param index: index of the link (in the order you passed to the constructor or the
+   *    default order)
+   * @return: joint indices of the joints in the chain
+   */
   std::vector<std::size_t> getChainJointIndex(const std::string &end_effector);
 
+  /**
+   * Get the joint names of the joints in the chain from the root to the given link.
+   *
+   * @param index: index of the link (in the order you passed to the constructor or the
+   *    default order)
+   * @return: joint names of the joints in the chain
+   */
   std::vector<std::string> getChainJointName(const std::string &end_effector);
 
+  /**
+   * Get a random configuration.
+   *
+   * @return: random joint configuration
+   */
   VectorX getRandomConfiguration();
 
+  /**
+   * Compute forward kinematics for the given joint configuration.
+   *
+   * If you want the result you need to call ``get_link_pose()``
+   *
+   * @param qpos: joint configuration. Needs to be full configuration, not just the
+   *    movegroup joints.
+   */
   void computeForwardKinematics(const VectorX &qpos);
 
+  /**
+   * Get the pose of the given link.
+   *
+   * @param index: index of the link (in the order you passed to the constructor or the
+   *    default order)
+   * @return: pose of the link [x, y, z, qw, qx, qy, qz]
+   */
   Vector7 getLinkPose(const size_t &index);
 
-  Vector7 getJointPose(const size_t &index);  // TODO not same as sapien
+  Vector7 getJointPose(const size_t &index);  // TODO: not same as sapien
 
+  /**
+   * Compute the full jacobian for the given joint configuration.
+   *
+   * If you want the result you need to call ``get_link_jacobian()``
+   *
+   * @param qpos: joint configuration. Needs to be full configuration, not just the
+   *    movegroup joints.
+   */
   void computeFullJacobian(const VectorX &qpos);
 
+  /**
+   * Get the jacobian of the given link.
+   *
+   * @param index: index of the link (in the order you passed to the constructor or the
+   *    default order)
+   * @param local: if ``true``, the jacobian is expressed in the local frame of the
+   *    link, otherwise it is expressed in the world frame
+   * @return: 6 x n jacobian of the link
+   */
   Matrix6x getLinkJacobian(const size_t &index, const bool &local = false);
 
+  /**
+   * Compute the jacobian of the given link.
+   *
+   * @param qpos: joint configuration. Needs to be full configuration, not just the
+   *    movegroup joints.
+   * @param index: index of the link (in the order you passed to the constructor or the
+   *    default order)
+   * @param local: if ``true`` return the jacobian w.r.t. the instantaneous local frame
+   *    of the link
+   * @return: 6 x n jacobian of the link
+   */
   Matrix6x computeSingleLinkJacobian(const VectorX &qpos, const size_t &index,
                                      bool local = false);
 
+  /**
+   * Compute the inverse kinematics using close loop inverse kinematics.
+   *
+   * @param index: index of the link (in the order you passed to the constructor or the
+   *    default order)
+   * @param pose: desired pose of the link [x, y, z, qw, qx, qy, qz]
+   * @param q_init: initial joint configuration
+   * @param mask: if the value at a given index is ``true``, the joint is *not* used in
+   *    the IK
+   * @param eps: tolerance for the IK
+   * @param maxIter: maximum number of iterations
+   * @param dt: time step for the CLIK
+   * @param damp: damping for the CLIK
+   * @return: joint configuration
+   */
   std::tuple<VectorX, bool, Vector6> computeIKCLIK(
       const size_t &index, const Vector7 &pose, const VectorX &q_init,
       const std::vector<bool> &mask, const double &eps = 1e-5,
       const int &maxIter = 1000, const double &dt = 1e-1, const double &damp = 1e-12);
 
+  /**
+   * The same as ``compute_IK_CLIK()`` but with it clamps the joint configuration to the
+   * given limits.
+   *
+   * @param index: index of the link (in the order you passed to the constructor or the
+   *    default order)
+   * @param pose: desired pose of the link [x, y, z, qw, qx, qy, qz]
+   * @param q_init: initial joint configuration
+   * @param q_min: minimum joint configuration
+   * @param q_max: maximum joint configuration
+   * @param eps: tolerance for the IK
+   * @param maxIter: maximum number of iterations
+   * @param dt: time step for the CLIK
+   * @param damp: damping for the CLIK
+   * @return: joint configuration
+   */
   std::tuple<VectorX, bool, Vector6> computeIKCLIKJL(
       const size_t &index, const Vector7 &pose, const VectorX &q_init,
       const VectorX &qmin, const VectorX &qmax, const double &eps = 1e-5,

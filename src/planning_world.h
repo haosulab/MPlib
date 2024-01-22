@@ -8,11 +8,15 @@
 #include "fcl_model.h"
 #include "macros_utils.hpp"
 
+/// Result of the collision checking.
 template <typename DATATYPE>
 struct WorldCollisionResultTpl {
-  fcl::CollisionResult<DATATYPE> res;
-  // size_t object_id1, object_id2;
-  std::string collision_type, object_name1, object_name2, link_name1, link_name2;
+  fcl::CollisionResult<DATATYPE> res;  ///< the fcl CollisionResult
+  std::string collision_type,          ///< type of the collision
+      object_name1,                    ///< name of the first object
+      object_name2,                    ///< name of the second object
+      link_name1,                      ///< link name of the first object in collision
+      link_name2;                      ///< link name of the second object in collision
 };
 
 template <typename T>
@@ -23,6 +27,7 @@ using WorldCollisionResultf = WorldCollisionResultTpl<float>;
 using WorldCollisionResultd_ptr = WorldCollisionResultTpl_ptr<double>;
 using WorldCollisionResultf_ptr = WorldCollisionResultTpl_ptr<float>;
 
+/// Planning world for collision checking
 template <typename DATATYPE>
 class PlanningWorldTpl {
  private:
@@ -61,12 +66,13 @@ class PlanningWorldTpl {
   bool use_point_cloud, use_attach;  // expose to python
 
   /**
-   * @brief PlanningWorld constructor
-   * @param articulations articulated models i.e. robot arms
-   * @param articulation_names names of the articulated models
-   * @param normal_objects collision objects that are not articulated
-   * @param normal_object_names names of the normal objects
-   * @param plan_articulation_id id of the articulated model that is used for planning
+   * Constructs a PlanningWorld with given articulations and normal objects
+   *
+   * @param articulations: list of articulated models
+   * @param articulation_names: name of the articulated models
+   * @param normal_objects: list of collision objects that are not articulated
+   * @param normal_object_names: name of the normal objects
+   * @param plan_articulation_id: id of the articulated model that is used for planning
    */
   PlanningWorldTpl(const std::vector<ArticulatedModel_ptr> &articulations,
                    const std::vector<std::string> &articulation_names,
@@ -76,8 +82,18 @@ class PlanningWorldTpl {
 
   // std::vector<bool> const &articulation_flags);
 
+  /**
+   * Get the list of articulated models.
+   *
+   * @return: list of articulated models
+   */
   std::vector<ArticulatedModel_ptr> getArticulations(void) { return articulations; }
 
+  /**
+   * Get the list of non-articulated collision objects.
+   *
+   * @return: list of non-articulated collision objects
+   */
   std::vector<CollisionObject_ptr> getNormalObjects(void) {
     std::vector<CollisionObject_ptr> ret;
     for (const auto &itm : normal_object_map) ret.push_back(itm.second);
@@ -93,10 +109,10 @@ class PlanningWorldTpl {
   }
 
   /**
-   * @brief add or change a non-articulated object
+   * Add a non-articulated collision object to the planning world.
    *
-   * @param name
-   * @param collision_object an fcl collision object pointer
+   * @param name: name of the non-articulated collision object
+   * @param collision_object: the non-articulated collision object to be added
    */
   void setNormalObject(const std::string &name,
                        const CollisionObject_ptr &collision_object) {
@@ -104,11 +120,10 @@ class PlanningWorldTpl {
   }
 
   /**
-   * @brief remove a non-articulated object
+   * Remove am non-articulated object
    *
-   * @param name
-   * @return true if the item exists
-   * @return false otherwise
+   * @param name: name of the non-articulated collision object
+   * @return: ``true`` if the item exists and ``false`` otherwise
    */
   bool removeNormalObject(const std::string &name) {
     if (!normal_object_map.count(name)) return false;
@@ -120,50 +135,92 @@ class PlanningWorldTpl {
 
   int getMoveArticulationId() { return move_articulation_id; }
 
+  /**
+   * Set whether to use point cloud for collision checking.
+   *
+   * @param use: whether to use point cloud
+   */
   void setUsePointCloud(const bool &use) { use_point_cloud = use; }
 
   /**
-   * @brief update the octree given a point cloud
+   * Update the point cloud for collision checking.
    *
-   * @param vertices a set of points
-   * @param radius how big the radius of each point is. This will cause robot to plan
-   * around certain objects since the collision geometry is bigger
+   * @param vertices: vertices of the point cloud
+   * @param radius: radius of each point in the point cloud
    */
   void updatePointCloud(const Matrixx3 &vertices, const double &radius = 0.0);
 
+  /**
+   * Set whether to use attached tool for collision checking.
+   *
+   * @param use: whether to use attached tool
+   */
   void setUseAttach(const bool &use) {
     use_attach = use;
     if (!use) removeAttach();
   }
 
   /**
-   * @brief remove attach object so nothing won't be anything on the end effector
-   *        when use_attach is set to true again
+   * Remove attach object so there won't be anything on the end effector when
+   * ``use_attach`` is set to ``true`` again
    */
   void removeAttach() { has_attach = false; }
 
   /**
-   * @brief attach or update the attached object
-   * @param p_geom shared ptr to a collision object
-   * @param link_id id of the link to which the object is attached
-   * @param pose the pose of the attached object w.r.t. the link it's attached to
+   * Attach or update the attached object
+   *
+   * @param p_geom: fcl collision geometry of the attached tool
+   * @param link_id: id of the link to which the object is attached
+   * @param pose: pose of the attached object w.r.t. the link it's attached to.
+   *              [x, y, z, qw, qx, qy, qz]
    */
   void updateAttachedTool(CollisionGeometry_ptr p_geom, int link_id,
                           const Vector7 &pose);
 
+  /**
+   * Add a sphere as the attached tool.
+   *
+   * @param radius: radius of the sphere
+   * @param link_id: link id of the attached sphere
+   * @param pose: pose of the attached sphere w.r.t. the link it's attached to.
+   *              [x, y, z, qw, qx, qy, qz]
+   */
   void updateAttachedSphere(DATATYPE radius, int link_id, const Vector7 &pose);
 
+  /**
+   * Add a box as the attached tool.
+   *
+   * @param size: size of the box, [size_x, size_y, size_z]
+   * @param link_id: link id of the attached box
+   * @param pose: pose of the attached box w.r.t. the link it's attached to.
+   *              [x, y, z, qw, qx, qy, qz]
+   */
   void updateAttachedBox(const Vector3 &size, int link_id, const Vector7 &pose);
 
+  /**
+   * Add a mesh as the attached tool.
+   *
+   * @param mesh_path: path to the mesh file
+   * @param link_id: link id of the attached mesh
+   * @param pose: pose of the attached mesh w.r.t. the link it's attached to.
+   *              [x, y, z, qw, qx, qy, qz]
+   */
   void updateAttachedMesh(const std::string &mesh_path, int link_id,
                           const Vector7 &pose);
 
+  /// Print the pose of the attached tool.
   void printAttachedToolPose() {
     auto tmp1 = attached_tool.get()->getTranslation();
     auto tmp2 = attached_tool.get()->getRotation();
     print_info("Attached tool pose: ", tmp1.transpose(), " ", tmp2);
   }
 
+  /**
+   * Add an articulated model to the planning world.
+   *
+   * @param model: articulated model to be added
+   * @param name: name of the articulated model
+   */
   void addArticulation(const ArticulatedModel_ptr &model,
                        const std::string &name) {  // bool const &planning = true) {
     articulations.push_back(model);
@@ -171,6 +228,12 @@ class PlanningWorldTpl {
     // articulation_flags.push_back(planning);
   }
 
+  /**
+   * Add a list of articulated models to the planning world.
+   *
+   * @param models: list of articulated models to be added
+   * @param names: list of names of the articulated models
+   */
   void addArticulations(
       const std::vector<ArticulatedModel_ptr> &models,
       const std::vector<std::string> &names) {  // std::vector<bool> const &planning) {
@@ -180,19 +243,54 @@ class PlanningWorldTpl {
     // planning.end());
   }
 
+  /**
+   * Set the joint qpos of the articulated model.
+   *
+   * @param index: index of the articulated model
+   * @param qpos: joint angles of the *movegroup only*
+   */
   void setQpos(const int &index, const VectorX &qpos);
 
+  /**
+   * Set the joint qpos of all articulated models.
+   *
+   * @param qpos: joint angles of all the models (*movegroup only*)
+   */
   void setQposAll(const VectorX &qpos);
 
-  //   bool collide_among_normal_objects()=0;
-
+  /**
+   * Check collision in the planning world.
+   *
+   * @return: ``true`` if collision exists
+   */
   bool collide();
 
-  // std::vector<WorldCollisionResult> collideFull(void);
+  /**
+   * Check collision between the articulated model and itself.
+   *
+   * @param index: index of the articulated model
+   * @param request: collision request params. Can leave empty for default value
+   * @return: List of WorldCollisionResult objects
+   */
   std::vector<WorldCollisionResult> selfCollide(
       int index, const CollisionRequest &request = CollisionRequest());
+  /**
+   * Check collision between the articulated model and other objects.
+   *
+   * @param index: index of the articulated model
+   * @param request: collision request params. Can leave empty for default value
+   * @return: List of WorldCollisionResult objects
+   */
   std::vector<WorldCollisionResult> collideWithOthers(
       int index, const CollisionRequest &request = CollisionRequest());
+
+  /**
+   * Check collision between the articulated model and all objects.
+   *
+   * @param index: index of the articulated model
+   * @param request: collision request params. Can leave empty for default value
+   * @return: List of WorldCollisionResult objects
+   */
   std::vector<WorldCollisionResult> collideFull(
       int index, const CollisionRequest &request = CollisionRequest());
 };
