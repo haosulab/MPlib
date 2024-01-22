@@ -58,10 +58,10 @@ add_custom_target(
 # Pybind11
 add_subdirectory("third_party/pybind11")
 pybind11_add_module(pymp python/pybind.cpp)
-target_link_libraries(pymp PRIVATE mp Eigen3::Eigen)
+target_link_libraries(pymp PRIVATE mp)
 add_dependencies(pymp pybind11_mkdoc)
 
 # compile test_articulated_model and run the test
 add_executable(test_articulated_model tests/test_articulated_model.cpp)
-target_link_libraries(test_articulated_model PRIVATE mp Eigen3::Eigen)
+target_link_libraries(test_articulated_model PRIVATE mp)
 add_test(NAME test_articulated_model COMMAND test_articulated_model)
