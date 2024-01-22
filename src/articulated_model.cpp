@@ -21,17 +21,19 @@
 #include "pinocchio/parsers/urdf/model.hxx"
 #include "pinocchio/parsers/utils.hpp"
 
-#define DEFINE_TEMPLATE_AM(DATATYPE) template class ArticulatedModelTpl<DATATYPE>;
+#define DEFINE_TEMPLATE_AM(S) template class ArticulatedModelTpl<S>;
 
 DEFINE_TEMPLATE_AM(float)
 
 DEFINE_TEMPLATE_AM(double)
 
-template <typename DATATYPE>
-ArticulatedModelTpl<DATATYPE>::ArticulatedModelTpl(
-    const std::string &urdf_filename, const std::string &srdf_filename,
-    const Vector3 &gravity, const std::vector<std::string> &joint_names,
-    const std::vector<std::string> &link_names, const bool &verbose, const bool &convex)
+template <typename S>
+ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
+                                            const std::string &srdf_filename,
+                                            const Vector3 &gravity,
+                                            const std::vector<std::string> &joint_names,
+                                            const std::vector<std::string> &link_names,
+                                            const bool &verbose, const bool &convex)
     : pinocchio_model_(urdf_filename, gravity, verbose),
       fcl_model_(urdf_filename, verbose, convex),
       verbose_(verbose) {
@@ -48,14 +50,14 @@ ArticulatedModelTpl<DATATYPE>::ArticulatedModelTpl(
   setBasePose({0, 0, 0, 1, 0, 0, 0});  // initialize base pose to identity
 }
 
-template <typename DATATYPE>
-void ArticulatedModelTpl<DATATYPE>::setMoveGroup(const std::string &end_effector) {
+template <typename S>
+void ArticulatedModelTpl<S>::setMoveGroup(const std::string &end_effector) {
   std::vector<std::string> end_effectors = {end_effector};
   setMoveGroup(end_effectors);
 }
 
-template <typename DATATYPE>
-void ArticulatedModelTpl<DATATYPE>::setMoveGroup(
+template <typename S>
+void ArticulatedModelTpl<S>::setMoveGroup(
     const std::vector<std::string> &end_effectors) {
   move_group_end_effectors_ = end_effectors;
   move_group_user_joints_ = {};
@@ -73,15 +75,15 @@ void ArticulatedModelTpl<DATATYPE>::setMoveGroup(
     move_group_qpos_dim_ += pinocchio_model_.getJointDim(i);
 }
 
-template <typename DATATYPE>
-std::vector<std::string> ArticulatedModelTpl<DATATYPE>::getMoveGroupJointName(void) {
+template <typename S>
+std::vector<std::string> ArticulatedModelTpl<S>::getMoveGroupJointName(void) {
   std::vector<std::string> ret;
   for (auto i : move_group_user_joints_) ret.push_back(user_joint_names_[i]);
   return ret;
 }
 
-template <typename DATATYPE>
-void ArticulatedModelTpl<DATATYPE>::setQpos(const VectorX &qpos, const bool &full) {
+template <typename S>
+void ArticulatedModelTpl<S>::setQpos(const VectorX &qpos, const bool &full) {
   if (full)
     current_qpos_ = qpos;
   else {
@@ -110,12 +112,12 @@ void ArticulatedModelTpl<DATATYPE>::setQpos(const VectorX &qpos, const bool &ful
   fcl_model_.updateCollisionObjects(link_pose);
 }
 
-template <typename DATATYPE>
-void ArticulatedModelTpl<DATATYPE>::setBasePose(const Vector7 &pose) {
+template <typename S>
+void ArticulatedModelTpl<S>::setBasePose(const Vector7 &pose) {
   base_pose_ = pose;
   base_tf_.translation() = pose.head(3);
-  base_tf_.linear() = Eigen::Quaternion<DATATYPE>(pose[3], pose[4], pose[5], pose[6])
-                          .toRotationMatrix();
+  base_tf_.linear() =
+      Eigen::Quaternion<S>(pose[3], pose[4], pose[5], pose[6]).toRotationMatrix();
   setQpos(
       current_qpos_,
       true);  // we don't need to update Qpos, but this also updates fcl, which we need

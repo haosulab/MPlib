@@ -11,13 +11,12 @@
 #include "docstring/kdl_model.h"
 #include "mplib/kdl_model.h"
 #include "mplib/macros_utils.h"
+#include "pybind_macros.hpp"
 
 namespace py = pybind11;
 
-using DATATYPE = double;
-
-using KDLModel = KDLModelTpl<DATATYPE>;
-DEFINE_TEMPLATE_EIGEN(DATATYPE)
+using KDLModel = KDLModelTpl<S>;
+DEFINE_TEMPLATE_EIGEN(S)
 
 void build_pykdl(py::module &m_all) {
   auto m = m_all.def_submodule("kdl");

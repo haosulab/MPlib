@@ -12,17 +12,16 @@
 #include "fcl/narrowphase/collision_request.h"
 #include "mplib/macros_utils.h"
 #include "mplib/planning_world.h"
+#include "pybind_macros.hpp"
 
 namespace py = pybind11;
 
-using DATATYPE = double;
-
-using CollisionObject = fcl::CollisionObject<DATATYPE>;
+using CollisionObject = fcl::CollisionObject<S>;
 using CollisionObjectPtr = std::shared_ptr<CollisionObject>;
 
-using PlanningWorld = PlanningWorldTpl<DATATYPE>;
-using WorldCollisionResult = WorldCollisionResultTpl<DATATYPE>;
-using ArticulatedModelPtr = ArticulatedModelTplPtr<DATATYPE>;
+using PlanningWorld = PlanningWorldTpl<S>;
+using WorldCollisionResult = WorldCollisionResultTpl<S>;
+using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 
 void build_planning_world(py::module &m_all) {
   auto m = m_all.def_submodule("planning_world");

@@ -9,12 +9,12 @@
  * Supports initialization from URDF and SRDF files, and provides access to
  * underlying Pinocchio and FCL models.
  */
-template <typename DATATYPE>
+template <typename S>
 class ArticulatedModelTpl {
  private:
-  DEFINE_TEMPLATE_EIGEN(DATATYPE);
-  using PinocchioModel = PinocchioModelTpl<DATATYPE>;
-  using FCLModel = FCLModelTpl<DATATYPE>;
+  DEFINE_TEMPLATE_EIGEN(S);
+  using PinocchioModel = PinocchioModelTpl<S>;
+  using FCLModel = FCLModelTpl<S>;
 
   PinocchioModel pinocchio_model_;
   FCLModel fcl_model_;
@@ -58,14 +58,14 @@ class ArticulatedModelTpl {
    *
    * @return: Pinocchio model used for kinematics and dynamics computations
    */
-  PinocchioModelTpl<DATATYPE> &getPinocchioModel() { return pinocchio_model_; }
+  PinocchioModelTpl<S> &getPinocchioModel() { return pinocchio_model_; }
 
   /**
    * Get the underlying FCL model.
    *
    * @return: FCL model used for collision checking
    */
-  FCLModelTpl<DATATYPE> &getFCLModel() { return fcl_model_; }
+  FCLModelTpl<S> &getFCLModel() { return fcl_model_; }
 
   /**
    * Set the move group, i.e. the chain ending in end effector for which to compute the

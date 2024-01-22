@@ -10,12 +10,11 @@
 
 #include "docstring/articulated_model.h"
 #include "mplib/articulated_model.h"
+#include "pybind_macros.hpp"
 
 namespace py = pybind11;
 
-using DATATYPE = double;
-
-using ArticulatedModel = ArticulatedModelTpl<DATATYPE>;
+using ArticulatedModel = ArticulatedModelTpl<S>;
 
 void build_pyarticulation(py::module &m_all) {
   auto m = m_all.def_submodule(
@@ -25,9 +24,9 @@ void build_pyarticulation(py::module &m_all) {
           m, "ArticulatedModel", DOC(ArticulatedModelTpl));
 
   PyArticulatedModel
-      .def(py::init<const std::string &, const std::string &,
-                    Eigen::Matrix<DATATYPE, 3, 1>, const std::vector<std::string> &,
-                    const std::vector<std::string> &, const bool &, const bool &>(),
+      .def(py::init<const std::string &, const std::string &, Eigen::Matrix<S, 3, 1>,
+                    const std::vector<std::string> &, const std::vector<std::string> &,
+                    const bool &, const bool &>(),
            py::arg("urdf_filename"), py::arg("srdf_filename"), py::arg("gravity"),
            py::arg("joint_names"), py::arg("link_names"), py::arg("verbose") = true,
            py::arg("convex") = false, DOC(ArticulatedModelTpl, ArticulatedModelTpl))

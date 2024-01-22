@@ -17,11 +17,11 @@
  *
  * See https://github.com/stack-of-tasks/pinocchio
  */
-template <typename DATATYPE>
+template <typename S>
 class PinocchioModelTpl {
  private:
-  DEFINE_TEMPLATE_EIGEN(DATATYPE)
-  DEFINE_TEMPLATE_PINOCCHIO(DATATYPE)
+  DEFINE_TEMPLATE_EIGEN(S)
+  DEFINE_TEMPLATE_PINOCCHIO(S)
 
   // pinocchio::ModelTpl<float>;
 
@@ -114,9 +114,9 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: limit of the joints
    */
-  inline std::vector<Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
-  getJointLimits(const bool &user = true) {
-    std::vector<Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>> ret;
+  inline std::vector<Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>> getJointLimits(
+      const bool &user = true) {
+    std::vector<Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>> ret;
     auto njoints = user ? user_joint_names_.size() : model_.joints.size();
     for (size_t i = 0; i < njoints; i++) ret.push_back(getJointLimit(i, user));
     return ret;
@@ -130,13 +130,13 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: limit of the joint with the given index
    */
-  inline Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> getJointLimit(
+  inline Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic> getJointLimit(
       const size_t &index, const bool &user = true) {
     auto joint_type = getJointType(index, user);
     size_t pinocchio_idx = user ? joint_index_user2pinocchio_[index] : index;
     size_t start_idx = model_.idx_qs[pinocchio_idx], nq = model_.nqs[pinocchio_idx],
            dim_joint = getJointDim(index, user);
-    Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret;
+    Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic> ret;
     ASSERT(dim_joint == 1, "Only support joint with dim 1 but joint" +
                                getJointNames(user)[index] + " has dim " +
                                std::to_string(dim_joint));
@@ -146,14 +146,14 @@ class PinocchioModelTpl {
     if (joint_type[joint_prefix_.size()] == 'P' ||
         (joint_type[joint_prefix_.size()] == 'R' &&
          joint_type[joint_prefix_.size() + 1] != 'U')) {
-      ret = Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>(nq, 2);
+      ret = Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>(nq, 2);
       for (size_t j = 0; j < nq; j++) {
         ret(j, 0) = model_.lowerPositionLimit[start_idx + j];
         ret(j, 1) = model_.upperPositionLimit[start_idx + j];
       }
     } else if (joint_type[joint_prefix_.size()] == 'R' &&
                joint_type[joint_prefix_.size() + 1] == 'U') {
-      ret = Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>(1, 2);
+      ret = Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>(1, 2);
       ret(0, 0) = -3.14159265359, ret(0, 1) = 3.14159265359;
     }
     return ret;

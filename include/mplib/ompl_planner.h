@@ -28,11 +28,11 @@ namespace ob = ompl::base;
 // namespace oc = ompl::control;
 namespace og = ompl::geometric;
 
-template <typename DATATYPE>
-std::vector<DATATYPE> compoundstate2vector(const ob::State *state_raw,
-                                           ob::SpaceInformation *const &si_) {
+template <typename S>
+std::vector<S> compoundstate2vector(const ob::State *state_raw,
+                                    ob::SpaceInformation *const &si_) {
   auto state = state_raw->as<ob::CompoundState>();
-  std::vector<DATATYPE> ret;
+  std::vector<S> ret;
   auto si = si_->getStateSpace()->as<ob::CompoundStateSpace>();
 
   for (size_t i = 0; i < si->getSubspaceCount(); i++) {
@@ -42,12 +42,11 @@ std::vector<DATATYPE> compoundstate2vector(const ob::State *state_raw,
       case ob::STATE_SPACE_REAL_VECTOR:
         n = subspace->as<ob::RealVectorStateSpace>()->getDimension();
         for (size_t j = 0; j < n; j++)
-          ret.push_back((DATATYPE)(*state)[i]
-                            ->as<ob::RealVectorStateSpace::StateType>()
-                            ->values[j]);
+          ret.push_back(
+              (S)(*state)[i]->as<ob::RealVectorStateSpace::StateType>()->values[j]);
         break;
       case ob::STATE_SPACE_SO2:
-        ret.push_back((DATATYPE)(*state)[i]->as<ob::SO2StateSpace::StateType>()->value);
+        ret.push_back((S)(*state)[i]->as<ob::SO2StateSpace::StateType>()->value);
         break;
       default:
         throw std::invalid_argument("Unhandled subspace type.");
@@ -57,14 +56,14 @@ std::vector<DATATYPE> compoundstate2vector(const ob::State *state_raw,
   return ret;
 }
 
-template <typename DATATYPE>
-std::vector<DATATYPE> rvssstate2vector(const ob::State *state_raw,
-                                       ob::SpaceInformation *const &si_) {
+template <typename S>
+std::vector<S> rvssstate2vector(const ob::State *state_raw,
+                                ob::SpaceInformation *const &si_) {
   auto dim = si_->getStateDimension();
   auto state = state_raw->as<ob::ProjectedStateSpace::StateType>();
-  std::vector<DATATYPE> ret;
+  std::vector<S> ret;
   for (size_t i = 0; i < dim; i++) {
-    ret.push_back((DATATYPE)(*state)[i]);
+    ret.push_back((S)(*state)[i]);
   }
   return ret;
 }
@@ -83,14 +82,13 @@ Eigen::Matrix<OUT_TYPE, Eigen::Dynamic, 1> vector2eigen(const std::vector<IN_TYP
   return ret;
 }
 
-template <typename DATATYPE>
-Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> state2eigen(const ob::State *state_raw,
-                                                       ob::SpaceInformation *const &si_,
-                                                       bool is_rvss = false) {
-  std::vector<DATATYPE> vec_ret = is_rvss
-                                      ? rvssstate2vector<DATATYPE>(state_raw, si_)
-                                      : compoundstate2vector<DATATYPE>(state_raw, si_);
-  auto ret = vector2eigen<DATATYPE, DATATYPE>(vec_ret);
+template <typename S>
+Eigen::Matrix<S, Eigen::Dynamic, 1> state2eigen(const ob::State *state_raw,
+                                                ob::SpaceInformation *const &si_,
+                                                bool is_rvss = false) {
+  std::vector<S> vec_ret = is_rvss ? rvssstate2vector<S>(state_raw, si_)
+                                   : compoundstate2vector<S>(state_raw, si_);
+  auto ret = vector2eigen<S, S>(vec_ret);
   return ret;
 }
 
@@ -99,7 +97,7 @@ struct FixedJoint {
                             // belong to?
   size_t joint_idx;         // what is the index of the joint you want it fixed?
   double value;  // what is the value of the fixed joint?  we are actively trying to get
-                 // rid of the DATATYPE template
+                 // rid of the S template
 
   FixedJoint(size_t articulation_idx, size_t joint_idx, double value)
       : articulation_idx(articulation_idx), joint_idx(joint_idx), value(value) {}
@@ -125,17 +123,16 @@ Eigen::VectorXd remove_fixed_joints(const FixedJoints &fixed_joints,
 Eigen::VectorXd add_fixed_joints(const FixedJoints &fixed_joints,
                                  const Eigen::VectorXd &state);
 
-template <typename DATATYPE>
+template <typename S>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
-  using VectorX = Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1>;
-  PlanningWorldTplPtr<DATATYPE> world_;
+  using VectorX = Eigen::Matrix<S, Eigen::Dynamic, 1>;
+  PlanningWorldTplPtr<S> world_;
   bool is_rvss_;
   FixedJoints fixed_joints_;
 
  public:
-  ValidityCheckerTpl(PlanningWorldTplPtr<DATATYPE> world,
-                     const ob::SpaceInformationPtr &si, bool is_rvss,
-                     const FixedJoints &fixed_joints = FixedJoints())
+  ValidityCheckerTpl(PlanningWorldTplPtr<S> world, const ob::SpaceInformationPtr &si,
+                     bool is_rvss, const FixedJoints &fixed_joints = FixedJoints())
       : ob::StateValidityChecker(si),
         world_(world),
         is_rvss_(is_rvss),
@@ -151,7 +148,7 @@ class ValidityCheckerTpl : public ob::StateValidityChecker {
   }
 
   bool isValid(const ob::State *state_raw) const {
-    auto state = state2eigen<DATATYPE>(state_raw, si_, is_rvss_);
+    auto state = state2eigen<S>(state_raw, si_, is_rvss_);
     return _isValid(state);
   }
 };
@@ -179,8 +176,8 @@ class GeneralConstraint : public ob::Constraint {
   }
 };
 
-template <typename DATATYPE>
-using ValidityCheckerTplPtr = std::shared_ptr<ValidityCheckerTpl<DATATYPE>>;
+template <typename S>
+using ValidityCheckerTplPtr = std::shared_ptr<ValidityCheckerTpl<S>>;
 
 using ValidityCheckerdPtr = ValidityCheckerTplPtr<double>;
 using ValidityCheckerfPtr = ValidityCheckerTplPtr<float>;
@@ -188,7 +185,7 @@ using ValidityCheckerd = ValidityCheckerTpl<double>;
 using ValidityCheckerf = ValidityCheckerTpl<float>;
 
 /// OMPL Planner
-template <typename DATATYPE>
+template <typename S>
 class OMPLPlannerTpl {
   using CompoundStateSpacePtr = std::shared_ptr<ob::CompoundStateSpace>;
   using SpaceInformationPtr = std::shared_ptr<ob::SpaceInformation>;
@@ -197,10 +194,10 @@ class OMPLPlannerTpl {
   using CompoundStateSpace = ob::CompoundStateSpace;
   using SpaceInformation = ob::SpaceInformation;
   using ProblemDefinition = ob::ProblemDefinition;
-  using ValidityChecker = ValidityCheckerTpl<DATATYPE>;
-  using ValidityCheckerPtr = ValidityCheckerTplPtr<DATATYPE>;
+  using ValidityChecker = ValidityCheckerTpl<S>;
+  using ValidityCheckerPtr = ValidityCheckerTplPtr<S>;
 
-  DEFINE_TEMPLATE_EIGEN(DATATYPE)
+  DEFINE_TEMPLATE_EIGEN(S)
 
   std::shared_ptr<ob::RealVectorStateSpace> p_ambient_space_;
   std::shared_ptr<ob::ProjectedStateSpace> p_constrained_space_;
@@ -210,10 +207,10 @@ class OMPLPlannerTpl {
   SpaceInformationPtr p_compound_si_;
   SpaceInformationPtr p_constrained_si_;
   SpaceInformationPtr si_;
-  PlanningWorldTplPtr<DATATYPE> world_;
-  ValidityCheckerTplPtr<DATATYPE> valid_checker_;
+  PlanningWorldTplPtr<S> world_;
+  ValidityCheckerTplPtr<S> valid_checker_;
   size_t dim_;
-  std::vector<DATATYPE> lower_joint_limits_, upper_joint_limits_;
+  std::vector<S> lower_joint_limits_, upper_joint_limits_;
   std::vector<bool> is_revolute_;
   // if not empty, then we need to update the state space
   FixedJoints last_fixed_joints_;
@@ -239,7 +236,7 @@ class OMPLPlannerTpl {
    *
    * @param world: planning world
    */
-  OMPLPlannerTpl(const PlanningWorldTplPtr<DATATYPE> &world, int robot_idx = 0);
+  OMPLPlannerTpl(const PlanningWorldTplPtr<S> &world, int robot_idx = 0);
 
   VectorX random_sample_nearby(const VectorX &start_state);
 
@@ -251,7 +248,7 @@ class OMPLPlannerTpl {
    */
   void build_compound_state_space(const FixedJoints &fixed_joints = FixedJoints());
 
-  PlanningWorldTplPtr<DATATYPE> get_world() { return world_; }
+  PlanningWorldTplPtr<S> get_world() { return world_; }
 
   size_t get_dim() { return dim_; }
 
@@ -287,7 +284,7 @@ class OMPLPlannerTpl {
    * @return: pair of planner status and path. If planner succeeds, status is "Exact
    *          solution."
    */
-  std::pair<std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>> plan(
+  std::pair<std::string, Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>> plan(
       const VectorX &start_state, const std::vector<VectorX> &goal_states,
       const std::string &planner_name = "RRTConnect", const double &time = 1.0,
       const double &range = 0.0, const bool verbose = false,
@@ -300,8 +297,8 @@ class OMPLPlannerTpl {
       double constraint_tolerance = 1e-3);
 };
 
-template <typename DATATYPE>
-using OMPLPlannerTplPtr = std::shared_ptr<ValidityCheckerTpl<DATATYPE>>;
+template <typename S>
+using OMPLPlannerTplPtr = std::shared_ptr<ValidityCheckerTpl<S>>;
 
 using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
 using OMPLPlannerTplfPtr = OMPLPlannerTplPtr<float>;

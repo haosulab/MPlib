@@ -2,23 +2,21 @@
 
 #include <kdl/frames_io.hpp>
 
-#define DEFINE_TEMPLATE_URDF_UTILS(DATATYPE)                                           \
-  template pinocchio::InertiaTpl<DATATYPE, 0> convert_inertial<DATATYPE>(              \
-      const urdf::Inertial &Y);                                                        \
-  template pinocchio::InertiaTpl<DATATYPE, 0> convert_inertial<DATATYPE>(              \
-      const urdf::InertialSharedPtr &Y);                                               \
-  template pinocchio::SE3Tpl<DATATYPE, 0> pose_to_se3<DATATYPE>(const urdf::Pose &M);  \
-  template Eigen::Transform<DATATYPE, 3, Eigen::Isometry> se3_to_transform<DATATYPE>(  \
-      const pinocchio::SE3Tpl<DATATYPE, 0> &T);                                        \
-  template Eigen::Transform<DATATYPE, 3, Eigen::Isometry> pose_to_transform<DATATYPE>( \
-      const urdf::Pose &M);                                                            \
-  template pinocchio::SE3Tpl<DATATYPE, 0> transform_to_se3<DATATYPE>(                  \
-      const Eigen::Transform<DATATYPE, 3, Eigen::Isometry> &T);                        \
-  template std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<DATATYPE>>>                       \
-  load_mesh_as_BVH<DATATYPE>(const std::string &mesh_path,                             \
-                             const Eigen::Matrix<DATATYPE, 3, 1> &scale);              \
-  template std::shared_ptr<fcl::Convex<DATATYPE>> load_mesh_as_Convex<DATATYPE>(       \
-      const std::string &mesh_path, const Eigen::Matrix<DATATYPE, 3, 1> &scale);
+#define DEFINE_TEMPLATE_URDF_UTILS(S)                                                \
+  template pinocchio::InertiaTpl<S, 0> convert_inertial<S>(const urdf::Inertial &Y); \
+  template pinocchio::InertiaTpl<S, 0> convert_inertial<S>(                          \
+      const urdf::InertialSharedPtr &Y);                                             \
+  template pinocchio::SE3Tpl<S, 0> pose_to_se3<S>(const urdf::Pose &M);              \
+  template Eigen::Transform<S, 3, Eigen::Isometry> se3_to_transform<S>(              \
+      const pinocchio::SE3Tpl<S, 0> &T);                                             \
+  template Eigen::Transform<S, 3, Eigen::Isometry> pose_to_transform<S>(             \
+      const urdf::Pose &M);                                                          \
+  template pinocchio::SE3Tpl<S, 0> transform_to_se3<S>(                              \
+      const Eigen::Transform<S, 3, Eigen::Isometry> &T);                             \
+  template std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH<S>(       \
+      const std::string &mesh_path, const Eigen::Matrix<S, 3, 1> &scale);            \
+  template std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex<S>(                   \
+      const std::string &mesh_path, const Eigen::Matrix<S, 3, 1> &scale);
 
 DEFINE_TEMPLATE_URDF_UTILS(float)
 
@@ -26,57 +24,55 @@ DEFINE_TEMPLATE_URDF_UTILS(double)
 
 // copy code from pinocchio/src/parsers/urdf/model.cpp and add template to support float
 
-template <typename DATATYPE>
-Eigen::Transform<DATATYPE, 3, Eigen::Isometry> se3_to_transform(
-    const pinocchio::SE3Tpl<DATATYPE, 0> &T) {
-  Eigen::Transform<DATATYPE, 3, Eigen::Isometry> ret;
+template <typename S>
+Eigen::Transform<S, 3, Eigen::Isometry> se3_to_transform(
+    const pinocchio::SE3Tpl<S, 0> &T) {
+  Eigen::Transform<S, 3, Eigen::Isometry> ret;
   ret.linear() = T.rotation_impl();
   ret.translation() = T.translation_impl();
   return ret;
 }
 
-template <typename DATATYPE>
-pinocchio::SE3Tpl<DATATYPE, 0> transform_to_se3(
-    const Eigen::Transform<DATATYPE, 3, Eigen::Isometry> &T) {
-  return pinocchio::SE3Tpl<DATATYPE>(T.linear(), T.translation());
+template <typename S>
+pinocchio::SE3Tpl<S, 0> transform_to_se3(
+    const Eigen::Transform<S, 3, Eigen::Isometry> &T) {
+  return pinocchio::SE3Tpl<S>(T.linear(), T.translation());
 }
 
-template <typename DATATYPE>
-Eigen::Transform<DATATYPE, 3, Eigen::Isometry> pose_to_transform(const urdf::Pose &M) {
+template <typename S>
+Eigen::Transform<S, 3, Eigen::Isometry> pose_to_transform(const urdf::Pose &M) {
   const urdf::Vector3 &p = M.position;
   const urdf::Rotation &q = M.rotation;
-  Eigen::Transform<DATATYPE, 3, Eigen::Isometry> ret =
-      Eigen::Transform<DATATYPE, 3, Eigen::Isometry>::Identity();
-  ret.linear() = Eigen::Quaternion<DATATYPE>(q.w, q.x, q.y, q.z).matrix();
-  ret.translation() = Eigen::Matrix<DATATYPE, 3, 1>(p.x, p.y, p.z);
+  Eigen::Transform<S, 3, Eigen::Isometry> ret =
+      Eigen::Transform<S, 3, Eigen::Isometry>::Identity();
+  ret.linear() = Eigen::Quaternion<S>(q.w, q.x, q.y, q.z).matrix();
+  ret.translation() = Eigen::Matrix<S, 3, 1>(p.x, p.y, p.z);
   return ret;
 }
 
-template <typename DATATYPE>
-pinocchio::SE3Tpl<DATATYPE, 0> pose_to_se3(const urdf::Pose &M) {
+template <typename S>
+pinocchio::SE3Tpl<S, 0> pose_to_se3(const urdf::Pose &M) {
   const urdf::Vector3 &p = M.position;
   const urdf::Rotation &q = M.rotation;
-  return pinocchio::SE3Tpl<DATATYPE>(
-      Eigen::Quaternion<DATATYPE>(q.w, q.x, q.y, q.z).matrix(),
-      Eigen::Matrix<DATATYPE, 3, 1>(p.x, p.y, p.z));
+  return pinocchio::SE3Tpl<S>(Eigen::Quaternion<S>(q.w, q.x, q.y, q.z).matrix(),
+                              Eigen::Matrix<S, 3, 1>(p.x, p.y, p.z));
 }
 
-template <typename DATATYPE>
-pinocchio::InertiaTpl<DATATYPE, 0> convert_inertial(const urdf::Inertial &Y) {
+template <typename S>
+pinocchio::InertiaTpl<S, 0> convert_inertial(const urdf::Inertial &Y) {
   const urdf::Vector3 &p = Y.origin.position;
   const urdf::Rotation &q = Y.origin.rotation;
-  const Eigen::Matrix<DATATYPE, 3, 1> com(p.x, p.y, p.z);
-  const Eigen::Matrix<DATATYPE, 3, 3> &R =
-      Eigen::Quaternion<DATATYPE>(q.w, q.x, q.y, q.z).matrix();
-  Eigen::Matrix<DATATYPE, 3, 3> I;
+  const Eigen::Matrix<S, 3, 1> com(p.x, p.y, p.z);
+  const Eigen::Matrix<S, 3, 3> &R = Eigen::Quaternion<S>(q.w, q.x, q.y, q.z).matrix();
+  Eigen::Matrix<S, 3, 3> I;
   I << Y.ixx, Y.ixy, Y.ixz, Y.ixy, Y.iyy, Y.iyz, Y.ixz, Y.iyz, Y.izz;
-  return pinocchio::InertiaTpl<DATATYPE, 0>(Y.mass, com, R * I * R.transpose());
+  return pinocchio::InertiaTpl<S, 0>(Y.mass, com, R * I * R.transpose());
 }
 
-template <typename DATATYPE>
-pinocchio::InertiaTpl<DATATYPE, 0> convert_inertial(const urdf::InertialSharedPtr &Y) {
-  if (Y) return convert_inertial<DATATYPE>(*Y);
-  return pinocchio::InertiaTpl<DATATYPE>::Zero();
+template <typename S>
+pinocchio::InertiaTpl<S, 0> convert_inertial(const urdf::InertialSharedPtr &Y) {
+  if (Y) return convert_inertial<S>(*Y);
+  return pinocchio::InertiaTpl<S>::Zero();
 }
 
 AssimpLoader::AssimpLoader() : importer(new Assimp::Importer()) {
@@ -120,10 +116,10 @@ void AssimpLoader::load(const std::string &file_name) {
   const_cast<aiString &>(scene->mName) = file_name;
 }
 
-template <typename DATATYPE>
+template <typename S>
 int dfs_build_mesh(const aiScene *scene, const aiNode *node,
-                   const Eigen::Matrix<DATATYPE, 3, 1> &scale, int vertices_offset,
-                   std::vector<fcl::Vector3<DATATYPE>> &vertices,
+                   const Eigen::Matrix<S, 3, 1> &scale, int vertices_offset,
+                   std::vector<fcl::Vector3<S>> &vertices,
                    std::vector<fcl::Triangle> &triangles) {
   if (!node) return 0;
 
@@ -140,13 +136,12 @@ int dfs_build_mesh(const aiScene *scene, const aiNode *node,
     aiMesh *input_mesh = scene->mMeshes[node->mMeshes[i]];
 
     // Add the vertices
-    DATATYPE max_dim = 0;
+    S max_dim = 0;
     for (uint32_t j = 0; j < input_mesh->mNumVertices; j++) {
       aiVector3D p = input_mesh->mVertices[j];
       p *= transform;
-      vertices.push_back(fcl::Vector3<DATATYPE>((DATATYPE)p.x * scale[0],
-                                                (DATATYPE)p.y * scale[1],
-                                                (DATATYPE)p.z * scale[2]));
+      vertices.push_back(
+          fcl::Vector3<S>((S)p.x * scale[0], (S)p.y * scale[1], (S)p.z * scale[2]));
       max_dim = std::max({max_dim, std::abs(p.x) * scale[0], std::abs(p.y) * scale[1],
                           std::abs(p.z) * scale[2]});
     }
@@ -182,21 +177,21 @@ int dfs_build_mesh(const aiScene *scene, const aiNode *node,
   return nbVertices;
 }
 
-template <typename DATATYPE>
-std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<DATATYPE>>> load_mesh_as_BVH(
-    const std::string &mesh_path, const Eigen::Matrix<DATATYPE, 3, 1> &scale) {
+template <typename S>
+std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH(
+    const std::string &mesh_path, const Eigen::Matrix<S, 3, 1> &scale) {
   auto loader = AssimpLoader();  // TODO[Xinsong] change to a global loader so we do not
                                  // initialize it every time
   loader.load(mesh_path);
 
-  std::vector<fcl::Vector3<DATATYPE>> vertices;
+  std::vector<fcl::Vector3<S>> vertices;
   std::vector<fcl::Triangle> triangles;
 
-  dfs_build_mesh<DATATYPE>(loader.scene, loader.scene->mRootNode, scale, 0, vertices,
-                           triangles);
+  dfs_build_mesh<S>(loader.scene, loader.scene->mRootNode, scale, 0, vertices,
+                    triangles);
   // std::cout << "Num of vertex " << nbVertices << " " << vertices.size() << " " <<
   // triangles.size() << std::endl;
-  using Model = fcl::BVHModel<fcl::OBBRSS<DATATYPE>>;
+  using Model = fcl::BVHModel<fcl::OBBRSS<S>>;
   std::shared_ptr<Model> geom = std::make_shared<Model>();
   geom->beginModel();
   geom->addSubModel(vertices, triangles);
@@ -204,21 +199,21 @@ std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<DATATYPE>>> load_mesh_as_BVH(
   return geom;
 }
 
-template <typename DATATYPE>
-std::shared_ptr<fcl::Convex<DATATYPE>> load_mesh_as_Convex(
-    const std::string &mesh_path, const Eigen::Matrix<DATATYPE, 3, 1> &scale) {
+template <typename S>
+std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex(
+    const std::string &mesh_path, const Eigen::Matrix<S, 3, 1> &scale) {
   auto loader = AssimpLoader();
   loader.load(mesh_path);
 
-  std::vector<fcl::Vector3<DATATYPE>> vertices;
+  std::vector<fcl::Vector3<S>> vertices;
   std::vector<fcl::Triangle> triangles;
   /*
   Convex(const std::shared_ptr<const std::vector<Vector3<S>>>& vertices,
           int num_faces, const std::shared_ptr<const std::vector<int>>& faces,
   bool throw_if_invalid = false);
   */
-  dfs_build_mesh<DATATYPE>(loader.scene, loader.scene->mRootNode, scale, 0, vertices,
-                           triangles);
+  dfs_build_mesh<S>(loader.scene, loader.scene->mRootNode, scale, 0, vertices,
+                    triangles);
 
   auto faces = std::make_shared<std::vector<int>>();
   for (size_t i = 0; i < triangles.size(); i++) {
@@ -227,8 +222,8 @@ std::shared_ptr<fcl::Convex<DATATYPE>> load_mesh_as_Convex(
     faces->push_back(triangles[i][1]);
     faces->push_back(triangles[i][2]);
   }
-  auto vertices_ptr = std::make_shared<std::vector<fcl::Vector3<DATATYPE>>>(vertices);
-  using Convex = fcl::Convex<DATATYPE>;
+  auto vertices_ptr = std::make_shared<std::vector<fcl::Vector3<S>>>(vertices);
+  using Convex = fcl::Convex<S>;
   auto convex = std::make_shared<Convex>(vertices_ptr, triangles.size(), faces, true);
   return convex;
 }

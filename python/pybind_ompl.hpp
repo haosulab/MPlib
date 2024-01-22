@@ -11,12 +11,11 @@
 
 #include "docstring/ompl_planner.h"
 #include "mplib/ompl_planner.h"
+#include "pybind_macros.hpp"
 
 namespace py = pybind11;
 
-using DATATYPE = double;
-
-using OMPLPlanner = OMPLPlannerTpl<DATATYPE>;
+using OMPLPlanner = OMPLPlannerTpl<S>;
 using PlannerStatus = ob::PlannerStatus;
 using Path = ob::Path;
 using PathGeometric = og::PathGeometric;
@@ -33,7 +32,7 @@ void build_pyompl(py::module &m_all) {
       m, "OMPLPlanner", DOC(OMPLPlannerTpl));
 
   PyOMPLPlanner
-      .def(py::init<const PlanningWorldTplPtr<DATATYPE> &, int>(), py::arg("world"),
+      .def(py::init<const PlanningWorldTplPtr<S> &, int>(), py::arg("world"),
            py::arg("robot_idx") = 0, DOC(OMPLPlannerTpl, OMPLPlannerTpl))
       .def("plan", &OMPLPlanner::plan, py::arg("start_state"), py::arg("goal_states"),
            py::arg("planner_name") = "RRTConnect", py::arg("time") = 1.0,

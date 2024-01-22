@@ -29,40 +29,39 @@
 #include "mplib/fcl_model.h"
 #include "mplib/macros_utils.h"
 #include "mplib/urdf_utils.h"
+#include "pybind_macros.hpp"
 
-using DATATYPE = double;
+DEFINE_TEMPLATE_FCL(S)
 
-DEFINE_TEMPLATE_FCL(DATATYPE)
-
-DEFINE_TEMPLATE_EIGEN(DATATYPE)
-using FCLModel = FCLModelTpl<DATATYPE>;
+DEFINE_TEMPLATE_EIGEN(S)
+using FCLModel = FCLModelTpl<S>;
 
 /*
-using Vector3 = fcl::Vector3<DATATYPE>;
-using Vector4 = fcl::VectorN<DATATYPE, 4>;
-using Vector7 = fcl::Vector7<DATATYPE>;
+using Vector3 = fcl::Vector3<S>;
+using Vector4 = fcl::VectorN<S, 4>;
+using Vector7 = fcl::Vector7<S>;
 using Vector3I = fcl::Vector3<int>;
-using Transform = fcl::Transform3<DATATYPE>;
-using Matrix = fcl::Matrix3<DATATYPE>;
-using Quaternion = fcl::Quaternion<DATATYPE>;
+using Transform = fcl::Transform3<S>;
+using Matrix = fcl::Matrix3<S>;
+using Quaternion = fcl::Quaternion<S>;
 
 
-using OBBRSS = fcl::OBBRSS<DATATYPE>;
+using OBBRSS = fcl::OBBRSS<S>;
 
 
 // Collision Geometry type
-using CollisionGeometry = fcl::CollisionGeometry<DATATYPE>;
-using Box = fcl::Box<DATATYPE>;
-using Sphere = fcl::Sphere<DATATYPE>;
-using Capsule = fcl::Capsule<DATATYPE>;
-using Cone = fcl::Cone<DATATYPE>;
-using Cylinder = fcl::Cylinder<DATATYPE>;
-using Convex = fcl::Convex<DATATYPE>;
-using Plane = fcl::Plane<DATATYPE>;
+using CollisionGeometry = fcl::CollisionGeometry<S>;
+using Box = fcl::Box<S>;
+using Sphere = fcl::Sphere<S>;
+using Capsule = fcl::Capsule<S>;
+using Cone = fcl::Cone<S>;
+using Cylinder = fcl::Cylinder<S>;
+using Convex = fcl::Convex<S>;
+using Plane = fcl::Plane<S>;
 using BVHModel_OBBRSS = fcl::BVHModel<OBBRSS>;
 
 // Collision Object = Geometry + Transformation
-using CollisionObject = fcl::CollisionObject<DATATYPE>;
+using CollisionObject = fcl::CollisionObject<S>;
 
 // Data type
 using Triangle = fcl::Triangle;
@@ -102,14 +101,14 @@ void build_pyfcl(py::module &m_all) {
   auto PyBox = py::class_<Box, std::shared_ptr<Box>>(m, "Box", PyCollisionGeometry,
                                                      DOC(fcl, Box));
   PyBox.def(py::init<const Vector3 &>(), py::arg("side"), DOC(fcl, Box, Box))
-      .def(py::init<DATATYPE, DATATYPE, DATATYPE>(), py::arg("x"), py::arg("y"),
-           py::arg("z"), DOC(fcl, Box, Box, 2))
+      .def(py::init<S, S, S>(), py::arg("x"), py::arg("y"), py::arg("z"),
+           DOC(fcl, Box, Box, 2))
       .def_readwrite("side", &Box::side);
 
   auto PyCapsule = py::class_<Capsule, std::shared_ptr<Capsule>>(
       m, "Capsule", PyCollisionGeometry, DOC(fcl, Capsule));
   PyCapsule
-      .def(py::init<DATATYPE, DATATYPE>(), py::arg("radius"), py::arg("lz"),
+      .def(py::init<S, S>(), py::arg("radius"), py::arg("lz"),
            DOC(fcl, Capsule, Capsule))
       .def_readwrite("radius", &Capsule::radius)
       .def_readwrite("lz", &Capsule::lz);
@@ -117,14 +116,14 @@ void build_pyfcl(py::module &m_all) {
   auto PyCylinder = py::class_<Cylinder, std::shared_ptr<Cylinder>>(
       m, "Cylinder", PyCollisionGeometry, DOC(fcl, Cylinder));
   PyCylinder
-      .def(py::init<DATATYPE, DATATYPE>(), py::arg("radius"), py::arg("lz"),
+      .def(py::init<S, S>(), py::arg("radius"), py::arg("lz"),
            DOC(fcl, Cylinder, Cylinder))
       .def_readwrite("radius", &Cylinder::radius)
       .def_readwrite("lz", &Cylinder::lz);
 
   auto PyOcTree = py::class_<OcTree, std::shared_ptr<OcTree>>(
       m, "OcTree", PyCollisionGeometry, DOC(fcl, OcTree));
-  PyOcTree.def(py::init<DATATYPE>(), py::arg("resolution"), DOC(fcl, OcTree, OcTree))
+  PyOcTree.def(py::init<S>(), py::arg("resolution"), DOC(fcl, OcTree, OcTree))
       .def(py::init([](const Matrixx3 &vertices, const double &resolution) {
              octomap::OcTree *tree = new octomap::OcTree(resolution);
 
@@ -255,7 +254,7 @@ void build_pyfcl(py::module &m_all) {
       py::class_<CollisionRequest, std::shared_ptr<CollisionRequest>>(
           m, "CollisionRequest");
   PyCollisionRequest
-      .def(py::init<size_t, bool, size_t, bool, bool, GJKSolverType, DATATYPE>(),
+      .def(py::init<size_t, bool, size_t, bool, bool, GJKSolverType, S>(),
            py::arg("num_max_contacts") = 1, py::arg("enable_contact") = false,
            py::arg("num_max_cost_sources") = 1, py::arg("enable_cost") = false,
            py::arg("use_approximate_cost") = true,
@@ -268,7 +267,7 @@ void build_pyfcl(py::module &m_all) {
       py::class_<DistanceRequest, std::shared_ptr<DistanceRequest>>(m,
                                                                     "DistanceRequest");
   PyDistanceRequest
-      .def(py::init<bool, bool, DATATYPE, DATATYPE, DATATYPE, GJKSolverType>(),
+      .def(py::init<bool, bool, S, S, S, GJKSolverType>(),
            py::arg("enable_nearest_points") = false,
            py::arg("enable_signed_distance") = false, py::arg("rel_err") = 0.0,
            py::arg("abs_err") = 0.0, py::arg("distance_tolerance") = 1e-6,
@@ -279,8 +278,7 @@ void build_pyfcl(py::module &m_all) {
   auto PyDistanceResult =
       py::class_<DistanceResult, std::shared_ptr<DistanceResult>>(m, "DistanceResult");
   PyDistanceResult
-      .def(py::init<DATATYPE>(),
-           py::arg("min_distance") = std::numeric_limits<DATATYPE>::max())
+      .def(py::init<S>(), py::arg("min_distance") = std::numeric_limits<S>::max())
       .def_readonly("nearest_points", &DistanceResult::nearest_points)
       .def_readonly("min_distance", &DistanceResult::min_distance)
       .def("clear", &DistanceResult::clear);
@@ -316,7 +314,7 @@ void build_pyfcl(py::module &m_all) {
   auto PyCostSource =
       py::class_<CostSource, std::shared_ptr<CostSource>>(m, "CostSource");
   PyCostSource.def(py::init<>())
-      .def(py::init<const Vector3 &, const Vector3 &, DATATYPE>(), py::arg("aabb_min"),
+      .def(py::init<const Vector3 &, const Vector3 &, S>(), py::arg("aabb_min"),
            py::arg("aabb_max"), py::arg("cost_density"))
       .def_readonly("aabb_min", &CostSource::aabb_min)
       .def_readonly("aabb_max", &CostSource::aabb_max)
@@ -327,7 +325,7 @@ void build_pyfcl(py::module &m_all) {
   auto PyContactPoint =
       py::class_<ContactPoint, std::shared_ptr<ContactPoint>>(m, "ContactPoint");
   PyContactPoint.def(py::init<>())
-      .def(py::init<const Vector3 &, const Vector3 &, DATATYPE>(), py::arg("normal"),
+      .def(py::init<const Vector3 &, const Vector3 &, S>(), py::arg("normal"),
            py::arg("pos"), py::arg("penetration_depth"))
       .def_readonly("normal", &ContactPoint::normal)
       .def_readonly("pos", &ContactPoint::pos)
@@ -339,7 +337,7 @@ void build_pyfcl(py::module &m_all) {
       .def(py::init<const CollisionGeometry *, const CollisionGeometry *, int, int>(),
            py::arg("o1"), py::arg("o2"), py::arg("b1"), py::arg("b2"))
       .def(py::init<const CollisionGeometry *, const CollisionGeometry *, int, int,
-                    const Vector3 &, const Vector3 &, DATATYPE>(),
+                    const Vector3 &, const Vector3 &, S>(),
            py::arg("o1"), py::arg("o2"), py::arg("b1"), py::arg("b2"), py::arg("pos"),
            py::arg("normal"), py::arg("depth"))
       .def_readonly("normal", &Contact::normal)
@@ -388,8 +386,8 @@ void build_pyfcl(py::module &m_all) {
            py::arg("srdf_filename"), DOC(FCLModelTpl, removeCollisionPairsFromSrdf));
 
   // Extra function
-  m.def("load_mesh_as_BVH", load_mesh_as_BVH<DATATYPE>, py::arg("mesh_path"),
-        py::arg("scale"), DOC(load_mesh_as_BVH));
-  m.def("load_mesh_as_Convex", load_mesh_as_Convex<DATATYPE>, py::arg("mesh_path"),
+  m.def("load_mesh_as_BVH", load_mesh_as_BVH<S>, py::arg("mesh_path"), py::arg("scale"),
+        DOC(load_mesh_as_BVH));
+  m.def("load_mesh_as_Convex", load_mesh_as_Convex<S>, py::arg("mesh_path"),
         py::arg("scale"), DOC(load_mesh_as_Convex));
 }

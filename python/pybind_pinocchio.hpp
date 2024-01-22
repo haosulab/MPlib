@@ -11,13 +11,12 @@
 #include "docstring/pinocchio_model.h"
 #include "mplib/macros_utils.h"
 #include "mplib/pinocchio_model.h"
+#include "pybind_macros.hpp"
 
 namespace py = pybind11;
 
-using DATATYPE = double;
-
-using PinocchioModel = PinocchioModelTpl<DATATYPE>;
-DEFINE_TEMPLATE_EIGEN(DATATYPE)
+using PinocchioModel = PinocchioModelTpl<S>;
+DEFINE_TEMPLATE_EIGEN(S)
 
 void build_pypinocchio(py::module &m_all) {
   auto m = m_all.def_submodule("pinocchio");

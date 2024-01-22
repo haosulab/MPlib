@@ -24,33 +24,33 @@
 #include "fcl/narrowphase/collision_result.h"
 #include "pinocchio/multibody/joint/fwd.hpp"
 
-template <typename DATATYPE>
-Eigen::Transform<DATATYPE, 3, Eigen::Isometry> se3_to_transform(
-    const pinocchio::SE3Tpl<DATATYPE, 0> &T);
+template <typename S>
+Eigen::Transform<S, 3, Eigen::Isometry> se3_to_transform(
+    const pinocchio::SE3Tpl<S, 0> &T);
 
-template <typename DATATYPE>
-pinocchio::SE3Tpl<DATATYPE, 0> transform_to_se3(
-    const Eigen::Transform<DATATYPE, 3, Eigen::Isometry> &T);
+template <typename S>
+pinocchio::SE3Tpl<S, 0> transform_to_se3(
+    const Eigen::Transform<S, 3, Eigen::Isometry> &T);
 
-template <typename DATATYPE>
-Eigen::Transform<DATATYPE, 3, Eigen::Isometry> pose_to_transform(const urdf::Pose &M);
+template <typename S>
+Eigen::Transform<S, 3, Eigen::Isometry> pose_to_transform(const urdf::Pose &M);
 
-template <typename DATATYPE>
-pinocchio::SE3Tpl<DATATYPE, 0> pose_to_se3(const urdf::Pose &M);
+template <typename S>
+pinocchio::SE3Tpl<S, 0> pose_to_se3(const urdf::Pose &M);
 
-template <typename DATATYPE>
-pinocchio::InertiaTpl<DATATYPE, 0> convert_inertial(const urdf::Inertial &Y);
+template <typename S>
+pinocchio::InertiaTpl<S, 0> convert_inertial(const urdf::Inertial &Y);
 
-template <typename DATATYPE>
-pinocchio::InertiaTpl<DATATYPE, 0> convert_inertial(const urdf::InertialSharedPtr &Y);
+template <typename S>
+pinocchio::InertiaTpl<S, 0> convert_inertial(const urdf::InertialSharedPtr &Y);
 
-template <typename DATATYPE>
-std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<DATATYPE>>> load_mesh_as_BVH(
-    const std::string &mesh_path, const Eigen::Matrix<DATATYPE, 3, 1> &scale);
+template <typename S>
+std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH(
+    const std::string &mesh_path, const Eigen::Matrix<S, 3, 1> &scale);
 
-template <typename DATATYPE>
-std::shared_ptr<fcl::Convex<DATATYPE>> load_mesh_as_Convex(
-    const std::string &mesh_path, const Eigen::Matrix<DATATYPE, 3, 1> &scale);
+template <typename S>
+std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex(
+    const std::string &mesh_path, const Eigen::Matrix<S, 3, 1> &scale);
 
 struct AssimpLoader {
   AssimpLoader();

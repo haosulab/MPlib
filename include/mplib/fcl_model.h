@@ -20,11 +20,11 @@
  *
  * See https://github.com/flexible-collision-library/fcl
  */
-template <typename DATATYPE>
+template <typename S>
 class FCLModelTpl {
  private:
-  DEFINE_TEMPLATE_FCL(DATATYPE)
-  DEFINE_TEMPLATE_EIGEN(DATATYPE);
+  DEFINE_TEMPLATE_FCL(S)
+  DEFINE_TEMPLATE_EIGEN(S);
 
   urdf::ModelInterfaceSharedPtr urdf_model_;
 
@@ -123,14 +123,14 @@ class FCLModelTpl {
    */
   bool collide(const CollisionRequest &request = CollisionRequest());
 
-  std::vector<fcl::CollisionResult<DATATYPE>> collideFull(
+  std::vector<fcl::CollisionResult<S>> collideFull(
       const CollisionRequest &request = CollisionRequest(1, false, 1, false, true,
                                                          fcl::GJKSolverType::GST_INDEP,
                                                          1e-6));
 };
 
-template <typename DATATYPE>
-using FCLModelTplPtr = std::shared_ptr<FCLModelTpl<DATATYPE>>;
+template <typename S>
+using FCLModelTplPtr = std::shared_ptr<FCLModelTpl<S>>;
 
 using FCLModeld = FCLModelTpl<double>;
 using FCLModelf = FCLModelTpl<float>;

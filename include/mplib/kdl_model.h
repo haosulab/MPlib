@@ -23,10 +23,10 @@
  *
  * See https://github.com/orocos/orocos_kinematics_dynamics
  */
-template <typename DATATYPE>
+template <typename S>
 class KDLModelTpl {
  private:
-  DEFINE_TEMPLATE_EIGEN(DATATYPE)
+  DEFINE_TEMPLATE_EIGEN(S)
   KDL::Tree tree_;
   std::string tree_root_name_;
   std::vector<std::string> user_link_names_;

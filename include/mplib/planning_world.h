@@ -9,14 +9,14 @@
 #include "macros_utils.h"
 
 /// Result of the collision checking.
-template <typename DATATYPE>
+template <typename S>
 struct WorldCollisionResultTpl {
-  fcl::CollisionResult<DATATYPE> res;  ///< the fcl CollisionResult
-  std::string collision_type,          ///< type of the collision
-      object_name1,                    ///< name of the first object
-      object_name2,                    ///< name of the second object
-      link_name1,                      ///< link name of the first object in collision
-      link_name2;                      ///< link name of the second object in collision
+  fcl::CollisionResult<S> res;  ///< the fcl CollisionResult
+  std::string collision_type,   ///< type of the collision
+      object_name1,             ///< name of the first object
+      object_name2,             ///< name of the second object
+      link_name1,               ///< link name of the first object in collision
+      link_name2;               ///< link name of the second object in collision
 };
 
 template <typename T>
@@ -28,29 +28,28 @@ using WorldCollisionResultdPtr = WorldCollisionResultTplPtr<double>;
 using WorldCollisionResultfPtr = WorldCollisionResultTplPtr<float>;
 
 /// Planning world for collision checking
-template <typename DATATYPE>
+template <typename S>
 class PlanningWorldTpl {
  private:
-  DEFINE_TEMPLATE_EIGEN(DATATYPE);
-  using CollisionRequest = fcl::CollisionRequest<DATATYPE>;
-  using CollisionResult = fcl::CollisionResult<DATATYPE>;
+  DEFINE_TEMPLATE_EIGEN(S);
+  using CollisionRequest = fcl::CollisionRequest<S>;
+  using CollisionResult = fcl::CollisionResult<S>;
 
-  using CollisionGeometry = fcl::CollisionGeometry<DATATYPE>;
+  using CollisionGeometry = fcl::CollisionGeometry<S>;
   using CollisionGeometryPtr = std::shared_ptr<CollisionGeometry>;
 
-  using CollisionObject = fcl::CollisionObject<DATATYPE>;
+  using CollisionObject = fcl::CollisionObject<S>;
   using CollisionObjectPtr = std::shared_ptr<CollisionObject>;
 
-  using DynamicAABBTreeCollisionManager =
-      fcl::DynamicAABBTreeCollisionManager<DATATYPE>;
+  using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
   using BroadPhaseCollisionManagerPtr =
-      std::shared_ptr<fcl::BroadPhaseCollisionManager<DATATYPE>>;
+      std::shared_ptr<fcl::BroadPhaseCollisionManager<S>>;
 
-  using ArticulatedModel = ArticulatedModelTpl<DATATYPE>;
-  using ArticulatedModelPtr = ArticulatedModelTplPtr<DATATYPE>;
+  using ArticulatedModel = ArticulatedModelTpl<S>;
+  using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 
-  using WorldCollisionResult = WorldCollisionResultTpl<DATATYPE>;
-  using WorldCollisionResultPtr = WorldCollisionResultTplPtr<DATATYPE>;
+  using WorldCollisionResult = WorldCollisionResultTpl<S>;
+  using WorldCollisionResultPtr = WorldCollisionResultTplPtr<S>;
 
   std::vector<ArticulatedModelPtr> articulations_;
   std::vector<std::string> articulation_names_;
@@ -185,7 +184,7 @@ class PlanningWorldTpl {
    * @param pose: pose of the attached sphere w.r.t. the link it's attached to.
    *              [x, y, z, qw, qx, qy, qz]
    */
-  void updateAttachedSphere(DATATYPE radius, int link_id, const Vector7 &pose);
+  void updateAttachedSphere(S radius, int link_id, const Vector7 &pose);
 
   /**
    * Add a box as the attached tool.
