@@ -128,36 +128,36 @@ Eigen::VectorXd add_fixed_joints(const FixedJoints &fixed_joints,
 template <typename DATATYPE>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
   typedef Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> VectorX;
-  PlanningWorldTpl_ptr<DATATYPE> world;
-  bool is_rvss;
-  FixedJoints fixed_joints;
+  PlanningWorldTpl_ptr<DATATYPE> world_;
+  bool is_rvss_;
+  FixedJoints fixed_joints_;
 
  public:
   ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world,
                      const ob::SpaceInformationPtr &si, bool is_rvss,
                      const FixedJoints &fixed_joints = FixedJoints())
       : ob::StateValidityChecker(si),
-        world(world),
-        is_rvss(is_rvss),
-        fixed_joints(fixed_joints) {}
+        world_(world),
+        is_rvss_(is_rvss),
+        fixed_joints_(fixed_joints) {}
 
   void update_fixed_joints(const FixedJoints &fixed_joints) {
-    this->fixed_joints = fixed_joints;
+    this->fixed_joints_ = fixed_joints;
   }
 
   bool _isValid(VectorX state) const {
-    world->setQposAll(add_fixed_joints(fixed_joints, state));
-    return !world->collide();
+    world_->setQposAll(add_fixed_joints(fixed_joints_, state));
+    return !world_->collide();
   }
 
   bool isValid(const ob::State *state_raw) const {
-    auto state = state2eigen<DATATYPE>(state_raw, si_, is_rvss);
+    auto state = state2eigen<DATATYPE>(state_raw, si_, is_rvss_);
     return _isValid(state);
   }
 };
 
 class GeneralConstraint : public ob::Constraint {
-  std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> f, j;
+  std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> f_, j_;
 
  public:
   GeneralConstraint(
@@ -166,16 +166,16 @@ class GeneralConstraint : public ob::Constraint {
           &f,
       const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
           &j)
-      : ob::Constraint(dim, 1), f(f), j(j) {}
+      : ob::Constraint(dim, 1), f_(f), j_(j) {}
 
   void function(const Eigen::Ref<const Eigen::VectorXd> &x,
                 Eigen::Ref<Eigen::VectorXd> out) const override {
-    f(x, out);
+    f_(x, out);
   }
 
   void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x,
                 Eigen::Ref<Eigen::MatrixXd> out) const override {
-    j(x, out);
+    j_(x, out);
   }
 };
 
@@ -202,21 +202,21 @@ class OMPLPlannerTpl {
 
   DEFINE_TEMPLATE_EIGEN(DATATYPE)
 
-  std::shared_ptr<ob::RealVectorStateSpace> p_ambient_space;
-  std::shared_ptr<ob::ProjectedStateSpace> p_constrained_space;
-  CompoundStateSpace_ptr cs;
-  ob::StateSpacePtr state_space;
-  std::shared_ptr<ompl::geometric::SimpleSetup> ss;
-  SpaceInformation_ptr p_compound_si;
-  SpaceInformation_ptr p_constrained_si;
-  SpaceInformation_ptr si;
-  PlanningWorldTpl_ptr<DATATYPE> world;
-  ValidityCheckerTpl_ptr<DATATYPE> valid_checker;
-  size_t dim;
-  std::vector<DATATYPE> lower_joint_limits, upper_joint_limits;
-  std::vector<bool> is_revolute;
-  FixedJoints
-      last_fixed_joints;  // if not empty, then we need to update the state space
+  std::shared_ptr<ob::RealVectorStateSpace> p_ambient_space_;
+  std::shared_ptr<ob::ProjectedStateSpace> p_constrained_space_;
+  CompoundStateSpace_ptr cs_;
+  ob::StateSpacePtr state_space_;
+  std::shared_ptr<ompl::geometric::SimpleSetup> ss_;
+  SpaceInformation_ptr p_compound_si_;
+  SpaceInformation_ptr p_constrained_si_;
+  SpaceInformation_ptr si_;
+  PlanningWorldTpl_ptr<DATATYPE> world_;
+  ValidityCheckerTpl_ptr<DATATYPE> valid_checker_;
+  size_t dim_;
+  std::vector<DATATYPE> lower_joint_limits_, upper_joint_limits_;
+  std::vector<bool> is_revolute_;
+  // if not empty, then we need to update the state space
+  FixedJoints last_fixed_joints_;
 
   /** Certain joint configurations are the same if some joints are the same fmod 2pi. */
   std::shared_ptr<ob::GoalStates> make_goal_states(
@@ -251,9 +251,9 @@ class OMPLPlannerTpl {
    */
   void build_compound_state_space(const FixedJoints &fixed_joints = FixedJoints());
 
-  PlanningWorldTpl_ptr<DATATYPE> get_world() { return world; }
+  PlanningWorldTpl_ptr<DATATYPE> get_world() { return world_; }
 
-  size_t get_dim() { return dim; }
+  size_t get_dim() { return dim_; }
 
   /**
    * Simplify the provided path.

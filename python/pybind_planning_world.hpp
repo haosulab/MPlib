@@ -84,8 +84,8 @@ void build_planning_world(py::module &m_all) {
            DOC(PlanningWorldTpl, updateAttachedMesh))
       .def("print_attached_tool_pose", &PlanningWorld::printAttachedToolPose,
            DOC(PlanningWorldTpl, printAttachedToolPose))
-      .def_readonly("use_point_cloud", &PlanningWorld::use_point_cloud)
-      .def_readonly("use_attach", &PlanningWorld::use_attach);
+      .def_readonly("use_point_cloud", &PlanningWorld::use_point_cloud_)
+      .def_readonly("use_attach", &PlanningWorld::use_attach_);
 
   auto PyWorldCollisionResult =
       py::class_<WorldCollisionResult, std::shared_ptr<WorldCollisionResult>>(

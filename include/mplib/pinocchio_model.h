@@ -25,23 +25,23 @@ class PinocchioModelTpl {
 
   // pinocchio::ModelTpl<float>;
 
-  urdf::ModelInterfaceSharedPtr urdf_model;
-  Model model;
-  Data data;
+  urdf::ModelInterfaceSharedPtr urdf_model_;
+  Model model_;
+  Data data_;
 
-  VectorXI joint_index_user2pinocchio, joint_index_pinocchio2user;
-  VectorXI v_index_user2pinocchio;  // the joint index in model
+  VectorXI joint_index_user2pinocchio_, joint_index_pinocchio2user_;
+  VectorXI v_index_user2pinocchio_;  // the joint index in model
   // map between user and pinocchio
-  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> v_map_user2pinocchio;
-  VectorXI link_index_user2pinocchio;
+  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> v_map_user2pinocchio_;
+  VectorXI link_index_user2pinocchio_;
 
-  std::vector<std::string> user_link_names;
-  std::vector<std::string> user_joint_names;
-  std::vector<std::string> leaf_links;
-  VectorXI qidx, vidx, nqs, nvs, parents;
+  std::vector<std::string> user_link_names_;
+  std::vector<std::string> user_joint_names_;
+  std::vector<std::string> leaf_links_;
+  VectorXI qidx_, vidx_, nqs_, nvs_, parents_;
 
-  const std::string joint_prefix = "JointModel";
-  bool verbose;
+  const std::string joint_prefix_ = "JointModel";
+  bool verbose_;
 
   VectorX qposUser2Pinocchio(const VectorX &qpos);
 
@@ -65,16 +65,16 @@ class PinocchioModelTpl {
   PinocchioModelTpl(const std::string &urdf_filename, const Vector3 &gravity,
                     const bool &verbose = true);
 
-  inline Model &getModel(void) { return model; }
+  inline Model &getModel(void) { return model_; }
 
-  inline Data &getData(void) { return data; }
+  inline Data &getData(void) { return data_; }
 
   /**
    * Get the leaf links (links without child) of the kinematic tree.
    *
    * @return: list of leaf links
    */
-  std::vector<std::string> getLeafLinks() { return leaf_links; }
+  std::vector<std::string> getLeafLinks() { return leaf_links_; }
 
   /**
    * Get the type of the joint with the given index.
@@ -86,9 +86,9 @@ class PinocchioModelTpl {
    */
   inline std::string getJointType(const size_t &index, const bool &user = true) {
     if (user)
-      return model.joints[joint_index_user2pinocchio[index]].shortname();
+      return model_.joints[joint_index_user2pinocchio_[index]].shortname();
     else
-      return model.joints[index].shortname();
+      return model_.joints[index].shortname();
   }
 
   /**
@@ -101,7 +101,7 @@ class PinocchioModelTpl {
    */
   inline std::vector<std::string> getJointTypes(const bool &user = true) {
     std::vector<std::string> ret;
-    auto njoints = user ? user_joint_names.size() : model.joints.size();
+    auto njoints = user ? user_joint_names_.size() : model_.joints.size();
     for (size_t i = 0; i < njoints; i++) ret.push_back(getJointType(i, user));
     return ret;
   }
@@ -117,7 +117,7 @@ class PinocchioModelTpl {
   inline std::vector<Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
   getJointLimits(const bool &user = true) {
     std::vector<Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>> ret;
-    auto njoints = user ? user_joint_names.size() : model.joints.size();
+    auto njoints = user ? user_joint_names_.size() : model_.joints.size();
     for (size_t i = 0; i < njoints; i++) ret.push_back(getJointLimit(i, user));
     return ret;
   }
@@ -133,8 +133,8 @@ class PinocchioModelTpl {
   inline Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> getJointLimit(
       const size_t &index, const bool &user = true) {
     auto joint_type = getJointType(index, user);
-    size_t pinocchio_idx = user ? joint_index_user2pinocchio[index] : index;
-    size_t start_idx = model.idx_qs[pinocchio_idx], nq = model.nqs[pinocchio_idx],
+    size_t pinocchio_idx = user ? joint_index_user2pinocchio_[index] : index;
+    size_t start_idx = model_.idx_qs[pinocchio_idx], nq = model_.nqs[pinocchio_idx],
            dim_joint = getJointDim(index, user);
     Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret;
     ASSERT(dim_joint == 1, "Only support joint with dim 1 but joint" +
@@ -143,16 +143,16 @@ class PinocchioModelTpl {
     // std::cout << joint_type << " " << joint_type[joint_prefix.size()] << " " <<
     // joint_type[joint_prefix.size() + 1] << " " <<  nq << " " << dim_joint << " " <<
     // std::endl;
-    if (joint_type[joint_prefix.size()] == 'P' ||
-        (joint_type[joint_prefix.size()] == 'R' &&
-         joint_type[joint_prefix.size() + 1] != 'U')) {
+    if (joint_type[joint_prefix_.size()] == 'P' ||
+        (joint_type[joint_prefix_.size()] == 'R' &&
+         joint_type[joint_prefix_.size() + 1] != 'U')) {
       ret = Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>(nq, 2);
       for (size_t j = 0; j < nq; j++) {
-        ret(j, 0) = model.lowerPositionLimit[start_idx + j];
-        ret(j, 1) = model.upperPositionLimit[start_idx + j];
+        ret(j, 0) = model_.lowerPositionLimit[start_idx + j];
+        ret(j, 1) = model_.upperPositionLimit[start_idx + j];
       }
-    } else if (joint_type[joint_prefix.size()] == 'R' &&
-               joint_type[joint_prefix.size() + 1] == 'U') {
+    } else if (joint_type[joint_prefix_.size()] == 'R' &&
+               joint_type[joint_prefix_.size() + 1] == 'U') {
       ret = Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>(1, 2);
       ret(0, 0) = -3.14159265359, ret(0, 1) = 3.14159265359;
     }
@@ -168,7 +168,7 @@ class PinocchioModelTpl {
    * @return: id of the joint with the given index
    */
   inline size_t getJointId(const size_t &index, const bool &user = true) {
-    return user ? vidx[index] : model.idx_vs[index];
+    return user ? vidx_[index] : model_.idx_vs[index];
   }
 
   /**
@@ -181,10 +181,10 @@ class PinocchioModelTpl {
    */
   inline VectorXI getJointIds(const bool &user = true) {
     if (user)
-      return vidx;
+      return vidx_;
     else {
-      auto ret = VectorXI(model.idx_vs.size());
-      for (size_t i = 0; i < model.idx_vs.size(); i++) ret[i] = model.idx_vs[i];
+      auto ret = VectorXI(model_.idx_vs.size());
+      for (size_t i = 0; i < model_.idx_vs.size(); i++) ret[i] = model_.idx_vs[i];
       return ret;
     }
   }
@@ -198,7 +198,7 @@ class PinocchioModelTpl {
    * @return: dimension of the joint with the given index
    */
   inline size_t getJointDim(const size_t &index, const bool &user = true) {
-    return user ? nvs[index] : model.nvs[index];
+    return user ? nvs_[index] : model_.nvs[index];
   }
 
   /**
@@ -211,10 +211,10 @@ class PinocchioModelTpl {
    */
   inline VectorXI getJointDims(const bool &user = true) {
     if (user)
-      return nvs;
+      return nvs_;
     else {
-      auto ret = VectorXI(model.nvs.size());
-      for (size_t i = 0; i < model.nvs.size(); i++) ret[i] = model.nvs[i];
+      auto ret = VectorXI(model_.nvs.size());
+      for (size_t i = 0; i < model_.nvs.size(); i++) ret[i] = model_.nvs[i];
       return ret;
     }
   }
@@ -228,7 +228,7 @@ class PinocchioModelTpl {
    * @return: parent of the joint with the given index
    */
   inline size_t getParent(const size_t &index, const bool &user = true) {
-    return user ? parents[index] : model.parents[index];
+    return user ? parents_[index] : model_.parents[index];
   }
 
   /**
@@ -241,10 +241,10 @@ class PinocchioModelTpl {
    */
   inline VectorXI getParents(const bool &user = true) {
     if (user)
-      return parents;
+      return parents_;
     else {
-      auto ret = VectorXI(model.parents.size());
-      for (size_t i = 0; i < model.parents.size(); i++) ret[i] = model.parents[i];
+      auto ret = VectorXI(model_.parents.size());
+      for (size_t i = 0; i < model_.parents.size(); i++) ret[i] = model_.parents[i];
       return ret;
     }
   }
@@ -258,12 +258,12 @@ class PinocchioModelTpl {
    */
   inline std::vector<std::string> getLinkNames(const bool &user = true) {
     if (user)
-      return user_link_names;
+      return user_link_names_;
     else {
       std::vector<std::string> link_names;
-      for (size_t i = 0; i < model.frames.size(); i++)
-        if (model.frames[i].type == pinocchio::BODY)
-          link_names.push_back(model.frames[i].name);
+      for (size_t i = 0; i < model_.frames.size(); i++)
+        if (model_.frames[i].type == pinocchio::BODY)
+          link_names.push_back(model_.frames[i].name);
       return link_names;
     }
   }
@@ -277,9 +277,9 @@ class PinocchioModelTpl {
    * @return: name of the joints
    */
   inline std::vector<std::string> getJointNames(const bool &user = true) {
-    if (user) return user_joint_names;
+    if (user) return user_joint_names_;
     // we need to ignore the "universe" joint
-    return std::vector<std::string>(model.names.begin() + 1, model.names.end());
+    return std::vector<std::string>(model_.names.begin() + 1, model_.names.end());
   }
 
   std::vector<std::vector<size_t>> getSupports(const bool &user = true) {
@@ -287,7 +287,7 @@ class PinocchioModelTpl {
       std::vector<std::vector<size_t>> ret;
       return ret;
     } else
-      return model.supports;
+      return model_.supports;
   }
 
   std::vector<std::vector<size_t>> getSubtrees(const bool &user = true) {
@@ -295,13 +295,13 @@ class PinocchioModelTpl {
       std::vector<std::vector<size_t>> ret;
       return ret;
     } else
-      return model.subtrees;
+      return model_.subtrees;
   }
 
   /// Frame is a Pinocchio internal data type which is not supported outside this class.
   void printFrames(void);
 
-  int getNFrames(void) { return model.nframes; }
+  int getNFrames(void) { return model_.nframes; }
 
   /*
       // The original model for debug only

@@ -17,7 +17,7 @@ void PinocchioModelTpl<DATATYPE>::dfs_parse_tree(urdf::LinkConstSharedPtr link,
                                                  UrdfVisitorBase &visitor) {
   const urdf::JointConstSharedPtr joint =
       urdf::const_pointer_cast<urdf::Joint>(link->parent_joint);
-  if (verbose) print_verbose("Joint ", joint->name, " ", joint.get());
+  if (verbose_) print_verbose("Joint ", joint->name, " ", joint.get());
   if (joint) {
     PINOCCHIO_CHECK_INPUT_ARGUMENT(link->getParent() && link);
 
@@ -178,33 +178,33 @@ void PinocchioModelTpl<DATATYPE>::dfs_parse_tree(urdf::LinkConstSharedPtr link,
   } else if (link->getParent())
     throw std::invalid_argument(link->name + " - joint information missing.");
   for (auto child : link->child_links) dfs_parse_tree(child, visitor);
-  if (link->child_links.empty()) leaf_links.push_back(link->name);
+  if (link->child_links.empty()) leaf_links_.push_back(link->name);
 }
 
 template <typename DATATYPE>
 void PinocchioModelTpl<DATATYPE>::init(const urdf::ModelInterfaceSharedPtr &urdfTree,
                                        const Vector3 &gravity) {
-  urdf_model = urdfTree;
+  urdf_model_ = urdfTree;
 
   pinocchio::urdf::details::UrdfVisitor<DATATYPE, 0,
                                         pinocchio::JointCollectionDefaultTpl>
-      visitor(model);
-  if (verbose) {
+      visitor(model_);
+  if (verbose_) {
     print_verbose("Begin to parse URDF");
     visitor.log = &std::cout;
   }
-  if (not urdf_model)
+  if (not urdf_model_)
     throw std::invalid_argument("The XML stream does not contain a valid URDF model.");
 
-  visitor.setName(urdf_model->getName());
-  urdf::LinkConstSharedPtr root_link = urdf_model->getRoot();
+  visitor.setName(urdf_model_->getName());
+  urdf::LinkConstSharedPtr root_link = urdf_model_->getRoot();
   visitor.addRootJoint(convert_inertial<DATATYPE>(root_link->inertial),
                        root_link->name);
   for (auto child : root_link->child_links) dfs_parse_tree(child, visitor);
 
-  model.gravity = {gravity, Vector3 {0, 0, 0}};
-  data = Data(model);
-  if (verbose) print_verbose("Begin to set joint order and link order");
+  model_.gravity = {gravity, Vector3 {0, 0, 0}};
+  data_ = Data(model_);
+  if (verbose_) print_verbose("Begin to set joint order and link order");
   setJointOrder(getJointNames(false));
   setLinkOrder(getLinkNames(false));
 }
@@ -213,7 +213,7 @@ template <typename DATATYPE>
 PinocchioModelTpl<DATATYPE>::PinocchioModelTpl(const std::string &urdf_filename,
                                                const Vector3 &gravity,
                                                const bool &verbose)
-    : verbose(verbose) {
+    : verbose_(verbose) {
   urdf::ModelInterfaceSharedPtr urdf = urdf::parseURDFFile(urdf_filename);
   init(urdf, gravity);
 }
@@ -222,26 +222,26 @@ template <typename DATATYPE>
 PinocchioModelTpl<DATATYPE>::PinocchioModelTpl(
     const urdf::ModelInterfaceSharedPtr &urdfTree, const Vector3 &gravity,
     const bool &verbose)
-    : verbose(verbose) {
+    : verbose_(verbose) {
   init(urdfTree, gravity);
 }
 
 template <typename DATATYPE>
 Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1>
 PinocchioModelTpl<DATATYPE>::qposUser2Pinocchio(const VectorX &q_user) {
-  VectorX q_pinocchio(model.nq);
+  VectorX q_pinocchio(model_.nq);
   size_t count = 0;
-  for (size_t i = 0; i < static_cast<size_t>(joint_index_user2pinocchio.size()); i++) {
-    auto start_idx = model.idx_qs[joint_index_user2pinocchio[i]];
-    switch (nqs[i]) {
+  for (size_t i = 0; i < static_cast<size_t>(joint_index_user2pinocchio_.size()); i++) {
+    auto start_idx = model_.idx_qs[joint_index_user2pinocchio_[i]];
+    switch (nqs_[i]) {
       case 0:  // FIX
         break;
       case 1:  // REVOLUTE OR PRISMATIC
-        ASSERT(start_idx < model.nq, "posS2P out of bound");
+        ASSERT(start_idx < model_.nq, "posS2P out of bound");
         q_pinocchio[start_idx] = q_user[count];
         break;
       case 2:  // CONTINUOUS
-        ASSERT(start_idx + 1 < model.nq, "posS2P out of bound");
+        ASSERT(start_idx + 1 < model_.nq, "posS2P out of bound");
         q_pinocchio[start_idx] = std::cos(q_user(count));
         q_pinocchio[start_idx + 1] = std::sin(q_user(count));
         break;
@@ -250,7 +250,7 @@ PinocchioModelTpl<DATATYPE>::qposUser2Pinocchio(const VectorX &q_user) {
             "Unsupported joint in computation. Currently support: fixed, revolute, "
             "prismatic");
     }
-    count += nvs[i];
+    count += nvs_[i];
   }
   ASSERT(count == static_cast<size_t>(q_user.size()), "Qpos user2pinocchio failed");
   return q_pinocchio;
@@ -259,19 +259,19 @@ PinocchioModelTpl<DATATYPE>::qposUser2Pinocchio(const VectorX &q_user) {
 template <typename DATATYPE>
 Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1>
 PinocchioModelTpl<DATATYPE>::qposPinocchio2User(const VectorX &q_pinocchio) {
-  VectorX q_user(model.nv);
+  VectorX q_user(model_.nv);
   uint32_t count = 0;
-  for (size_t i = 0; i < static_cast<size_t>(joint_index_user2pinocchio.size()); i++) {
-    auto start_idx = model.idx_qs[joint_index_user2pinocchio[i]];
-    switch (nqs[i]) {
+  for (size_t i = 0; i < static_cast<size_t>(joint_index_user2pinocchio_.size()); i++) {
+    auto start_idx = model_.idx_qs[joint_index_user2pinocchio_[i]];
+    switch (nqs_[i]) {
       case 0:  // FIX
         break;
       case 1:  // REVOLUTE OR PRISMATIC
-        ASSERT(count < static_cast<size_t>(model.nv), "posP2S out of bound");
+        ASSERT(count < static_cast<size_t>(model_.nv), "posP2S out of bound");
         q_user[count] = q_pinocchio[start_idx];
         break;
       case 2:  // CONTINUOUS
-        ASSERT(count < static_cast<size_t>(model.nv), "posS2P out of bound");
+        ASSERT(count < static_cast<size_t>(model_.nv), "posS2P out of bound");
         q_user[count] = std::atan2(q_pinocchio[start_idx + 1], q_pinocchio[start_idx]);
         break;
       default:
@@ -279,7 +279,7 @@ PinocchioModelTpl<DATATYPE>::qposPinocchio2User(const VectorX &q_pinocchio) {
             "Unsupported joint in computation. Currently support: fixed, revolute, "
             "prismatic");
     }
-    count += nvs[i];
+    count += nvs_[i];
   }
   ASSERT(count == q_user.size(), "Qpos pinocchio2user failed");
   return q_user;
@@ -287,15 +287,15 @@ PinocchioModelTpl<DATATYPE>::qposPinocchio2User(const VectorX &q_pinocchio) {
 
 template <typename DATATYPE>
 void PinocchioModelTpl<DATATYPE>::setJointOrder(const std::vector<std::string> &names) {
-  user_joint_names = names;
-  v_index_user2pinocchio = VectorXI(model.nv);
-  vidx = VectorXI(names.size());
-  qidx = VectorXI(names.size());
-  nvs = VectorXI(names.size());
-  nqs = VectorXI(names.size());
-  parents = VectorXI(names.size());
-  joint_index_user2pinocchio = VectorXI(names.size());
-  joint_index_pinocchio2user = VectorXI::Constant(model.njoints, -1);
+  user_joint_names_ = names;
+  v_index_user2pinocchio_ = VectorXI(model_.nv);
+  vidx_ = VectorXI(names.size());
+  qidx_ = VectorXI(names.size());
+  nvs_ = VectorXI(names.size());
+  nqs_ = VectorXI(names.size());
+  parents_ = VectorXI(names.size());
+  joint_index_user2pinocchio_ = VectorXI(names.size());
+  joint_index_pinocchio2user_ = VectorXI::Constant(model_.njoints, -1);
 
   // joint_start_index = Eigen::VectorXi(names.size());
   // joint_tangent_dim = Eigen::VectorXi(names.size());
@@ -303,49 +303,49 @@ void PinocchioModelTpl<DATATYPE>::setJointOrder(const std::vector<std::string> &
 
   size_t len_v = 0, len_q = 0;
   for (size_t i = 0; i < names.size(); i++) {
-    auto pinocchio_idx = model.getJointId(names[i]);
-    if (pinocchio_idx == static_cast<size_t>(model.njoints))
+    auto pinocchio_idx = model_.getJointId(names[i]);
+    if (pinocchio_idx == static_cast<size_t>(model_.njoints))
       throw std::invalid_argument(
           names[i] + " is either an invalid or unsupported joint in your URDF");
-    vidx[i] = len_v;
-    qidx[i] = len_q;
-    nvs[i] = model.nvs[pinocchio_idx];
-    nqs[i] = model.nqs[pinocchio_idx];
-    parents[i] = model.parents[pinocchio_idx];
-    joint_index_user2pinocchio[i] = pinocchio_idx;
-    joint_index_pinocchio2user[pinocchio_idx] = i;
-    len_q += model.nqs[pinocchio_idx];
-    for (int j = 0; j < model.nvs[pinocchio_idx]; j++)
-      v_index_user2pinocchio[len_v++] = model.idx_vs[pinocchio_idx] + j;
+    vidx_[i] = len_v;
+    qidx_[i] = len_q;
+    nvs_[i] = model_.nvs[pinocchio_idx];
+    nqs_[i] = model_.nqs[pinocchio_idx];
+    parents_[i] = model_.parents[pinocchio_idx];
+    joint_index_user2pinocchio_[i] = pinocchio_idx;
+    joint_index_pinocchio2user_[pinocchio_idx] = i;
+    len_q += model_.nqs[pinocchio_idx];
+    for (int j = 0; j < model_.nvs[pinocchio_idx]; j++)
+      v_index_user2pinocchio_[len_v++] = model_.idx_vs[pinocchio_idx] + j;
   }
-  ASSERT(len_v == static_cast<size_t>(model.nv), "setJointOrder failed");
-  v_map_user2pinocchio =
-      Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic>(v_index_user2pinocchio);
+  ASSERT(len_v == static_cast<size_t>(model_.nv), "setJointOrder failed");
+  v_map_user2pinocchio_ =
+      Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic>(v_index_user2pinocchio_);
 }
 
 template <typename DATATYPE>
 void PinocchioModelTpl<DATATYPE>::setLinkOrder(const std::vector<std::string> &names) {
-  user_link_names = names;
-  link_index_user2pinocchio = VectorXI(names.size());
+  user_link_names_ = names;
+  link_index_user2pinocchio_ = VectorXI(names.size());
   for (size_t i = 0; i < names.size(); i++) {
-    auto pinocchio_idx = model.getFrameId(names[i], pinocchio::BODY);
-    if (pinocchio_idx == static_cast<size_t>(model.nframes))
+    auto pinocchio_idx = model_.getFrameId(names[i], pinocchio::BODY);
+    if (pinocchio_idx == static_cast<size_t>(model_.nframes))
       throw std::invalid_argument(names[i] + " is a invalid names in setLinkOrder");
-    link_index_user2pinocchio[i] = pinocchio_idx;
+    link_index_user2pinocchio_[i] = pinocchio_idx;
   }
 }
 
 template <typename DATATYPE>
 void PinocchioModelTpl<DATATYPE>::printFrames(void) {
-  print_info("Joint dim ", model.joints.size(), " ", model.nv, " ", model.nvs.size(),
-             " ", model.idx_vs.size());
-  print_info("Joint Tangent dim ", model.nq, " ", model.nqs.size(), " ",
-             model.idx_qs.size());
-  print_info("Joint Limit ", model.lowerPositionLimit.transpose(), " ",
-             model.upperPositionLimit.transpose());
-  for (size_t i = 0; i < model.frames.size(); i++) {
+  print_info("Joint dim ", model_.joints.size(), " ", model_.nv, " ", model_.nvs.size(),
+             " ", model_.idx_vs.size());
+  print_info("Joint Tangent dim ", model_.nq, " ", model_.nqs.size(), " ",
+             model_.idx_qs.size());
+  print_info("Joint Limit ", model_.lowerPositionLimit.transpose(), " ",
+             model_.upperPositionLimit.transpose());
+  for (size_t i = 0; i < model_.frames.size(); i++) {
     std::string type_name = "NONE";
-    auto frame = model.frames[i];
+    auto frame = model_.frames[i];
     if (frame.type == pinocchio::OP_FRAME)
       type_name = "OP_FRAME";
     else if (frame.type == pinocchio::JOINT)
@@ -364,49 +364,49 @@ void PinocchioModelTpl<DATATYPE>::printFrames(void) {
 template <typename DATATYPE>
 std::vector<std::size_t> PinocchioModelTpl<DATATYPE>::getChainJointIndex(
     const std::string &end_effector) {
-  auto frame_id = model.getBodyId(end_effector);
+  auto frame_id = model_.getBodyId(end_effector);
   std::vector<std::size_t> index_pinocchio =
-      model.supports[model.frames[frame_id].parent];
+      model_.supports[model_.frames[frame_id].parent];
   std::vector<std::size_t> ret;
   for (auto index : index_pinocchio)
-    if (joint_index_pinocchio2user[index] != -1)
-      ret.push_back(joint_index_pinocchio2user[index]);
+    if (joint_index_pinocchio2user_[index] != -1)
+      ret.push_back(joint_index_pinocchio2user_[index]);
   return ret;
 }
 
 template <typename DATATYPE>
 std::vector<std::string> PinocchioModelTpl<DATATYPE>::getChainJointName(
     const std::string &end_effector) {
-  auto frame_id = model.getBodyId(end_effector);
+  auto frame_id = model_.getBodyId(end_effector);
   std::vector<std::size_t> index_pinocchio =
-      model.supports[model.frames[frame_id].parent];
+      model_.supports[model_.frames[frame_id].parent];
   std::vector<std::string> ret;
   for (auto index : index_pinocchio)
-    if (joint_index_pinocchio2user[index] != -1) ret.push_back(model.names[index]);
+    if (joint_index_pinocchio2user_[index] != -1) ret.push_back(model_.names[index]);
   return ret;
 }
 
 template <typename DATATYPE>
 Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1>
 PinocchioModelTpl<DATATYPE>::getRandomConfiguration() {
-  auto qpos = pinocchio::randomConfiguration(model);
+  auto qpos = pinocchio::randomConfiguration(model_);
   return qposPinocchio2User(qpos);
 }
 
 template <typename DATATYPE>
 void PinocchioModelTpl<DATATYPE>::computeForwardKinematics(const VectorX &qpos) {
-  pinocchio::forwardKinematics(model, data, qposUser2Pinocchio(qpos));
+  pinocchio::forwardKinematics(model_, data_, qposUser2Pinocchio(qpos));
 }
 
 template <typename DATATYPE>
 Eigen::Matrix<DATATYPE, 7, 1> PinocchioModelTpl<DATATYPE>::getLinkPose(
     const size_t &index) {
-  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio.size()),
+  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "The link index is out of bound!");
-  auto frame = link_index_user2pinocchio[index];
-  auto parent_joint = model.frames[frame].parent;
-  auto link2joint = model.frames[frame].placement;
-  auto joint2world = data.oMi[parent_joint];
+  auto frame = link_index_user2pinocchio_[index];
+  auto parent_joint = model_.frames[frame].parent;
+  auto link2joint = model_.frames[frame].placement;
+  auto joint2world = data_.oMi[parent_joint];
   // std::cout << parent_joint << " " << link2joint << std::endl;
   // std::cout << joint2world << std::endl;
 
@@ -439,9 +439,9 @@ Eigen::Matrix<DATATYPE, 7, 1> PinocchioModelTpl<DATATYPE>::getLinkPose(
 template <typename DATATYPE>
 Eigen::Matrix<DATATYPE, 7, 1> PinocchioModelTpl<DATATYPE>::getJointPose(
     const size_t &index) {
-  ASSERT(index < static_cast<size_t>(joint_index_user2pinocchio.size()),
+  ASSERT(index < static_cast<size_t>(joint_index_user2pinocchio_.size()),
          "The link index is out of bound!");
-  auto frame = joint_index_user2pinocchio[index];
+  auto frame = joint_index_user2pinocchio_[index];
 
   /* std::cout << index << " " << user_joint_names[index] << " "<< frame << " " <<
    model.getJointId(user_joint_names[index]) << std::endl; std::cout << data.oMi[0] <<
@@ -451,7 +451,7 @@ Eigen::Matrix<DATATYPE, 7, 1> PinocchioModelTpl<DATATYPE>::getJointPose(
 */
   // using Data = pinocchio::DataTpl<DATATYPE>
 
-  auto joint2world = data.oMi[frame];
+  auto joint2world = data_.oMi[frame];
   auto p = joint2world.translation();
   auto q = Quaternion(joint2world.rotation());
   DATATYPE pose[] = {p.x(), p.y(), p.z(), q.w(), q.x(), q.y(), q.z()};
@@ -460,30 +460,30 @@ Eigen::Matrix<DATATYPE, 7, 1> PinocchioModelTpl<DATATYPE>::getJointPose(
 
 template <typename DATATYPE>
 void PinocchioModelTpl<DATATYPE>::computeFullJacobian(const VectorX &qpos) {
-  pinocchio::computeJointJacobians(model, data, qposUser2Pinocchio(qpos));
+  pinocchio::computeJointJacobians(model_, data_, qposUser2Pinocchio(qpos));
 }
 
 template <typename DATATYPE>
 Eigen::Matrix<DATATYPE, 6, Eigen::Dynamic> PinocchioModelTpl<DATATYPE>::getLinkJacobian(
     const size_t &index, const bool &local) {
-  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio.size()),
+  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "link index out of bound");
-  auto frameId = link_index_user2pinocchio[index];
-  auto jointId = model.frames[frameId].parent;
+  auto frameId = link_index_user2pinocchio_[index];
+  auto jointId = model_.frames[frameId].parent;
 
-  auto link2joint = model.frames[frameId].placement;
-  auto joint2world = data.oMi[jointId];
+  auto link2joint = model_.frames[frameId].placement;
+  auto joint2world = data_.oMi[jointId];
   auto link2world = joint2world * link2joint;
 
-  Matrix6x J(6, model.nv);
+  Matrix6x J(6, model_.nv);
   J.fill(0);
 
-  pinocchio::getJointJacobian(model, data, jointId, pinocchio::ReferenceFrame::WORLD,
+  pinocchio::getJointJacobian(model_, data_, jointId, pinocchio::ReferenceFrame::WORLD,
                               J);
   if (local) {
     J = link2world.toActionMatrixInverse() * J;
   }
-  return J * v_map_user2pinocchio;
+  return J * v_map_user2pinocchio_;
 }
 
 template <typename DATATYPE>
@@ -491,22 +491,22 @@ Eigen::Matrix<DATATYPE, 6, Eigen::Dynamic>
 PinocchioModelTpl<DATATYPE>::computeSingleLinkJacobian(const VectorX &qpos,
                                                        const size_t &index,
                                                        bool local) {
-  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio.size()),
+  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "link index out of bound");
-  auto frameId = link_index_user2pinocchio[index];
-  auto jointId = model.frames[frameId].parent;
-  auto link2joint = model.frames[frameId].placement;
+  auto frameId = link_index_user2pinocchio_[index];
+  auto jointId = model_.frames[frameId].parent;
+  auto link2joint = model_.frames[frameId].placement;
 
-  Eigen::Matrix<DATATYPE, 6, Eigen::Dynamic> J(6, model.nv);
+  Eigen::Matrix<DATATYPE, 6, Eigen::Dynamic> J(6, model_.nv);
   J.fill(0);
-  pinocchio::computeJointJacobian(model, data, qposUser2Pinocchio(qpos), jointId, J);
+  pinocchio::computeJointJacobian(model_, data_, qposUser2Pinocchio(qpos), jointId, J);
   if (local) {
     J = link2joint.toActionMatrixInverse() * J;
   } else {
-    auto joint2world = data.oMi[jointId];
+    auto joint2world = data_.oMi[jointId];
     J = joint2world.toActionMatrix() * J;
   }
-  return J * v_map_user2pinocchio;
+  return J * v_map_user2pinocchio_;
 }
 
 template <typename DATATYPE>
@@ -517,30 +517,30 @@ PinocchioModelTpl<DATATYPE>::computeIKCLIK(const size_t &index, const Vector7 &p
                                            const std::vector<bool> &mask,
                                            const double &eps, const int &maxIter,
                                            const double &dt, const double &damp) {
-  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio.size()),
+  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "link index out of bound");
-  auto frameId = link_index_user2pinocchio[index];
-  auto jointId = model.frames[frameId].parent;
+  auto frameId = link_index_user2pinocchio_[index];
+  auto jointId = model_.frames[frameId].parent;
 
   SE3 link_pose;
   link_pose.translation({pose[0], pose[1], pose[2]});
   // w, x, y, z
   link_pose.rotation(Quaternion(pose[3], pose[4], pose[5], pose[6]).toRotationMatrix());
-  auto link2joint = model.frames[frameId].placement;
+  auto link2joint = model_.frames[frameId].placement;
 
   SE3 joint_pose = link_pose * link2joint.inverse();
   VectorX q = qposUser2Pinocchio(q_init);  // pinocchio::neutral(model);
-  Matrix6x J(6, model.nv);
+  Matrix6x J(6, model_.nv);
   J.setZero();
 
   bool success = false;
   Vector6 err;
-  VectorX v(model.nv);
+  VectorX v(model_.nv);
 
   int mask_size = mask.size();
   for (int i = 0;; i++) {
-    pinocchio::forwardKinematics(model, data, q);
-    const SE3 dMi = joint_pose.actInv(data.oMi[jointId]);
+    pinocchio::forwardKinematics(model_, data_, q);
+    const SE3 dMi = joint_pose.actInv(data_.oMi[jointId]);
     err = pinocchio::log6(dMi).toVector();
     if (err.norm() < eps) {
       success = true;
@@ -550,13 +550,13 @@ PinocchioModelTpl<DATATYPE>::computeIKCLIK(const size_t &index, const Vector7 &p
       success = false;
       break;
     }
-    pinocchio::computeJointJacobian(model, data, q, jointId, J);
+    pinocchio::computeJointJacobian(model_, data_, q, jointId, J);
 
     // mask out certain joints
     if (mask_size != 0) {
       for (int j = 0; j < mask_size; j++)
         if (mask[j]) {
-          int u = joint_index_user2pinocchio[j] - 1;
+          int u = joint_index_user2pinocchio_[j] - 1;
           for (int k = 0; k < 6; k++) J(k, u) = 0;
         }
     }
@@ -564,7 +564,7 @@ PinocchioModelTpl<DATATYPE>::computeIKCLIK(const size_t &index, const Vector7 &p
     JJt.noalias() = J * J.transpose();
     JJt.diagonal().array() += damp;
     v.noalias() = -J.transpose() * JJt.ldlt().solve(err);
-    q = pinocchio::integrate(model, q, v * dt);
+    q = pinocchio::integrate(model_, q, v * dt);
   }
   return {qposPinocchio2User(q), success, err};
 }
@@ -577,31 +577,31 @@ PinocchioModelTpl<DATATYPE>::computeIKCLIKJL(const size_t &index, const Vector7 
                                              const VectorX &q_min, const VectorX &q_max,
                                              const double &eps, const int &maxIter,
                                              const double &dt, const double &damp) {
-  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio.size()),
+  ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "link index out of bound");
-  auto frameId = link_index_user2pinocchio[index];
-  auto jointId = model.frames[frameId].parent;
+  auto frameId = link_index_user2pinocchio_[index];
+  auto jointId = model_.frames[frameId].parent;
 
   SE3 link_pose;
   link_pose.translation({pose[0], pose[1], pose[2]});
   // w, x, y, z
   link_pose.rotation(Quaternion(pose[3], pose[4], pose[5], pose[6]).toRotationMatrix());
-  auto link2joint = model.frames[frameId].placement;
+  auto link2joint = model_.frames[frameId].placement;
 
   SE3 joint_pose = link_pose * link2joint.inverse();
   VectorX q = qposUser2Pinocchio(q_init);  // pinocchio::neutral(model);
   VectorX qmin = qposUser2Pinocchio(q_min);
   VectorX qmax = qposUser2Pinocchio(q_max);
-  Matrix6x J(6, model.nv);
+  Matrix6x J(6, model_.nv);
   J.setZero();
 
   bool success = false;
   Vector6 err;
-  VectorX v(model.nv);
+  VectorX v(model_.nv);
 
   for (int i = 0;; i++) {
-    pinocchio::forwardKinematics(model, data, q);
-    const SE3 dMi = joint_pose.actInv(data.oMi[jointId]);
+    pinocchio::forwardKinematics(model_, data_, q);
+    const SE3 dMi = joint_pose.actInv(data_.oMi[jointId]);
     err = pinocchio::log6(dMi).toVector();
     if (err.norm() < eps) {
       success = true;
@@ -611,12 +611,12 @@ PinocchioModelTpl<DATATYPE>::computeIKCLIKJL(const size_t &index, const Vector7 
       success = false;
       break;
     }
-    pinocchio::computeJointJacobian(model, data, q, jointId, J);
+    pinocchio::computeJointJacobian(model_, data_, q, jointId, J);
     Matrix6 JJt;
     JJt.noalias() = J * J.transpose();
     JJt.diagonal().array() += damp;
     v.noalias() = -J.transpose() * JJt.ldlt().solve(err);
-    q = pinocchio::integrate(model, q, v * dt);
+    q = pinocchio::integrate(model_, q, v * dt);
     for (int j = 0; j < q.rows(); j++) {
       if (q[j] < qmin[j]) {
         if (abs(qmin[j] + 3.1415926) < 1e-3)

@@ -16,23 +16,23 @@ class ArticulatedModelTpl {
   using PinocchioModel = PinocchioModelTpl<DATATYPE>;
   using FCLModel = FCLModelTpl<DATATYPE>;
 
-  PinocchioModel pinocchio_model;
-  FCLModel fcl_model;
+  PinocchioModel pinocchio_model_;
+  FCLModel fcl_model_;
 
-  std::vector<std::string> user_link_names;
+  std::vector<std::string> user_link_names_;
   std::vector<std::string>
-      user_joint_names;  // all links and joints you want to control. order matters
+      user_joint_names_;  // all links and joints you want to control. order matters
 
-  std::vector<size_t> move_group_user_joints;
-  std::vector<std::string> move_group_end_effectors;
-  VectorX current_qpos;  // The planning world only update the state in planning group.
+  std::vector<size_t> move_group_user_joints_;
+  std::vector<std::string> move_group_end_effectors_;
+  VectorX current_qpos_;  // The planning world only update the state in planning group.
 
-  size_t move_group_qpos_dim;
-  bool verbose;
+  size_t move_group_qpos_dim_;
+  bool verbose_;
 
   // the base pose of the robot
-  Vector7 base_pose;
-  Transform3 base_tf;
+  Vector7 base_pose_;
+  Transform3 base_tf_;
 
  public:
   /**
@@ -58,14 +58,14 @@ class ArticulatedModelTpl {
    *
    * @return: Pinocchio model used for kinematics and dynamics computations
    */
-  PinocchioModelTpl<DATATYPE> &getPinocchioModel() { return pinocchio_model; }
+  PinocchioModelTpl<DATATYPE> &getPinocchioModel() { return pinocchio_model_; }
 
   /**
    * Get the underlying FCL model.
    *
    * @return: FCL model used for collision checking
    */
-  FCLModelTpl<DATATYPE> &getFCLModel() { return fcl_model; }
+  FCLModelTpl<DATATYPE> &getFCLModel() { return fcl_model_; }
 
   /**
    * Set the move group, i.e. the chain ending in end effector for which to compute the
@@ -88,7 +88,7 @@ class ArticulatedModelTpl {
    *
    * @return: list of user joint indices of the move group
    */
-  std::vector<size_t> getMoveGroupJointIndices(void) { return move_group_user_joints; }
+  std::vector<size_t> getMoveGroupJointIndices(void) { return move_group_user_joints_; }
 
   /**
    * Get the joint names of the move group.
@@ -102,14 +102,14 @@ class ArticulatedModelTpl {
    *
    * @return: list of joint names of the user
    */
-  std::vector<std::string> getUserJointNames(void) { return user_joint_names; }
+  std::vector<std::string> getUserJointNames(void) { return user_joint_names_; }
 
   /**
    * Get the link names that the user has provided for planning.
    *
    * @return: list of link names of the user
    */
-  std::vector<std::string> getUserLinkNames(void) { return user_link_names; }
+  std::vector<std::string> getUserLinkNames(void) { return user_link_names_; }
 
   /**
    * Get the end effectors of the move group.
@@ -117,7 +117,7 @@ class ArticulatedModelTpl {
    * @return: list of end effectors of the move group
    */
   std::vector<std::string> getMoveGroupEndEffectors(void) {
-    return move_group_end_effectors;
+    return move_group_end_effectors_;
   }
 
   /**
@@ -125,14 +125,14 @@ class ArticulatedModelTpl {
    *
    * @return: dimension of the move group qpos
    */
-  size_t getQposDim(void) { return move_group_qpos_dim; }
+  size_t getQposDim(void) { return move_group_qpos_dim_; }
 
   /**
    * Get the current joint position of all active joints inside the URDF.
    *
    * @return: current qpos of all active joints
    */
-  VectorX getQpos(void) { return current_qpos; }
+  VectorX getQpos(void) { return current_qpos_; }
 
   /**
    * Let the planner know the current joint positions.
@@ -146,9 +146,9 @@ class ArticulatedModelTpl {
 
   /** Only support one end effector case */
   size_t getEEFrameIndex() {
-    return std::find(user_link_names.begin(), user_link_names.end(),
-                     move_group_end_effectors[0]) -
-           user_link_names.begin();
+    return std::find(user_link_names_.begin(), user_link_names_.end(),
+                     move_group_end_effectors_[0]) -
+           user_link_names_.begin();
   }
 
   /**
@@ -157,7 +157,7 @@ class ArticulatedModelTpl {
    * @param srdf: path to SRDF file, can be relative to the current working directory
    */
   void updateSRDF(const std::string &srdf) {
-    fcl_model.removeCollisionPairsFromSrdf(srdf);
+    fcl_model_.removeCollisionPairsFromSrdf(srdf);
   }
 
   /**
@@ -172,7 +172,7 @@ class ArticulatedModelTpl {
    *
    * @return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
    */
-  Vector7 getBasePose() { return base_pose; }
+  Vector7 getBasePose() { return base_pose_; }
 };
 
 template <typename T>

@@ -27,20 +27,20 @@ template <typename DATATYPE>
 class KDLModelTpl {
  private:
   DEFINE_TEMPLATE_EIGEN(DATATYPE)
-  KDL::Tree tree;
-  std::string tree_root_name;
-  std::vector<std::string> user_link_names;
-  std::vector<std::string> user_joint_names;
-  std::vector<int> joint_mapping_kdl_2_user;
-  std::map<std::string, int> user_joint_idx_mapping;
-  bool verbose;
+  KDL::Tree tree_;
+  std::string tree_root_name_;
+  std::vector<std::string> user_link_names_;
+  std::vector<std::string> user_joint_names_;
+  std::vector<int> joint_mapping_kdl_2_user_;
+  std::map<std::string, int> user_joint_idx_mapping_;
+  bool verbose_;
 
  public:
   KDLModelTpl(const std::string &urdf_filename,
               const std::vector<std::string> &joint_names,
               const std::vector<std::string> &link_names, const bool &verbose);
 
-  std::string getTreeRootName() { return tree_root_name; }
+  std::string getTreeRootName() { return tree_root_name_; }
 
   std::tuple<VectorX, int> chainIKLMA(const size_t &index, const VectorX &q0,
                                       const Vector7 &pose);

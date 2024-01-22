@@ -9,8 +9,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "mplib/ompl_planner.h"
 #include "docstring/ompl_planner.h"
+#include "mplib/ompl_planner.h"
 
 namespace py = pybind11;
 
