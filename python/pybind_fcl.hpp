@@ -11,6 +11,8 @@
 #include "../src/fcl_model.h"
 #include "../src/macros_utils.hpp"
 #include "../src/urdf_utils.h"
+#include "docstring/fcl_model.h"
+#include "docstring/urdf_utils.h"
 #include "fcl/broadphase/broadphase_dynamic_AABB_tree.h"
 #include "fcl/common/types.h"
 #include "fcl/geometry/octree/octree.h"
@@ -67,191 +69,6 @@ using Triangle = fcl::Triangle;
 */
 namespace py = pybind11;
 
-std::string CollisionGeometry_doc = R"(
-    Collision geometry base class.
-    This is an FCL class so you can refer to the FCL doc here https://flexible-collision-library.github.io/d6/d5d/classfcl_1_1CollisionGeometry.html)";
-
-std::string Box_doc = R"(
-    Box collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a box geometry.)";
-
-std::string Box_constructor_doc = R"(
-    Construct a box with given side length.
-    Args:
-        side: side length of the box in an array [x, y, z])";
-
-std::string Box_constructor_doc2 = R"(
-    Construct a box with given side length.
-    Args:
-        x: side length of the box in x direction
-        y: side length of the box in y direction
-        z: side length of the box in z direction)";
-
-std::string Capsule_doc = R"(
-    Capsule collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a capsule geometry.)";
-
-std::string Capsule_constructor_doc = R"(
-    Construct a capsule with given radius and height.
-    Args:
-        radius: radius of the capsule
-        lz: height of the capsule)";
-
-std::string Cylinder_doc = R"(
-    Cylinder collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a cylinder geometry.)";
-
-std::string Cylinder_constructor_doc = R"(
-    Construct a cylinder with given radius and height.
-    Args:
-        radius: radius of the cylinder
-        lz: height of the cylinder)";
-
-std::string OcTree_doc = R"(
-    OcTree collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a point cloud geometry represented by an Octree.)";
-
-std::string OcTree_constructor_doc = R"(
-    Construct an OcTree with given resolution.
-    Args:
-        resolution: resolution of the OcTree (smallest size of a voxel). you can treat this is as the diameter of a point)";
-
-std::string OcTree_constructor_doc2 = R"(
-    Construct an OcTree with given vertices and resolution.
-    Args:
-        vertices: vertices of the point cloud
-        resolution: resolution of the OcTree)";
-
-std::string Convex_doc = R"(
-    Convex collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a convex geometry.)";
-
-std::string Convex_constructor_doc = R"(
-    Construct a convex with given vertices and faces.
-    Args:
-        vertices: vertices of the convex
-        num_faces: number of faces of the convex
-        faces: faces of the convex geometry represented by a list of vertex indices
-        throw_if_invalid: if true, throw an exception if the convex is invalid)";
-
-std::string Convex_constructor_doc2 = R"(
-    Construct a convex with given vertices and faces.
-    Args:
-        vertices: vertices of the convex
-        faces: faces of the convex geometry represented by a list of vertex indices
-        throw_if_invalid: if true, throw an exception if the convex is invalid)";
-
-std::string Convex_get_face_count_doc = R"(
-    Get the number of faces of the convex.
-    Returns:
-        number of faces of the convex)";
-
-std::string Convex_get_faces_doc = R"(
-    Get the faces of the convex.
-    Returns:
-        faces of the convex represented by a list of vertex indices)";
-
-std::string Convex_get_vertices_doc = R"(
-    Get the vertices of the convex.
-    Returns:
-        vertices of the convex)";
-
-std::string Convex_compute_volume_doc = R"(
-    Compute the volume of the convex.
-    Returns:
-        volume of the convex)";
-
-std::string Convex_get_interior_point_doc = R"(
-    Sample a random interior point of the convex geometry
-    Returns:
-        interior point of the convex)";
-
-std::string BVHModel_OBBRSS_doc = R"(
-    BVHModel collision geometry.
-    Inheriting from CollisionGeometry, this class specializes to a mesh geometry represented by a BVH tree.)";
-
-std::string BVHModel_OBBRSS_constructor_doc = R"(
-    Construct an empty BVHModel.)";
-
-std::string BVHModel_OBBRSS_beginModel_doc = R"(
-    Begin to construct a BVHModel.
-    Args:
-        num_faces: number of faces of the mesh
-        num_vertices: number of vertices of the mesh)";
-
-std::string BVHModel_OBBRSS_endModel_doc = R"(
-    End the construction of a BVHModel.)";
-
-std::string BVHModel_OBBRSS_addSubModel_doc = R"(
-    Add a sub-model to the BVHModel.
-    Args:
-        vertices: vertices of the sub-model
-        faces: faces of the sub-model represented by a list of vertex indices)";
-
-std::string BVHModel_OBBRSS_get_vertices_doc = R"(
-    Get the vertices of the BVHModel.
-    Returns:
-        vertices of the BVHModel)";
-
-std::string BVHModel_OBBRSS_get_faces_doc = R"(
-    Get the faces of the BVHModel.
-    Returns:
-        faces of the BVHModel)";
-
-std::string CollisionObject_doc = R"(
-    Collision object class.
-    This class contains the collision geometry and the transformation of the geometry.)";
-
-std::string CollisionObject_constructor_doc = R"(
-    Construct a collision object with given collision geometry and transformation.
-    Args:
-        collision_geometry: collision geometry of the object
-        translation: translation of the object
-        rotation: rotation of the object)";
-
-std::string FCLModel_doc = R"(
-    FCL model class.
-    This class contains the collision object and has the ability to perform collision checking and distance computation.)";
-
-std::string FCLModel_constructor_doc = R"(
-    Construct an FCL model from URDF and SRDF files.
-    Args:
-        urdf_filename: path to URDF file, can be relative to the current working directory
-        verbose: print debug information
-        convex: use convex decomposition for collision objects)";
-
-std::string FCLModel_get_collision_pairs_doc = R"(
-    Get the collision pairs of the FCL model.
-    Returns:
-        collision pairs of the FCL model. if the FCL model has N collision objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled collision pairs)";
-
-std::string FCLModel_get_collision_objects_doc = R"(
-    Get the collision objects of the FCL model.
-    Returns:
-        all collision objects of the FCL model)";
-
-std::string FCLModel_set_link_order_doc = R"(
-    Set the link order of the FCL model.
-    Args:
-        names: list of link names in the order that you want to set.)";
-
-std::string FCLModel_update_collision_objects_doc = R"(
-    Update the collision objects of the FCL model.
-    Args:
-        link_poses: list of link poses in the order of the link order)";
-
-std::string FCLModel_collide_doc = R"(
-    Perform collision checking.
-    Args:
-        request: collision request
-    Returns:
-        true if collision happens)";
-
-std::string FCLModel_remove_collision_pairs_from_srdf_doc = R"(
-    Remove collision pairs from SRDF.
-    Args:
-        srdf_filename: path to SRDF file, can be relative to the current working directory)";
-
 void build_pyfcl(py::module &m_all) {
   auto m = m_all.def_submodule("fcl");
 
@@ -267,7 +84,7 @@ void build_pyfcl(py::module &m_all) {
   // Collision Geometry type
   auto PyCollisionGeometry =
       py::class_<CollisionGeometry, std::shared_ptr<CollisionGeometry>>(
-          m, "CollisionGeometry", CollisionGeometry_doc.c_str());
+          m, "CollisionGeometry", DOC(fcl, CollisionGeometry));
   PyCollisionGeometry.def("computeLocalAABB", &CollisionGeometry::computeLocalAABB)
       .def("isOccupied", &CollisionGeometry::isOccupied)
       .def("isFree", &CollisionGeometry::isFree)
@@ -283,32 +100,31 @@ void build_pyfcl(py::module &m_all) {
 
   // collision geometries
   auto PyBox = py::class_<Box, std::shared_ptr<Box>>(m, "Box", PyCollisionGeometry,
-                                                     Box_doc.c_str());
-  PyBox.def(py::init<const Vector3 &>(), py::arg("side"), Box_constructor_doc.c_str())
+                                                     DOC(fcl, Box));
+  PyBox.def(py::init<const Vector3 &>(), py::arg("side"), DOC(fcl, Box, Box))
       .def(py::init<DATATYPE, DATATYPE, DATATYPE>(), py::arg("x"), py::arg("y"),
-           py::arg("z"), Box_constructor_doc2.c_str())
+           py::arg("z"), DOC(fcl, Box, Box, 2))
       .def_readwrite("side", &Box::side);
 
   auto PyCapsule = py::class_<Capsule, std::shared_ptr<Capsule>>(
-      m, "Capsule", PyCollisionGeometry, Capsule_doc.c_str());
+      m, "Capsule", PyCollisionGeometry, DOC(fcl, Capsule));
   PyCapsule
       .def(py::init<DATATYPE, DATATYPE>(), py::arg("radius"), py::arg("lz"),
-           Capsule_constructor_doc.c_str())
+           DOC(fcl, Capsule, Capsule))
       .def_readwrite("radius", &Capsule::radius)
       .def_readwrite("lz", &Capsule::lz);
 
   auto PyCylinder = py::class_<Cylinder, std::shared_ptr<Cylinder>>(
-      m, "Cylinder", PyCollisionGeometry, Cylinder_doc.c_str());
+      m, "Cylinder", PyCollisionGeometry, DOC(fcl, Cylinder));
   PyCylinder
       .def(py::init<DATATYPE, DATATYPE>(), py::arg("radius"), py::arg("lz"),
-           Cylinder_constructor_doc.c_str())
+           DOC(fcl, Cylinder, Cylinder))
       .def_readwrite("radius", &Cylinder::radius)
       .def_readwrite("lz", &Cylinder::lz);
 
   auto PyOcTree = py::class_<OcTree, std::shared_ptr<OcTree>>(
-      m, "OcTree", PyCollisionGeometry, OcTree_doc.c_str());
-  PyOcTree
-      .def(py::init<DATATYPE>(), py::arg("resolution"), OcTree_constructor_doc.c_str())
+      m, "OcTree", PyCollisionGeometry, DOC(fcl, OcTree));
+  PyOcTree.def(py::init<DATATYPE>(), py::arg("resolution"), DOC(fcl, OcTree, OcTree))
       .def(py::init([](const Matrixx3 &vertices, const double &resolution) {
              octomap::OcTree *tree = new octomap::OcTree(resolution);
 
@@ -322,15 +138,15 @@ void build_pyfcl(py::module &m_all) {
              OcTree *octree = new OcTree(tree_ptr);
              return octree;
            }),
-           py::arg("vertices"), py::arg("resolution"), OcTree_constructor_doc2.c_str());
+           py::arg("vertices"), py::arg("resolution"), DOC(fcl, OcTree, OcTree, 2));
 
   auto PyConvex = py::class_<Convex, std::shared_ptr<Convex>>(
-      m, "Convex", PyCollisionGeometry, Convex_doc.c_str());
+      m, "Convex", PyCollisionGeometry, DOC(fcl, Convex));
   PyConvex
       .def(py::init<const std::shared_ptr<const std::vector<Vector3>> &, int,
                     const std::shared_ptr<const std::vector<int>> &, bool>(),
            py::arg("vertices"), py::arg("num_faces"), py::arg("faces"),
-           py::arg("throw_if_invalid") = true, Convex_constructor_doc.c_str())
+           py::arg("throw_if_invalid") = true, DOC(fcl, Convex, Convex))
       .def(py::init([](const Matrixx3 &vertices, const Matrixx3I &faces,
                        const bool &throw_if_invalid) {
              auto vertices_new = std::make_shared<std::vector<Vector3>>();
@@ -349,33 +165,33 @@ void build_pyfcl(py::module &m_all) {
              return Convex(vertices_new, faces.rows(), faces_new, throw_if_invalid);
            }),
            py::arg("vertices"), py::arg("faces"), py::arg("throw_if_invalid") = true,
-           Convex_constructor_doc2.c_str())
+           DOC(fcl, Convex, Convex, 2))
       //.def("radius", &Convex::getRadius)
-      .def("get_face_count", &Convex::getFaceCount, Convex_get_face_count_doc.c_str())
-      .def("get_faces", &Convex::getFaces, Convex_get_faces_doc.c_str())
-      .def("get_vertices", &Convex::getVertices, Convex_get_vertices_doc.c_str())
-      .def("compute_volume", &Convex::computeVolume, Convex_compute_volume_doc.c_str())
+      .def("get_face_count", &Convex::getFaceCount, DOC(fcl, Convex, getFaceCount))
+      .def("get_faces", &Convex::getFaces, DOC(fcl, Convex, getFaces))
+      .def("get_vertices", &Convex::getVertices, DOC(fcl, Convex, getVertices))
+      .def("compute_volume", &Convex::computeVolume, DOC(fcl, Convex, computeVolume))
       .def("get_interior_point", &Convex::getInteriorPoint,
-           Convex_get_interior_point_doc.c_str());
+           DOC(fcl, Convex, getInteriorPoint));
 
   auto PyBVHModel_OBBRSS =
       py::class_<BVHModel_OBBRSS, std::shared_ptr<BVHModel_OBBRSS>>(
-          m, "BVHModel", PyCollisionGeometry, BVHModel_OBBRSS_doc.c_str());
+          m, "BVHModel", PyCollisionGeometry, DOC(fcl, BVHModel_OBBRSS));
 
   PyBVHModel_OBBRSS.def(py::init<>())
       .def("beginModel", &BVHModel_OBBRSS::beginModel, py::arg("num_faces") = 0,
-           py::arg("num_vertices") = 0, BVHModel_OBBRSS_beginModel_doc.c_str())
-      .def("endModel", &BVHModel_OBBRSS::endModel, BVHModel_OBBRSS_endModel_doc.c_str())
+           py::arg("num_vertices") = 0, DOC(fcl, BVHModel_OBBRSS, beginModel))
+      .def("endModel", &BVHModel_OBBRSS::endModel, DOC(fcl, BVHModel_OBBRSS, endModel))
       .def("addSubModel",
            py::overload_cast<const std::vector<Vector3> &>(
                &BVHModel_OBBRSS::addSubModel),
-           py::arg("vertices"), BVHModel_OBBRSS_addSubModel_doc.c_str())
+           py::arg("vertices"), DOC(fcl, BVHModel_OBBRSS, addSubModel))
       .def("addSubModel",
            py::overload_cast<const std::vector<Vector3> &,
                              const std::vector<Triangle> &>(
                &BVHModel_OBBRSS::addSubModel),
            py::arg("vertices"), py::arg("faces"),
-           BVHModel_OBBRSS_addSubModel_doc.c_str())
+           DOC(fcl, BVHModel_OBBRSS, addSubModel, 2))
       .def(
           "addSubModel",
           [](BVHModel_OBBRSS &a, const std::vector<Vector3> &vertices,
@@ -385,7 +201,8 @@ void build_pyfcl(py::module &m_all) {
               face_list.push_back(Triangle(faces[i][0], faces[i][1], faces[i][2]));
             a.addSubModel(vertices, face_list);
           },
-          py::arg("vertices"), py::arg("faces"))
+          py::arg("vertices"), py::arg("faces"),
+          DOC(fcl, BVHModel_OBBRSS, addSubModel, 3))
       .def(
           "get_vertices",
           [](BVHModel_OBBRSS &a) {
@@ -393,7 +210,7 @@ void build_pyfcl(py::module &m_all) {
             for (auto i = 0; i < a.num_vertices; i++) ret.push_back(*(a.vertices + i));
             return ret;
           },
-          BVHModel_OBBRSS_get_vertices_doc.c_str())
+          DOC(fcl, BVHModel_OBBRSS, getVertices))
       .def(
           "get_faces",
           [](BVHModel_OBBRSS &a) {
@@ -401,14 +218,14 @@ void build_pyfcl(py::module &m_all) {
             for (auto i = 0; i < a.num_tris; i++) ret.push_back(*(a.tri_indices + i));
             return ret;
           },
-          BVHModel_OBBRSS_get_faces_doc.c_str())
+          DOC(fcl, BVHModel_OBBRSS, getFaces))
       .def_readonly("num_faces", &BVHModel_OBBRSS::num_tris)
       .def_readonly("num_vertices", &BVHModel_OBBRSS::num_vertices);
 
   // Collision Object = Geometry + Transformation
   auto PyCollisionObject =
       py::class_<CollisionObject, std::shared_ptr<CollisionObject>>(
-          m, "CollisionObject", CollisionObject_doc.c_str());
+          m, "CollisionObject", DOC(fcl, CollisionObject));
   PyCollisionObject
       .def(py::init([](const std::shared_ptr<CollisionGeometry> &a, const Vector3 &p,
                        const Vector4 &q) {
@@ -416,7 +233,7 @@ void build_pyfcl(py::module &m_all) {
              return CollisionObject(a, q_mat, p);
            }),
            py::arg("collision_geometry"), py::arg("translation"), py::arg("rotation"),
-           CollisionObject_constructor_doc.c_str())
+           DOC(fcl, CollisionObject, CollisionObject))
       .def("get_collision_geometry", &CollisionObject::collisionGeometry)
       .def("get_translation", &CollisionObject::getTranslation)
       .def("get_rotation", &CollisionObject::getRotation)
@@ -545,33 +362,34 @@ void build_pyfcl(py::module &m_all) {
       });
 
   // FCL model
-  auto PyFCLModel = py::class_<FCLModel, std::shared_ptr<FCLModel>>(m, "FCLModel");
+  auto PyFCLModel =
+      py::class_<FCLModel, std::shared_ptr<FCLModel>>(m, "FCLModel", DOC(FCLModelTpl));
   PyFCLModel
       .def(py::init<const std::string &, const bool &, const bool &>(),
            py::arg("urdf_filename"), py::arg("verbose") = true,
-           py::arg("convex") = false, FCLModel_constructor_doc.c_str())
+           py::arg("convex") = false, DOC(FCLModelTpl, FCLModelTpl, 2))
       .def("get_collision_pairs", &FCLModel::getCollisionPairs,
-           FCLModel_get_collision_pairs_doc.c_str())
+           DOC(FCLModelTpl, getCollisionPairs))
       .def("get_collision_objects", &FCLModel::getCollisionObjects,
-           FCLModel_get_collision_objects_doc.c_str())
+           DOC(FCLModelTpl, getCollisionObjects))
       .def("set_link_order", &FCLModel::setLinkOrder, py::arg("names"),
-           FCLModel_set_link_order_doc.c_str())
+           DOC(FCLModelTpl, setLinkOrder))
       .def("update_collision_objects",
            py::overload_cast<const std::vector<Vector7> &>(
                &FCLModel::updateCollisionObjects),
-           py::arg("link_poses"), FCLModel_update_collision_objects_doc.c_str())
+           py::arg("link_poses"), DOC(FCLModelTpl, updateCollisionObjects, 2))
       .def("collide", &FCLModel::collide, py::arg("request") = CollisionRequest(),
-           FCLModel_collide_doc.c_str())
+           DOC(FCLModelTpl, collide))
       .def("collide_full", &FCLModel::collideFull,
-           py::arg("request") = CollisionRequest())
-      .def("get_collision_link_names", &FCLModel::getCollisionLinkNames)
+           py::arg("request") = CollisionRequest(), DOC(FCLModelTpl, collideFull))
+      .def("get_collision_link_names", &FCLModel::getCollisionLinkNames,
+           DOC(FCLModelTpl, getCollisionLinkNames))
       .def("remove_collision_pairs_from_srdf", &FCLModel::removeCollisionPairsFromSrdf,
-           py::arg("srdf_filename"),
-           FCLModel_remove_collision_pairs_from_srdf_doc.c_str());
+           py::arg("srdf_filename"), DOC(FCLModelTpl, removeCollisionPairsFromSrdf));
 
   // Extra function
   m.def("load_mesh_as_BVH", load_mesh_as_BVH<DATATYPE>, py::arg("mesh_path"),
-        py::arg("scale"));
+        py::arg("scale"), DOC(load_mesh_as_BVH));
   m.def("load_mesh_as_Convex", load_mesh_as_Convex<DATATYPE>, py::arg("mesh_path"),
-        py::arg("scale"));
+        py::arg("scale"), DOC(load_mesh_as_Convex));
 }

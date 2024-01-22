@@ -18,6 +18,11 @@
 #include "macros_utils.hpp"
 #include "urdf_utils.h"
 
+/**
+ * KDL model of an articulation
+ *
+ * See https://github.com/orocos/orocos_kinematics_dynamics
+ */
 template <typename DATATYPE>
 class KDLModelTpl {
  private:

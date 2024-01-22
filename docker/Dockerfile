@@ -98,6 +98,13 @@ RUN git clone --single-branch -b v1.5.1 --depth 1 https://github.com/orocos/oroc
     cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc) && make install && \
     rm -rf /workspace/orocos_kinematics_dynamics
 
+# clang library for pybind11_mkdoc
+RUN yum-config-manager --add-repo=https://buildlogs.centos.org/c7-llvm-toolset-11.0.x86_64 && \
+  yum update -y && yum install -y --nogpgcheck llvm-toolset-11.0-clang-11.0.1 && \
+  yum upgrade -y && yum clean all
+ENV LLVM_DIR_PATH=/opt/rh/llvm-toolset-11.0/root/usr/lib64 \
+    CLANG_INCLUDE_DIR=/opt/rh/llvm-toolset-11.0/root/usr/lib64/clang/11.0.1/include
+
 # Set working directory to be repository directory
 ARG WORKDIR="/workspace"
 WORKDIR ${WORKDIR}

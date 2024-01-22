@@ -1,221 +1,273 @@
+import typing
+
+import numpy
+
 import mplib.pymp.articulation
 import mplib.pymp.fcl
-import numpy
-import typing
-__all__ = ['PlanningWorld', 'WorldCollisionResult']
+
+__all__ = ["PlanningWorld", "WorldCollisionResult"]
 M = typing.TypeVar("M", bound=int)
+
 class PlanningWorld:
-    def __init__(self, articulations: list[mplib.pymp.articulation.ArticulatedModel], articulation_names: list[str], normal_objects: list[mplib.pymp.fcl.CollisionObject], normal_object_names: list[str], plan_articulation_id: int = 0) -> None:
+    """
+    Planning world for collision checking
+    """
+    def __init__(
+        self,
+        articulations: list[mplib.pymp.articulation.ArticulatedModel],
+        articulation_names: list[str],
+        normal_objects: list[mplib.pymp.fcl.CollisionObject],
+        normal_object_names: list[str],
+        plan_articulation_id: int = 0,
+    ) -> None:
         """
-            Planning world for collision checking.
-            Args:
-                articulations: list of articulated models
-                articulation_names: list of names for articulated models
-                normal_objects: list of non-articulated collision objects
-                normal_object_names: list of names for normal collision objects
-                plan_articulation_id: index of the articulated model to be used for planning
-            Returns:
-                PlanningWorld object
+        Constructs a PlanningWorld with given articulations and normal objects
+
+        :param articulations: list of articulated models
+        :param articulation_names: name of the articulated models
+        :param normal_objects: list of collision objects that are not articulated
+        :param normal_object_names: name of the normal objects
+        :param plan_articulation_id: id of the articulated model that is used for
+            planning
         """
-    def add_articulation(self, model: mplib.pymp.articulation.ArticulatedModel, name: str) -> None:
+    def add_articulation(
+        self, model: mplib.pymp.articulation.ArticulatedModel, name: str
+    ) -> None:
         """
-            Add an articulated model to the planning world.
-            Args:
-                model: articulated model to be added
-                name: name of the articulated model
-            Returns:
-                None
+        Add an articulated model to the planning world.
+
+        :param model: articulated model to be added
+        :param name: name of the articulated model
         """
-    def add_articulations(self, models: list[mplib.pymp.articulation.ArticulatedModel], names: list[str]) -> None:
+    def add_articulations(
+        self, models: list[mplib.pymp.articulation.ArticulatedModel], names: list[str]
+    ) -> None:
         """
-            Add a list of articulated models to the planning world.
-            Args:
-                models: list of articulated models to be added
-                names: list of names of the articulated models
-            Returns:
-                None
+        Add a list of articulated models to the planning world.
+
+        :param models: list of articulated models to be added
+        :param names: list of names of the articulated models
         """
     def collide(self) -> bool:
         """
-            Check collision between all objects.
-            Returns:
-                True if collision happens
+        Check collision in the planning world.
+
+        :return: ``True`` if collision exists
         """
-    def collide_full(self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...) -> list[...]:
+    def collide_full(
+        self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...
+    ) -> list[...]:
         """
-            Check collision between the articulated model and all objects.
-            Args:
-                index: index of the articulated model
-                request: collision request params. can leave empty for default value
-            Returns:
-                List of WorldCollisionResult objects
+        Check collision between the articulated model and all objects.
+
+        :param index: index of the articulated model
+        :param request: collision request params. Can leave empty for default value
+        :return: List of WorldCollisionResult objects
         """
-    def collide_with_others(self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...) -> list[...]:
+    def collide_with_others(
+        self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...
+    ) -> list[...]:
         """
-            Check collision between the articulated model and other objects.
-            Args:
-                index: index of the articulated model
-                request: collision request params. can leave empty for default value
-            Returns:
-                List of WorldCollisionResult objects
+        Check collision between the articulated model and other objects.
+
+        :param index: index of the articulated model
+        :param request: collision request params. Can leave empty for default value
+        :return: List of WorldCollisionResult objects
         """
     def get_articulations(self) -> list[mplib.pymp.articulation.ArticulatedModel]:
         """
-            Get the list of articulated models.
-            Returns:
-                list of articulated models as pointers
+        Get the list of articulated models.
+
+        :return: list of articulated models
         """
     def get_normal_objects(self) -> list[mplib.pymp.fcl.CollisionObject]:
         """
-            Get the list of non-articulated collision objects.
-            Returns:
-                list of non-articulated collision objects
+        Get the list of non-articulated collision objects.
+
+        :return: list of non-articulated collision objects
         """
     def print_attached_tool_pose(self) -> None:
         """
-            Print the pose of the attached tool.
-            Returns:
-                None
+        Print the pose of the attached tool.
         """
     def remove_attach(self) -> None:
         """
-            Remove the attached tool.
-            Returns:
-                None
+        Remove attach object so there won't be anything on the end effector when
+        ``use_attach`` is set to ``True`` again
         """
     def remove_normal_object(self, name: str) -> bool:
         """
-            Remove a non-articulated collision object from the planning world.
-            Args:
-                name: name of the non-articulated collision object
-            Returns:
-                None
+        Remove am non-articulated object
+
+        :param name: name of the non-articulated collision object
+        :return: ``True`` if the item exists and ``False`` otherwise
         """
-    def self_collide(self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...) -> list[...]:
+    def self_collide(
+        self, index: int = 0, request: mplib.pymp.fcl.CollisionRequest = ...
+    ) -> list[...]:
         """
-            Check collision between the articulated model and itself.
-            Args:
-                index: index of the articulated model
-                request: collision request params. can leave empty for default value
-            Returns:
-                List of WorldCollisionResult objects
+        Check collision between the articulated model and itself.
+
+        :param index: index of the articulated model
+        :param request: collision request params. Can leave empty for default value
+        :return: List of WorldCollisionResult objects
         """
-    def set_normal_object(self, collision_object: str, name: mplib.pymp.fcl.CollisionObject) -> None:
+    def set_normal_object(
+        self, collision_object: str, name: mplib.pymp.fcl.CollisionObject
+    ) -> None:
         """
-            Add a non-articulated collision object to the planning world.
-            Args:
-                name: name of the non-articulated collision object
-                collision_object: non-articulated collision object to be added
-            Returns:
-                None
+        Add a non-articulated collision object to the planning world.
+
+        :param name: name of the non-articulated collision object
+        :param collision_object: the non-articulated collision object to be added
         """
-    def set_qpos(self, index: int, qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
+    def set_qpos(
+        self,
+        index: int,
+        qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
+    ) -> None:
         """
-            Set the joint qpos of the articulated model.
-            Args:
-                index: index of the articulated model
-                qpos: joint angles of the *movegroup only*
-            Returns:
-                None
+        Set the joint qpos of the articulated model.
+
+        :param index: index of the articulated model
+        :param qpos: joint angles of the *movegroup only*
         """
-    def set_qpos_all(self, qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
+    def set_qpos_all(
+        self,
+        qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
+    ) -> None:
         """
-            Set the joint qpos of all articulated models.
-            Args:
-                qpos: joint angles of all the models (*movegroup only*)
-            Returns:
-                None
+        Set the joint qpos of all articulated models.
+
+        :param qpos: joint angles of all the models (*movegroup only*)
         """
     def set_use_attach(self, use: bool) -> None:
         """
-            Set whether to use attached tool for collision checking.
-            Args:
-                use: whether to use attached tool
-            Returns:
-                None
+        Set whether to use attached tool for collision checking.
+
+        :param use: whether to use attached tool
         """
     def set_use_point_cloud(self, use: bool) -> None:
         """
-            Set whether to use point cloud for collision checking.
-            Args:
-                use: whether to use point cloud
-            Returns:
-                None
+        Set whether to use point cloud for collision checking.
+
+        :param use: whether to use point cloud
         """
-    def update_attached_box(self, size: numpy.ndarray[tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]], link_id: int, pose: numpy.ndarray[tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
-        ...
-    def update_attached_mesh(self, mesh_path: str, link_id: int, pose: numpy.ndarray[tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
+    def update_attached_box(
+        self,
+        size: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
         """
-            Add mesh as the attached tool.
-            Args:
-                mesh_path: path to the mesh file
-                link_id: link id of the attached mesh
-                pose: pose of the attached mesh [x, y, z, qw, qx, qy, qz]
-            Returns:
-                None
+        Add a box as the attached tool.
+
+        :param size: size of the box, [size_x, size_y, size_z]
+        :param link_id: link id of the attached box
+        :param pose: pose of the attached box w.r.t. the link it's attached to. [x, y,
+            z, qw, qx, qy, qz]
         """
-    def update_attached_sphere(self, radius: float, link_id: int, pose: numpy.ndarray[tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
+    def update_attached_mesh(
+        self,
+        mesh_path: str,
+        link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
         """
-            Add sphere as the attached tool.
-            Args:
-                radius: radius of the sphere
-                link_id: link id of the attached sphere
-                pose: pose of the attached sphere [x, y, z, qw, qx, qy, qz]
-            Returns:
-                None
+        Add a mesh as the attached tool.
+
+        :param mesh_path: path to the mesh file
+        :param link_id: link id of the attached mesh
+        :param pose: pose of the attached mesh w.r.t. the link it's attached to. [x, y,
+            z, qw, qx, qy, qz]
         """
-    def update_attached_tool(self, p_geom: mplib.pymp.fcl.CollisionGeometry, link_id: int, pose: numpy.ndarray[tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]]) -> None:
+    def update_attached_sphere(
+        self,
+        radius: float,
+        link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
         """
-            Update the attached tool.
-            Args:
-                p_geom: fcl collision geometry of the attached tool
-                link_id: link id of the attached tool
-                pose: pose of the attached tool [x, y, z, qw, qx, qy, qz]
-            Returns:
-                None
+        Add a sphere as the attached tool.
+
+        :param radius: radius of the sphere
+        :param link_id: link id of the attached sphere
+        :param pose: pose of the attached sphere w.r.t. the link it's attached to. [x,
+            y, z, qw, qx, qy, qz]
         """
-    def update_point_cloud(self, vertices: numpy.ndarray[tuple[M, typing.Literal[3]], numpy.dtype[numpy.float64]], radius: float) -> None:
+    def update_attached_tool(
+        self,
+        p_geom: mplib.pymp.fcl.CollisionGeometry,
+        link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
         """
-            Update the point cloud for collision checking.
-            Args:
-                vertices: vertices of the point cloud
-                radius: radius of each point in the point cloud
-            Returns:
-                None
+        Attach or update the attached object
+
+        :param p_geom: fcl collision geometry of the attached tool
+        :param link_id: id of the link to which the object is attached
+        :param pose: pose of the attached object w.r.t. the link it's attached to. [x,
+            y, z, qw, qx, qy, qz]
+        """
+    def update_point_cloud(
+        self,
+        vertices: numpy.ndarray[
+            tuple[M, typing.Literal[3]], numpy.dtype[numpy.float64]
+        ],
+        radius: float,
+    ) -> None:
+        """
+        Update the point cloud for collision checking.
+
+        :param vertices: vertices of the point cloud
+        :param radius: radius of each point in the point cloud
         """
     @property
-    def use_attach(self) -> bool:
-        ...
+    def use_attach(self) -> bool: ...
     @property
-    def use_point_cloud(self) -> bool:
-        ...
+    def use_point_cloud(self) -> bool: ...
+
 class WorldCollisionResult:
     """
-    
-        Result of the collision checking.
-        Attributes:
-            res: whether collision happens
-            object_name1: name of the first object
-            object_name2: name of the second object
-            collision_type: type of the collision
-            link_name1: link name of the first object in collision
-            link_name2: link name of the second object in collision
+    Result of the collision checking.
     """
     @property
     def collision_type(self) -> str:
-        ...
+        """
+        type of the collision
+        """
     @property
     def link_name1(self) -> str:
-        ...
+        """
+        link name of the first object in collision
+        """
     @property
     def link_name2(self) -> str:
-        ...
+        """
+        link name of the second object in collision
+        """
     @property
     def object_name1(self) -> str:
-        ...
+        """
+        name of the first object
+        """
     @property
     def object_name2(self) -> str:
-        ...
+        """
+        name of the second object
+        """
     @property
     def res(self) -> mplib.pymp.fcl.CollisionResult:
-        ...
+        """
+        the fcl CollisionResult
+        """
