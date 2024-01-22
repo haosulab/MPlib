@@ -94,7 +94,7 @@ Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> state2eigen(const ob::State *state_ra
   return ret;
 }
 
-typedef struct FixedJoint {
+struct FixedJoint {
   size_t articulation_idx;  // which robot in the planning world does the fixed joint
                             // belong to?
   size_t joint_idx;         // what is the index of the joint you want it fixed?
@@ -112,9 +112,9 @@ typedef struct FixedJoint {
     return articulation_idx < other.articulation_idx ||
            (articulation_idx == other.articulation_idx && joint_idx < other.joint_idx);
   }
-} FixedJoint;
+};
 
-typedef std::set<FixedJoint> FixedJoints;
+using FixedJoints = std::set<FixedJoint>;
 
 bool is_fixed_joint(const FixedJoints &fixed_joints, size_t articulation_idx,
                     size_t joint_idx);
@@ -127,7 +127,7 @@ Eigen::VectorXd add_fixed_joints(const FixedJoints &fixed_joints,
 
 template <typename DATATYPE>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
-  typedef Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> VectorX;
+  using VectorX = Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1>;
   PlanningWorldTplPtr<DATATYPE> world_;
   bool is_rvss_;
   FixedJoints fixed_joints_;
@@ -190,13 +190,13 @@ using ValidityCheckerf = ValidityCheckerTpl<float>;
 /// OMPL Planner
 template <typename DATATYPE>
 class OMPLPlannerTpl {
-  typedef std::shared_ptr<ob::CompoundStateSpace> CompoundStateSpacePtr;
-  typedef std::shared_ptr<ob::SpaceInformation> SpaceInformationPtr;
-  typedef std::shared_ptr<ob::ProblemDefinition> ProblemDefinitionPtr;
+  using CompoundStateSpacePtr = std::shared_ptr<ob::CompoundStateSpace>;
+  using SpaceInformationPtr = std::shared_ptr<ob::SpaceInformation>;
+  using ProblemDefinitionPtr = std::shared_ptr<ob::ProblemDefinition>;
 
-  typedef ob::CompoundStateSpace CompoundStateSpace;
-  typedef ob::SpaceInformation SpaceInformation;
-  typedef ob::ProblemDefinition ProblemDefinition;
+  using CompoundStateSpace = ob::CompoundStateSpace;
+  using SpaceInformation = ob::SpaceInformation;
+  using ProblemDefinition = ob::ProblemDefinition;
   using ValidityChecker = ValidityCheckerTpl<DATATYPE>;
   using ValidityCheckerPtr = ValidityCheckerTplPtr<DATATYPE>;
 
