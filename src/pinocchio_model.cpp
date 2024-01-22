@@ -1,8 +1,8 @@
-#include "pinocchio_model.h"
+#include "mplib/pinocchio_model.h"
 
 #include <urdf_parser/urdf_parser.h>
 
-#include "urdf_utils.h"
+#include "mplib/urdf_utils.h"
 // #include <boost/property_tree/xml_parser.hpp>
 // #include <boost/property_tree/ptree.hpp>
 

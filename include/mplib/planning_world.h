@@ -6,7 +6,7 @@
 #include "articulated_model.h"
 #include "color_printing.h"
 #include "fcl_model.h"
-#include "macros_utils.hpp"
+#include "macros_utils.h"
 
 /// Result of the collision checking.
 template <typename DATATYPE>

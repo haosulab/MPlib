@@ -1,6 +1,6 @@
-#include "ompl_planner.h"
+#include "mplib/ompl_planner.h"
 
-#include "pinocchio_model.h"
+#include "mplib/pinocchio_model.h"
 
 #define DEFINE_TEMPLATE_OMPL(DATATYPE)         \
   template class ValidityCheckerTpl<DATATYPE>; \

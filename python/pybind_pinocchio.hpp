@@ -8,9 +8,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "../src/macros_utils.hpp"
-#include "../src/pinocchio_model.h"
 #include "docstring/pinocchio_model.h"
+#include "mplib/macros_utils.h"
+#include "mplib/pinocchio_model.h"
 
 namespace py = pybind11;
 

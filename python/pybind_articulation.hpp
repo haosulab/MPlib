@@ -8,8 +8,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "../src/articulated_model.h"
 #include "docstring/articulated_model.h"
+#include "mplib/articulated_model.h"
 
 namespace py = pybind11;
 

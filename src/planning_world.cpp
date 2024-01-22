@@ -1,9 +1,9 @@
-#include "planning_world.h"
+#include "mplib/planning_world.h"
 
 #include "fcl/geometry/octree/octree.h"
-#include "fcl_model.h"
-#include "macros_utils.hpp"
-#include "urdf_utils.h"
+#include "mplib/fcl_model.h"
+#include "mplib/macros_utils.h"
+#include "mplib/urdf_utils.h"
 
 #define DEFINE_TEMPLATE_PW(DATATYPE)         \
   template class PlanningWorldTpl<DATATYPE>; \

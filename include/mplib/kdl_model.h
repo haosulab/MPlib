@@ -15,7 +15,7 @@
 #include <kdl/utilities/svd_eigen_HH.hpp>
 #include <urdf_parser/urdf_parser.h>
 
-#include "macros_utils.hpp"
+#include "macros_utils.h"
 #include "urdf_utils.h"
 
 /**

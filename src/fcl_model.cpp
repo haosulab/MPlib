@@ -1,4 +1,4 @@
-#include "fcl_model.h"
+#include "mplib/fcl_model.h"
 
 #include <algorithm>
 
@@ -6,7 +6,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
-#include "urdf_utils.h"
+#include "mplib/urdf_utils.h"
 
 #define DEFINE_TEMPLATE_FM(DATATYPE) template class FCLModelTpl<DATATYPE>;
 

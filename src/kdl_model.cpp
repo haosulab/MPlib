@@ -1,4 +1,4 @@
-#include "kdl_model.h"
+#include "mplib/kdl_model.h"
 
 #define DEFINE_TEMPLATE_FM(DATATYPE) template class KDLModelTpl<DATATYPE>;
 

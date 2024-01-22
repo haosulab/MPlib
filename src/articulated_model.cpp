@@ -1,4 +1,4 @@
-#include "articulated_model.h"
+#include "mplib/articulated_model.h"
 
 #include <algorithm>
 #include <cmath>
@@ -14,12 +14,12 @@
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/algorithm/rnea.hpp>
 
+#include "mplib/urdf_utils.h"
 #include "pinocchio/multibody/joint/fwd.hpp"
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/parsers/urdf/geometry.hxx"
 #include "pinocchio/parsers/urdf/model.hxx"
 #include "pinocchio/parsers/utils.hpp"
-#include "urdf_utils.h"
 
 #define DEFINE_TEMPLATE_AM(DATATYPE) template class ArticulatedModelTpl<DATATYPE>;
 
