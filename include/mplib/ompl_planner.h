@@ -22,6 +22,7 @@
 #include <pinocchio/fwd.hpp>
 
 #include "color_printing.h"
+#include "macros_utils.h"
 #include "planning_world.h"
 #include "types.h"
 
@@ -117,6 +118,9 @@ VectorXd remove_fixed_joints(const FixedJoints &fixed_joints, const VectorXd &st
 
 VectorXd add_fixed_joints(const FixedJoints &fixed_joints, const VectorXd &state);
 
+// ValidityCheckerTplPtr
+MPLIB_CLASS_TEMPLATE_FORWARD(ValidityCheckerTpl);
+
 template <typename S>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
   PlanningWorldTplPtr<S> world_;
@@ -166,13 +170,14 @@ class GeneralConstraint : public ob::Constraint {
   }
 };
 
-template <typename S>
-using ValidityCheckerTplPtr = std::shared_ptr<ValidityCheckerTpl<S>>;
-
-using ValidityCheckerdPtr = ValidityCheckerTplPtr<double>;
-using ValidityCheckerfPtr = ValidityCheckerTplPtr<float>;
-using ValidityCheckerd = ValidityCheckerTpl<double>;
+// Common Type Alias ===================================================================
 using ValidityCheckerf = ValidityCheckerTpl<float>;
+using ValidityCheckerd = ValidityCheckerTpl<double>;
+using ValidityCheckerfPtr = ValidityCheckerTplPtr<float>;
+using ValidityCheckerdPtr = ValidityCheckerTplPtr<double>;
+
+// OMPLPlannerTplPtr
+MPLIB_CLASS_TEMPLATE_FORWARD(OMPLPlannerTpl);
 
 /// OMPL Planner
 template <typename S>
@@ -275,12 +280,10 @@ class OMPLPlannerTpl {
       double constraint_tolerance = 1e-3);
 };
 
-template <typename S>
-using OMPLPlannerTplPtr = std::shared_ptr<ValidityCheckerTpl<S>>;
-
-using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
-using OMPLPlannerTplfPtr = OMPLPlannerTplPtr<float>;
-using OMPLPlannerTpld = OMPLPlannerTpl<double>;
+// Common Type Alias ===================================================================
 using OMPLPlannerTplf = OMPLPlannerTpl<float>;
+using OMPLPlannerTpld = OMPLPlannerTpl<double>;
+using OMPLPlannerTplfPtr = OMPLPlannerTplPtr<float>;
+using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
 
 }  // namespace mplib::ompl

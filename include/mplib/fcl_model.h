@@ -13,9 +13,13 @@
 #include "fcl/narrowphase/collision_request.h"
 #include "fcl/narrowphase/collision_result.h"
 #include "fcl/narrowphase/gjk_solver_type.h"
+#include "macros_utils.h"
 #include "types.h"
 
 namespace mplib::fcl {
+
+// FCLModelTplPtr
+MPLIB_CLASS_TEMPLATE_FORWARD(FCLModelTpl);
 
 /**
  * FCL collision model of an articulation
@@ -128,12 +132,10 @@ class FCLModelTpl {
                                                                1e-6));
 };
 
-template <typename S>
-using FCLModelTplPtr = std::shared_ptr<FCLModelTpl<S>>;
-
-using FCLModeld = FCLModelTpl<double>;
+// Common Type Alias ===================================================================
 using FCLModelf = FCLModelTpl<float>;
-using FCLModeldPtr = FCLModelTplPtr<double>;
+using FCLModeld = FCLModelTpl<double>;
 using FCLModelfPtr = FCLModelTplPtr<float>;
+using FCLModeldPtr = FCLModelTplPtr<double>;
 
 }  // namespace mplib::fcl

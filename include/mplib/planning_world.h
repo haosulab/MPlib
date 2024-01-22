@@ -11,6 +11,9 @@
 
 namespace mplib {
 
+// WorldCollisionResultTplPtr
+MPLIB_STRUCT_TEMPLATE_FORWARD(WorldCollisionResultTpl);
+
 /// Result of the collision checking.
 template <typename S>
 struct WorldCollisionResultTpl {
@@ -22,13 +25,14 @@ struct WorldCollisionResultTpl {
       link_name2;               ///< link name of the second object in collision
 };
 
-template <typename T>
-using WorldCollisionResultTplPtr = std::shared_ptr<WorldCollisionResultTpl<T>>;
-
-using WorldCollisionResultd = WorldCollisionResultTpl<double>;
+// Common Type Alias ===================================================================
 using WorldCollisionResultf = WorldCollisionResultTpl<float>;
-using WorldCollisionResultdPtr = WorldCollisionResultTplPtr<double>;
+using WorldCollisionResultd = WorldCollisionResultTpl<double>;
 using WorldCollisionResultfPtr = WorldCollisionResultTplPtr<float>;
+using WorldCollisionResultdPtr = WorldCollisionResultTplPtr<double>;
+
+// PlanningWorldTplPtr
+MPLIB_CLASS_TEMPLATE_FORWARD(PlanningWorldTpl);
 
 /// Planning world for collision checking
 template <typename S>
@@ -295,12 +299,10 @@ class PlanningWorldTpl {
       size_t index, const CollisionRequest &request = CollisionRequest());
 };
 
-template <typename T>
-using PlanningWorldTplPtr = std::shared_ptr<PlanningWorldTpl<T>>;
-
-using PlanningWorldd = PlanningWorldTpl<double>;
+// Common Type Alias ===================================================================
 using PlanningWorldf = PlanningWorldTpl<float>;
-using PlanningWorlddPtr = PlanningWorldTplPtr<double>;
+using PlanningWorldd = PlanningWorldTpl<double>;
 using PlanningWorldfPtr = PlanningWorldTplPtr<float>;
+using PlanningWorlddPtr = PlanningWorldTplPtr<double>;
 
 }  // namespace mplib

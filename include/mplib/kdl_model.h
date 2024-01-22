@@ -15,10 +15,14 @@
 #include <kdl/utilities/svd_eigen_HH.hpp>
 #include <urdf_parser/urdf_parser.h>
 
+#include "macros_utils.h"
 #include "types.h"
 #include "urdf_utils.h"
 
 namespace mplib::kdl {
+
+// KDLModelTplPtr
+MPLIB_CLASS_TEMPLATE_FORWARD(KDLModelTpl);
 
 /**
  * KDL model of an articulation
@@ -58,12 +62,10 @@ class KDLModelTpl {
                                          const VectorX<S> &q_max);
 };
 
-template <typename T>
-using KDLModelTplPtr = std::shared_ptr<KDLModelTpl<T>>;
-
-using KDLModeld = KDLModelTpl<double>;
+// Common Type Alias ===================================================================
 using KDLModelf = KDLModelTpl<float>;
-using KDLModeldPtr = KDLModelTplPtr<double>;
+using KDLModeld = KDLModelTpl<double>;
 using KDLModelfPtr = KDLModelTplPtr<float>;
+using KDLModeldPtr = KDLModelTplPtr<double>;
 
 }  // namespace mplib::kdl

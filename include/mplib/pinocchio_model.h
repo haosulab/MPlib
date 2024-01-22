@@ -15,6 +15,9 @@
 
 namespace mplib::pinocchio {
 
+// PinocchioModelTplPtr
+MPLIB_CLASS_TEMPLATE_FORWARD(PinocchioModelTpl);
+
 /**
  * Pinocchio model of an articulation
  *
@@ -481,12 +484,10 @@ class PinocchioModelTpl {
       const int &maxIter = 1000, const double &dt = 1e-1, const double &damp = 1e-12);
 };
 
-template <typename T>
-using PinocchioModelTplPtr = std::shared_ptr<PinocchioModelTpl<T>>;
-
-using PinocchioModeld = PinocchioModelTpl<double>;
+// Common Type Alias ===================================================================
 using PinocchioModelf = PinocchioModelTpl<float>;
-using PinocchioModeldPtr = PinocchioModelTplPtr<double>;
+using PinocchioModeld = PinocchioModelTpl<double>;
 using PinocchioModelfPtr = PinocchioModelTplPtr<float>;
+using PinocchioModeldPtr = PinocchioModelTplPtr<double>;
 
 }  // namespace mplib::pinocchio

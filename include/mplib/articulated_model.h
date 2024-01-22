@@ -2,10 +2,14 @@
 
 #include "color_printing.h"
 #include "fcl_model.h"
+#include "macros_utils.h"
 #include "pinocchio_model.h"
 #include "types.h"
 
 namespace mplib {
+
+// ArticulatedModelTplPtr
+MPLIB_CLASS_TEMPLATE_FORWARD(ArticulatedModelTpl);
 
 /**
  * Supports initialization from URDF and SRDF files, and provides access to
@@ -174,12 +178,10 @@ class ArticulatedModelTpl {
   Vector7<S> getBasePose() { return base_pose_; }
 };
 
-template <typename T>
-using ArticulatedModelTplPtr = std::shared_ptr<ArticulatedModelTpl<T>>;
-
-using ArticulatedModeld = ArticulatedModelTpl<double>;
+// Common Type Alias ===================================================================
 using ArticulatedModelf = ArticulatedModelTpl<float>;
-using ArticulatedModeldPtr = ArticulatedModelTplPtr<double>;
+using ArticulatedModeld = ArticulatedModelTpl<double>;
 using ArticulatedModelfPtr = ArticulatedModelTplPtr<float>;
+using ArticulatedModeldPtr = ArticulatedModelTplPtr<double>;
 
 }  // namespace mplib
