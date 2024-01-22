@@ -33,7 +33,7 @@ void build_pyompl(py::module &m_all) {
       m, "OMPLPlanner", DOC(OMPLPlannerTpl));
 
   PyOMPLPlanner
-      .def(py::init<const PlanningWorldTpl_ptr<DATATYPE> &, int>(), py::arg("world"),
+      .def(py::init<const PlanningWorldTplPtr<DATATYPE> &, int>(), py::arg("world"),
            py::arg("robot_idx") = 0, DOC(OMPLPlannerTpl, OMPLPlannerTpl))
       .def("plan", &OMPLPlanner::plan, py::arg("start_state"), py::arg("goal_states"),
            py::arg("planner_name") = "RRTConnect", py::arg("time") = 1.0,

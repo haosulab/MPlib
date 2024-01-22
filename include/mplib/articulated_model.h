@@ -176,9 +176,9 @@ class ArticulatedModelTpl {
 };
 
 template <typename T>
-using ArticulatedModelTpl_ptr = std::shared_ptr<ArticulatedModelTpl<T>>;
+using ArticulatedModelTplPtr = std::shared_ptr<ArticulatedModelTpl<T>>;
 
 using ArticulatedModeld = ArticulatedModelTpl<double>;
 using ArticulatedModelf = ArticulatedModelTpl<float>;
-using ArticulatedModeld_ptr = ArticulatedModelTpl_ptr<double>;
-using ArticulatedModelf_ptr = ArticulatedModelTpl_ptr<float>;
+using ArticulatedModeldPtr = ArticulatedModelTplPtr<double>;
+using ArticulatedModelfPtr = ArticulatedModelTplPtr<float>;

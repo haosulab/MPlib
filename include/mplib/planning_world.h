@@ -20,12 +20,12 @@ struct WorldCollisionResultTpl {
 };
 
 template <typename T>
-using WorldCollisionResultTpl_ptr = std::shared_ptr<WorldCollisionResultTpl<T>>;
+using WorldCollisionResultTplPtr = std::shared_ptr<WorldCollisionResultTpl<T>>;
 
 using WorldCollisionResultd = WorldCollisionResultTpl<double>;
 using WorldCollisionResultf = WorldCollisionResultTpl<float>;
-using WorldCollisionResultd_ptr = WorldCollisionResultTpl_ptr<double>;
-using WorldCollisionResultf_ptr = WorldCollisionResultTpl_ptr<float>;
+using WorldCollisionResultdPtr = WorldCollisionResultTplPtr<double>;
+using WorldCollisionResultfPtr = WorldCollisionResultTplPtr<float>;
 
 /// Planning world for collision checking
 template <typename DATATYPE>
@@ -36,31 +36,31 @@ class PlanningWorldTpl {
   using CollisionResult = fcl::CollisionResult<DATATYPE>;
 
   using CollisionGeometry = fcl::CollisionGeometry<DATATYPE>;
-  using CollisionGeometry_ptr = std::shared_ptr<CollisionGeometry>;
+  using CollisionGeometryPtr = std::shared_ptr<CollisionGeometry>;
 
   using CollisionObject = fcl::CollisionObject<DATATYPE>;
-  using CollisionObject_ptr = std::shared_ptr<CollisionObject>;
+  using CollisionObjectPtr = std::shared_ptr<CollisionObject>;
 
   using DynamicAABBTreeCollisionManager =
       fcl::DynamicAABBTreeCollisionManager<DATATYPE>;
-  using BroadPhaseCollisionManager_ptr =
+  using BroadPhaseCollisionManagerPtr =
       std::shared_ptr<fcl::BroadPhaseCollisionManager<DATATYPE>>;
 
   using ArticulatedModel = ArticulatedModelTpl<DATATYPE>;
-  using ArticulatedModel_ptr = ArticulatedModelTpl_ptr<DATATYPE>;
+  using ArticulatedModelPtr = ArticulatedModelTplPtr<DATATYPE>;
 
   using WorldCollisionResult = WorldCollisionResultTpl<DATATYPE>;
-  using WorldCollisionResult_ptr = WorldCollisionResultTpl_ptr<DATATYPE>;
+  using WorldCollisionResultPtr = WorldCollisionResultTplPtr<DATATYPE>;
 
-  std::vector<ArticulatedModel_ptr> articulations_;
+  std::vector<ArticulatedModelPtr> articulations_;
   std::vector<std::string> articulation_names_;
   // std::vector<bool> articulation_flags;
-  std::unordered_map<std::string, CollisionObject_ptr> normal_object_map_;
+  std::unordered_map<std::string, CollisionObjectPtr> normal_object_map_;
   int move_articulation_id_, attach_link_id_;
-  CollisionObject_ptr point_cloud_, attached_tool_;
+  CollisionObjectPtr point_cloud_, attached_tool_;
   bool has_point_cloud_, has_attach_;
   Transform3 attach_to_link_pose_;
-  // BroadPhaseCollisionManager_ptr normal_manager;
+  // BroadPhaseCollisionManagerPtr normal_manager;
 
  public:
   bool use_point_cloud_, use_attach_;  // expose to python
@@ -74,9 +74,9 @@ class PlanningWorldTpl {
    * @param normal_object_names: name of the normal objects
    * @param plan_articulation_id: id of the articulated model that is used for planning
    */
-  PlanningWorldTpl(const std::vector<ArticulatedModel_ptr> &articulations,
+  PlanningWorldTpl(const std::vector<ArticulatedModelPtr> &articulations,
                    const std::vector<std::string> &articulation_names,
-                   const std::vector<CollisionObject_ptr> &normal_objects,
+                   const std::vector<CollisionObjectPtr> &normal_objects,
                    const std::vector<std::string> &normal_object_names,
                    int plan_articulation_id = 0);
 
@@ -87,15 +87,15 @@ class PlanningWorldTpl {
    *
    * @return: list of articulated models
    */
-  std::vector<ArticulatedModel_ptr> getArticulations(void) { return articulations_; }
+  std::vector<ArticulatedModelPtr> getArticulations(void) { return articulations_; }
 
   /**
    * Get the list of non-articulated collision objects.
    *
    * @return: list of non-articulated collision objects
    */
-  std::vector<CollisionObject_ptr> getNormalObjects(void) {
-    std::vector<CollisionObject_ptr> ret;
+  std::vector<CollisionObjectPtr> getNormalObjects(void) {
+    std::vector<CollisionObjectPtr> ret;
     for (const auto &itm : normal_object_map_) ret.push_back(itm.second);
     return ret;
   }
@@ -115,7 +115,7 @@ class PlanningWorldTpl {
    * @param collision_object: the non-articulated collision object to be added
    */
   void setNormalObject(const std::string &name,
-                       const CollisionObject_ptr &collision_object) {
+                       const CollisionObjectPtr &collision_object) {
     normal_object_map_[name] = collision_object;
   }
 
@@ -174,7 +174,7 @@ class PlanningWorldTpl {
    * @param pose: pose of the attached object w.r.t. the link it's attached to.
    *              [x, y, z, qw, qx, qy, qz]
    */
-  void updateAttachedTool(CollisionGeometry_ptr p_geom, int link_id,
+  void updateAttachedTool(CollisionGeometryPtr p_geom, int link_id,
                           const Vector7 &pose);
 
   /**
@@ -221,7 +221,7 @@ class PlanningWorldTpl {
    * @param model: articulated model to be added
    * @param name: name of the articulated model
    */
-  void addArticulation(const ArticulatedModel_ptr &model,
+  void addArticulation(const ArticulatedModelPtr &model,
                        const std::string &name) {  // bool const &planning = true) {
     articulations_.push_back(model);
     articulation_names_.push_back(name);
@@ -235,7 +235,7 @@ class PlanningWorldTpl {
    * @param names: list of names of the articulated models
    */
   void addArticulations(
-      const std::vector<ArticulatedModel_ptr> &models,
+      const std::vector<ArticulatedModelPtr> &models,
       const std::vector<std::string> &names) {  // std::vector<bool> const &planning) {
     articulations_.insert(articulations_.end(), models.begin(), models.end());
     articulation_names_.insert(articulation_names_.end(), names.begin(), names.end());
@@ -296,9 +296,9 @@ class PlanningWorldTpl {
 };
 
 template <typename T>
-using PlanningWorldTpl_ptr = std::shared_ptr<PlanningWorldTpl<T>>;
+using PlanningWorldTplPtr = std::shared_ptr<PlanningWorldTpl<T>>;
 
 using PlanningWorldd = PlanningWorldTpl<double>;
 using PlanningWorldf = PlanningWorldTpl<float>;
-using PlanningWorldd_ptr = PlanningWorldTpl_ptr<double>;
-using PlanningWorldf_ptr = PlanningWorldTpl_ptr<float>;
+using PlanningWorlddPtr = PlanningWorldTplPtr<double>;
+using PlanningWorldfPtr = PlanningWorldTplPtr<float>;

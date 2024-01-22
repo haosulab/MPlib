@@ -18,11 +18,11 @@ namespace py = pybind11;
 using DATATYPE = double;
 
 using CollisionObject = fcl::CollisionObject<DATATYPE>;
-using CollisionObject_ptr = std::shared_ptr<CollisionObject>;
+using CollisionObjectPtr = std::shared_ptr<CollisionObject>;
 
 using PlanningWorld = PlanningWorldTpl<DATATYPE>;
 using WorldCollisionResult = WorldCollisionResultTpl<DATATYPE>;
-using ArticulatedModel_ptr = ArticulatedModelTpl_ptr<DATATYPE>;
+using ArticulatedModelPtr = ArticulatedModelTplPtr<DATATYPE>;
 
 void build_planning_world(py::module &m_all) {
   auto m = m_all.def_submodule("planning_world");
@@ -30,9 +30,9 @@ void build_planning_world(py::module &m_all) {
       m, "PlanningWorld", DOC(PlanningWorldTpl));
 
   PyPlanningWorld
-      .def(py::init<const std::vector<ArticulatedModel_ptr> &,
+      .def(py::init<const std::vector<ArticulatedModelPtr> &,
                     const std::vector<std::string> &,
-                    const std::vector<CollisionObject_ptr> &,
+                    const std::vector<CollisionObjectPtr> &,
                     const std::vector<std::string> &, const int &>(),
            py::arg("articulations"), py::arg("articulation_names"),
            py::arg("normal_objects"), py::arg("normal_object_names"),

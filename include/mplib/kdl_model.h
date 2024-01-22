@@ -56,9 +56,9 @@ class KDLModelTpl {
 };
 
 template <typename T>
-using KDLModelTpl_ptr = std::shared_ptr<KDLModelTpl<T>>;
+using KDLModelTplPtr = std::shared_ptr<KDLModelTpl<T>>;
 
 using KDLModeld = KDLModelTpl<double>;
 using KDLModelf = KDLModelTpl<float>;
-using KDLModeld_ptr = KDLModelTpl_ptr<double>;
-using KDLModelf_ptr = KDLModelTpl_ptr<float>;
+using KDLModeldPtr = KDLModelTplPtr<double>;
+using KDLModelfPtr = KDLModelTplPtr<float>;

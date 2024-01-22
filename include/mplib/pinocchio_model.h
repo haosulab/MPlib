@@ -486,9 +486,9 @@ class PinocchioModelTpl {
 };
 
 template <typename T>
-using PinocchioModelTpl_ptr = std::shared_ptr<PinocchioModelTpl<T>>;
+using PinocchioModelTplPtr = std::shared_ptr<PinocchioModelTpl<T>>;
 
 using PinocchioModeld = PinocchioModelTpl<double>;
 using PinocchioModelf = PinocchioModelTpl<float>;
-using PinocchioModeld_ptr = PinocchioModelTpl_ptr<double>;
-using PinocchioModelf_ptr = PinocchioModelTpl_ptr<float>;
+using PinocchioModeldPtr = PinocchioModelTplPtr<double>;
+using PinocchioModelfPtr = PinocchioModelTplPtr<float>;

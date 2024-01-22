@@ -25,7 +25,7 @@ void FCLModelTpl<DATATYPE>::dfs_parse_tree(const urdf::LinkConstSharedPtr &link,
   if (link->collision) {
     for (auto geom : link->collision_array) {
       auto geom_model = geom->geometry;
-      CollisionGeometry_ptr collision_geometry = nullptr;
+      CollisionGeometryPtr collision_geometry = nullptr;
       auto pose = Transform3::Identity();
       if (geom_model->type == urdf::Geometry::MESH) {
         const urdf::MeshSharedPtr urdf_mesh =
@@ -66,7 +66,7 @@ void FCLModelTpl<DATATYPE>::dfs_parse_tree(const urdf::LinkConstSharedPtr &link,
 
       if (!collision_geometry)
         throw std::invalid_argument("The polyhedron retrived is empty");
-      CollisionObject_ptr obj(new CollisionObject(collision_geometry, pose));
+      CollisionObjectPtr obj(new CollisionObject(collision_geometry, pose));
 
       collision_objects_.push_back(obj);
       // collision_link_index.push_back(frame_id);

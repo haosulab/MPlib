@@ -31,33 +31,33 @@
 
 #ifndef USE_TEMPLATE_FCL
 #define USE_TEMPLATE_FCL
-#define DEFINE_TEMPLATE_FCL(DATATYPE)                               \
-  using OBBRSS = fcl::OBBRSS<DATATYPE>;                             \
-  using CollisionGeometry = fcl::CollisionGeometry<DATATYPE>;       \
-  using BVHModel_OBBRSS = fcl::BVHModel<OBBRSS>;                    \
-  using Convex = fcl::Convex<DATATYPE>;                             \
-  using Capsule = fcl::Capsule<DATATYPE>;                           \
-  using Cylinder = fcl::Cylinder<DATATYPE>;                         \
-  using Box = fcl::Box<DATATYPE>;                                   \
-  using Sphere = fcl::Sphere<DATATYPE>;                             \
-  using Cone = fcl::Cone<DATATYPE>;                                 \
-  using Plane = fcl::Plane<DATATYPE>;                               \
-  using CollisionObject = fcl::CollisionObject<DATATYPE>;           \
-  using CollisionRequest = fcl::CollisionRequest<DATATYPE>;         \
-  using CollisionResult = fcl::CollisionResult<DATATYPE>;           \
-  using DistanceRequest = fcl::DistanceRequest<DATATYPE>;           \
-  using DistanceResult = fcl::DistanceResult<DATATYPE>;             \
-  using Triangle = fcl::Triangle;                                   \
-  using ContactPoint = fcl::ContactPoint<DATATYPE>;                 \
-  using Contact = fcl::Contact<DATATYPE>;                           \
-  using CostSource = fcl::CostSource<DATATYPE>;                     \
-  using GJKSolverType = fcl::GJKSolverType;                         \
-  using DynamicAABBTreeCollisionManager =                           \
-      fcl::DynamicAABBTreeCollisionManager<DATATYPE>;               \
-  using BroadPhaseCollisionManager_ptr =                            \
-      std::shared_ptr<fcl::BroadPhaseCollisionManager<DATATYPE>>;   \
-  using CollisionGeometry_ptr = std::shared_ptr<CollisionGeometry>; \
-  using CollisionObject_ptr = std::shared_ptr<CollisionObject>;     \
+#define DEFINE_TEMPLATE_FCL(DATATYPE)                              \
+  using OBBRSS = fcl::OBBRSS<DATATYPE>;                            \
+  using CollisionGeometry = fcl::CollisionGeometry<DATATYPE>;      \
+  using BVHModel_OBBRSS = fcl::BVHModel<OBBRSS>;                   \
+  using Convex = fcl::Convex<DATATYPE>;                            \
+  using Capsule = fcl::Capsule<DATATYPE>;                          \
+  using Cylinder = fcl::Cylinder<DATATYPE>;                        \
+  using Box = fcl::Box<DATATYPE>;                                  \
+  using Sphere = fcl::Sphere<DATATYPE>;                            \
+  using Cone = fcl::Cone<DATATYPE>;                                \
+  using Plane = fcl::Plane<DATATYPE>;                              \
+  using CollisionObject = fcl::CollisionObject<DATATYPE>;          \
+  using CollisionRequest = fcl::CollisionRequest<DATATYPE>;        \
+  using CollisionResult = fcl::CollisionResult<DATATYPE>;          \
+  using DistanceRequest = fcl::DistanceRequest<DATATYPE>;          \
+  using DistanceResult = fcl::DistanceResult<DATATYPE>;            \
+  using Triangle = fcl::Triangle;                                  \
+  using ContactPoint = fcl::ContactPoint<DATATYPE>;                \
+  using Contact = fcl::Contact<DATATYPE>;                          \
+  using CostSource = fcl::CostSource<DATATYPE>;                    \
+  using GJKSolverType = fcl::GJKSolverType;                        \
+  using DynamicAABBTreeCollisionManager =                          \
+      fcl::DynamicAABBTreeCollisionManager<DATATYPE>;              \
+  using BroadPhaseCollisionManagerPtr =                            \
+      std::shared_ptr<fcl::BroadPhaseCollisionManager<DATATYPE>>;  \
+  using CollisionGeometryPtr = std::shared_ptr<CollisionGeometry>; \
+  using CollisionObjectPtr = std::shared_ptr<CollisionObject>;     \
   using OcTree = fcl::OcTree<DATATYPE>;
 #endif
 

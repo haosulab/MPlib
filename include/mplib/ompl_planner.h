@@ -128,12 +128,12 @@ Eigen::VectorXd add_fixed_joints(const FixedJoints &fixed_joints,
 template <typename DATATYPE>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
   typedef Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1> VectorX;
-  PlanningWorldTpl_ptr<DATATYPE> world_;
+  PlanningWorldTplPtr<DATATYPE> world_;
   bool is_rvss_;
   FixedJoints fixed_joints_;
 
  public:
-  ValidityCheckerTpl(PlanningWorldTpl_ptr<DATATYPE> world,
+  ValidityCheckerTpl(PlanningWorldTplPtr<DATATYPE> world,
                      const ob::SpaceInformationPtr &si, bool is_rvss,
                      const FixedJoints &fixed_joints = FixedJoints())
       : ob::StateValidityChecker(si),
@@ -180,38 +180,38 @@ class GeneralConstraint : public ob::Constraint {
 };
 
 template <typename DATATYPE>
-using ValidityCheckerTpl_ptr = std::shared_ptr<ValidityCheckerTpl<DATATYPE>>;
+using ValidityCheckerTplPtr = std::shared_ptr<ValidityCheckerTpl<DATATYPE>>;
 
-using ValidityCheckerd_ptr = ValidityCheckerTpl_ptr<double>;
-using ValidityCheckerf_ptr = ValidityCheckerTpl_ptr<float>;
+using ValidityCheckerdPtr = ValidityCheckerTplPtr<double>;
+using ValidityCheckerfPtr = ValidityCheckerTplPtr<float>;
 using ValidityCheckerd = ValidityCheckerTpl<double>;
 using ValidityCheckerf = ValidityCheckerTpl<float>;
 
 /// OMPL Planner
 template <typename DATATYPE>
 class OMPLPlannerTpl {
-  typedef std::shared_ptr<ob::CompoundStateSpace> CompoundStateSpace_ptr;
-  typedef std::shared_ptr<ob::SpaceInformation> SpaceInformation_ptr;
-  typedef std::shared_ptr<ob::ProblemDefinition> ProblemDefinition_ptr;
+  typedef std::shared_ptr<ob::CompoundStateSpace> CompoundStateSpacePtr;
+  typedef std::shared_ptr<ob::SpaceInformation> SpaceInformationPtr;
+  typedef std::shared_ptr<ob::ProblemDefinition> ProblemDefinitionPtr;
 
   typedef ob::CompoundStateSpace CompoundStateSpace;
   typedef ob::SpaceInformation SpaceInformation;
   typedef ob::ProblemDefinition ProblemDefinition;
   using ValidityChecker = ValidityCheckerTpl<DATATYPE>;
-  using ValidityChecker_ptr = ValidityCheckerTpl_ptr<DATATYPE>;
+  using ValidityCheckerPtr = ValidityCheckerTplPtr<DATATYPE>;
 
   DEFINE_TEMPLATE_EIGEN(DATATYPE)
 
   std::shared_ptr<ob::RealVectorStateSpace> p_ambient_space_;
   std::shared_ptr<ob::ProjectedStateSpace> p_constrained_space_;
-  CompoundStateSpace_ptr cs_;
+  CompoundStateSpacePtr cs_;
   ob::StateSpacePtr state_space_;
   std::shared_ptr<ompl::geometric::SimpleSetup> ss_;
-  SpaceInformation_ptr p_compound_si_;
-  SpaceInformation_ptr p_constrained_si_;
-  SpaceInformation_ptr si_;
-  PlanningWorldTpl_ptr<DATATYPE> world_;
-  ValidityCheckerTpl_ptr<DATATYPE> valid_checker_;
+  SpaceInformationPtr p_compound_si_;
+  SpaceInformationPtr p_constrained_si_;
+  SpaceInformationPtr si_;
+  PlanningWorldTplPtr<DATATYPE> world_;
+  ValidityCheckerTplPtr<DATATYPE> valid_checker_;
   size_t dim_;
   std::vector<DATATYPE> lower_joint_limits_, upper_joint_limits_;
   std::vector<bool> is_revolute_;
@@ -239,7 +239,7 @@ class OMPLPlannerTpl {
    *
    * @param world: planning world
    */
-  OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world, int robot_idx = 0);
+  OMPLPlannerTpl(const PlanningWorldTplPtr<DATATYPE> &world, int robot_idx = 0);
 
   VectorX random_sample_nearby(const VectorX &start_state);
 
@@ -251,7 +251,7 @@ class OMPLPlannerTpl {
    */
   void build_compound_state_space(const FixedJoints &fixed_joints = FixedJoints());
 
-  PlanningWorldTpl_ptr<DATATYPE> get_world() { return world_; }
+  PlanningWorldTplPtr<DATATYPE> get_world() { return world_; }
 
   size_t get_dim() { return dim_; }
 
@@ -301,9 +301,9 @@ class OMPLPlannerTpl {
 };
 
 template <typename DATATYPE>
-using OMPLPlannerTpl_ptr = std::shared_ptr<ValidityCheckerTpl<DATATYPE>>;
+using OMPLPlannerTplPtr = std::shared_ptr<ValidityCheckerTpl<DATATYPE>>;
 
-using OMPLPlannerTpld_ptr = OMPLPlannerTpl_ptr<double>;
-using OMPLPlannerTplf_ptr = OMPLPlannerTpl_ptr<float>;
+using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
+using OMPLPlannerTplfPtr = OMPLPlannerTplPtr<float>;
 using OMPLPlannerTpld = OMPLPlannerTpl<double>;
 using OMPLPlannerTplf = OMPLPlannerTpl<float>;

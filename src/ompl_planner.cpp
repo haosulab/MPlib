@@ -162,7 +162,7 @@ void OMPLPlannerTpl<DATATYPE>::build_constrained_ambient_state_space(void) {
 }
 
 template <typename DATATYPE>
-OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(const PlanningWorldTpl_ptr<DATATYPE> &world,
+OMPLPlannerTpl<DATATYPE>::OMPLPlannerTpl(const PlanningWorldTplPtr<DATATYPE> &world,
                                          int robot_idx)
     : world_(world) {
   build_constrained_ambient_state_space();  // default is constrained space
