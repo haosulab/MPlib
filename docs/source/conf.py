@@ -19,6 +19,7 @@ extensions = [
   'sphinx.ext.autosummary',
   'sphinx.ext.duration',
   'sphinx.ext.napoleon',
+  'sphinx.ext.viewcode',
   "myst_parser",
 ]
 
