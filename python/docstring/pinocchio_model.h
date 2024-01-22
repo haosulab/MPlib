@@ -24,16 +24,16 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_PinocchioModelTpl =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl =
 R"doc(Pinocchio model of an articulation
 
 See https://github.com/stack-of-tasks/pinocchio)doc";
 
-static const char *__doc_PinocchioModelTpl_PinocchioModelTpl =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_PinocchioModelTpl =
 R"doc(
 )doc";
 
-static const char *__doc_PinocchioModelTpl_PinocchioModelTpl_2 =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_PinocchioModelTpl_2 =
 R"doc(
 Construct a Pinocchio model from the given URDF file.
 
@@ -41,7 +41,7 @@ Construct a Pinocchio model from the given URDF file.
 :param gravity: gravity vector
 :param verbose: print debug information)doc";
 
-static const char *__doc_PinocchioModelTpl_computeForwardKinematics =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_computeForwardKinematics =
 R"doc(
 Compute forward kinematics for the given joint configuration.
 
@@ -50,7 +50,7 @@ If you want the result you need to call ``get_link_pose()``
 :param qpos: joint configuration. Needs to be full configuration, not just the
     movegroup joints.)doc";
 
-static const char *__doc_PinocchioModelTpl_computeFullJacobian =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_computeFullJacobian =
 R"doc(
 Compute the full jacobian for the given joint configuration.
 
@@ -59,7 +59,7 @@ If you want the result you need to call ``get_link_jacobian()``
 :param qpos: joint configuration. Needs to be full configuration, not just the
     movegroup joints.)doc";
 
-static const char *__doc_PinocchioModelTpl_computeIKCLIK =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_computeIKCLIK =
 R"doc(
 Compute the inverse kinematics using close loop inverse kinematics.
 
@@ -75,7 +75,7 @@ Compute the inverse kinematics using close loop inverse kinematics.
 :param damp: damping for the CLIK
 :return: joint configuration)doc";
 
-static const char *__doc_PinocchioModelTpl_computeIKCLIKJL =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_computeIKCLIKJL =
 R"doc(
 The same as ``compute_IK_CLIK()`` but with it clamps the joint configuration to
 the given limits.
@@ -92,7 +92,7 @@ the given limits.
 :param damp: damping for the CLIK
 :return: joint configuration)doc";
 
-static const char *__doc_PinocchioModelTpl_computeSingleLinkJacobian =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_computeSingleLinkJacobian =
 R"doc(
 Compute the jacobian of the given link.
 
@@ -104,7 +104,7 @@ Compute the jacobian of the given link.
     frame of the link
 :return: 6 x n jacobian of the link)doc";
 
-static const char *__doc_PinocchioModelTpl_getChainJointIndex =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getChainJointIndex =
 R"doc(
 Get the joint indices of the joints in the chain from the root to the given
 link.
@@ -113,7 +113,7 @@ link.
     the default order)
 :return: joint indices of the joints in the chain)doc";
 
-static const char *__doc_PinocchioModelTpl_getChainJointName =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getChainJointName =
 R"doc(
 Get the joint names of the joints in the chain from the root to the given link.
 
@@ -121,11 +121,11 @@ Get the joint names of the joints in the chain from the root to the given link.
     the default order)
 :return: joint names of the joints in the chain)doc";
 
-static const char *__doc_PinocchioModelTpl_getData =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getData =
 R"doc(
 )doc";
 
-static const char *__doc_PinocchioModelTpl_getJointDim =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointDim =
 R"doc(
 Get the dimension of the joint with the given index.
 
@@ -134,7 +134,7 @@ Get the dimension of the joint with the given index.
     constructor or the default order
 :return: dimension of the joint with the given index)doc";
 
-static const char *__doc_PinocchioModelTpl_getJointDims =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointDims =
 R"doc(
 Get the dimension of all the joints. Again, Pinocchio might split a joint into
 multiple joints.
@@ -143,7 +143,7 @@ multiple joints.
     passed to the constructor or the default order
 :return: dimention of the joints)doc";
 
-static const char *__doc_PinocchioModelTpl_getJointId =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointId =
 R"doc(
 Get the id of the joint with the given index.
 
@@ -152,7 +152,7 @@ Get the id of the joint with the given index.
     constructor or the default order
 :return: id of the joint with the given index)doc";
 
-static const char *__doc_PinocchioModelTpl_getJointIds =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointIds =
 R"doc(
 Get the id of all the joints. Again, Pinocchio might split a joint into multiple
 joints.
@@ -161,7 +161,7 @@ joints.
     the constructor or the default order
 :return: id of the joints)doc";
 
-static const char *__doc_PinocchioModelTpl_getJointLimit =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointLimit =
 R"doc(
 Get the limit of the joint with the given index.
 
@@ -170,7 +170,7 @@ Get the limit of the joint with the given index.
     constructor or the default order
 :return: limit of the joint with the given index)doc";
 
-static const char *__doc_PinocchioModelTpl_getJointLimits =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointLimits =
 R"doc(
 Get the limit of all the joints. Again, Pinocchio might split a joint into
 multiple joints.
@@ -179,7 +179,7 @@ multiple joints.
     to the constructor or the default order
 :return: limit of the joints)doc";
 
-static const char *__doc_PinocchioModelTpl_getJointNames =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointNames =
 R"doc(
 Get the name of all the joints. Again, Pinocchio might split a joint into
 multiple joints.
@@ -188,11 +188,11 @@ multiple joints.
     to the constructor or the default order
 :return: name of the joints)doc";
 
-static const char *__doc_PinocchioModelTpl_getJointPose =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointPose =
 R"doc(
 )doc";
 
-static const char *__doc_PinocchioModelTpl_getJointType =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointType =
 R"doc(
 Get the type of the joint with the given index.
 
@@ -201,7 +201,7 @@ Get the type of the joint with the given index.
     constructor or the default order
 :return: type of the joint with the given index)doc";
 
-static const char *__doc_PinocchioModelTpl_getJointTypes =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointTypes =
 R"doc(
 Get the type of all the joints. Again, Pinocchio might split a joint into
 multiple joints.
@@ -210,13 +210,13 @@ multiple joints.
     to the constructor or the default order
 :return: type of the joints)doc";
 
-static const char *__doc_PinocchioModelTpl_getLeafLinks =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getLeafLinks =
 R"doc(
 Get the leaf links (links without child) of the kinematic tree.
 
 :return: list of leaf links)doc";
 
-static const char *__doc_PinocchioModelTpl_getLinkJacobian =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getLinkJacobian =
 R"doc(
 Get the jacobian of the given link.
 
@@ -226,7 +226,7 @@ Get the jacobian of the given link.
     link, otherwise it is expressed in the world frame
 :return: 6 x n jacobian of the link)doc";
 
-static const char *__doc_PinocchioModelTpl_getLinkNames =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getLinkNames =
 R"doc(
 Get the name of all the links.
 
@@ -234,7 +234,7 @@ Get the name of all the links.
     to the constructor or the default order
 :return: name of the links)doc";
 
-static const char *__doc_PinocchioModelTpl_getLinkPose =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getLinkPose =
 R"doc(
 Get the pose of the given link.
 
@@ -242,15 +242,15 @@ Get the pose of the given link.
     the default order)
 :return: pose of the link [x, y, z, qw, qx, qy, qz])doc";
 
-static const char *__doc_PinocchioModelTpl_getModel =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getModel =
 R"doc(
 )doc";
 
-static const char *__doc_PinocchioModelTpl_getNFrames =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getNFrames =
 R"doc(
 )doc";
 
-static const char *__doc_PinocchioModelTpl_getParent =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getParent =
 R"doc(
 Get the parent of the joint with the given index.
 
@@ -259,7 +259,7 @@ Get the parent of the joint with the given index.
     constructor or the default order
 :return: parent of the joint with the given index)doc";
 
-static const char *__doc_PinocchioModelTpl_getParents =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getParents =
 R"doc(
 Get the parent of all the joints. Again, Pinocchio might split a joint into
 multiple joints.
@@ -268,26 +268,26 @@ multiple joints.
     passed to the constructor or the default order
 :return: parent of the joints)doc";
 
-static const char *__doc_PinocchioModelTpl_getRandomConfiguration =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getRandomConfiguration =
 R"doc(
 Get a random configuration.
 
 :return: random joint configuration)doc";
 
-static const char *__doc_PinocchioModelTpl_getSubtrees =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getSubtrees =
 R"doc(
 )doc";
 
-static const char *__doc_PinocchioModelTpl_getSupports =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getSupports =
 R"doc(
 )doc";
 
-static const char *__doc_PinocchioModelTpl_printFrames =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_printFrames =
 R"doc(
 Frame is a Pinocchio internal data type which is not supported outside this
 class.)doc";
 
-static const char *__doc_PinocchioModelTpl_setJointOrder =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_setJointOrder =
 R"doc(
 Pinocchio might have a different joint order or it might add additional joints.
 
@@ -296,7 +296,7 @@ the one you want.
 
 :param names: list of joint names in the order you want)doc";
 
-static const char *__doc_PinocchioModelTpl_setLinkOrder =
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_setLinkOrder =
 R"doc(
 Pinocchio might have a different link order or it might add additional links.
 

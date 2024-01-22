@@ -21,6 +21,8 @@
 #include "pinocchio/parsers/urdf/model.hxx"
 #include "pinocchio/parsers/utils.hpp"
 
+namespace mplib {
+
 #define DEFINE_TEMPLATE_AM(S) template class ArticulatedModelTpl<S>;
 
 DEFINE_TEMPLATE_AM(float)
@@ -30,7 +32,7 @@ DEFINE_TEMPLATE_AM(double)
 template <typename S>
 ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
                                             const std::string &srdf_filename,
-                                            const Vector3 &gravity,
+                                            const Vector3<S> &gravity,
                                             const std::vector<std::string> &joint_names,
                                             const std::vector<std::string> &link_names,
                                             const bool &verbose, const bool &convex)
@@ -45,7 +47,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
   pinocchio_model_.setJointOrder(user_joint_names_);
   fcl_model_.setLinkOrder(user_link_names_);
   fcl_model_.removeCollisionPairsFromSrdf(srdf_filename);
-  current_qpos_ = VectorX::Constant(pinocchio_model_.getModel().nv, 0);
+  current_qpos_ = VectorX<S>::Constant(pinocchio_model_.getModel().nv, 0);
   setMoveGroup(user_link_names_);
   setBasePose({0, 0, 0, 1, 0, 0, 0});  // initialize base pose to identity
 }
@@ -83,7 +85,7 @@ std::vector<std::string> ArticulatedModelTpl<S>::getMoveGroupJointName(void) {
 }
 
 template <typename S>
-void ArticulatedModelTpl<S>::setQpos(const VectorX &qpos, const bool &full) {
+void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, const bool &full) {
   if (full)
     current_qpos_ = qpos;
   else {
@@ -100,11 +102,11 @@ void ArticulatedModelTpl<S>::setQpos(const VectorX &qpos, const bool &full) {
   }
   pinocchio_model_.computeForwardKinematics(current_qpos_);
   if (verbose_) print_verbose("current_qpos ", current_qpos_);
-  std::vector<Transform3> link_pose;
+  std::vector<Transform3<S>> link_pose;
   for (size_t i = 0; i < user_link_names_.size(); i++) {
-    Vector7 pose_i = pinocchio_model_.getLinkPose(i);
-    Transform3 tmp_i;
-    tmp_i.linear() = Quaternion(pose_i[3], pose_i[4], pose_i[5], pose_i[6]).matrix();
+    Vector7<S> pose_i = pinocchio_model_.getLinkPose(i);
+    Transform3<S> tmp_i;
+    tmp_i.linear() = Quaternion<S>(pose_i[3], pose_i[4], pose_i[5], pose_i[6]).matrix();
     tmp_i.translation() = pose_i.head(3);
     tmp_i = base_tf_ * tmp_i;  // base_tf is the pose of the robot base
     link_pose.push_back(tmp_i);
@@ -113,12 +115,14 @@ void ArticulatedModelTpl<S>::setQpos(const VectorX &qpos, const bool &full) {
 }
 
 template <typename S>
-void ArticulatedModelTpl<S>::setBasePose(const Vector7 &pose) {
+void ArticulatedModelTpl<S>::setBasePose(const Vector7<S> &pose) {
   base_pose_ = pose;
   base_tf_.translation() = pose.head(3);
   base_tf_.linear() =
-      Eigen::Quaternion<S>(pose[3], pose[4], pose[5], pose[6]).toRotationMatrix();
+      Quaternion<S>(pose[3], pose[4], pose[5], pose[6]).toRotationMatrix();
   setQpos(
       current_qpos_,
       true);  // we don't need to update Qpos, but this also updates fcl, which we need
 }
+
+}  // namespace mplib

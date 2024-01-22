@@ -1,6 +1,9 @@
 #pragma once
 
 #include <iostream>
+#include <string>
+
+namespace mplib {
 
 const std::string red("\033[0;31m");
 const std::string green("\033[0;32m");
@@ -44,3 +47,5 @@ void print_verbose(Args... args) {
   std::cout << magenta;
   (std::cout << ... << args) << reset << std::endl;
 }
+
+}  // namespace mplib

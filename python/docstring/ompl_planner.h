@@ -24,60 +24,60 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_FixedJoint = R"doc()doc";
+static const char *__doc_mplib_ompl_FixedJoint = R"doc()doc";
 
-static const char *__doc_FixedJoint_FixedJoint =
+static const char *__doc_mplib_ompl_FixedJoint_FixedJoint =
 R"doc(
 )doc";
 
-static const char *__doc_FixedJoint_articulation_idx = R"doc()doc";
+static const char *__doc_mplib_ompl_FixedJoint_articulation_idx = R"doc()doc";
 
-static const char *__doc_FixedJoint_joint_idx = R"doc()doc";
+static const char *__doc_mplib_ompl_FixedJoint_joint_idx = R"doc()doc";
 
-static const char *__doc_FixedJoint_operator_lt =
+static const char *__doc_mplib_ompl_FixedJoint_operator_lt =
 R"doc(
 )doc";
 
-static const char *__doc_FixedJoint_value = R"doc()doc";
+static const char *__doc_mplib_ompl_FixedJoint_value = R"doc()doc";
 
-static const char *__doc_GeneralConstraint = R"doc()doc";
+static const char *__doc_mplib_ompl_GeneralConstraint = R"doc()doc";
 
-static const char *__doc_GeneralConstraint_GeneralConstraint =
+static const char *__doc_mplib_ompl_GeneralConstraint_GeneralConstraint =
 R"doc(
 )doc";
 
-static const char *__doc_GeneralConstraint_function =
+static const char *__doc_mplib_ompl_GeneralConstraint_function =
 R"doc(
 )doc";
 
-static const char *__doc_GeneralConstraint_jacobian =
+static const char *__doc_mplib_ompl_GeneralConstraint_jacobian =
 R"doc(
 )doc";
 
-static const char *__doc_OMPLPlannerTpl = R"doc(OMPL Planner)doc";
+static const char *__doc_mplib_ompl_OMPLPlannerTpl = R"doc(OMPL Planner)doc";
 
-static const char *__doc_OMPLPlannerTpl_OMPLPlannerTpl =
+static const char *__doc_mplib_ompl_OMPLPlannerTpl_OMPLPlannerTpl =
 R"doc(
 Construct an OMPLPlanner from a PlanningWorld
 
 :param world: planning world)doc";
 
-static const char *__doc_OMPLPlannerTpl_build_compound_state_space =
+static const char *__doc_mplib_ompl_OMPLPlannerTpl_build_compound_state_space =
 R"doc(
 Build a new state space given the current planning world and a set of fixed
 joints
 
 :param fixed_joints: a vector of FixedJoint)doc";
 
-static const char *__doc_OMPLPlannerTpl_get_dim =
+static const char *__doc_mplib_ompl_OMPLPlannerTpl_get_dim =
 R"doc(
 )doc";
 
-static const char *__doc_OMPLPlannerTpl_get_world =
+static const char *__doc_mplib_ompl_OMPLPlannerTpl_get_world =
 R"doc(
 )doc";
 
-static const char *__doc_OMPLPlannerTpl_plan =
+static const char *__doc_mplib_ompl_OMPLPlannerTpl_plan =
 R"doc(
 Plan a path from start state to goal states.
 
@@ -102,64 +102,64 @@ Plan a path from start state to goal states.
 :return: pair of planner status and path. If planner succeeds, status is "Exact
     solution.")doc";
 
-static const char *__doc_OMPLPlannerTpl_random_sample_nearby =
+static const char *__doc_mplib_ompl_OMPLPlannerTpl_random_sample_nearby =
 R"doc(
 )doc";
 
-static const char *__doc_OMPLPlannerTpl_simplify_path =
+static const char *__doc_mplib_ompl_OMPLPlannerTpl_simplify_path =
 R"doc(
 Simplify the provided path.
 
 :param path: path to be simplified (numpy array of shape (n, dim))
 :return: simplified path)doc";
 
-static const char *__doc_ValidityCheckerTpl = R"doc()doc";
+static const char *__doc_mplib_ompl_ValidityCheckerTpl = R"doc()doc";
 
-static const char *__doc_ValidityCheckerTpl_ValidityCheckerTpl =
+static const char *__doc_mplib_ompl_ValidityCheckerTpl_ValidityCheckerTpl =
 R"doc(
 )doc";
 
-static const char *__doc_ValidityCheckerTpl_isValid =
+static const char *__doc_mplib_ompl_ValidityCheckerTpl_isValid =
 R"doc(
 )doc";
 
-static const char *__doc_ValidityCheckerTpl_isValid_2 =
+static const char *__doc_mplib_ompl_ValidityCheckerTpl_isValid_2 =
 R"doc(
 )doc";
 
-static const char *__doc_ValidityCheckerTpl_update_fixed_joints =
+static const char *__doc_mplib_ompl_ValidityCheckerTpl_update_fixed_joints =
 R"doc(
 )doc";
 
-static const char *__doc_add_fixed_joints =
+static const char *__doc_mplib_ompl_add_fixed_joints =
 R"doc(
 )doc";
 
-static const char *__doc_compoundstate2vector =
+static const char *__doc_mplib_ompl_compoundstate2vector =
 R"doc(
 )doc";
 
-static const char *__doc_eigen2vector =
+static const char *__doc_mplib_ompl_eigen2vector =
 R"doc(
 )doc";
 
-static const char *__doc_is_fixed_joint =
+static const char *__doc_mplib_ompl_is_fixed_joint =
 R"doc(
 )doc";
 
-static const char *__doc_remove_fixed_joints =
+static const char *__doc_mplib_ompl_remove_fixed_joints =
 R"doc(
 )doc";
 
-static const char *__doc_rvssstate2vector =
+static const char *__doc_mplib_ompl_rvssstate2vector =
 R"doc(
 )doc";
 
-static const char *__doc_state2eigen =
+static const char *__doc_mplib_ompl_state2eigen =
 R"doc(
 )doc";
 
-static const char *__doc_vector2eigen =
+static const char *__doc_mplib_ompl_vector2eigen =
 R"doc(
 )doc";
 

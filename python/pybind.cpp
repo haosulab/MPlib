@@ -9,6 +9,8 @@
 
 namespace py = pybind11;
 
+namespace mplib {
+
 PYBIND11_MODULE(pymp, m) {
   m.doc() = "Motion planning python binding";
   build_pyfcl(m);
@@ -19,3 +21,5 @@ PYBIND11_MODULE(pymp, m) {
   build_pyompl(m);
   // build_pytopp(m);
 }
+
+}  // namespace mplib

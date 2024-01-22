@@ -23,10 +23,9 @@
 
 #include "color_printing.h"
 #include "planning_world.h"
+#include "types.h"
 
-namespace ob = ompl::base;
-// namespace oc = ompl::control;
-namespace og = ompl::geometric;
+namespace mplib::ompl {
 
 template <typename S>
 std::vector<S> compoundstate2vector(const ob::State *state_raw,
@@ -69,23 +68,22 @@ std::vector<S> rvssstate2vector(const ob::State *state_raw,
 }
 
 template <typename IN_TYPE, typename OUT_TYPE>
-std::vector<OUT_TYPE> eigen2vector(const Eigen::Matrix<IN_TYPE, Eigen::Dynamic, 1> &x) {
+std::vector<OUT_TYPE> eigen2vector(const VectorX<IN_TYPE> &x) {
   std::vector<OUT_TYPE> ret;
   for (auto i = 0; i < x.rows(); i++) ret.push_back((OUT_TYPE)x[i]);
   return ret;
 }
 
 template <typename IN_TYPE, typename OUT_TYPE>
-Eigen::Matrix<OUT_TYPE, Eigen::Dynamic, 1> vector2eigen(const std::vector<IN_TYPE> &x) {
-  Eigen::Matrix<OUT_TYPE, Eigen::Dynamic, 1> ret(x.size());
+VectorX<OUT_TYPE> vector2eigen(const std::vector<IN_TYPE> &x) {
+  VectorX<OUT_TYPE> ret(x.size());
   for (size_t i = 0; i < x.size(); i++) ret[i] = (OUT_TYPE)x[i];
   return ret;
 }
 
 template <typename S>
-Eigen::Matrix<S, Eigen::Dynamic, 1> state2eigen(const ob::State *state_raw,
-                                                ob::SpaceInformation *const &si_,
-                                                bool is_rvss = false) {
+VectorX<S> state2eigen(const ob::State *state_raw, ob::SpaceInformation *const &si_,
+                       bool is_rvss = false) {
   std::vector<S> vec_ret = is_rvss ? rvssstate2vector<S>(state_raw, si_)
                                    : compoundstate2vector<S>(state_raw, si_);
   auto ret = vector2eigen<S, S>(vec_ret);
@@ -112,20 +110,15 @@ struct FixedJoint {
   }
 };
 
-using FixedJoints = std::set<FixedJoint>;
-
 bool is_fixed_joint(const FixedJoints &fixed_joints, size_t articulation_idx,
                     size_t joint_idx);
 
-Eigen::VectorXd remove_fixed_joints(const FixedJoints &fixed_joints,
-                                    const Eigen::VectorXd &state);
+VectorXd remove_fixed_joints(const FixedJoints &fixed_joints, const VectorXd &state);
 
-Eigen::VectorXd add_fixed_joints(const FixedJoints &fixed_joints,
-                                 const Eigen::VectorXd &state);
+VectorXd add_fixed_joints(const FixedJoints &fixed_joints, const VectorXd &state);
 
 template <typename S>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
-  using VectorX = Eigen::Matrix<S, Eigen::Dynamic, 1>;
   PlanningWorldTplPtr<S> world_;
   bool is_rvss_;
   FixedJoints fixed_joints_;
@@ -142,7 +135,7 @@ class ValidityCheckerTpl : public ob::StateValidityChecker {
     this->fixed_joints_ = fixed_joints;
   }
 
-  bool _isValid(VectorX state) const {
+  bool _isValid(VectorX<S> state) const {
     world_->setQposAll(add_fixed_joints(fixed_joints_, state));
     return !world_->collide();
   }
@@ -154,24 +147,21 @@ class ValidityCheckerTpl : public ob::StateValidityChecker {
 };
 
 class GeneralConstraint : public ob::Constraint {
-  std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)> f_, j_;
+  std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> f_, j_;
 
  public:
   GeneralConstraint(
-      size_t dim,
-      const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
-          &f,
-      const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
-          &j)
+      size_t dim, const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> &f,
+      const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> &j)
       : ob::Constraint(dim, 1), f_(f), j_(j) {}
 
-  void function(const Eigen::Ref<const Eigen::VectorXd> &x,
-                Eigen::Ref<Eigen::VectorXd> out) const override {
+  void function(const Eigen::Ref<const VectorXd> &x,
+                Eigen::Ref<VectorXd> out) const override {
     f_(x, out);
   }
 
-  void jacobian(const Eigen::Ref<const Eigen::VectorXd> &x,
-                Eigen::Ref<Eigen::MatrixXd> out) const override {
+  void jacobian(const Eigen::Ref<const VectorXd> &x,
+                Eigen::Ref<MatrixXd> out) const override {
     j_(x, out);
   }
 };
@@ -187,23 +177,11 @@ using ValidityCheckerf = ValidityCheckerTpl<float>;
 /// OMPL Planner
 template <typename S>
 class OMPLPlannerTpl {
-  using CompoundStateSpacePtr = std::shared_ptr<ob::CompoundStateSpace>;
-  using SpaceInformationPtr = std::shared_ptr<ob::SpaceInformation>;
-  using ProblemDefinitionPtr = std::shared_ptr<ob::ProblemDefinition>;
-
-  using CompoundStateSpace = ob::CompoundStateSpace;
-  using SpaceInformation = ob::SpaceInformation;
-  using ProblemDefinition = ob::ProblemDefinition;
-  using ValidityChecker = ValidityCheckerTpl<S>;
-  using ValidityCheckerPtr = ValidityCheckerTplPtr<S>;
-
-  DEFINE_TEMPLATE_EIGEN(S)
-
   std::shared_ptr<ob::RealVectorStateSpace> p_ambient_space_;
   std::shared_ptr<ob::ProjectedStateSpace> p_constrained_space_;
   CompoundStateSpacePtr cs_;
   ob::StateSpacePtr state_space_;
-  std::shared_ptr<ompl::geometric::SimpleSetup> ss_;
+  std::shared_ptr<og::SimpleSetup> ss_;
   SpaceInformationPtr p_compound_si_;
   SpaceInformationPtr p_constrained_si_;
   SpaceInformationPtr si_;
@@ -217,7 +195,7 @@ class OMPLPlannerTpl {
 
   /** Certain joint configurations are the same if some joints are the same fmod 2pi. */
   std::shared_ptr<ob::GoalStates> make_goal_states(
-      const std::vector<VectorX> &goal_states);
+      const std::vector<VectorX<S>> &goal_states);
 
   /** build a real vector state space for the robot */
   void build_constrained_ambient_state_space();
@@ -238,7 +216,7 @@ class OMPLPlannerTpl {
    */
   OMPLPlannerTpl(const PlanningWorldTplPtr<S> &world, int robot_idx = 0);
 
-  VectorX random_sample_nearby(const VectorX &start_state);
+  VectorX<S> random_sample_nearby(const VectorX<S> &start_state);
 
   /**
    * @brief Build a new state space given the current planning world
@@ -258,7 +236,7 @@ class OMPLPlannerTpl {
    * @param path: path to be simplified (numpy array of shape (n, dim))
    * @return: simplified path
    */
-  Eigen::MatrixXd simplify_path(Eigen::MatrixXd &path);
+  MatrixXd simplify_path(MatrixXd &path);
 
   /**
    * Plan a path from start state to goal states.
@@ -284,15 +262,15 @@ class OMPLPlannerTpl {
    * @return: pair of planner status and path. If planner succeeds, status is "Exact
    *          solution."
    */
-  std::pair<std::string, Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>> plan(
-      const VectorX &start_state, const std::vector<VectorX> &goal_states,
+  std::pair<std::string, MatrixX<S>> plan(
+      const VectorX<S> &start_state, const std::vector<VectorX<S>> &goal_states,
       const std::string &planner_name = "RRTConnect", const double &time = 1.0,
       const double &range = 0.0, const bool verbose = false,
       const FixedJoints &fixed_joints = FixedJoints(),
       const bool no_simplification = false,
-      const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+      const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
           &constraint_function = nullptr,
-      const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+      const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
           &constraint_jacobian = nullptr,
       double constraint_tolerance = 1e-3);
 };
@@ -304,3 +282,5 @@ using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
 using OMPLPlannerTplfPtr = OMPLPlannerTplPtr<float>;
 using OMPLPlannerTpld = OMPLPlannerTpl<double>;
 using OMPLPlannerTplf = OMPLPlannerTpl<float>;
+
+}  // namespace mplib::ompl

@@ -24,23 +24,23 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_print_debug =
+static const char *__doc_mplib_print_debug =
 R"doc(
 )doc";
 
-static const char *__doc_print_error =
+static const char *__doc_mplib_print_error =
 R"doc(
 )doc";
 
-static const char *__doc_print_info =
+static const char *__doc_mplib_print_info =
 R"doc(
 )doc";
 
-static const char *__doc_print_verbose =
+static const char *__doc_mplib_print_verbose =
 R"doc(
 )doc";
 
-static const char *__doc_print_warning =
+static const char *__doc_mplib_print_warning =
 R"doc(
 )doc";
 

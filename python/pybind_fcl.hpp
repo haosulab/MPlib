@@ -10,63 +10,43 @@
 
 #include "docstring/fcl_model.h"
 #include "docstring/urdf_utils.h"
-#include "fcl/broadphase/broadphase_dynamic_AABB_tree.h"
-#include "fcl/common/types.h"
-#include "fcl/geometry/octree/octree.h"
-#include "fcl/math/constants.h"
-#include "fcl/math/triangle.h"
-#include "fcl/narrowphase/collision.h"
-#include "fcl/narrowphase/collision_object.h"
-#include "fcl/narrowphase/collision_request.h"
-#include "fcl/narrowphase/collision_result.h"
-#include "fcl/narrowphase/contact.h"
-#include "fcl/narrowphase/contact_point.h"
-#include "fcl/narrowphase/cost_source.h"
-#include "fcl/narrowphase/distance.h"
-#include "fcl/narrowphase/distance_request.h"
-#include "fcl/narrowphase/distance_result.h"
-#include "fcl/narrowphase/gjk_solver_type.h"
+#include "mplib/articulated_model.h"
 #include "mplib/fcl_model.h"
-#include "mplib/macros_utils.h"
+#include "mplib/planning_world.h"
+#include "mplib/types.h"
 #include "mplib/urdf_utils.h"
 #include "pybind_macros.hpp"
 
-DEFINE_TEMPLATE_FCL(S)
+namespace py = pybind11;
 
-DEFINE_TEMPLATE_EIGEN(S)
-using FCLModel = FCLModelTpl<S>;
+namespace mplib {
 
-/*
-using Vector3 = fcl::Vector3<S>;
-using Vector4 = fcl::VectorN<S, 4>;
-using Vector7 = fcl::Vector7<S>;
-using Vector3I = fcl::Vector3<int>;
-using Transform = fcl::Transform3<S>;
-using Matrix = fcl::Matrix3<S>;
-using Quaternion = fcl::Quaternion<S>;
+using FCLModel = fcl::FCLModelTpl<S>;
+using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
+using WorldCollisionResult = WorldCollisionResultTpl<S>;
 
-
-using OBBRSS = fcl::OBBRSS<S>;
-
-
-// Collision Geometry type
+using Triangle = fcl::Triangle;
 using CollisionGeometry = fcl::CollisionGeometry<S>;
 using Box = fcl::Box<S>;
-using Sphere = fcl::Sphere<S>;
 using Capsule = fcl::Capsule<S>;
 using Cone = fcl::Cone<S>;
-using Cylinder = fcl::Cylinder<S>;
 using Convex = fcl::Convex<S>;
+using Cylinder = fcl::Cylinder<S>;
 using Plane = fcl::Plane<S>;
-using BVHModel_OBBRSS = fcl::BVHModel<OBBRSS>;
+using Sphere = fcl::Sphere<S>;
+using BVHModel_OBBRSS = fcl::BVHModel<fcl::OBBRSS<S>>;
+using OcTree = fcl::OcTree<S>;
 
-// Collision Object = Geometry + Transformation
 using CollisionObject = fcl::CollisionObject<S>;
-
-// Data type
-using Triangle = fcl::Triangle;
-*/
-namespace py = pybind11;
+using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
+using GJKSolverType = fcl::GJKSolverType;
+using CollisionRequest = fcl::CollisionRequest<S>;
+using CollisionResult = fcl::CollisionResult<S>;
+using DistanceRequest = fcl::DistanceRequest<S>;
+using DistanceResult = fcl::DistanceResult<S>;
+using Contact = fcl::Contact<S>;
+using ContactPoint = fcl::ContactPoint<S>;
+using CostSource = fcl::CostSource<S>;
 
 void build_pyfcl(py::module &m_all) {
   auto m = m_all.def_submodule("fcl");
@@ -100,7 +80,7 @@ void build_pyfcl(py::module &m_all) {
   // collision geometries
   auto PyBox = py::class_<Box, std::shared_ptr<Box>>(m, "Box", PyCollisionGeometry,
                                                      DOC(fcl, Box));
-  PyBox.def(py::init<const Vector3 &>(), py::arg("side"), DOC(fcl, Box, Box))
+  PyBox.def(py::init<const Vector3<S> &>(), py::arg("side"), DOC(fcl, Box, Box))
       .def(py::init<S, S, S>(), py::arg("x"), py::arg("y"), py::arg("z"),
            DOC(fcl, Box, Box, 2))
       .def_readwrite("side", &Box::side);
@@ -124,7 +104,7 @@ void build_pyfcl(py::module &m_all) {
   auto PyOcTree = py::class_<OcTree, std::shared_ptr<OcTree>>(
       m, "OcTree", PyCollisionGeometry, DOC(fcl, OcTree));
   PyOcTree.def(py::init<S>(), py::arg("resolution"), DOC(fcl, OcTree, OcTree))
-      .def(py::init([](const Matrixx3 &vertices, const double &resolution) {
+      .def(py::init([](const MatrixX3<S> &vertices, const double &resolution) {
              octomap::OcTree *tree = new octomap::OcTree(resolution);
 
              // insert some measurements of occupied cells
@@ -142,16 +122,16 @@ void build_pyfcl(py::module &m_all) {
   auto PyConvex = py::class_<Convex, std::shared_ptr<Convex>>(
       m, "Convex", PyCollisionGeometry, DOC(fcl, Convex));
   PyConvex
-      .def(py::init<const std::shared_ptr<const std::vector<Vector3>> &, int,
+      .def(py::init<const std::shared_ptr<const std::vector<Vector3<S>>> &, int,
                     const std::shared_ptr<const std::vector<int>> &, bool>(),
            py::arg("vertices"), py::arg("num_faces"), py::arg("faces"),
            py::arg("throw_if_invalid") = true, DOC(fcl, Convex, Convex))
-      .def(py::init([](const Matrixx3 &vertices, const Matrixx3I &faces,
+      .def(py::init([](const MatrixX3<S> &vertices, const MatrixX3i &faces,
                        const bool &throw_if_invalid) {
-             auto vertices_new = std::make_shared<std::vector<Vector3>>();
+             auto vertices_new = std::make_shared<std::vector<Vector3<S>>>();
              auto faces_new = std::make_shared<std::vector<int>>();
              for (auto i = 0; i < vertices.rows(); i++) {
-               Vector3 tmp_i;
+               Vector3<S> tmp_i;
                tmp_i(0) = vertices(i, 0);
                tmp_i(1) = vertices(i, 1);
                tmp_i(2) = vertices(i, 2);
@@ -182,19 +162,19 @@ void build_pyfcl(py::module &m_all) {
            py::arg("num_vertices") = 0, DOC(fcl, BVHModel_OBBRSS, beginModel))
       .def("endModel", &BVHModel_OBBRSS::endModel, DOC(fcl, BVHModel_OBBRSS, endModel))
       .def("addSubModel",
-           py::overload_cast<const std::vector<Vector3> &>(
+           py::overload_cast<const std::vector<Vector3<S>> &>(
                &BVHModel_OBBRSS::addSubModel),
            py::arg("vertices"), DOC(fcl, BVHModel_OBBRSS, addSubModel))
       .def("addSubModel",
-           py::overload_cast<const std::vector<Vector3> &,
+           py::overload_cast<const std::vector<Vector3<S>> &,
                              const std::vector<Triangle> &>(
                &BVHModel_OBBRSS::addSubModel),
            py::arg("vertices"), py::arg("faces"),
            DOC(fcl, BVHModel_OBBRSS, addSubModel, 2))
       .def(
           "addSubModel",
-          [](BVHModel_OBBRSS &a, const std::vector<Vector3> &vertices,
-             const std::vector<Vector3I> &faces) {
+          [](BVHModel_OBBRSS &a, const std::vector<Vector3<S>> &vertices,
+             const std::vector<Vector3i> &faces) {
             std::vector<Triangle> face_list;
             for (size_t i = 0; i < faces.size(); i++)
               face_list.push_back(Triangle(faces[i][0], faces[i][1], faces[i][2]));
@@ -205,7 +185,7 @@ void build_pyfcl(py::module &m_all) {
       .def(
           "get_vertices",
           [](BVHModel_OBBRSS &a) {
-            std::vector<Vector3> ret;
+            std::vector<Vector3<S>> ret;
             for (auto i = 0; i < a.num_vertices; i++) ret.push_back(*(a.vertices + i));
             return ret;
           },
@@ -226,9 +206,9 @@ void build_pyfcl(py::module &m_all) {
       py::class_<CollisionObject, std::shared_ptr<CollisionObject>>(
           m, "CollisionObject", DOC(fcl, CollisionObject));
   PyCollisionObject
-      .def(py::init([](const std::shared_ptr<CollisionGeometry> &a, const Vector3 &p,
-                       const Vector4 &q) {
-             auto q_mat = Quaternion(q(0), q(1), q(2), q(3)).matrix();
+      .def(py::init([](const std::shared_ptr<CollisionGeometry> &a, const Vector3<S> &p,
+                       const Vector4<S> &q) {
+             auto q_mat = Quaternion<S>(q(0), q(1), q(2), q(3)).matrix();
              return CollisionObject(a, q_mat, p);
            }),
            py::arg("collision_geometry"), py::arg("translation"), py::arg("rotation"),
@@ -236,9 +216,9 @@ void build_pyfcl(py::module &m_all) {
       .def("get_collision_geometry", &CollisionObject::collisionGeometry)
       .def("get_translation", &CollisionObject::getTranslation)
       .def("get_rotation", &CollisionObject::getRotation)
-      .def("set_transformation", [](CollisionObject &a, const Vector7 &pose) {
-        Transform3 trans;
-        trans.linear() = Quaternion(pose[3], pose[4], pose[5], pose[6]).matrix();
+      .def("set_transformation", [](CollisionObject &a, const Vector7<S> &pose) {
+        Transform3<S> trans;
+        trans.linear() = Quaternion<S>(pose[3], pose[4], pose[5], pose[6]).matrix();
         trans.translation() = pose.head(3);
         a.setTransform(trans);
       });
@@ -314,7 +294,7 @@ void build_pyfcl(py::module &m_all) {
   auto PyCostSource =
       py::class_<CostSource, std::shared_ptr<CostSource>>(m, "CostSource");
   PyCostSource.def(py::init<>())
-      .def(py::init<const Vector3 &, const Vector3 &, S>(), py::arg("aabb_min"),
+      .def(py::init<const Vector3<S> &, const Vector3<S> &, S>(), py::arg("aabb_min"),
            py::arg("aabb_max"), py::arg("cost_density"))
       .def_readonly("aabb_min", &CostSource::aabb_min)
       .def_readonly("aabb_max", &CostSource::aabb_max)
@@ -325,7 +305,7 @@ void build_pyfcl(py::module &m_all) {
   auto PyContactPoint =
       py::class_<ContactPoint, std::shared_ptr<ContactPoint>>(m, "ContactPoint");
   PyContactPoint.def(py::init<>())
-      .def(py::init<const Vector3 &, const Vector3 &, S>(), py::arg("normal"),
+      .def(py::init<const Vector3<S> &, const Vector3<S> &, S>(), py::arg("normal"),
            py::arg("pos"), py::arg("penetration_depth"))
       .def_readonly("normal", &ContactPoint::normal)
       .def_readonly("pos", &ContactPoint::pos)
@@ -337,7 +317,7 @@ void build_pyfcl(py::module &m_all) {
       .def(py::init<const CollisionGeometry *, const CollisionGeometry *, int, int>(),
            py::arg("o1"), py::arg("o2"), py::arg("b1"), py::arg("b2"))
       .def(py::init<const CollisionGeometry *, const CollisionGeometry *, int, int,
-                    const Vector3 &, const Vector3 &, S>(),
+                    const Vector3<S> &, const Vector3<S> &, S>(),
            py::arg("o1"), py::arg("o2"), py::arg("b1"), py::arg("b2"), py::arg("pos"),
            py::arg("normal"), py::arg("depth"))
       .def_readonly("normal", &Contact::normal)
@@ -349,45 +329,50 @@ void build_pyfcl(py::module &m_all) {
         [](const CollisionObject *o1, const CollisionObject *o2,
            const CollisionRequest &request) {
           CollisionResult result;
-          fcl::collide(o1, o2, request, result);
+          ::fcl::collide(o1, o2, request, result);
           return result;
         })
       .def("distance", [](const CollisionObject *o1, const CollisionObject *o2,
                           const DistanceRequest &request) {
         DistanceResult result;
-        fcl::distance(o1, o2, request, result);
+        ::fcl::distance(o1, o2, request, result);
         return result;
       });
 
   // FCL model
-  auto PyFCLModel =
-      py::class_<FCLModel, std::shared_ptr<FCLModel>>(m, "FCLModel", DOC(FCLModelTpl));
+  auto PyFCLModel = py::class_<FCLModel, std::shared_ptr<FCLModel>>(
+      m, "FCLModel", DOC(mplib, fcl, FCLModelTpl));
   PyFCLModel
       .def(py::init<const std::string &, const bool &, const bool &>(),
            py::arg("urdf_filename"), py::arg("verbose") = true,
-           py::arg("convex") = false, DOC(FCLModelTpl, FCLModelTpl, 2))
+           py::arg("convex") = false, DOC(mplib, fcl, FCLModelTpl, FCLModelTpl, 2))
       .def("get_collision_pairs", &FCLModel::getCollisionPairs,
-           DOC(FCLModelTpl, getCollisionPairs))
+           DOC(mplib, fcl, FCLModelTpl, getCollisionPairs))
       .def("get_collision_objects", &FCLModel::getCollisionObjects,
-           DOC(FCLModelTpl, getCollisionObjects))
+           DOC(mplib, fcl, FCLModelTpl, getCollisionObjects))
       .def("set_link_order", &FCLModel::setLinkOrder, py::arg("names"),
-           DOC(FCLModelTpl, setLinkOrder))
+           DOC(mplib, fcl, FCLModelTpl, setLinkOrder))
       .def("update_collision_objects",
-           py::overload_cast<const std::vector<Vector7> &>(
+           py::overload_cast<const std::vector<Vector7<S>> &>(
                &FCLModel::updateCollisionObjects),
-           py::arg("link_poses"), DOC(FCLModelTpl, updateCollisionObjects, 2))
+           py::arg("link_poses"),
+           DOC(mplib, fcl, FCLModelTpl, updateCollisionObjects, 2))
       .def("collide", &FCLModel::collide, py::arg("request") = CollisionRequest(),
-           DOC(FCLModelTpl, collide))
+           DOC(mplib, fcl, FCLModelTpl, collide))
       .def("collide_full", &FCLModel::collideFull,
-           py::arg("request") = CollisionRequest(), DOC(FCLModelTpl, collideFull))
+           py::arg("request") = CollisionRequest(),
+           DOC(mplib, fcl, FCLModelTpl, collideFull))
       .def("get_collision_link_names", &FCLModel::getCollisionLinkNames,
-           DOC(FCLModelTpl, getCollisionLinkNames))
+           DOC(mplib, fcl, FCLModelTpl, getCollisionLinkNames))
       .def("remove_collision_pairs_from_srdf", &FCLModel::removeCollisionPairsFromSrdf,
-           py::arg("srdf_filename"), DOC(FCLModelTpl, removeCollisionPairsFromSrdf));
+           py::arg("srdf_filename"),
+           DOC(mplib, fcl, FCLModelTpl, removeCollisionPairsFromSrdf));
 
   // Extra function
   m.def("load_mesh_as_BVH", load_mesh_as_BVH<S>, py::arg("mesh_path"), py::arg("scale"),
-        DOC(load_mesh_as_BVH));
+        DOC(mplib, load_mesh_as_BVH));
   m.def("load_mesh_as_Convex", load_mesh_as_Convex<S>, py::arg("mesh_path"),
-        py::arg("scale"), DOC(load_mesh_as_Convex));
+        py::arg("scale"), DOC(mplib, load_mesh_as_Convex));
 }
+
+}  // namespace mplib

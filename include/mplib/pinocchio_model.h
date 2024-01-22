@@ -11,6 +11,9 @@
 
 #include "color_printing.h"
 #include "macros_utils.h"
+#include "types.h"
+
+namespace mplib::pinocchio {
 
 /**
  * Pinocchio model of an articulation
@@ -20,40 +23,35 @@
 template <typename S>
 class PinocchioModelTpl {
  private:
-  DEFINE_TEMPLATE_EIGEN(S)
-  DEFINE_TEMPLATE_PINOCCHIO(S)
-
-  // pinocchio::ModelTpl<float>;
-
   urdf::ModelInterfaceSharedPtr urdf_model_;
-  Model model_;
-  Data data_;
+  Model<S> model_;
+  Data<S> data_;
 
-  VectorXI joint_index_user2pinocchio_, joint_index_pinocchio2user_;
-  VectorXI v_index_user2pinocchio_;  // the joint index in model
+  VectorXi joint_index_user2pinocchio_, joint_index_pinocchio2user_;
+  VectorXi v_index_user2pinocchio_;  // the joint index in model
   // map between user and pinocchio
-  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> v_map_user2pinocchio_;
-  VectorXI link_index_user2pinocchio_;
+  PermutationMatrixX v_map_user2pinocchio_;
+  VectorXi link_index_user2pinocchio_;
 
   std::vector<std::string> user_link_names_;
   std::vector<std::string> user_joint_names_;
   std::vector<std::string> leaf_links_;
-  VectorXI qidx_, vidx_, nqs_, nvs_, parents_;
+  VectorXi qidx_, vidx_, nqs_, nvs_, parents_;
 
   const std::string joint_prefix_ = "JointModel";
   bool verbose_;
 
-  VectorX qposUser2Pinocchio(const VectorX &qpos);
+  VectorX<S> qposUser2Pinocchio(const VectorX<S> &qpos);
 
-  VectorX qposPinocchio2User(const VectorX &qpos);
+  VectorX<S> qposPinocchio2User(const VectorX<S> &qpos);
 
-  void init(const urdf::ModelInterfaceSharedPtr &urdfTree, const Vector3 &gravity);
+  void init(const urdf::ModelInterfaceSharedPtr &urdfTree, const Vector3<S> &gravity);
 
-  void dfs_parse_tree(urdf::LinkConstSharedPtr link, UrdfVisitorBase &visitor);
+  void dfs_parse_tree(urdf::LinkConstSharedPtr link, UrdfVisitorBase<S> &visitor);
 
  public:
   PinocchioModelTpl(const urdf::ModelInterfaceSharedPtr &urdfTree,
-                    const Vector3 &gravity, const bool &verbose = true);
+                    const Vector3<S> &gravity, const bool &verbose = true);
 
   /**
    * Construct a Pinocchio model from the given URDF file.
@@ -62,12 +60,12 @@ class PinocchioModelTpl {
    * @param gravity: gravity vector
    * @param verbose: print debug information
    */
-  PinocchioModelTpl(const std::string &urdf_filename, const Vector3 &gravity,
+  PinocchioModelTpl(const std::string &urdf_filename, const Vector3<S> &gravity,
                     const bool &verbose = true);
 
-  inline Model &getModel(void) { return model_; }
+  inline Model<S> &getModel(void) { return model_; }
 
-  inline Data &getData(void) { return data_; }
+  inline Data<S> &getData(void) { return data_; }
 
   /**
    * Get the leaf links (links without child) of the kinematic tree.
@@ -114,9 +112,8 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: limit of the joints
    */
-  inline std::vector<Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>> getJointLimits(
-      const bool &user = true) {
-    std::vector<Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>> ret;
+  inline std::vector<MatrixX<S>> getJointLimits(const bool &user = true) {
+    std::vector<MatrixX<S>> ret;
     auto njoints = user ? user_joint_names_.size() : model_.joints.size();
     for (size_t i = 0; i < njoints; i++) ret.push_back(getJointLimit(i, user));
     return ret;
@@ -130,13 +127,12 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: limit of the joint with the given index
    */
-  inline Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic> getJointLimit(
-      const size_t &index, const bool &user = true) {
+  inline MatrixX<S> getJointLimit(const size_t &index, const bool &user = true) {
     auto joint_type = getJointType(index, user);
     size_t pinocchio_idx = user ? joint_index_user2pinocchio_[index] : index;
     size_t start_idx = model_.idx_qs[pinocchio_idx], nq = model_.nqs[pinocchio_idx],
            dim_joint = getJointDim(index, user);
-    Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic> ret;
+    MatrixX<S> ret;
     ASSERT(dim_joint == 1, "Only support joint with dim 1 but joint" +
                                getJointNames(user)[index] + " has dim " +
                                std::to_string(dim_joint));
@@ -146,14 +142,14 @@ class PinocchioModelTpl {
     if (joint_type[joint_prefix_.size()] == 'P' ||
         (joint_type[joint_prefix_.size()] == 'R' &&
          joint_type[joint_prefix_.size() + 1] != 'U')) {
-      ret = Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>(nq, 2);
+      ret = MatrixX<S>(nq, 2);
       for (size_t j = 0; j < nq; j++) {
         ret(j, 0) = model_.lowerPositionLimit[start_idx + j];
         ret(j, 1) = model_.upperPositionLimit[start_idx + j];
       }
     } else if (joint_type[joint_prefix_.size()] == 'R' &&
                joint_type[joint_prefix_.size() + 1] == 'U') {
-      ret = Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>(1, 2);
+      ret = MatrixX<S>(1, 2);
       ret(0, 0) = -3.14159265359, ret(0, 1) = 3.14159265359;
     }
     return ret;
@@ -179,11 +175,11 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: id of the joints
    */
-  inline VectorXI getJointIds(const bool &user = true) {
+  inline VectorXi getJointIds(const bool &user = true) {
     if (user)
       return vidx_;
     else {
-      auto ret = VectorXI(model_.idx_vs.size());
+      auto ret = VectorXi(model_.idx_vs.size());
       for (size_t i = 0; i < model_.idx_vs.size(); i++) ret[i] = model_.idx_vs[i];
       return ret;
     }
@@ -209,11 +205,11 @@ class PinocchioModelTpl {
    *    passed to the constructor or the default order
    * @return: dimention of the joints
    */
-  inline VectorXI getJointDims(const bool &user = true) {
+  inline VectorXi getJointDims(const bool &user = true) {
     if (user)
       return nvs_;
     else {
-      auto ret = VectorXI(model_.nvs.size());
+      auto ret = VectorXi(model_.nvs.size());
       for (size_t i = 0; i < model_.nvs.size(); i++) ret[i] = model_.nvs[i];
       return ret;
     }
@@ -239,11 +235,11 @@ class PinocchioModelTpl {
    *    to the constructor or the default order
    * @return: parent of the joints
    */
-  inline VectorXI getParents(const bool &user = true) {
+  inline VectorXi getParents(const bool &user = true) {
     if (user)
       return parents_;
     else {
-      auto ret = VectorXI(model_.parents.size());
+      auto ret = VectorXi(model_.parents.size());
       for (size_t i = 0; i < model_.parents.size(); i++) ret[i] = model_.parents[i];
       return ret;
     }
@@ -262,7 +258,7 @@ class PinocchioModelTpl {
     else {
       std::vector<std::string> link_names;
       for (size_t i = 0; i < model_.frames.size(); i++)
-        if (model_.frames[i].type == pinocchio::BODY)
+        if (model_.frames[i].type == ::pinocchio::BODY)
           link_names.push_back(model_.frames[i].name);
       return link_names;
     }
@@ -385,7 +381,7 @@ class PinocchioModelTpl {
    *
    * @return: random joint configuration
    */
-  VectorX getRandomConfiguration();
+  VectorX<S> getRandomConfiguration();
 
   /**
    * Compute forward kinematics for the given joint configuration.
@@ -395,7 +391,7 @@ class PinocchioModelTpl {
    * @param qpos: joint configuration. Needs to be full configuration, not just the
    *    movegroup joints.
    */
-  void computeForwardKinematics(const VectorX &qpos);
+  void computeForwardKinematics(const VectorX<S> &qpos);
 
   /**
    * Get the pose of the given link.
@@ -404,9 +400,9 @@ class PinocchioModelTpl {
    *    default order)
    * @return: pose of the link [x, y, z, qw, qx, qy, qz]
    */
-  Vector7 getLinkPose(const size_t &index);
+  Vector7<S> getLinkPose(const size_t &index);
 
-  Vector7 getJointPose(const size_t &index);  // TODO: not same as sapien
+  Vector7<S> getJointPose(const size_t &index);  // TODO: not same as sapien
 
   /**
    * Compute the full jacobian for the given joint configuration.
@@ -416,7 +412,7 @@ class PinocchioModelTpl {
    * @param qpos: joint configuration. Needs to be full configuration, not just the
    *    movegroup joints.
    */
-  void computeFullJacobian(const VectorX &qpos);
+  void computeFullJacobian(const VectorX<S> &qpos);
 
   /**
    * Get the jacobian of the given link.
@@ -427,7 +423,7 @@ class PinocchioModelTpl {
    *    link, otherwise it is expressed in the world frame
    * @return: 6 x n jacobian of the link
    */
-  Matrix6x getLinkJacobian(const size_t &index, const bool &local = false);
+  Matrix6X<S> getLinkJacobian(const size_t &index, const bool &local = false);
 
   /**
    * Compute the jacobian of the given link.
@@ -440,8 +436,8 @@ class PinocchioModelTpl {
    *    of the link
    * @return: 6 x n jacobian of the link
    */
-  Matrix6x computeSingleLinkJacobian(const VectorX &qpos, const size_t &index,
-                                     bool local = false);
+  Matrix6X<S> computeSingleLinkJacobian(const VectorX<S> &qpos, const size_t &index,
+                                        bool local = false);
 
   /**
    * Compute the inverse kinematics using close loop inverse kinematics.
@@ -458,8 +454,8 @@ class PinocchioModelTpl {
    * @param damp: damping for the CLIK
    * @return: joint configuration
    */
-  std::tuple<VectorX, bool, Vector6> computeIKCLIK(
-      const size_t &index, const Vector7 &pose, const VectorX &q_init,
+  std::tuple<VectorX<S>, bool, Vector6<S>> computeIKCLIK(
+      const size_t &index, const Vector7<S> &pose, const VectorX<S> &q_init,
       const std::vector<bool> &mask, const double &eps = 1e-5,
       const int &maxIter = 1000, const double &dt = 1e-1, const double &damp = 1e-12);
 
@@ -479,9 +475,9 @@ class PinocchioModelTpl {
    * @param damp: damping for the CLIK
    * @return: joint configuration
    */
-  std::tuple<VectorX, bool, Vector6> computeIKCLIKJL(
-      const size_t &index, const Vector7 &pose, const VectorX &q_init,
-      const VectorX &qmin, const VectorX &qmax, const double &eps = 1e-5,
+  std::tuple<VectorX<S>, bool, Vector6<S>> computeIKCLIKJL(
+      const size_t &index, const Vector7<S> &pose, const VectorX<S> &q_init,
+      const VectorX<S> &qmin, const VectorX<S> &qmax, const double &eps = 1e-5,
       const int &maxIter = 1000, const double &dt = 1e-1, const double &damp = 1e-12);
 };
 
@@ -492,3 +488,5 @@ using PinocchioModeld = PinocchioModelTpl<double>;
 using PinocchioModelf = PinocchioModelTpl<float>;
 using PinocchioModeldPtr = PinocchioModelTplPtr<double>;
 using PinocchioModelfPtr = PinocchioModelTplPtr<float>;
+
+}  // namespace mplib::pinocchio

@@ -24,11 +24,11 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_ArticulatedModelTpl =
+static const char *__doc_mplib_ArticulatedModelTpl =
 R"doc(Supports initialization from URDF and SRDF files, and provides access to
 underlying Pinocchio and FCL models.)doc";
 
-static const char *__doc_ArticulatedModelTpl_ArticulatedModelTpl =
+static const char *__doc_mplib_ArticulatedModelTpl_ArticulatedModelTpl =
 R"doc(
 Construct an articulated model from URDF and SRDF files.
 
@@ -41,91 +41,91 @@ Construct an articulated model from URDF and SRDF files.
 :param verbose: print debug information
 :param convex: use convex decomposition for collision objects)doc";
 
-static const char *__doc_ArticulatedModelTpl_getBasePose =
+static const char *__doc_mplib_ArticulatedModelTpl_getBasePose =
 R"doc(
 Get the base pose of the robot.
 
 :return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format)doc";
 
-static const char *__doc_ArticulatedModelTpl_getEEFrameIndex =
+static const char *__doc_mplib_ArticulatedModelTpl_getEEFrameIndex =
 R"doc(
 Only support one end effector case)doc";
 
-static const char *__doc_ArticulatedModelTpl_getFCLModel =
+static const char *__doc_mplib_ArticulatedModelTpl_getFCLModel =
 R"doc(
 Get the underlying FCL model.
 
 :return: FCL model used for collision checking)doc";
 
-static const char *__doc_ArticulatedModelTpl_getMoveGroupEndEffectors =
+static const char *__doc_mplib_ArticulatedModelTpl_getMoveGroupEndEffectors =
 R"doc(
 Get the end effectors of the move group.
 
 :return: list of end effectors of the move group)doc";
 
-static const char *__doc_ArticulatedModelTpl_getMoveGroupJointIndices =
+static const char *__doc_mplib_ArticulatedModelTpl_getMoveGroupJointIndices =
 R"doc(
 Get the joint indices of the move group.
 
 :return: list of user joint indices of the move group)doc";
 
-static const char *__doc_ArticulatedModelTpl_getMoveGroupJointName =
+static const char *__doc_mplib_ArticulatedModelTpl_getMoveGroupJointName =
 R"doc(
 Get the joint names of the move group.
 
 :return: list of joint names of the move group)doc";
 
-static const char *__doc_ArticulatedModelTpl_getPinocchioModel =
+static const char *__doc_mplib_ArticulatedModelTpl_getPinocchioModel =
 R"doc(
 Get the underlying Pinocchio model.
 
 :return: Pinocchio model used for kinematics and dynamics computations)doc";
 
-static const char *__doc_ArticulatedModelTpl_getQpos =
+static const char *__doc_mplib_ArticulatedModelTpl_getQpos =
 R"doc(
 Get the current joint position of all active joints inside the URDF.
 
 :return: current qpos of all active joints)doc";
 
-static const char *__doc_ArticulatedModelTpl_getQposDim =
+static const char *__doc_mplib_ArticulatedModelTpl_getQposDim =
 R"doc(
 Get the dimension of the move group qpos.
 
 :return: dimension of the move group qpos)doc";
 
-static const char *__doc_ArticulatedModelTpl_getUserJointNames =
+static const char *__doc_mplib_ArticulatedModelTpl_getUserJointNames =
 R"doc(
 Get the joint names that the user has provided for planning.
 
 :return: list of joint names of the user)doc";
 
-static const char *__doc_ArticulatedModelTpl_getUserLinkNames =
+static const char *__doc_mplib_ArticulatedModelTpl_getUserLinkNames =
 R"doc(
 Get the link names that the user has provided for planning.
 
 :return: list of link names of the user)doc";
 
-static const char *__doc_ArticulatedModelTpl_setBasePose =
+static const char *__doc_mplib_ArticulatedModelTpl_setBasePose =
 R"doc(
 Set the base pose of the robot.
 
 :param pose: base pose of the robot in [x, y, z, qw, qx, qy, qz] format)doc";
 
-static const char *__doc_ArticulatedModelTpl_setMoveGroup =
+static const char *__doc_mplib_ArticulatedModelTpl_setMoveGroup =
 R"doc(
 Set the move group, i.e. the chain ending in end effector for which to compute
 the forward kinematics for all subsequent queries.
 
 :param chain: list of links extending to the end effector)doc";
 
-static const char *__doc_ArticulatedModelTpl_setMoveGroup_2 =
+static const char *__doc_mplib_ArticulatedModelTpl_setMoveGroup_2 =
 R"doc(
 Set the move group but we have multiple end effectors in a chain. I.e., Base -->
 EE1 --> EE2 --> ... --> EEn
 
 :param end_effectors: names of the end effector link)doc";
 
-static const char *__doc_ArticulatedModelTpl_setQpos =
+static const char *__doc_mplib_ArticulatedModelTpl_setQpos =
 R"doc(
 Let the planner know the current joint positions.
 
@@ -134,7 +134,7 @@ Let the planner know the current joint positions.
     is ``False``, we will pad the missing joints with current known qpos. The
     default is ``False``)doc";
 
-static const char *__doc_ArticulatedModelTpl_updateSRDF =
+static const char *__doc_mplib_ArticulatedModelTpl_updateSRDF =
 R"doc(
 Update the SRDF file to disable self-collisions.
 

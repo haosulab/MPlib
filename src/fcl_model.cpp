@@ -6,7 +6,10 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
+#include "mplib/macros_utils.h"
 #include "mplib/urdf_utils.h"
+
+namespace mplib::fcl {
 
 #define DEFINE_TEMPLATE_FM(S) template class FCLModelTpl<S>;
 
@@ -25,8 +28,8 @@ void FCLModelTpl<S>::dfs_parse_tree(const urdf::LinkConstSharedPtr &link,
   if (link->collision) {
     for (auto geom : link->collision_array) {
       auto geom_model = geom->geometry;
-      CollisionGeometryPtr collision_geometry = nullptr;
-      auto pose = Transform3::Identity();
+      CollisionGeometryPtr<S> collision_geometry = nullptr;
+      auto pose = Transform3<S>::Identity();
       if (geom_model->type == urdf::Geometry::MESH) {
         const urdf::MeshSharedPtr urdf_mesh =
             urdf::dynamic_pointer_cast<urdf::Mesh>(geom_model);
@@ -40,8 +43,8 @@ void FCLModelTpl<S>::dfs_parse_tree(const urdf::LinkConstSharedPtr &link,
           throw std::invalid_argument(ss.str());
         }
         if (verbose_) print_verbose("File name ", file_name);
-        Vector3 scale = {(S)urdf_mesh->scale.x, (S)urdf_mesh->scale.y,
-                         (S)urdf_mesh->scale.z};
+        Vector3<S> scale = {(S)urdf_mesh->scale.x, (S)urdf_mesh->scale.y,
+                            (S)urdf_mesh->scale.z};
         if (use_convex_)
           collision_geometry = load_mesh_as_Convex(mesh_path, scale);
         else
@@ -51,22 +54,22 @@ void FCLModelTpl<S>::dfs_parse_tree(const urdf::LinkConstSharedPtr &link,
         const urdf::CylinderSharedPtr cylinder =
             urdf::dynamic_pointer_cast<urdf::Cylinder>(geom_model);
         collision_geometry =
-            std::make_shared<Cylinder>((S)cylinder->radius, (S)cylinder->length);
+            std::make_shared<Cylinder<S>>((S)cylinder->radius, (S)cylinder->length);
       } else if (geom_model->type == urdf::Geometry::BOX) {
         const urdf::BoxSharedPtr box =
             urdf::dynamic_pointer_cast<urdf::Box>(geom_model);
         collision_geometry =
-            std::make_shared<Box>((S)box->dim.x, (S)box->dim.y, (S)box->dim.z);
+            std::make_shared<Box<S>>((S)box->dim.x, (S)box->dim.y, (S)box->dim.z);
       } else if (geom_model->type == ::urdf::Geometry::SPHERE) {
         const urdf::SphereSharedPtr sphere =
             urdf::dynamic_pointer_cast<urdf::Sphere>(geom_model);
-        collision_geometry = std::make_shared<Sphere>((S)sphere->radius);
+        collision_geometry = std::make_shared<Sphere<S>>((S)sphere->radius);
       } else
         throw std::invalid_argument("Unknown geometry type :");
 
       if (!collision_geometry)
         throw std::invalid_argument("The polyhedron retrived is empty");
-      CollisionObjectPtr obj(new CollisionObject(collision_geometry, pose));
+      CollisionObjectPtr<S> obj(new CollisionObject<S>(collision_geometry, pose));
 
       collision_objects_.push_back(obj);
       // collision_link_index.push_back(frame_id);
@@ -181,28 +184,28 @@ void FCLModelTpl<S>::removeCollisionPairsFromSrdf(const std::string &srdf_filena
 }
 
 template <typename S>
-bool FCLModelTpl<S>::collide(const CollisionRequest &request) {
+bool FCLModelTpl<S>::collide(const CollisionRequest<S> &request) {
   // result will be returned via the collision result structure
-  CollisionResult result;
+  CollisionResult<S> result;
   for (auto col_pair : collision_pairs_) {
-    fcl::collide(collision_objects_[col_pair.first].get(),
-                 collision_objects_[col_pair.second].get(), request, result);
+    ::fcl::collide(collision_objects_[col_pair.first].get(),
+                   collision_objects_[col_pair.second].get(), request, result);
     if (result.isCollision()) return true;
   }
   return false;
 }
 
 template <typename S>
-std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::collideFull(
-    const CollisionRequest &request) {
-  // CollisionRequest request(1, false, 1, false, true, fcl::GJKSolverType::GST_INDEP,
+std::vector<CollisionResult<S>> FCLModelTpl<S>::collideFull(
+    const CollisionRequest<S> &request) {
+  // CollisionRequest request(1, false, 1, false, true, GJKSolverType::GST_INDEP,
   // 1e-6);
   //  result will be returned via the collision result structure
-  std::vector<CollisionResult> ret;
+  std::vector<CollisionResult<S>> ret;
   // double cnt = 0;
   // std::cout << collision_pairs.size() << std::endl;
   for (auto col_pair : collision_pairs_) {
-    CollisionResult result;
+    CollisionResult<S> result;
     result.clear();
 
     // auto trans = collision_objects[col_pair.first].get()->getTranslation();
@@ -214,8 +217,8 @@ std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::collideFull(
     // std::cout << collision_objects[col_pair.first].get()->getTranslation() <<
     // std::endl; std::cout <<
     // collision_objects[col_pair.second].get()->getTranslation() << std::endl;
-    fcl::collide(collision_objects_[col_pair.first].get(),
-                 collision_objects_[col_pair.second].get(), request, result);
+    ::fcl::collide(collision_objects_[col_pair.first].get(),
+                   collision_objects_[col_pair.second].get(), request, result);
     /*if (result.isCollision()) {
         std::vector<Contact> contacts;
         result.getContacts(contacts);
@@ -231,10 +234,11 @@ std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::collideFull(
 }
 
 template <typename S>
-void FCLModelTpl<S>::updateCollisionObjects(const std::vector<Transform3> &link_pose) {
+void FCLModelTpl<S>::updateCollisionObjects(
+    const std::vector<Transform3<S>> &link_pose) {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
-    Transform3 t_i = link_pose[link_i] * collision_origin2link_poses[i];
+    Transform3<S> t_i = link_pose[link_i] * collision_origin2link_poses[i];
     collision_objects_[i].get()->setTransform(t_i);
     // auto tmp1 = collision_objects[i].get()->getTranslation();
     // std::cout << collision_objects[i].get()->getTranslation() << std::endl;
@@ -242,15 +246,15 @@ void FCLModelTpl<S>::updateCollisionObjects(const std::vector<Transform3> &link_
 }
 
 template <typename S>
-void FCLModelTpl<S>::updateCollisionObjects(const std::vector<Vector7> &link_pose) {
+void FCLModelTpl<S>::updateCollisionObjects(const std::vector<Vector7<S>> &link_pose) {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
-    Transform3 tt_i;
-    tt_i.linear() = Quaternion(link_pose[link_i][3], link_pose[link_i][4],
-                               link_pose[link_i][5], link_pose[link_i][6])
+    Transform3<S> tt_i;
+    tt_i.linear() = Quaternion<S>(link_pose[link_i][3], link_pose[link_i][4],
+                                  link_pose[link_i][5], link_pose[link_i][6])
                         .matrix();
     tt_i.translation() = link_pose[link_i].head(3);
-    Transform3 t_i = tt_i * collision_origin2link_poses[i];
+    Transform3<S> t_i = tt_i * collision_origin2link_poses[i];
     collision_objects_[i].get()->setTransform(t_i);
     // auto tmp1 = collision_objects[i].get()->getTranslation();
     // auto tmp2 = collision_objects[i].get()->getRotation();
@@ -266,3 +270,5 @@ void FCLModelTpl<S>::printCollisionPairs(void) {
     print_info(collision_link_names_[i], " ", collision_link_names_[j]);
   }
 }
+
+}  // namespace mplib::fcl

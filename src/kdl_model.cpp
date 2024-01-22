@@ -1,5 +1,9 @@
 #include "mplib/kdl_model.h"
 
+#include "mplib/macros_utils.h"
+
+namespace mplib::kdl {
+
 #define DEFINE_TEMPLATE_FM(S) template class KDLModelTpl<S>;
 
 DEFINE_TEMPLATE_FM(double)
@@ -31,10 +35,11 @@ KDLModelTpl<S>::KDLModelTpl(const std::string &urdf_filename,
 }
 
 template <typename S>
-std::tuple<Eigen::Matrix<S, Eigen::Dynamic, 1>, int> KDLModelTpl<S>::chainIKLMA(
-    const size_t &index, const VectorX &q0, const Vector7 &pose) {
+std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKLMA(const size_t &index,
+                                                       const VectorX<S> &q0,
+                                                       const Vector7<S> &pose) {
   KDL::Chain chain;
-  Eigen::Matrix<double, 6, 1> L;
+  Vector6<double> L;
   L(0) = 1;
   L(1) = 1;
   L(2) = 1;
@@ -59,14 +64,15 @@ std::tuple<Eigen::Matrix<S, Eigen::Dynamic, 1>, int> KDLModelTpl<S>::chainIKLMA(
   }
   for (int i = 0; i < n; i++) q_init(i) = q0[idx[i]];
   auto retval = solver.CartToJnt(q_init, frame_goal, q_sol);
-  VectorX q1 = q0;
+  VectorX<S> q1 = q0;
   for (int i = 0; i < n; i++) q1[idx[i]] = q_sol(i);
   return {q1, retval};
 }
 
 template <typename S>
-std::tuple<Eigen::Matrix<S, Eigen::Dynamic, 1>, int> KDLModelTpl<S>::chainIKNR(
-    const size_t &index, const VectorX &q0, const Vector7 &pose) {
+std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKNR(const size_t &index,
+                                                      const VectorX<S> &q0,
+                                                      const Vector7<S> &pose) {
   KDL::Chain chain;
   ASSERT(index < user_link_names_.size(), "link index out of bound");
   tree_.getChain(tree_root_name_, user_link_names_[index], chain);
@@ -91,15 +97,17 @@ std::tuple<Eigen::Matrix<S, Eigen::Dynamic, 1>, int> KDLModelTpl<S>::chainIKNR(
   }
   for (int i = 0; i < n; i++) q_init(i) = q0[idx[i]];
   auto retval = solver.CartToJnt(q_init, frame_goal, q_sol);
-  VectorX q1 = q0;
+  VectorX<S> q1 = q0;
   for (int i = 0; i < n; i++) q1[idx[i]] = q_sol(i);
   return {q1, retval};
 }
 
 template <typename S>
-std::tuple<Eigen::Matrix<S, Eigen::Dynamic, 1>, int> KDLModelTpl<S>::chainIKNRJL(
-    const size_t &index, const VectorX &q0, const Vector7 &pose, const VectorX &qmin,
-    const VectorX &qmax) {
+std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKNRJL(const size_t &index,
+                                                        const VectorX<S> &q0,
+                                                        const Vector7<S> &pose,
+                                                        const VectorX<S> &qmin,
+                                                        const VectorX<S> &qmax) {
   KDL::Chain chain;
   ASSERT(index < user_link_names_.size(), "link index out of bound");
   tree_.getChain(tree_root_name_, user_link_names_[index], chain);
@@ -131,15 +139,16 @@ std::tuple<Eigen::Matrix<S, Eigen::Dynamic, 1>, int> KDLModelTpl<S>::chainIKNRJL
 
   for (int i = 0; i < n; i++) q_init(i) = q0[idx[i]];
   auto retval = solver.CartToJnt(q_init, frame_goal, q_sol);
-  VectorX q1 = q0;
+  VectorX<S> q1 = q0;
   for (int i = 0; i < n; i++) q1[idx[i]] = q_sol(i);
   return {q1, retval};
 }
 
 template <typename S>
-std::tuple<Eigen::Matrix<S, Eigen::Dynamic, 1>, int> KDLModelTpl<S>::TreeIKNRJL(
-    const std::vector<std::string> endpoints, const VectorX &q0,
-    const std::vector<Vector7> &poses, const VectorX &qmin, const VectorX &qmax) {
+std::tuple<VectorX<S>, int> KDLModelTpl<S>::TreeIKNRJL(
+    const std::vector<std::string> endpoints, const VectorX<S> &q0,
+    const std::vector<Vector7<S>> &poses, const VectorX<S> &qmin,
+    const VectorX<S> &qmax) {
   KDL::TreeFkSolverPos_recursive fkpossolver(tree_);
   KDL::TreeIkSolverVel_wdls ikvelsolver(tree_, endpoints);
   ikvelsolver.setLambda(1e-6);
@@ -166,8 +175,10 @@ std::tuple<Eigen::Matrix<S, Eigen::Dynamic, 1>, int> KDLModelTpl<S>::TreeIKNRJL(
 
   auto retval = solver.CartToJnt(q_init, frames, q_sol);
 
-  VectorX q1 = q0;
+  VectorX<S> q1 = q0;
   for (int i = 0; i < n; i++) q1[joint_mapping_kdl_2_user_[i]] = q_sol(i);
 
   return {q1, retval};
 }
+
+}  // namespace mplib::kdl

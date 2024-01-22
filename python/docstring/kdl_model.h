@@ -24,32 +24,32 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_KDLModelTpl =
+static const char *__doc_mplib_kdl_KDLModelTpl =
 R"doc(KDL model of an articulation
 
 See https://github.com/orocos/orocos_kinematics_dynamics)doc";
 
-static const char *__doc_KDLModelTpl_KDLModelTpl =
+static const char *__doc_mplib_kdl_KDLModelTpl_KDLModelTpl =
 R"doc(
 )doc";
 
-static const char *__doc_KDLModelTpl_TreeIKNRJL =
+static const char *__doc_mplib_kdl_KDLModelTpl_TreeIKNRJL =
 R"doc(
 )doc";
 
-static const char *__doc_KDLModelTpl_chainIKLMA =
+static const char *__doc_mplib_kdl_KDLModelTpl_chainIKLMA =
 R"doc(
 )doc";
 
-static const char *__doc_KDLModelTpl_chainIKNR =
+static const char *__doc_mplib_kdl_KDLModelTpl_chainIKNR =
 R"doc(
 )doc";
 
-static const char *__doc_KDLModelTpl_chainIKNRJL =
+static const char *__doc_mplib_kdl_KDLModelTpl_chainIKNRJL =
 R"doc(
 )doc";
 
-static const char *__doc_KDLModelTpl_getTreeRootName =
+static const char *__doc_mplib_kdl_KDLModelTpl_getTreeRootName =
 R"doc(
 )doc";
 

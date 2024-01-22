@@ -13,7 +13,9 @@
 #include "fcl/narrowphase/collision_request.h"
 #include "fcl/narrowphase/collision_result.h"
 #include "fcl/narrowphase/gjk_solver_type.h"
-#include "macros_utils.h"
+#include "types.h"
+
+namespace mplib::fcl {
 
 /**
  * FCL collision model of an articulation
@@ -23,13 +25,10 @@
 template <typename S>
 class FCLModelTpl {
  private:
-  DEFINE_TEMPLATE_FCL(S)
-  DEFINE_TEMPLATE_EIGEN(S);
-
   urdf::ModelInterfaceSharedPtr urdf_model_;
 
-  std::vector<CollisionObjectPtr> collision_objects_;
-  std::vector<Transform3> collision_origin2link_poses;
+  std::vector<CollisionObjectPtr<S>> collision_objects_;
+  std::vector<Transform3<S>> collision_origin2link_poses;
   std::vector<std::string> collision_link_names_;
   std::vector<std::string> parent_link_names_;
   std::vector<std::pair<size_t, size_t>> collision_pairs_;
@@ -75,7 +74,7 @@ class FCLModelTpl {
    *
    * @return: all collision objects of the FCL model
    */
-  inline std::vector<CollisionObjectPtr> &getCollisionObjects() {
+  inline std::vector<CollisionObjectPtr<S>> &getCollisionObjects() {
     return collision_objects_;
   }
 
@@ -106,14 +105,14 @@ class FCLModelTpl {
    */
   void removeCollisionPairsFromSrdf(const std::string &srdf_filename);
 
-  void updateCollisionObjects(const std::vector<Transform3> &link_pose);
+  void updateCollisionObjects(const std::vector<Transform3<S>> &link_pose);
 
   /**
    * Update the collision objects of the FCL model.
    *
    * @param link_poses: list of link poses in the order of the link order
    */
-  void updateCollisionObjects(const std::vector<Vector7> &link_pose);
+  void updateCollisionObjects(const std::vector<Vector7<S>> &link_pose);
 
   /**
    * Perform collision checking.
@@ -121,12 +120,12 @@ class FCLModelTpl {
    * @param request: collision request
    * @return: ``true`` if collision happens
    */
-  bool collide(const CollisionRequest &request = CollisionRequest());
+  bool collide(const CollisionRequest<S> &request = CollisionRequest<S>());
 
-  std::vector<fcl::CollisionResult<S>> collideFull(
-      const CollisionRequest &request = CollisionRequest(1, false, 1, false, true,
-                                                         fcl::GJKSolverType::GST_INDEP,
-                                                         1e-6));
+  std::vector<CollisionResult<S>> collideFull(
+      const CollisionRequest<S> &request = CollisionRequest<S>(1, false, 1, false, true,
+                                                               GJKSolverType::GST_INDEP,
+                                                               1e-6));
 };
 
 template <typename S>
@@ -136,3 +135,5 @@ using FCLModeld = FCLModelTpl<double>;
 using FCLModelf = FCLModelTpl<float>;
 using FCLModeldPtr = FCLModelTplPtr<double>;
 using FCLModelfPtr = FCLModelTplPtr<float>;
+
+}  // namespace mplib::fcl

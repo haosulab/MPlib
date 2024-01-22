@@ -23,34 +23,35 @@
 #include "fcl/narrowphase/collision_request.h"
 #include "fcl/narrowphase/collision_result.h"
 #include "pinocchio/multibody/joint/fwd.hpp"
+#include "types.h"
+
+namespace mplib {
 
 template <typename S>
-Eigen::Transform<S, 3, Eigen::Isometry> se3_to_transform(
-    const pinocchio::SE3Tpl<S, 0> &T);
+Transform3<S> se3_to_transform(const pinocchio::SE3<S> &T);
 
 template <typename S>
-pinocchio::SE3Tpl<S, 0> transform_to_se3(
-    const Eigen::Transform<S, 3, Eigen::Isometry> &T);
+pinocchio::SE3<S> transform_to_se3(const Transform3<S> &T);
 
 template <typename S>
-Eigen::Transform<S, 3, Eigen::Isometry> pose_to_transform(const urdf::Pose &M);
+Transform3<S> pose_to_transform(const urdf::Pose &M);
 
 template <typename S>
-pinocchio::SE3Tpl<S, 0> pose_to_se3(const urdf::Pose &M);
+pinocchio::SE3<S> pose_to_se3(const urdf::Pose &M);
 
 template <typename S>
-pinocchio::InertiaTpl<S, 0> convert_inertial(const urdf::Inertial &Y);
+pinocchio::Inertia<S> convert_inertial(const urdf::Inertial &Y);
 
 template <typename S>
-pinocchio::InertiaTpl<S, 0> convert_inertial(const urdf::InertialSharedPtr &Y);
+pinocchio::Inertia<S> convert_inertial(const urdf::InertialSharedPtr &Y);
 
 template <typename S>
 std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH(
-    const std::string &mesh_path, const Eigen::Matrix<S, 3, 1> &scale);
+    const std::string &mesh_path, const Vector3<S> &scale);
 
 template <typename S>
-std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex(
-    const std::string &mesh_path, const Eigen::Matrix<S, 3, 1> &scale);
+std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex(const std::string &mesh_path,
+                                                    const Vector3<S> &scale);
 
 struct AssimpLoader {
   AssimpLoader();
@@ -65,3 +66,5 @@ struct AssimpLoader {
 bool treeFromUrdfModel(const urdf::ModelInterfaceSharedPtr &robot_model,
                        KDL::Tree &tree, std::string &tree_root_name,
                        const bool &verbose = false);
+
+}  // namespace mplib

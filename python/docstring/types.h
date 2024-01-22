@@ -24,56 +24,6 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_mplib_AssimpLoader = R"doc()doc";
-
-static const char *__doc_mplib_AssimpLoader_AssimpLoader =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_AssimpLoader_importer = R"doc()doc";
-
-static const char *__doc_mplib_AssimpLoader_load =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_AssimpLoader_scene = R"doc()doc";
-
-static const char *__doc_mplib_convert_inertial =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_convert_inertial_2 =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_load_mesh_as_BVH =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_load_mesh_as_Convex =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_pose_to_se3 =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_pose_to_transform =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_se3_to_transform =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_transform_to_se3 =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_treeFromUrdfModel =
-R"doc(
-)doc";
-
 /* ----- Begin of custom docstring section ----- */
 
 /* ----- End of custom docstring section ----- */

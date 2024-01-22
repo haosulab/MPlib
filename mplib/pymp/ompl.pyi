@@ -40,7 +40,7 @@ class OMPLPlanner:
         time: float = 1.0,
         range: float = 0.0,
         verbose: bool = False,
-        fixed_joints: set[FixedJoint] = set(),
+        fixed_joints: set[...] = set(),
         no_simplification: bool = False,
         constraint_function: typing.Callable[
             [

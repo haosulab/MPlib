@@ -2,8 +2,10 @@
 
 #include "color_printing.h"
 #include "fcl_model.h"
-#include "macros_utils.h"
 #include "pinocchio_model.h"
+#include "types.h"
+
+namespace mplib {
 
 /**
  * Supports initialization from URDF and SRDF files, and provides access to
@@ -12,27 +14,24 @@
 template <typename S>
 class ArticulatedModelTpl {
  private:
-  DEFINE_TEMPLATE_EIGEN(S);
-  using PinocchioModel = PinocchioModelTpl<S>;
-  using FCLModel = FCLModelTpl<S>;
+  PinocchioModelTpl<S> pinocchio_model_;
+  FCLModelTpl<S> fcl_model_;
 
-  PinocchioModel pinocchio_model_;
-  FCLModel fcl_model_;
-
+  // all links and joints you want to control. order matters
   std::vector<std::string> user_link_names_;
-  std::vector<std::string>
-      user_joint_names_;  // all links and joints you want to control. order matters
+  std::vector<std::string> user_joint_names_;
 
   std::vector<size_t> move_group_user_joints_;
   std::vector<std::string> move_group_end_effectors_;
-  VectorX current_qpos_;  // The planning world only update the state in planning group.
+  VectorX<S>
+      current_qpos_;  // The planning world only update the state in planning group.
 
   size_t move_group_qpos_dim_;
   bool verbose_;
 
   // the base pose of the robot
-  Vector7 base_pose_;
-  Transform3 base_tf_;
+  Vector7<S> base_pose_;
+  Transform3<S> base_tf_;
 
  public:
   /**
@@ -48,7 +47,7 @@ class ArticulatedModelTpl {
    * @param convex: use convex decomposition for collision objects
    */
   ArticulatedModelTpl(const std::string &urdf_filename,
-                      const std::string &srdf_filename, const Vector3 &gravity,
+                      const std::string &srdf_filename, const Vector3<S> &gravity,
                       const std::vector<std::string> &joint_names = {},
                       const std::vector<std::string> &link_names = {},
                       const bool &verbose = true, const bool &convex = false);
@@ -132,7 +131,7 @@ class ArticulatedModelTpl {
    *
    * @return: current qpos of all active joints
    */
-  VectorX getQpos(void) { return current_qpos_; }
+  VectorX<S> getQpos(void) { return current_qpos_; }
 
   /**
    * Let the planner know the current joint positions.
@@ -142,7 +141,7 @@ class ArticulatedModelTpl {
    *    If full is ``false``, we will pad the missing joints with current known qpos.
    *    The default is ``false``
    */
-  void setQpos(const VectorX &qpos, const bool &full = false);
+  void setQpos(const VectorX<S> &qpos, const bool &full = false);
 
   /** Only support one end effector case */
   size_t getEEFrameIndex() {
@@ -165,14 +164,14 @@ class ArticulatedModelTpl {
    *
    * @param pose: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
    */
-  void setBasePose(const Vector7 &pose);
+  void setBasePose(const Vector7<S> &pose);
 
   /**
    * Get the base pose of the robot.
    *
    * @return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
    */
-  Vector7 getBasePose() { return base_pose_; }
+  Vector7<S> getBasePose() { return base_pose_; }
 };
 
 template <typename T>
@@ -182,3 +181,5 @@ using ArticulatedModeld = ArticulatedModelTpl<double>;
 using ArticulatedModelf = ArticulatedModelTpl<float>;
 using ArticulatedModeldPtr = ArticulatedModelTplPtr<double>;
 using ArticulatedModelfPtr = ArticulatedModelTplPtr<float>;
+
+}  // namespace mplib

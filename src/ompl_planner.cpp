@@ -2,6 +2,8 @@
 
 #include "mplib/pinocchio_model.h"
 
+namespace mplib::ompl {
+
 #define DEFINE_TEMPLATE_OMPL(S)         \
   template class ValidityCheckerTpl<S>; \
   template class OMPLPlannerTpl<S>;
@@ -20,9 +22,8 @@ bool is_fixed_joint(const FixedJoints &fixed_joints, size_t articulation_idx,
   return false;
 }
 
-Eigen::VectorXd remove_fixed_joints(const FixedJoints &fixed_joints,
-                                    const Eigen::VectorXd &state) {
-  Eigen::VectorXd ret(state.rows() - fixed_joints.size());
+VectorXd remove_fixed_joints(const FixedJoints &fixed_joints, const VectorXd &state) {
+  VectorXd ret(state.rows() - fixed_joints.size());
   size_t cnt = 0;
   for (auto i = 0; i < state.rows(); i++) {
     if (is_fixed_joint(fixed_joints, 0, i))
@@ -32,10 +33,9 @@ Eigen::VectorXd remove_fixed_joints(const FixedJoints &fixed_joints,
   return ret;
 }
 
-Eigen::VectorXd add_fixed_joints(const FixedJoints &fixed_joints,
-                                 const Eigen::VectorXd &state) {
+VectorXd add_fixed_joints(const FixedJoints &fixed_joints, const VectorXd &state) {
   auto fixed_itr = fixed_joints.begin();
-  Eigen::VectorXd ret(fixed_joints.size() + state.rows());
+  VectorXd ret(fixed_joints.size() + state.rows());
   size_t j = 0;
   for (auto i = 0; i < ret.rows(); i++) {
     if (is_fixed_joint(fixed_joints, 0, i)) {
@@ -116,8 +116,9 @@ void OMPLPlannerTpl<S>::build_compound_state_space(const FixedJoints &fixed_join
   state_space_ = cs_;
   p_compound_si_ = std::make_shared<SpaceInformation>(state_space_);
   si_ = p_compound_si_;
-  valid_checker_ = std::make_shared<ValidityChecker>(world_, si_, false, fixed_joints);
-  ss_ = std::make_shared<ompl::geometric::SimpleSetup>(si_);
+  valid_checker_ =
+      std::make_shared<ValidityCheckerTpl<S>>(world_, si_, false, fixed_joints);
+  ss_ = std::make_shared<og::SimpleSetup>(si_);
   ss_->setStateValidityChecker(valid_checker_);
 }
 
@@ -168,11 +169,10 @@ OMPLPlannerTpl<S>::OMPLPlannerTpl(const PlanningWorldTplPtr<S> &world, int robot
 }
 
 template <typename S>
-Eigen::Matrix<S, Eigen::Dynamic, 1> OMPLPlannerTpl<S>::random_sample_nearby(
-    const VectorX &start_state) {
+VectorX<S> OMPLPlannerTpl<S>::random_sample_nearby(const VectorX<S> &start_state) {
   for (int cnt = 0; cnt < 1000; ++cnt) {
     S ratio = (S)(cnt + 1) / 1000;
-    VectorX new_state = start_state;
+    VectorX<S> new_state = start_state;
     for (size_t i = 0; i < dim_; i++) {
       S r = (S)rand() / RAND_MAX * 2 - 1;
       new_state[i] += (upper_joint_limits_[i] - lower_joint_limits_[i]) * ratio * r;
@@ -199,7 +199,7 @@ void OMPLPlannerTpl<S>::_simplify_path(og::PathGeometric &path) {
 }
 
 template <typename S>
-Eigen::MatrixXd OMPLPlannerTpl<S>::simplify_path(Eigen::MatrixXd &path) {
+MatrixXd OMPLPlannerTpl<S>::simplify_path(MatrixXd &path) {
   if (si_ == p_constrained_si_) {  // warning
     print_warning("Current space information is for constrained planning");
     print_warning("doing simplification in non-constrained space");
@@ -211,7 +211,7 @@ Eigen::MatrixXd OMPLPlannerTpl<S>::simplify_path(Eigen::MatrixXd &path) {
     geo_path.append(state.get());
   }
   _simplify_path(geo_path);
-  Eigen::MatrixXd ret(geo_path.getStateCount(), dim_);
+  MatrixXd ret(geo_path.getStateCount(), dim_);
   for (size_t i = 0; i < geo_path.getStateCount(); i++) {
     // we should only simplify the path when not doing constrained planning
     ret.row(i) = state2eigen<S>(geo_path.getState(i), si_.get(), false);
@@ -221,7 +221,7 @@ Eigen::MatrixXd OMPLPlannerTpl<S>::simplify_path(Eigen::MatrixXd &path) {
 
 template <typename S>
 std::shared_ptr<ob::GoalStates> OMPLPlannerTpl<S>::make_goal_states(
-    const std::vector<VectorX> &goal_states) {
+    const std::vector<VectorX<S>> &goal_states) {
   auto goals = std::make_shared<ob::GoalStates>(si_);
 
   int tot_enum_states = 1, tot_goal_state = 0;
@@ -268,14 +268,13 @@ std::shared_ptr<ob::GoalStates> OMPLPlannerTpl<S>::make_goal_states(
 }
 
 template <typename S>
-std::pair<std::string, Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic>>
-OMPLPlannerTpl<S>::plan(
-    const VectorX &start_state, const std::vector<VectorX> &goal_states,
+std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
+    const VectorX<S> &start_state, const std::vector<VectorX<S>> &goal_states,
     const std::string &planner_name, const double &time, const double &range,
     const bool verbose, const FixedJoints &fixed_joints, const bool no_simplification,
-    const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+    const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
         &constraint_function,
-    const std::function<void(const Eigen::VectorXd &, Eigen::Ref<Eigen::VectorXd>)>
+    const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
         &constraint_jacobian,
     double constraint_tolerance) {
   if (fixed_joints.size() || last_fixed_joints_.size()) {
@@ -294,13 +293,13 @@ OMPLPlannerTpl<S>::plan(
     p_constrained_si_ =
         std::make_shared<ob::ConstrainedSpaceInformation>(p_constrained_space_);
     si_ = p_constrained_si_;
-    valid_checker_ = std::make_shared<ValidityChecker>(world_, si_, true);
-    ss_ = std::make_shared<ompl::geometric::SimpleSetup>(si_);
+    valid_checker_ = std::make_shared<ValidityCheckerTpl<S>>(world_, si_, true);
+    ss_ = std::make_shared<og::SimpleSetup>(si_);
   }
   last_fixed_joints_ = fixed_joints;
 
-  Eigen::VectorXd reduced_start_state = remove_fixed_joints(fixed_joints, start_state);
-  std::vector<Eigen::VectorXd> reduced_goal_states;
+  VectorXd reduced_start_state = remove_fixed_joints(fixed_joints, start_state);
+  std::vector<VectorXd> reduced_goal_states;
   for (auto &goal_state : goal_states)
     reduced_goal_states.push_back(remove_fixed_joints(fixed_joints, goal_state));
 
@@ -308,7 +307,7 @@ OMPLPlannerTpl<S>::plan(
          "Length of start state and goal state should be equal");
   ASSERT(static_cast<size_t>(reduced_start_state.rows()) == dim_,
          "Length of start state and problem dimension should be equal");
-  if (verbose == false) ompl::msg::noOutputHandler();
+  if (verbose == false) ::ompl::msg::noOutputHandler();
 
   ob::ScopedState<> start(state_space_);
   start = eigen2vector<S, double>(reduced_start_state);
@@ -316,7 +315,7 @@ OMPLPlannerTpl<S>::plan(
   bool invalid_start = !valid_checker_->_isValid(reduced_start_state);
   if (invalid_start) {
     print_warning("invalid start state!! (collision)");
-    VectorX new_reduced_start_state = random_sample_nearby(reduced_start_state);
+    VectorX<S> new_reduced_start_state = random_sample_nearby(reduced_start_state);
     start = eigen2vector<S, double>(new_reduced_start_state);
   }
 
@@ -355,8 +354,7 @@ OMPLPlannerTpl<S>::plan(
       _simplify_path(path);
 
     size_t len = path.getStateCount();
-    Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic> ret(len + invalid_start,
-                                                         start_state.rows());
+    MatrixX<S> ret(len + invalid_start, start_state.rows());
     if (verbose) print_verbose("Result size ", len, " ", start_state.rows());
     if (invalid_start) {
       for (auto j = 0; j < start_state.rows(); j++) ret(0, j) = start_state(j);
@@ -372,7 +370,9 @@ OMPLPlannerTpl<S>::plan(
     }
     return std::make_pair(solved.asString(), ret);
   } else {
-    Eigen::Matrix<S, Eigen::Dynamic, Eigen::Dynamic> ret(0, start_state.rows());
+    MatrixX<S> ret(0, start_state.rows());
     return std::make_pair(solved.asString(), ret);
   }
 }
+
+}  // namespace mplib::ompl

@@ -24,16 +24,16 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_FCLModelTpl =
+static const char *__doc_mplib_fcl_FCLModelTpl =
 R"doc(FCL collision model of an articulation
 
 See https://github.com/flexible-collision-library/fcl)doc";
 
-static const char *__doc_FCLModelTpl_FCLModelTpl =
+static const char *__doc_mplib_fcl_FCLModelTpl_FCLModelTpl =
 R"doc(
 )doc";
 
-static const char *__doc_FCLModelTpl_FCLModelTpl_2 =
+static const char *__doc_mplib_fcl_FCLModelTpl_FCLModelTpl_2 =
 R"doc(
 Construct an FCL model from URDF and SRDF files.
 
@@ -42,32 +42,32 @@ Construct an FCL model from URDF and SRDF files.
 :param verbose: print debug information
 :param convex: use convex decomposition for collision objects)doc";
 
-static const char *__doc_FCLModelTpl_collide =
+static const char *__doc_mplib_fcl_FCLModelTpl_collide =
 R"doc(
 Perform collision checking.
 
 :param request: collision request
 :return: ``True`` if collision happens)doc";
 
-static const char *__doc_FCLModelTpl_collideFull =
+static const char *__doc_mplib_fcl_FCLModelTpl_collideFull =
 R"doc(
 )doc";
 
-static const char *__doc_FCLModelTpl_getCollisionLinkNames =
+static const char *__doc_mplib_fcl_FCLModelTpl_getCollisionLinkNames =
 R"doc(
 )doc";
 
-static const char *__doc_FCLModelTpl_getCollisionLinkUserIndices =
+static const char *__doc_mplib_fcl_FCLModelTpl_getCollisionLinkUserIndices =
 R"doc(
 )doc";
 
-static const char *__doc_FCLModelTpl_getCollisionObjects =
+static const char *__doc_mplib_fcl_FCLModelTpl_getCollisionObjects =
 R"doc(
 Get the collision objects of the FCL model.
 
 :return: all collision objects of the FCL model)doc";
 
-static const char *__doc_FCLModelTpl_getCollisionPairs =
+static const char *__doc_mplib_fcl_FCLModelTpl_getCollisionPairs =
 R"doc(
 Get the collision pairs of the FCL model.
 
@@ -75,32 +75,32 @@ Get the collision pairs of the FCL model.
     objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled
     collision pairs)doc";
 
-static const char *__doc_FCLModelTpl_getUserLinkNames =
+static const char *__doc_mplib_fcl_FCLModelTpl_getUserLinkNames =
 R"doc(
 )doc";
 
-static const char *__doc_FCLModelTpl_printCollisionPairs =
+static const char *__doc_mplib_fcl_FCLModelTpl_printCollisionPairs =
 R"doc(
 )doc";
 
-static const char *__doc_FCLModelTpl_removeCollisionPairsFromSrdf =
+static const char *__doc_mplib_fcl_FCLModelTpl_removeCollisionPairsFromSrdf =
 R"doc(
 Remove collision pairs from SRDF.
 
 :param srdf_filename: path to SRDF file, can be relative to the current working
     directory)doc";
 
-static const char *__doc_FCLModelTpl_setLinkOrder =
+static const char *__doc_mplib_fcl_FCLModelTpl_setLinkOrder =
 R"doc(
 Set the link order of the FCL model.
 
 :param names: list of link names in the order that you want to set.)doc";
 
-static const char *__doc_FCLModelTpl_updateCollisionObjects =
+static const char *__doc_mplib_fcl_FCLModelTpl_updateCollisionObjects =
 R"doc(
 )doc";
 
-static const char *__doc_FCLModelTpl_updateCollisionObjects_2 =
+static const char *__doc_mplib_fcl_FCLModelTpl_updateCollisionObjects_2 =
 R"doc(
 Update the collision objects of the FCL model.
 

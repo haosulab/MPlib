@@ -24,9 +24,9 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_PlanningWorldTpl = R"doc(Planning world for collision checking)doc";
+static const char *__doc_mplib_PlanningWorldTpl = R"doc(Planning world for collision checking)doc";
 
-static const char *__doc_PlanningWorldTpl_PlanningWorldTpl =
+static const char *__doc_mplib_PlanningWorldTpl_PlanningWorldTpl =
 R"doc(
 Constructs a PlanningWorld with given articulations and normal objects
 
@@ -37,27 +37,27 @@ Constructs a PlanningWorld with given articulations and normal objects
 :param plan_articulation_id: id of the articulated model that is used for
     planning)doc";
 
-static const char *__doc_PlanningWorldTpl_addArticulation =
+static const char *__doc_mplib_PlanningWorldTpl_addArticulation =
 R"doc(
 Add an articulated model to the planning world.
 
 :param model: articulated model to be added
 :param name: name of the articulated model)doc";
 
-static const char *__doc_PlanningWorldTpl_addArticulations =
+static const char *__doc_mplib_PlanningWorldTpl_addArticulations =
 R"doc(
 Add a list of articulated models to the planning world.
 
 :param models: list of articulated models to be added
 :param names: list of names of the articulated models)doc";
 
-static const char *__doc_PlanningWorldTpl_collide =
+static const char *__doc_mplib_PlanningWorldTpl_collide =
 R"doc(
 Check collision in the planning world.
 
 :return: ``True`` if collision exists)doc";
 
-static const char *__doc_PlanningWorldTpl_collideFull =
+static const char *__doc_mplib_PlanningWorldTpl_collideFull =
 R"doc(
 Check collision between the articulated model and all objects.
 
@@ -65,7 +65,7 @@ Check collision between the articulated model and all objects.
 :param request: collision request params. Can leave empty for default value
 :return: List of WorldCollisionResult objects)doc";
 
-static const char *__doc_PlanningWorldTpl_collideWithOthers =
+static const char *__doc_mplib_PlanningWorldTpl_collideWithOthers =
 R"doc(
 Check collision between the articulated model and other objects.
 
@@ -73,47 +73,47 @@ Check collision between the articulated model and other objects.
 :param request: collision request params. Can leave empty for default value
 :return: List of WorldCollisionResult objects)doc";
 
-static const char *__doc_PlanningWorldTpl_getArticulationNames =
+static const char *__doc_mplib_PlanningWorldTpl_getArticulationNames =
 R"doc(
 )doc";
 
-static const char *__doc_PlanningWorldTpl_getArticulations =
+static const char *__doc_mplib_PlanningWorldTpl_getArticulations =
 R"doc(
 Get the list of articulated models.
 
 :return: list of articulated models)doc";
 
-static const char *__doc_PlanningWorldTpl_getMoveArticulationId =
+static const char *__doc_mplib_PlanningWorldTpl_getMoveArticulationId =
 R"doc(
 )doc";
 
-static const char *__doc_PlanningWorldTpl_getNormalObjectNames =
+static const char *__doc_mplib_PlanningWorldTpl_getNormalObjectNames =
 R"doc(
 )doc";
 
-static const char *__doc_PlanningWorldTpl_getNormalObjects =
+static const char *__doc_mplib_PlanningWorldTpl_getNormalObjects =
 R"doc(
 Get the list of non-articulated collision objects.
 
 :return: list of non-articulated collision objects)doc";
 
-static const char *__doc_PlanningWorldTpl_printAttachedToolPose =
+static const char *__doc_mplib_PlanningWorldTpl_printAttachedToolPose =
 R"doc(
 Print the pose of the attached tool.)doc";
 
-static const char *__doc_PlanningWorldTpl_removeAttach =
+static const char *__doc_mplib_PlanningWorldTpl_removeAttach =
 R"doc(
 Remove attach object so there won't be anything on the end effector when
 ``use_attach`` is set to ``True`` again)doc";
 
-static const char *__doc_PlanningWorldTpl_removeNormalObject =
+static const char *__doc_mplib_PlanningWorldTpl_removeNormalObject =
 R"doc(
 Remove am non-articulated object
 
 :param name: name of the non-articulated collision object
 :return: ``True`` if the item exists and ``False`` otherwise)doc";
 
-static const char *__doc_PlanningWorldTpl_selfCollide =
+static const char *__doc_mplib_PlanningWorldTpl_selfCollide =
 R"doc(
 Check collision between the articulated model and itself.
 
@@ -121,43 +121,43 @@ Check collision between the articulated model and itself.
 :param request: collision request params. Can leave empty for default value
 :return: List of WorldCollisionResult objects)doc";
 
-static const char *__doc_PlanningWorldTpl_setMoveArticulationId =
+static const char *__doc_mplib_PlanningWorldTpl_setMoveArticulationId =
 R"doc(
 )doc";
 
-static const char *__doc_PlanningWorldTpl_setNormalObject =
+static const char *__doc_mplib_PlanningWorldTpl_setNormalObject =
 R"doc(
 Add a non-articulated collision object to the planning world.
 
 :param name: name of the non-articulated collision object
 :param collision_object: the non-articulated collision object to be added)doc";
 
-static const char *__doc_PlanningWorldTpl_setQpos =
+static const char *__doc_mplib_PlanningWorldTpl_setQpos =
 R"doc(
 Set the joint qpos of the articulated model.
 
 :param index: index of the articulated model
 :param qpos: joint angles of the *movegroup only*)doc";
 
-static const char *__doc_PlanningWorldTpl_setQposAll =
+static const char *__doc_mplib_PlanningWorldTpl_setQposAll =
 R"doc(
 Set the joint qpos of all articulated models.
 
 :param qpos: joint angles of all the models (*movegroup only*))doc";
 
-static const char *__doc_PlanningWorldTpl_setUseAttach =
+static const char *__doc_mplib_PlanningWorldTpl_setUseAttach =
 R"doc(
 Set whether to use attached tool for collision checking.
 
 :param use: whether to use attached tool)doc";
 
-static const char *__doc_PlanningWorldTpl_setUsePointCloud =
+static const char *__doc_mplib_PlanningWorldTpl_setUsePointCloud =
 R"doc(
 Set whether to use point cloud for collision checking.
 
 :param use: whether to use point cloud)doc";
 
-static const char *__doc_PlanningWorldTpl_updateAttachedBox =
+static const char *__doc_mplib_PlanningWorldTpl_updateAttachedBox =
 R"doc(
 Add a box as the attached tool.
 
@@ -166,7 +166,7 @@ Add a box as the attached tool.
 :param pose: pose of the attached box w.r.t. the link it's attached to. [x, y,
     z, qw, qx, qy, qz])doc";
 
-static const char *__doc_PlanningWorldTpl_updateAttachedMesh =
+static const char *__doc_mplib_PlanningWorldTpl_updateAttachedMesh =
 R"doc(
 Add a mesh as the attached tool.
 
@@ -175,7 +175,7 @@ Add a mesh as the attached tool.
 :param pose: pose of the attached mesh w.r.t. the link it's attached to. [x, y,
     z, qw, qx, qy, qz])doc";
 
-static const char *__doc_PlanningWorldTpl_updateAttachedSphere =
+static const char *__doc_mplib_PlanningWorldTpl_updateAttachedSphere =
 R"doc(
 Add a sphere as the attached tool.
 
@@ -184,7 +184,7 @@ Add a sphere as the attached tool.
 :param pose: pose of the attached sphere w.r.t. the link it's attached to. [x,
     y, z, qw, qx, qy, qz])doc";
 
-static const char *__doc_PlanningWorldTpl_updateAttachedTool =
+static const char *__doc_mplib_PlanningWorldTpl_updateAttachedTool =
 R"doc(
 Attach or update the attached object
 
@@ -193,30 +193,30 @@ Attach or update the attached object
 :param pose: pose of the attached object w.r.t. the link it's attached to. [x,
     y, z, qw, qx, qy, qz])doc";
 
-static const char *__doc_PlanningWorldTpl_updatePointCloud =
+static const char *__doc_mplib_PlanningWorldTpl_updatePointCloud =
 R"doc(
 Update the point cloud for collision checking.
 
 :param vertices: vertices of the point cloud
 :param radius: radius of each point in the point cloud)doc";
 
-static const char *__doc_PlanningWorldTpl_use_attach = R"doc()doc";
+static const char *__doc_mplib_PlanningWorldTpl_use_attach = R"doc()doc";
 
-static const char *__doc_PlanningWorldTpl_use_point_cloud = R"doc()doc";
+static const char *__doc_mplib_PlanningWorldTpl_use_point_cloud = R"doc()doc";
 
-static const char *__doc_WorldCollisionResultTpl = R"doc(Result of the collision checking.)doc";
+static const char *__doc_mplib_WorldCollisionResultTpl = R"doc(Result of the collision checking.)doc";
 
-static const char *__doc_WorldCollisionResultTpl_collision_type = R"doc(type of the collision)doc";
+static const char *__doc_mplib_WorldCollisionResultTpl_collision_type = R"doc(type of the collision)doc";
 
-static const char *__doc_WorldCollisionResultTpl_link_name1 = R"doc(link name of the first object in collision)doc";
+static const char *__doc_mplib_WorldCollisionResultTpl_link_name1 = R"doc(link name of the first object in collision)doc";
 
-static const char *__doc_WorldCollisionResultTpl_link_name2 = R"doc(link name of the second object in collision)doc";
+static const char *__doc_mplib_WorldCollisionResultTpl_link_name2 = R"doc(link name of the second object in collision)doc";
 
-static const char *__doc_WorldCollisionResultTpl_object_name1 = R"doc(name of the first object)doc";
+static const char *__doc_mplib_WorldCollisionResultTpl_object_name1 = R"doc(name of the first object)doc";
 
-static const char *__doc_WorldCollisionResultTpl_object_name2 = R"doc(name of the second object)doc";
+static const char *__doc_mplib_WorldCollisionResultTpl_object_name2 = R"doc(name of the second object)doc";
 
-static const char *__doc_WorldCollisionResultTpl_res = R"doc(the fcl CollisionResult)doc";
+static const char *__doc_mplib_WorldCollisionResultTpl_res = R"doc(the fcl CollisionResult)doc";
 
 /* ----- Begin of custom docstring section ----- */
 

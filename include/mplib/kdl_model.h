@@ -15,8 +15,10 @@
 #include <kdl/utilities/svd_eigen_HH.hpp>
 #include <urdf_parser/urdf_parser.h>
 
-#include "macros_utils.h"
+#include "types.h"
 #include "urdf_utils.h"
+
+namespace mplib::kdl {
 
 /**
  * KDL model of an articulation
@@ -26,7 +28,6 @@
 template <typename S>
 class KDLModelTpl {
  private:
-  DEFINE_TEMPLATE_EIGEN(S)
   KDL::Tree tree_;
   std::string tree_root_name_;
   std::vector<std::string> user_link_names_;
@@ -42,17 +43,19 @@ class KDLModelTpl {
 
   std::string getTreeRootName() { return tree_root_name_; }
 
-  std::tuple<VectorX, int> chainIKLMA(const size_t &index, const VectorX &q0,
-                                      const Vector7 &pose);
-  std::tuple<VectorX, int> chainIKNR(const size_t &index, const VectorX &q0,
-                                     const Vector7 &pose);
-  std::tuple<VectorX, int> chainIKNRJL(const size_t &index, const VectorX &q0,
-                                       const Vector7 &pose, const VectorX &q_min,
-                                       const VectorX &q_max);
-  std::tuple<VectorX, int> TreeIKNRJL(const std::vector<std::string> endpoints,
-                                      const VectorX &q0,
-                                      const std::vector<Vector7> &poses,
-                                      const VectorX &q_min, const VectorX &q_max);
+  std::tuple<VectorX<S>, int> chainIKLMA(const size_t &index, const VectorX<S> &q0,
+                                         const Vector7<S> &pose);
+  std::tuple<VectorX<S>, int> chainIKNR(const size_t &index, const VectorX<S> &q0,
+                                        const Vector7<S> &pose);
+  std::tuple<VectorX<S>, int> chainIKNRJL(const size_t &index, const VectorX<S> &q0,
+                                          const Vector7<S> &pose,
+                                          const VectorX<S> &q_min,
+                                          const VectorX<S> &q_max);
+  std::tuple<VectorX<S>, int> TreeIKNRJL(const std::vector<std::string> endpoints,
+                                         const VectorX<S> &q0,
+                                         const std::vector<Vector7<S>> &poses,
+                                         const VectorX<S> &q_min,
+                                         const VectorX<S> &q_max);
 };
 
 template <typename T>
@@ -62,3 +65,5 @@ using KDLModeld = KDLModelTpl<double>;
 using KDLModelf = KDLModelTpl<float>;
 using KDLModeldPtr = KDLModelTplPtr<double>;
 using KDLModelfPtr = KDLModelTplPtr<float>;
+
+}  // namespace mplib::kdl

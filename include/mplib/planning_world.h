@@ -7,6 +7,9 @@
 #include "color_printing.h"
 #include "fcl_model.h"
 #include "macros_utils.h"
+#include "types.h"
+
+namespace mplib {
 
 /// Result of the collision checking.
 template <typename S>
@@ -31,19 +34,17 @@ using WorldCollisionResultfPtr = WorldCollisionResultTplPtr<float>;
 template <typename S>
 class PlanningWorldTpl {
  private:
-  DEFINE_TEMPLATE_EIGEN(S);
   using CollisionRequest = fcl::CollisionRequest<S>;
   using CollisionResult = fcl::CollisionResult<S>;
 
   using CollisionGeometry = fcl::CollisionGeometry<S>;
-  using CollisionGeometryPtr = std::shared_ptr<CollisionGeometry>;
+  using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
 
   using CollisionObject = fcl::CollisionObject<S>;
-  using CollisionObjectPtr = std::shared_ptr<CollisionObject>;
+  using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
 
   using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
-  using BroadPhaseCollisionManagerPtr =
-      std::shared_ptr<fcl::BroadPhaseCollisionManager<S>>;
+  using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
 
   using ArticulatedModel = ArticulatedModelTpl<S>;
   using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
@@ -58,7 +59,7 @@ class PlanningWorldTpl {
   int move_articulation_id_, attach_link_id_;
   CollisionObjectPtr point_cloud_, attached_tool_;
   bool has_point_cloud_, has_attach_;
-  Transform3 attach_to_link_pose_;
+  Transform3<S> attach_to_link_pose_;
   // BroadPhaseCollisionManagerPtr normal_manager;
 
  public:
@@ -147,7 +148,7 @@ class PlanningWorldTpl {
    * @param vertices: vertices of the point cloud
    * @param radius: radius of each point in the point cloud
    */
-  void updatePointCloud(const Matrixx3 &vertices, const double &radius = 0.0);
+  void updatePointCloud(const MatrixX3<S> &vertices, const double &radius = 0.0);
 
   /**
    * Set whether to use attached tool for collision checking.
@@ -174,7 +175,7 @@ class PlanningWorldTpl {
    *              [x, y, z, qw, qx, qy, qz]
    */
   void updateAttachedTool(CollisionGeometryPtr p_geom, int link_id,
-                          const Vector7 &pose);
+                          const Vector7<S> &pose);
 
   /**
    * Add a sphere as the attached tool.
@@ -184,7 +185,7 @@ class PlanningWorldTpl {
    * @param pose: pose of the attached sphere w.r.t. the link it's attached to.
    *              [x, y, z, qw, qx, qy, qz]
    */
-  void updateAttachedSphere(S radius, int link_id, const Vector7 &pose);
+  void updateAttachedSphere(S radius, int link_id, const Vector7<S> &pose);
 
   /**
    * Add a box as the attached tool.
@@ -194,7 +195,7 @@ class PlanningWorldTpl {
    * @param pose: pose of the attached box w.r.t. the link it's attached to.
    *              [x, y, z, qw, qx, qy, qz]
    */
-  void updateAttachedBox(const Vector3 &size, int link_id, const Vector7 &pose);
+  void updateAttachedBox(const Vector3<S> &size, int link_id, const Vector7<S> &pose);
 
   /**
    * Add a mesh as the attached tool.
@@ -205,7 +206,7 @@ class PlanningWorldTpl {
    *              [x, y, z, qw, qx, qy, qz]
    */
   void updateAttachedMesh(const std::string &mesh_path, int link_id,
-                          const Vector7 &pose);
+                          const Vector7<S> &pose);
 
   /// Print the pose of the attached tool.
   void printAttachedToolPose() {
@@ -248,14 +249,14 @@ class PlanningWorldTpl {
    * @param index: index of the articulated model
    * @param qpos: joint angles of the *movegroup only*
    */
-  void setQpos(const int &index, const VectorX &qpos);
+  void setQpos(const int &index, const VectorX<S> &qpos);
 
   /**
    * Set the joint qpos of all articulated models.
    *
    * @param qpos: joint angles of all the models (*movegroup only*)
    */
-  void setQposAll(const VectorX &qpos);
+  void setQposAll(const VectorX<S> &qpos);
 
   /**
    * Check collision in the planning world.
@@ -301,3 +302,5 @@ using PlanningWorldd = PlanningWorldTpl<double>;
 using PlanningWorldf = PlanningWorldTpl<float>;
 using PlanningWorlddPtr = PlanningWorldTplPtr<double>;
 using PlanningWorldfPtr = PlanningWorldTplPtr<float>;
+
+}  // namespace mplib
