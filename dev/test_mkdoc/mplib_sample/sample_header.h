@@ -14,7 +14,8 @@ namespace mplib {
  * - Begin third unordered list element. Hac habitasse platea dictumst quisque
  *   sagittis purus sit. End third unordered list element.
  */
-class PlanningWorld {
+template <typename S>
+class PlanningWorldTpl {
  public:
   /**
    * Attaches existing normal object to specified link of articulation.
@@ -39,5 +40,17 @@ class PlanningWorld {
                     const std::vector<int> &pose,
                     const std::vector<std::string> &touch_links);
 };
+
+template <typename S>
+std::vector<S> compoundstate2vector(const std::vector<int> &state_raw);
+
+// Explicit Template Instantiation Declaration =========================================
+#define DECLARE_TEMPLATE_PLANNING_WORLD(S)                \
+  extern template std::vector<S> compoundstate2vector<S>( \
+      const std::vector<int> &state_raw);                 \
+  extern template class PlanningWorldTpl<S>
+
+DECLARE_TEMPLATE_PLANNING_WORLD(float);
+DECLARE_TEMPLATE_PLANNING_WORLD(double);
 
 }  // namespace mplib

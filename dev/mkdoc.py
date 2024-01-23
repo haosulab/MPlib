@@ -200,6 +200,17 @@ def is_accepted_cursor(cursor, name_chain) -> bool:
         # Don't process forward declarations.  If we did, we'd define the class
         # overview documentation twice; both cursors have a .raw_comment value.
         return False
+
+    # Explicit Template Instantiation Declaration
+    init_token_str = " ".join([token.spelling for token in cursor.get_tokens()][:3])
+    if (
+        cursor.kind == CursorKind.CLASS_DECL
+        and init_token_str == "extern template class"
+    ) or (
+        cursor.kind == CursorKind.STRUCT_DECL
+        and init_token_str == "extern template struct"
+    ):
+        return False
     return True
 
 
