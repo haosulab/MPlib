@@ -23,7 +23,7 @@ Examples
 .. toctree::
    :maxdepth: 1
 
-   ../motion_planning/examples
+   ../tutorials/examples
 
 API Reference
 -------------
