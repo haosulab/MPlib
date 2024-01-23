@@ -17,9 +17,9 @@ template <typename S>
 ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
                                             const std::string &srdf_filename,
                                             const Vector3<S> &gravity,
-                                            const std::vector<std::string> &joint_names,
                                             const std::vector<std::string> &link_names,
-                                            const bool &verbose, const bool &convex)
+                                            const std::vector<std::string> &joint_names,
+                                            const bool &convex, const bool &verbose)
     : pinocchio_model_(urdf_filename, gravity, verbose),
       fcl_model_(urdf_filename, verbose, convex),
       verbose_(verbose) {
@@ -34,6 +34,13 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
   current_qpos_ = VectorX<S>::Constant(pinocchio_model_.getModel().nv, 0);
   setMoveGroup(user_link_names_);
   setBasePose({0, 0, 0, 1, 0, 0, 0});  // initialize base pose to identity
+}
+
+template <typename S>
+std::vector<std::string> ArticulatedModelTpl<S>::getMoveGroupJointNames() {
+  std::vector<std::string> ret;
+  for (auto i : move_group_user_joints_) ret.push_back(user_joint_names_[i]);
+  return ret;
 }
 
 template <typename S>
@@ -59,13 +66,6 @@ void ArticulatedModelTpl<S>::setMoveGroup(
   move_group_qpos_dim_ = 0;
   for (auto i : move_group_user_joints_)
     move_group_qpos_dim_ += pinocchio_model_.getJointDim(i);
-}
-
-template <typename S>
-std::vector<std::string> ArticulatedModelTpl<S>::getMoveGroupJointName(void) {
-  std::vector<std::string> ret;
-  for (auto i : move_group_user_joints_) ret.push_back(user_joint_names_[i]);
-  return ret;
 }
 
 template <typename S>
@@ -104,9 +104,8 @@ void ArticulatedModelTpl<S>::setBasePose(const Vector7<S> &pose) {
   base_tf_.translation() = pose.head(3);
   base_tf_.linear() =
       Quaternion<S>(pose[3], pose[4], pose[5], pose[6]).toRotationMatrix();
-  setQpos(
-      current_qpos_,
-      true);  // we don't need to update Qpos, but this also updates fcl, which we need
+  // we don't need to update Qpos, but this also updates fcl, which we need
+  setQpos(current_qpos_, true);
 }
 
 }  // namespace mplib

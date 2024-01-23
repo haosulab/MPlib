@@ -64,10 +64,10 @@ class Planner:
             urdf,
             srdf,
             [0, 0, -9.81],
-            user_joint_names,
             user_link_names,
-            verbose=False,
+            user_joint_names,
             convex=True,
+            verbose=False,
         )
         self.pinocchio_model = self.robot.get_pinocchio_model()
 

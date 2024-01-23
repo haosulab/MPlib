@@ -36,20 +36,17 @@ Construct an articulated model from URDF and SRDF files.
     directory
 :param srdf_filename: path to SRDF file, we use it to disable self-collisions
 :param gravity: gravity vector
-:param joint_names: list of joints that are considered for planning
 :param link_names: list of links that are considered for planning
-:param verbose: print debug information
-:param convex: use convex decomposition for collision objects)doc";
+:param joint_names: list of joints that are considered for planning
+:param convex: use convex decomposition for collision objects. Default:
+    ``False``.
+:param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_getBasePose =
 R"doc(
 Get the base pose of the robot.
 
 :return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format)doc";
-
-static const char *__doc_mplib_ArticulatedModelTpl_getEEFrameIndex =
-R"doc(
-Only support one end effector case)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_getFCLModel =
 R"doc(
@@ -69,7 +66,7 @@ Get the joint indices of the move group.
 
 :return: list of user joint indices of the move group)doc";
 
-static const char *__doc_mplib_ArticulatedModelTpl_getMoveGroupJointName =
+static const char *__doc_mplib_ArticulatedModelTpl_getMoveGroupJointNames =
 R"doc(
 Get the joint names of the move group.
 

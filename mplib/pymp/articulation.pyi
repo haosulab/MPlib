@@ -24,10 +24,10 @@ class ArticulatedModel:
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
         ],
-        joint_names: list[str],
         link_names: list[str],
-        verbose: bool = True,
+        joint_names: list[str],
         convex: bool = False,
+        verbose: bool = False,
     ) -> None:
         """
         Construct an articulated model from URDF and SRDF files.
@@ -36,10 +36,11 @@ class ArticulatedModel:
             directory
         :param srdf_filename: path to SRDF file, we use it to disable self-collisions
         :param gravity: gravity vector
-        :param joint_names: list of joints that are considered for planning
         :param link_names: list of links that are considered for planning
-        :param verbose: print debug information
-        :param convex: use convex decomposition for collision objects
+        :param joint_names: list of joints that are considered for planning
+        :param convex: use convex decomposition for collision objects. Default:
+            ``False``.
+        :param verbose: print debug information. Default: ``False``.
         """
     def get_base_pose(
         self,
