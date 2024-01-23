@@ -22,24 +22,6 @@ MPLIB_CLASS_TEMPLATE_FORWARD(FCLModelTpl);
  */
 template <typename S>
 class FCLModelTpl {
- private:
-  urdf::ModelInterfaceSharedPtr urdf_model_;
-
-  std::vector<CollisionObjectPtr<S>> collision_objects_;
-  std::vector<Transform3<S>> collision_origin2link_poses;
-  std::vector<std::string> collision_link_names_;
-  std::vector<std::string> parent_link_names_;
-  std::vector<std::pair<size_t, size_t>> collision_pairs_;
-
-  std::vector<std::string> user_link_names_;
-  std::vector<size_t> collision_link_user_indices_;
-  std::string package_dir_;
-  bool have_link_order_, use_convex_, verbose_;
-
-  void init(const urdf::ModelInterfaceSharedPtr &urdfTree,
-            const std::string &package_dir_);
-  void dfs_parse_tree(const urdf::LinkConstSharedPtr &link, std::string);
-
  public:
   FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdfTree,
               const std::string &package_dir, const bool &verbose = true,
@@ -122,6 +104,24 @@ class FCLModelTpl {
       const CollisionRequest<S> &request = CollisionRequest<S>(1, false, 1, false, true,
                                                                GJKSolverType::GST_INDEP,
                                                                1e-6));
+
+ private:
+  void init(const urdf::ModelInterfaceSharedPtr &urdfTree,
+            const std::string &package_dir_);
+  void dfs_parse_tree(const urdf::LinkConstSharedPtr &link, std::string);
+
+  urdf::ModelInterfaceSharedPtr urdf_model_;
+
+  std::vector<CollisionObjectPtr<S>> collision_objects_;
+  std::vector<Transform3<S>> collision_origin2link_poses;
+  std::vector<std::string> collision_link_names_;
+  std::vector<std::string> parent_link_names_;
+  std::vector<std::pair<size_t, size_t>> collision_pairs_;
+
+  std::vector<std::string> user_link_names_;
+  std::vector<size_t> collision_link_user_indices_;
+  std::string package_dir_;
+  bool have_link_order_, use_convex_, verbose_;
 };
 
 // Common Type Alias ===================================================================

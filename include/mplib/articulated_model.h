@@ -19,26 +19,6 @@ MPLIB_CLASS_TEMPLATE_FORWARD(ArticulatedModelTpl);
  */
 template <typename S>
 class ArticulatedModelTpl {
- private:
-  pinocchio::PinocchioModelTpl<S> pinocchio_model_;
-  fcl::FCLModelTpl<S> fcl_model_;
-
-  // all links and joints you want to control. order matters
-  std::vector<std::string> user_link_names_;
-  std::vector<std::string> user_joint_names_;
-
-  std::vector<size_t> move_group_user_joints_;
-  std::vector<std::string> move_group_end_effectors_;
-  VectorX<S>
-      current_qpos_;  // The planning world only update the state in planning group.
-
-  size_t move_group_qpos_dim_;
-  bool verbose_;
-
-  // the base pose of the robot
-  Vector7<S> base_pose_;
-  Transform3<S> base_tf_;
-
  public:
   /**
    * Construct an articulated model from URDF and SRDF files.
@@ -178,6 +158,26 @@ class ArticulatedModelTpl {
    * @return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
    */
   Vector7<S> getBasePose() { return base_pose_; }
+
+ private:
+  pinocchio::PinocchioModelTpl<S> pinocchio_model_;
+  fcl::FCLModelTpl<S> fcl_model_;
+
+  // all links and joints you want to control. order matters
+  std::vector<std::string> user_link_names_;
+  std::vector<std::string> user_joint_names_;
+
+  // The planning world only update the state in planning group.
+  std::vector<size_t> move_group_user_joints_;
+  std::vector<std::string> move_group_end_effectors_;
+  VectorX<S> current_qpos_;
+
+  size_t move_group_qpos_dim_;
+  bool verbose_;
+
+  // the base pose of the robot
+  Vector7<S> base_pose_;
+  Transform3<S> base_tf_;
 };
 
 // Common Type Alias ===================================================================

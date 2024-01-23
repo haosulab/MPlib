@@ -22,15 +22,6 @@ MPLIB_CLASS_TEMPLATE_FORWARD(KDLModelTpl);
  */
 template <typename S>
 class KDLModelTpl {
- private:
-  KDL::Tree tree_;
-  std::string tree_root_name_;
-  std::vector<std::string> user_link_names_;
-  std::vector<std::string> user_joint_names_;
-  std::vector<int> joint_mapping_kdl_2_user_;
-  std::map<std::string, int> user_joint_idx_mapping_;
-  bool verbose_;
-
  public:
   KDLModelTpl(const std::string &urdf_filename,
               const std::vector<std::string> &joint_names,
@@ -51,6 +42,15 @@ class KDLModelTpl {
                                          const std::vector<Vector7<S>> &poses,
                                          const VectorX<S> &q_min,
                                          const VectorX<S> &q_max);
+
+ private:
+  KDL::Tree tree_;
+  std::string tree_root_name_;
+  std::vector<std::string> user_link_names_;
+  std::vector<std::string> user_joint_names_;
+  std::vector<int> joint_mapping_kdl_2_user_;
+  std::map<std::string, int> user_joint_idx_mapping_;
+  bool verbose_;
 };
 
 // Common Type Alias ===================================================================

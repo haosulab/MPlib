@@ -38,11 +38,6 @@ VectorX<S> state2eigen(const State *state_raw, SpaceInformation *const &si_,
 
 template <typename S>
 struct FixedJointTpl {
-  size_t articulation_idx;  // which robot in the planning world does the fixed joint
-                            // belong to?
-  size_t joint_idx;         // what is the index of the joint you want it fixed?
-  S value;                  // what is the value of the fixed joint?
-
   FixedJointTpl(size_t articulation_idx, size_t joint_idx, S value)
       : articulation_idx(articulation_idx), joint_idx(joint_idx), value(value) {}
 
@@ -54,6 +49,11 @@ struct FixedJointTpl {
     return articulation_idx < other.articulation_idx ||
            (articulation_idx == other.articulation_idx && joint_idx < other.joint_idx);
   }
+
+  size_t articulation_idx;  // which robot in the planning world does the fixed joint
+                            // belong to?
+  size_t joint_idx;         // what is the index of the joint you want it fixed?
+  S value;                  // what is the value of the fixed joint?
 };
 
 template <typename S>
@@ -73,10 +73,6 @@ MPLIB_CLASS_TEMPLATE_FORWARD(ValidityCheckerTpl);
 
 template <typename S>
 class ValidityCheckerTpl : public StateValidityChecker {
-  PlanningWorldTplPtr<S> world_;
-  bool is_rvss_;
-  FixedJointsTpl<S> fixed_joints_;
-
  public:
   ValidityCheckerTpl(PlanningWorldTplPtr<S> world, const SpaceInformationPtr &si,
                      bool is_rvss,
@@ -99,11 +95,20 @@ class ValidityCheckerTpl : public StateValidityChecker {
     auto state = state2eigen<S>(state_raw, si_, is_rvss_);
     return _isValid(state);
   }
+
+ private:
+  PlanningWorldTplPtr<S> world_;
+  bool is_rvss_;
+  FixedJointsTpl<S> fixed_joints_;
 };
 
-class GeneralConstraint : public Constraint {
-  std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> f_, j_;
+// Common Type Alias ===================================================================
+using ValidityCheckerf = ValidityCheckerTpl<float>;
+using ValidityCheckerd = ValidityCheckerTpl<double>;
+using ValidityCheckerfPtr = ValidityCheckerTplPtr<float>;
+using ValidityCheckerdPtr = ValidityCheckerTplPtr<double>;
 
+class GeneralConstraint : public Constraint {
  public:
   GeneralConstraint(
       size_t dim, const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> &f,
@@ -119,13 +124,10 @@ class GeneralConstraint : public Constraint {
                 Eigen::Ref<MatrixXd> out) const override {
     j_(x, out);
   }
-};
 
-// Common Type Alias ===================================================================
-using ValidityCheckerf = ValidityCheckerTpl<float>;
-using ValidityCheckerd = ValidityCheckerTpl<double>;
-using ValidityCheckerfPtr = ValidityCheckerTplPtr<float>;
-using ValidityCheckerdPtr = ValidityCheckerTplPtr<double>;
+ private:
+  std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> f_, j_;
+};
 
 // OMPLPlannerTplPtr
 MPLIB_CLASS_TEMPLATE_FORWARD(OMPLPlannerTpl);
@@ -133,36 +135,6 @@ MPLIB_CLASS_TEMPLATE_FORWARD(OMPLPlannerTpl);
 /// OMPL Planner
 template <typename S>
 class OMPLPlannerTpl {
-  RealVectorStateSpacePtr p_ambient_space_;
-  ProjectedStateSpacePtr p_constrained_space_;
-  CompoundStateSpacePtr cs_;
-  StateSpacePtr state_space_;
-  SimpleSetupPtr ss_;
-  SpaceInformationPtr p_compound_si_;
-  SpaceInformationPtr p_constrained_si_;
-  SpaceInformationPtr si_;
-  PlanningWorldTplPtr<S> world_;
-  ValidityCheckerTplPtr<S> valid_checker_;
-  size_t dim_;
-  std::vector<S> lower_joint_limits_, upper_joint_limits_;
-  std::vector<bool> is_revolute_;
-  // if not empty, then we need to update the state space
-  FixedJointsTpl<S> last_fixed_joints_;
-
-  /** Certain joint configurations are the same if some joints are the same fmod 2pi. */
-  GoalStatesPtr make_goal_states(const std::vector<VectorX<S>> &goal_states);
-
-  /** build a real vector state space for the robot */
-  void build_constrained_ambient_state_space();
-
-  /**
-   * ss depends on si so every time we change that need to redo it.
-   * also need to store the space type since ompl loses it -_-
-   */
-  void update_ss(bool is_rvss = false);
-
-  void _simplify_path(PathGeometric &path);  // keep this private to avoid confusion
-
  public:
   /**
    * Construct an OMPLPlanner from a PlanningWorld
@@ -229,6 +201,37 @@ class OMPLPlannerTpl {
       const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
           &constraint_jacobian = nullptr,
       double constraint_tolerance = 1e-3);
+
+ private:
+  /** Certain joint configurations are the same if some joints are the same fmod 2pi. */
+  GoalStatesPtr make_goal_states(const std::vector<VectorX<S>> &goal_states);
+
+  /** build a real vector state space for the robot */
+  void build_constrained_ambient_state_space();
+
+  /**
+   * ss depends on si so every time we change that need to redo it.
+   * also need to store the space type since ompl loses it -_-
+   */
+  void update_ss(bool is_rvss = false);
+
+  void _simplify_path(PathGeometric &path);  // keep this private to avoid confusion
+
+  RealVectorStateSpacePtr p_ambient_space_;
+  ProjectedStateSpacePtr p_constrained_space_;
+  CompoundStateSpacePtr cs_;
+  StateSpacePtr state_space_;
+  SimpleSetupPtr ss_;
+  SpaceInformationPtr p_compound_si_;
+  SpaceInformationPtr p_constrained_si_;
+  SpaceInformationPtr si_;
+  PlanningWorldTplPtr<S> world_;
+  ValidityCheckerTplPtr<S> valid_checker_;
+  size_t dim_;
+  std::vector<S> lower_joint_limits_, upper_joint_limits_;
+  std::vector<bool> is_revolute_;
+  // if not empty, then we need to update the state space
+  FixedJointsTpl<S> last_fixed_joints_;
 };
 
 // Common Type Alias ===================================================================

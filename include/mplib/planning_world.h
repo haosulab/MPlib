@@ -37,38 +37,19 @@ MPLIB_CLASS_TEMPLATE_FORWARD(PlanningWorldTpl);
 /// Planning world for collision checking
 template <typename S>
 class PlanningWorldTpl {
- private:
+  // Common type alias
   using CollisionRequest = fcl::CollisionRequest<S>;
   using CollisionResult = fcl::CollisionResult<S>;
-
-  using CollisionGeometry = fcl::CollisionGeometry<S>;
   using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
-
   using CollisionObject = fcl::CollisionObject<S>;
   using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
-
   using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
   using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
 
-  using ArticulatedModel = ArticulatedModelTpl<S>;
+  using WorldCollisionResult = WorldCollisionResultTpl<S>;
   using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 
-  using WorldCollisionResult = WorldCollisionResultTpl<S>;
-  using WorldCollisionResultPtr = WorldCollisionResultTplPtr<S>;
-
-  std::vector<ArticulatedModelPtr> articulations_;
-  std::vector<std::string> articulation_names_;
-  // std::vector<bool> articulation_flags;
-  std::unordered_map<std::string, CollisionObjectPtr> normal_object_map_;
-  int move_articulation_id_, attach_link_id_;
-  CollisionObjectPtr point_cloud_, attached_tool_;
-  bool has_point_cloud_, has_attach_;
-  Transform3<S> attach_to_link_pose_;
-  // BroadPhaseCollisionManagerPtr normal_manager;
-
  public:
-  bool use_point_cloud_, use_attach_;  // expose to python
-
   /**
    * Constructs a PlanningWorld with given articulations and normal objects
    *
@@ -297,6 +278,19 @@ class PlanningWorldTpl {
    */
   std::vector<WorldCollisionResult> collideFull(
       size_t index, const CollisionRequest &request = CollisionRequest());
+
+  bool use_point_cloud_, use_attach_;  // expose to python
+
+ private:
+  std::vector<ArticulatedModelPtr> articulations_;
+  std::vector<std::string> articulation_names_;
+  // std::vector<bool> articulation_flags;
+  std::unordered_map<std::string, CollisionObjectPtr> normal_object_map_;
+  int move_articulation_id_, attach_link_id_;
+  CollisionObjectPtr point_cloud_, attached_tool_;
+  bool has_point_cloud_, has_attach_;
+  Transform3<S> attach_to_link_pose_;
+  // BroadPhaseCollisionManagerPtr normal_manager;
 };
 
 // Common Type Alias ===================================================================

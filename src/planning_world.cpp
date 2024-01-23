@@ -21,13 +21,13 @@ PlanningWorldTpl<S>::PlanningWorldTpl(
     const std::vector<std::string> &articulation_names,
     const std::vector<CollisionObjectPtr> &normal_objects,
     const std::vector<std::string> &normal_object_names, int move_articulation_id)
-    : articulations_(articulations),
+    : use_point_cloud_(false),
+      use_attach_(false),
+      articulations_(articulations),
       articulation_names_(articulation_names),
       move_articulation_id_(move_articulation_id),
       has_point_cloud_(false),
-      has_attach_(false),
-      use_point_cloud_(false),
-      use_attach_(false) {
+      has_attach_(false) {
   ASSERT(articulations.size() == articulation_names.size(),
          "articulations and articulation_names should have the same size");
   ASSERT(normal_objects.size() == normal_object_names.size(),

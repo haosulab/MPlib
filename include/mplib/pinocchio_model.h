@@ -22,33 +22,6 @@ MPLIB_CLASS_TEMPLATE_FORWARD(PinocchioModelTpl);
  */
 template <typename S>
 class PinocchioModelTpl {
- private:
-  urdf::ModelInterfaceSharedPtr urdf_model_;
-  Model<S> model_;
-  Data<S> data_;
-
-  VectorXi joint_index_user2pinocchio_, joint_index_pinocchio2user_;
-  VectorXi v_index_user2pinocchio_;  // the joint index in model
-  // map between user and pinocchio
-  PermutationMatrixX v_map_user2pinocchio_;
-  VectorXi link_index_user2pinocchio_;
-
-  std::vector<std::string> user_link_names_;
-  std::vector<std::string> user_joint_names_;
-  std::vector<std::string> leaf_links_;
-  VectorXi qidx_, vidx_, nqs_, nvs_, parents_;
-
-  const std::string joint_prefix_ = "JointModel";
-  bool verbose_;
-
-  VectorX<S> qposUser2Pinocchio(const VectorX<S> &qpos);
-
-  VectorX<S> qposPinocchio2User(const VectorX<S> &qpos);
-
-  void init(const urdf::ModelInterfaceSharedPtr &urdfTree, const Vector3<S> &gravity);
-
-  void dfs_parse_tree(urdf::LinkConstSharedPtr link, UrdfVisitorBase<S> &visitor);
-
  public:
   PinocchioModelTpl(const urdf::ModelInterfaceSharedPtr &urdfTree,
                     const Vector3<S> &gravity, const bool &verbose = true);
@@ -388,6 +361,33 @@ class PinocchioModelTpl {
       const size_t &index, const Vector7<S> &pose, const VectorX<S> &q_init,
       const VectorX<S> &qmin, const VectorX<S> &qmax, const double &eps = 1e-5,
       const int &maxIter = 1000, const double &dt = 1e-1, const double &damp = 1e-12);
+
+ private:
+  VectorX<S> qposUser2Pinocchio(const VectorX<S> &qpos);
+
+  VectorX<S> qposPinocchio2User(const VectorX<S> &qpos);
+
+  void init(const urdf::ModelInterfaceSharedPtr &urdfTree, const Vector3<S> &gravity);
+
+  void dfs_parse_tree(urdf::LinkConstSharedPtr link, UrdfVisitorBase<S> &visitor);
+
+  urdf::ModelInterfaceSharedPtr urdf_model_;
+  Model<S> model_;
+  Data<S> data_;
+
+  VectorXi joint_index_user2pinocchio_, joint_index_pinocchio2user_;
+  VectorXi v_index_user2pinocchio_;  // the joint index in model
+  // map between user and pinocchio
+  PermutationMatrixX v_map_user2pinocchio_;
+  VectorXi link_index_user2pinocchio_;
+
+  std::vector<std::string> user_link_names_;
+  std::vector<std::string> user_joint_names_;
+  std::vector<std::string> leaf_links_;
+  VectorXi qidx_, vidx_, nqs_, nvs_, parents_;
+
+  const std::string joint_prefix_ = "JointModel";
+  bool verbose_;
 };
 
 // Common Type Alias ===================================================================
