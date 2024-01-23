@@ -27,11 +27,10 @@ DEFINE_TEMPLATE_KDL_MODEL(double);
 
 template <typename S>
 KDLModelTpl<S>::KDLModelTpl(const std::string &urdf_filename,
-                            const std::vector<std::string> &joint_names,
                             const std::vector<std::string> &link_names,
+                            const std::vector<std::string> &joint_names,
                             const bool &verbose)
     : user_link_names_(link_names), user_joint_names_(joint_names), verbose_(verbose) {
-  // std::cout << "Verbose" << verbose << std::endl;
   for (size_t i = 0; i < joint_names.size(); i++)
     user_joint_idx_mapping_[joint_names[i]] = i;
   urdf::ModelInterfaceSharedPtr urdf = urdf::parseURDFFile(urdf_filename);
@@ -147,7 +146,6 @@ std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKNRJL(const size_t &index,
   for (int i = 0; i < n; i++) {
     q_min(i) = qmin[idx[i]];
     q_max(i) = qmax[idx[i]];
-    // printf("%lf %lf\n", qmin[idx[i]], qmax[idx[i]]);
   }
 
   KDL::ChainIkSolverPos_NR_JL solver(chain, q_min, q_max, fkpossolver, ikvelsolver);

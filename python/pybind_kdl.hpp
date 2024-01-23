@@ -28,10 +28,12 @@ inline void build_pykdl(py::module &m_all) {
   PyKDLModel
       .def(py::init<const std::string &, const std::vector<std::string> &,
                     const std::vector<std::string> &, const bool &>(),
-           py::arg("urdf_filename"), py::arg("joint_names"), py::arg("link_names"),
-           py::arg("verbose"), DOC(mplib, kdl, KDLModelTpl, KDLModelTpl))
+           py::arg("urdf_filename"), py::arg("link_names"), py::arg("joint_names"),
+           py::arg("verbose") = false, DOC(mplib, kdl, KDLModelTpl, KDLModelTpl))
+
       .def("get_tree_root_name", &KDLModel::getTreeRootName,
            DOC(mplib, kdl, KDLModelTpl, getTreeRootName))
+
       .def("chain_IK_LMA", &KDLModel::chainIKLMA, py::arg("index"), py::arg("q_init"),
            py::arg("goal_pose"), DOC(mplib, kdl, KDLModelTpl, chainIKLMA))
       .def("chain_IK_NR", &KDLModel::chainIKNR, py::arg("index"), py::arg("q_init"),

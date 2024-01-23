@@ -14,9 +14,9 @@ class KDLModel:
     def __init__(
         self,
         urdf_filename: str,
-        joint_names: list[str],
         link_names: list[str],
-        verbose: bool,
+        joint_names: list[str],
+        verbose: bool = False,
     ) -> None: ...
     def chain_IK_LMA(
         self,
