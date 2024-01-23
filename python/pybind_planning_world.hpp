@@ -25,7 +25,7 @@ using DistanceRequest = fcl::DistanceRequest<S>;
 using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
 using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
 
-void build_planning_world(py::module &m_all) {
+inline void build_planning_world(py::module &m_all) {
   auto m = m_all.def_submodule("planning_world");
   auto PyPlanningWorld = py::class_<PlanningWorld, std::shared_ptr<PlanningWorld>>(
       m, "PlanningWorld", DOC(mplib, PlanningWorldTpl));

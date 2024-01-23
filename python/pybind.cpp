@@ -7,8 +7,6 @@
 #include "pybind_pinocchio.hpp"
 #include "pybind_planning_world.hpp"
 
-namespace py = pybind11;
-
 namespace mplib {
 
 PYBIND11_MODULE(pymp, m) {

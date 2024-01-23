@@ -18,7 +18,7 @@ namespace mplib {
 
 using PinocchioModel = pinocchio::PinocchioModelTpl<S>;
 
-void build_pypinocchio(py::module &m_all) {
+inline void build_pypinocchio(py::module &m_all) {
   auto m = m_all.def_submodule("pinocchio");
   auto PyPinocchioModel = py::class_<PinocchioModel, std::shared_ptr<PinocchioModel>>(
       m, "PinocchioModel", DOC(mplib, pinocchio, PinocchioModelTpl));

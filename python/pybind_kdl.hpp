@@ -18,7 +18,7 @@ namespace mplib {
 
 using KDLModel = KDLModelTpl<S>;
 
-void build_pykdl(py::module &m_all) {
+inline void build_pykdl(py::module &m_all) {
   auto m = m_all.def_submodule("kdl");
   auto PyKDLModel = py::class_<KDLModel, std::shared_ptr<KDLModel>>(
       m, "KDLModel", DOC(mplib, kdl, KDLModelTpl));

@@ -18,7 +18,7 @@ namespace mplib {
 
 using ArticulatedModel = ArticulatedModelTpl<S>;
 
-void build_pyarticulation(py::module &m_all) {
+inline void build_pyarticulation(py::module &m_all) {
   auto m = m_all.def_submodule(
       "articulation", "articulated model submodule, i.e. models with moving parts");
   auto PyArticulatedModel =

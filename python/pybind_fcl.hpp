@@ -48,7 +48,7 @@ using Contact = fcl::Contact<S>;
 using ContactPoint = fcl::ContactPoint<S>;
 using CostSource = fcl::CostSource<S>;
 
-void build_pyfcl(py::module &m_all) {
+inline void build_pyfcl(py::module &m_all) {
   auto m = m_all.def_submodule("fcl");
 
   // Data type

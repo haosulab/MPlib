@@ -30,7 +30,7 @@ py::array_t<T> make_array(const std::vector<T> &values) {
   return py::array_t<T>(values.size(), values.data());
 }
 
-void build_pyompl(py::module &m_all) {
+inline void build_pyompl(py::module &m_all) {
   auto m = m_all.def_submodule("ompl");
 
   auto PyOMPLPlanner = py::class_<OMPLPlanner, std::shared_ptr<OMPLPlanner>>(
