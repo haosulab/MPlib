@@ -202,8 +202,11 @@ using ProblemDefinition = ob::ProblemDefinition;
 using ProblemDefinitionPtr = std::shared_ptr<ob::ProblemDefinition>;
 
 // FixedJoint / FixedJoints
-struct FixedJoint;
-using FixedJoints = std::set<FixedJoint>;
+template <typename S>
+struct FixedJointTpl;
+
+template <typename S>
+using FixedJointsTpl = std::set<FixedJointTpl<S>>;
 
 }  // namespace ompl
 

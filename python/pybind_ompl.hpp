@@ -18,8 +18,8 @@ namespace py = pybind11;
 namespace mplib {
 
 using OMPLPlanner = ompl::OMPLPlannerTpl<S>;
-using FixedJoint = ompl::FixedJoint;
-using FixedJoints = ompl::FixedJoints;
+using FixedJoint = ompl::FixedJointTpl<S>;
+using FixedJoints = ompl::FixedJointsTpl<S>;
 
 using PlannerStatus = ompl::ob::PlannerStatus;
 using Path = ompl::ob::Path;
@@ -52,10 +52,10 @@ void build_pyompl(py::module &m_all) {
            DOC(mplib, ompl, OMPLPlannerTpl, simplify_path));
 
   auto PyFixedJoint = py::class_<FixedJoint, std::shared_ptr<FixedJoint>>(
-      m, "FixedJoint", DOC(mplib, ompl, FixedJoint));
-  PyFixedJoint.def(py::init<size_t, size_t, double>(), py::arg("articulation_idx"),
+      m, "FixedJoint", DOC(mplib, ompl, FixedJointTpl));
+  PyFixedJoint.def(py::init<size_t, size_t, S>(), py::arg("articulation_idx"),
                    py::arg("joint_idx"), py::arg("value"),
-                   DOC(mplib, ompl, FixedJoint, FixedJoint));
+                   DOC(mplib, ompl, FixedJointTpl, FixedJointTpl));
   PyFixedJoint.def_readwrite("articulation_idx", &FixedJoint::articulation_idx);
   PyFixedJoint.def_readwrite("joint_idx", &FixedJoint::joint_idx);
   PyFixedJoint.def_readwrite("value", &FixedJoint::value);

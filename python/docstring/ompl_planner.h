@@ -24,21 +24,21 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_mplib_ompl_FixedJoint = R"doc()doc";
+static const char *__doc_mplib_ompl_FixedJointTpl = R"doc()doc";
 
-static const char *__doc_mplib_ompl_FixedJoint_FixedJoint =
+static const char *__doc_mplib_ompl_FixedJointTpl_FixedJointTpl =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_FixedJoint_articulation_idx = R"doc()doc";
+static const char *__doc_mplib_ompl_FixedJointTpl_articulation_idx = R"doc()doc";
 
-static const char *__doc_mplib_ompl_FixedJoint_joint_idx = R"doc()doc";
+static const char *__doc_mplib_ompl_FixedJointTpl_joint_idx = R"doc()doc";
 
-static const char *__doc_mplib_ompl_FixedJoint_operator_lt =
+static const char *__doc_mplib_ompl_FixedJointTpl_operator_lt =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_FixedJoint_value = R"doc()doc";
+static const char *__doc_mplib_ompl_FixedJointTpl_value = R"doc()doc";
 
 static const char *__doc_mplib_ompl_GeneralConstraint = R"doc()doc";
 

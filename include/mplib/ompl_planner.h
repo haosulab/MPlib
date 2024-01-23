@@ -54,32 +54,37 @@ template <typename S>
 VectorX<S> state2eigen(const ob::State *state_raw, ob::SpaceInformation *const &si_,
                        bool is_rvss = false);
 
-struct FixedJoint {
+template <typename S>
+struct FixedJointTpl {
   size_t articulation_idx;  // which robot in the planning world does the fixed joint
                             // belong to?
   size_t joint_idx;         // what is the index of the joint you want it fixed?
-  double value;  // what is the value of the fixed joint?  we are actively trying to get
-                 // rid of the S template
+  S value;                  // what is the value of the fixed joint?
 
-  FixedJoint(size_t articulation_idx, size_t joint_idx, double value)
+  FixedJointTpl(size_t articulation_idx, size_t joint_idx, S value)
       : articulation_idx(articulation_idx), joint_idx(joint_idx), value(value) {}
 
-  bool operator==(const FixedJoint &other) const {
+  bool operator==(const FixedJointTpl &other) const {
     return articulation_idx == other.articulation_idx && joint_idx == other.joint_idx;
   }
 
-  bool operator<(const FixedJoint &other) const {
+  bool operator<(const FixedJointTpl &other) const {
     return articulation_idx < other.articulation_idx ||
            (articulation_idx == other.articulation_idx && joint_idx < other.joint_idx);
   }
 };
 
-bool is_fixed_joint(const FixedJoints &fixed_joints, size_t articulation_idx,
+template <typename S>
+bool is_fixed_joint(const FixedJointsTpl<S> &fixed_joints, size_t articulation_idx,
                     size_t joint_idx);
 
-VectorXd remove_fixed_joints(const FixedJoints &fixed_joints, const VectorXd &state);
+template <typename S>
+VectorX<S> remove_fixed_joints(const FixedJointsTpl<S> &fixed_joints,
+                               const VectorX<S> &state);
 
-VectorXd add_fixed_joints(const FixedJoints &fixed_joints, const VectorXd &state);
+template <typename S>
+VectorX<S> add_fixed_joints(const FixedJointsTpl<S> &fixed_joints,
+                            const VectorX<S> &state);
 
 // ValidityCheckerTplPtr
 MPLIB_CLASS_TEMPLATE_FORWARD(ValidityCheckerTpl);
@@ -88,17 +93,18 @@ template <typename S>
 class ValidityCheckerTpl : public ob::StateValidityChecker {
   PlanningWorldTplPtr<S> world_;
   bool is_rvss_;
-  FixedJoints fixed_joints_;
+  FixedJointsTpl<S> fixed_joints_;
 
  public:
   ValidityCheckerTpl(PlanningWorldTplPtr<S> world, const ob::SpaceInformationPtr &si,
-                     bool is_rvss, const FixedJoints &fixed_joints = FixedJoints())
+                     bool is_rvss,
+                     const FixedJointsTpl<S> &fixed_joints = FixedJointsTpl<S>())
       : ob::StateValidityChecker(si),
         world_(world),
         is_rvss_(is_rvss),
         fixed_joints_(fixed_joints) {}
 
-  void update_fixed_joints(const FixedJoints &fixed_joints) {
+  void update_fixed_joints(const FixedJointsTpl<S> &fixed_joints) {
     this->fixed_joints_ = fixed_joints;
   }
 
@@ -159,7 +165,7 @@ class OMPLPlannerTpl {
   std::vector<S> lower_joint_limits_, upper_joint_limits_;
   std::vector<bool> is_revolute_;
   // if not empty, then we need to update the state space
-  FixedJoints last_fixed_joints_;
+  FixedJointsTpl<S> last_fixed_joints_;
 
   /** Certain joint configurations are the same if some joints are the same fmod 2pi. */
   std::shared_ptr<ob::GoalStates> make_goal_states(
@@ -192,7 +198,8 @@ class OMPLPlannerTpl {
    *
    * @param fixed_joints: a vector of FixedJoint
    */
-  void build_compound_state_space(const FixedJoints &fixed_joints = FixedJoints());
+  void build_compound_state_space(
+      const FixedJointsTpl<S> &fixed_joints = FixedJointsTpl<S>());
 
   PlanningWorldTplPtr<S> get_world() { return world_; }
 
@@ -204,7 +211,7 @@ class OMPLPlannerTpl {
    * @param path: path to be simplified (numpy array of shape (n, dim))
    * @return: simplified path
    */
-  MatrixXd simplify_path(MatrixXd &path);
+  MatrixX<S> simplify_path(MatrixX<S> &path);
 
   /**
    * Plan a path from start state to goal states.
@@ -234,7 +241,7 @@ class OMPLPlannerTpl {
       const VectorX<S> &start_state, const std::vector<VectorX<S>> &goal_states,
       const std::string &planner_name = "RRTConnect", const double &time = 1.0,
       const double &range = 0.0, const bool verbose = false,
-      const FixedJoints &fixed_joints = FixedJoints(),
+      const FixedJointsTpl<S> &fixed_joints = FixedJointsTpl<S>(),
       const bool no_simplification = false,
       const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
           &constraint_function = nullptr,
@@ -250,15 +257,21 @@ using OMPLPlannerTplfPtr = OMPLPlannerTplPtr<float>;
 using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
 
 // Explicit Template Instantiation Declaration =========================================
-#define DECLARE_TEMPLATE_OMPL_PLANNER(S)                                      \
-  extern template std::vector<S> compoundstate2vector<S>(                     \
-      const ob::State *state_raw, ob::SpaceInformation *const &si_);          \
-  extern template std::vector<S> rvssstate2vector<S>(                         \
-      const ob::State *state_raw, ob::SpaceInformation *const &si_);          \
-  extern template VectorX<S> state2eigen<S>(const ob::State *state_raw,       \
-                                            ob::SpaceInformation *const &si_, \
-                                            bool is_rvss = false);            \
-  extern template class ValidityCheckerTpl<S>;                                \
+#define DECLARE_TEMPLATE_OMPL_PLANNER(S)                                             \
+  extern template std::vector<S> compoundstate2vector<S>(                            \
+      const ob::State *state_raw, ob::SpaceInformation *const &si_);                 \
+  extern template std::vector<S> rvssstate2vector<S>(                                \
+      const ob::State *state_raw, ob::SpaceInformation *const &si_);                 \
+  extern template VectorX<S> state2eigen<S>(                                         \
+      const ob::State *state_raw, ob::SpaceInformation *const &si_, bool is_rvss);   \
+  extern template bool is_fixed_joint<S>(const FixedJointsTpl<S> &fixed_joints,      \
+                                         size_t articulation_idx, size_t joint_idx); \
+  extern template VectorX<S> remove_fixed_joints<S>(                                 \
+      const FixedJointsTpl<S> &fixed_joints, const VectorX<S> &state);               \
+  extern template VectorX<S> add_fixed_joints<S>(                                    \
+      const FixedJointsTpl<S> &fixed_joints, const VectorX<S> &state);               \
+  extern template struct FixedJointTpl<S>;                                           \
+  extern template class ValidityCheckerTpl<S>;                                       \
   extern template class OMPLPlannerTpl<S>
 
 DECLARE_TEMPLATE_OMPL_PLANNER(float);
