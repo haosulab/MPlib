@@ -1,15 +1,12 @@
 #pragma once
+
+#include <string>
+#include <tuple>
 #include <vector>
 
-#include <pinocchio/algorithm/jacobian.hpp>
-#include <pinocchio/algorithm/joint-configuration.hpp>
-#include <pinocchio/algorithm/kinematics.hpp>
-#include <pinocchio/multibody/joint/fwd.hpp>
-#include <pinocchio/parsers/urdf.hpp>
 #include <urdf_model/types.h>
 #include <urdf_world/types.h>
 
-#include "color_printing.h"
 #include "macros_utils.h"
 #include "types.h"
 

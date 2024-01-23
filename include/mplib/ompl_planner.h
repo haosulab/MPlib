@@ -1,27 +1,10 @@
 #pragma once
 
 #include <functional>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <ompl/base/ConstrainedSpaceInformation.h>
-#include <ompl/base/Constraint.h>
-#include <ompl/base/SpaceInformation.h>
-#include <ompl/base/StateSpace.h>
-#include <ompl/base/goals/GoalStates.h>
-#include <ompl/base/objectives/MaximizeMinClearanceObjective.h>
-#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
-#include <ompl/base/objectives/StateCostIntegralObjective.h>
-#include <ompl/base/samplers/ObstacleBasedValidStateSampler.h>
-#include <ompl/base/spaces/RealVectorStateSpace.h>
-#include <ompl/base/spaces/SO2StateSpace.h>
-#include <ompl/base/spaces/constraint/ProjectedStateSpace.h>
-#include <ompl/geometric/PathSimplifier.h>
-#include <ompl/geometric/SimpleSetup.h>
-#include <ompl/geometric/planners/rrt/RRTConnect.h>
-#include <ompl/geometric/planners/rrt/RRTstar.h>
-#include <ompl/util/RandomNumbers.h>
-#include <pinocchio/fwd.hpp>
-
-#include "color_printing.h"
 #include "macros_utils.h"
 #include "planning_world.h"
 #include "types.h"

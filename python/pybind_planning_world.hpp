@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+#include <string>
 #include <vector>
 
 #include <pybind11/eigen.h>

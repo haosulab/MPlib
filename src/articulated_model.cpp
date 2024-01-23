@@ -1,25 +1,9 @@
 #include "mplib/articulated_model.h"
 
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <kdl/treefksolverpos_recursive.hpp>
-#include <kdl/treeiksolverpos_nr_jl.hpp>
-#include <kdl/treeiksolvervel_wdls.hpp>
-#include <pinocchio/algorithm/aba.hpp>
-#include <pinocchio/algorithm/crba.hpp>
-#include <pinocchio/algorithm/joint-configuration.hpp>
-#include <pinocchio/algorithm/rnea.hpp>
-
-#include "mplib/urdf_utils.h"
-#include "pinocchio/multibody/joint/fwd.hpp"
-#include "pinocchio/parsers/urdf.hpp"
-#include "pinocchio/parsers/urdf/geometry.hxx"
-#include "pinocchio/parsers/urdf/model.hxx"
-#include "pinocchio/parsers/utils.hpp"
+#include "mplib/color_printing.h"
+#include "mplib/macros_utils.h"
 
 namespace mplib {
 

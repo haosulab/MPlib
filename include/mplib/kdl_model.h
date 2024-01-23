@@ -1,23 +1,14 @@
 #pragma once
-#include <kdl/chain.hpp>
-#include <kdl/chainfksolverpos_recursive.hpp>
-#include <kdl/chainiksolverpos_lma.hpp>
-#include <kdl/chainiksolverpos_nr.hpp>
-#include <kdl/chainiksolverpos_nr_jl.hpp>
-#include <kdl/chainiksolvervel_pinv.hpp>
-#include <kdl/frames.hpp>
-#include <kdl/jacobian.hpp>
-#include <kdl/joint.hpp>
+
+#include <map>
+#include <string>
+#include <tuple>
+#include <vector>
+
 #include <kdl/tree.hpp>
-#include <kdl/treefksolverpos_recursive.hpp>
-#include <kdl/treeiksolverpos_nr_jl.hpp>
-#include <kdl/treeiksolvervel_wdls.hpp>
-#include <kdl/utilities/svd_eigen_HH.hpp>
-#include <urdf_parser/urdf_parser.h>
 
 #include "macros_utils.h"
 #include "types.h"
-#include "urdf_utils.h"
 
 namespace mplib::kdl {
 

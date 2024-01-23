@@ -1,11 +1,11 @@
 #pragma once
 
+#include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "articulated_model.h"
 #include "color_printing.h"
-#include "fcl_model.h"
 #include "macros_utils.h"
 #include "types.h"
 

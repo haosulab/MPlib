@@ -1,11 +1,12 @@
 #include "mplib/pinocchio_model.h"
 
+#include <pinocchio/algorithm/jacobian.hpp>
+#include <pinocchio/algorithm/joint-configuration.hpp>
+#include <pinocchio/algorithm/kinematics.hpp>
 #include <urdf_parser/urdf_parser.h>
 
+#include "mplib/color_printing.h"
 #include "mplib/urdf_utils.h"
-
-// #include <boost/property_tree/xml_parser.hpp>
-// #include <boost/property_tree/ptree.hpp>
 
 namespace mplib::pinocchio {
 

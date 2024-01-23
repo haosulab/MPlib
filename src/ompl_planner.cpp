@@ -1,6 +1,11 @@
 #include "mplib/ompl_planner.h"
 
-#include "mplib/pinocchio_model.h"
+#include <memory>
+
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
+#include <ompl/geometric/planners/rrt/RRTstar.h>
+
+#include "mplib/macros_utils.h"
 
 namespace mplib::ompl {
 

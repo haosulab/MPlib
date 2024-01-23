@@ -1,6 +1,8 @@
 #pragma once
 
-#include "color_printing.h"
+#include <string>
+#include <vector>
+
 #include "fcl_model.h"
 #include "macros_utils.h"
 #include "pinocchio_model.h"
@@ -18,8 +20,8 @@ MPLIB_CLASS_TEMPLATE_FORWARD(ArticulatedModelTpl);
 template <typename S>
 class ArticulatedModelTpl {
  private:
-  PinocchioModelTpl<S> pinocchio_model_;
-  FCLModelTpl<S> fcl_model_;
+  pinocchio::PinocchioModelTpl<S> pinocchio_model_;
+  fcl::FCLModelTpl<S> fcl_model_;
 
   // all links and joints you want to control. order matters
   std::vector<std::string> user_link_names_;

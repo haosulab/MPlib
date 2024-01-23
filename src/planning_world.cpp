@@ -1,7 +1,7 @@
 #include "mplib/planning_world.h"
 
-#include "fcl/geometry/octree/octree.h"
-#include "mplib/fcl_model.h"
+#include <memory>
+
 #include "mplib/macros_utils.h"
 #include "mplib/urdf_utils.h"
 

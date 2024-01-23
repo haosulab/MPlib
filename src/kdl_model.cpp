@@ -1,6 +1,21 @@
 #include "mplib/kdl_model.h"
 
+#include <kdl/chain.hpp>
+#include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/chainiksolverpos_lma.hpp>
+#include <kdl/chainiksolverpos_nr.hpp>
+#include <kdl/chainiksolverpos_nr_jl.hpp>
+#include <kdl/chainiksolvervel_pinv.hpp>
+#include <kdl/frames.hpp>
+#include <kdl/joint.hpp>
+#include <kdl/treefksolverpos_recursive.hpp>
+#include <kdl/treeiksolverpos_nr_jl.hpp>
+#include <kdl/treeiksolvervel_wdls.hpp>
+#include <urdf_parser/urdf_parser.h>
+#include <urdf_world/types.h>
+
 #include "mplib/macros_utils.h"
+#include "mplib/urdf_utils.h"
 
 namespace mplib::kdl {
 

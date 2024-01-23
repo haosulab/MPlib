@@ -1,18 +1,12 @@
 #pragma once
-#include <urdf_model/model.h>
-#include <urdf_parser/urdf_parser.h>
 
-#include "color_printing.h"
-#include "fcl/broadphase/broadphase_dynamic_AABB_tree.h"
-#include "fcl/common/types.h"
-#include "fcl/geometry/octree/octree.h"
-#include "fcl/math/constants.h"
-#include "fcl/math/triangle.h"
-#include "fcl/narrowphase/collision.h"
-#include "fcl/narrowphase/collision_object.h"
-#include "fcl/narrowphase/collision_request.h"
-#include "fcl/narrowphase/collision_result.h"
-#include "fcl/narrowphase/gjk_solver_type.h"
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <urdf_model/types.h>
+#include <urdf_world/types.h>
+
 #include "macros_utils.h"
 #include "types.h"
 

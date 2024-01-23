@@ -1,6 +1,11 @@
 #include "mplib/urdf_utils.h"
 
-#include <kdl/frames_io.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+#include <urdf_model/link.h>
+#include <urdf_model/model.h>
+
+#include "mplib/color_printing.h"
 
 namespace mplib {
 

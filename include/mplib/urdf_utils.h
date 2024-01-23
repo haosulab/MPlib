@@ -1,28 +1,14 @@
 #pragma once
 
-#include <assimp/DefaultLogger.hpp>
-#include <assimp/IOStream.hpp>
-#include <assimp/IOSystem.hpp>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <kdl/tree.hpp>
-#include <pinocchio/algorithm/jacobian.hpp>
-#include <pinocchio/algorithm/joint-configuration.hpp>
-#include <pinocchio/algorithm/kinematics.hpp>
-#include <pinocchio/parsers/urdf.hpp>
-#include <urdf_model/model.h>
-#include <urdf_parser/urdf_parser.h>
+#include <memory>
+#include <string>
 
-#include "color_printing.h"
-#include "fcl/common/types.h"
-#include "fcl/math/constants.h"
-#include "fcl/math/triangle.h"
-#include "fcl/narrowphase/collision.h"
-#include "fcl/narrowphase/collision_object.h"
-#include "fcl/narrowphase/collision_request.h"
-#include "fcl/narrowphase/collision_result.h"
-#include "pinocchio/multibody/joint/fwd.hpp"
+#include <assimp/Importer.hpp>
+#include <kdl/tree.hpp>
+#include <urdf_model/pose.h>
+#include <urdf_model/types.h>
+#include <urdf_world/types.h>
+
 #include "types.h"
 
 namespace mplib {
