@@ -30,43 +30,11 @@ namespace mplib::ompl {
 
 template <typename S>
 std::vector<S> compoundstate2vector(const ob::State *state_raw,
-                                    ob::SpaceInformation *const &si_) {
-  auto state = state_raw->as<ob::CompoundState>();
-  std::vector<S> ret;
-  auto si = si_->getStateSpace()->as<ob::CompoundStateSpace>();
-
-  for (size_t i = 0; i < si->getSubspaceCount(); i++) {
-    auto subspace(si->getSubspace(i));
-    size_t n;
-    switch (subspace->getType()) {
-      case ob::STATE_SPACE_REAL_VECTOR:
-        n = subspace->as<ob::RealVectorStateSpace>()->getDimension();
-        for (size_t j = 0; j < n; j++)
-          ret.push_back(
-              (S)(*state)[i]->as<ob::RealVectorStateSpace::StateType>()->values[j]);
-        break;
-      case ob::STATE_SPACE_SO2:
-        ret.push_back((S)(*state)[i]->as<ob::SO2StateSpace::StateType>()->value);
-        break;
-      default:
-        throw std::invalid_argument("Unhandled subspace type.");
-        break;
-    }
-  }
-  return ret;
-}
+                                    ob::SpaceInformation *const &si_);
 
 template <typename S>
 std::vector<S> rvssstate2vector(const ob::State *state_raw,
-                                ob::SpaceInformation *const &si_) {
-  auto dim = si_->getStateDimension();
-  auto state = state_raw->as<ob::ProjectedStateSpace::StateType>();
-  std::vector<S> ret;
-  for (size_t i = 0; i < dim; i++) {
-    ret.push_back((S)(*state)[i]);
-  }
-  return ret;
-}
+                                ob::SpaceInformation *const &si_);
 
 template <typename IN_TYPE, typename OUT_TYPE>
 std::vector<OUT_TYPE> eigen2vector(const VectorX<IN_TYPE> &x) {
@@ -84,12 +52,7 @@ VectorX<OUT_TYPE> vector2eigen(const std::vector<IN_TYPE> &x) {
 
 template <typename S>
 VectorX<S> state2eigen(const ob::State *state_raw, ob::SpaceInformation *const &si_,
-                       bool is_rvss = false) {
-  std::vector<S> vec_ret = is_rvss ? rvssstate2vector<S>(state_raw, si_)
-                                   : compoundstate2vector<S>(state_raw, si_);
-  auto ret = vector2eigen<S, S>(vec_ret);
-  return ret;
-}
+                       bool is_rvss = false);
 
 struct FixedJoint {
   size_t articulation_idx;  // which robot in the planning world does the fixed joint
@@ -287,12 +250,15 @@ using OMPLPlannerTplfPtr = OMPLPlannerTplPtr<float>;
 using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
 
 // Explicit Template Instantiation Declaration =========================================
-#define DECLARE_TEMPLATE_OMPL_PLANNER(S)                             \
-  extern template std::vector<S> compoundstate2vector<S>(            \
-      const ob::State *state_raw, ob::SpaceInformation *const &si_); \
-  extern template std::vector<S> rvssstate2vector<S>(                \
-      const ob::State *state_raw, ob::SpaceInformation *const &si_); \
-  extern template class ValidityCheckerTpl<S>;                       \
+#define DECLARE_TEMPLATE_OMPL_PLANNER(S)                                      \
+  extern template std::vector<S> compoundstate2vector<S>(                     \
+      const ob::State *state_raw, ob::SpaceInformation *const &si_);          \
+  extern template std::vector<S> rvssstate2vector<S>(                         \
+      const ob::State *state_raw, ob::SpaceInformation *const &si_);          \
+  extern template VectorX<S> state2eigen<S>(const ob::State *state_raw,       \
+                                            ob::SpaceInformation *const &si_, \
+                                            bool is_rvss = false);            \
+  extern template class ValidityCheckerTpl<S>;                                \
   extern template class OMPLPlannerTpl<S>
 
 DECLARE_TEMPLATE_OMPL_PLANNER(float);

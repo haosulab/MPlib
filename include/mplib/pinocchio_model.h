@@ -85,12 +85,7 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: type of the joint with the given index
    */
-  inline std::string getJointType(const size_t &index, const bool &user = true) {
-    if (user)
-      return model_.joints[joint_index_user2pinocchio_[index]].shortname();
-    else
-      return model_.joints[index].shortname();
-  }
+  inline std::string getJointType(const size_t &index, const bool &user = true);
 
   /**
    * Get the type of all the joints. Again, Pinocchio might split a joint into
@@ -100,12 +95,7 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: type of the joints
    */
-  inline std::vector<std::string> getJointTypes(const bool &user = true) {
-    std::vector<std::string> ret;
-    auto njoints = user ? user_joint_names_.size() : model_.joints.size();
-    for (size_t i = 0; i < njoints; i++) ret.push_back(getJointType(i, user));
-    return ret;
-  }
+  inline std::vector<std::string> getJointTypes(const bool &user = true);
 
   /**
    * Get the limit of all the joints. Again, Pinocchio might split a joint into
@@ -115,12 +105,7 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: limit of the joints
    */
-  inline std::vector<MatrixX<S>> getJointLimits(const bool &user = true) {
-    std::vector<MatrixX<S>> ret;
-    auto njoints = user ? user_joint_names_.size() : model_.joints.size();
-    for (size_t i = 0; i < njoints; i++) ret.push_back(getJointLimit(i, user));
-    return ret;
-  }
+  inline std::vector<MatrixX<S>> getJointLimits(const bool &user = true);
 
   /**
    * Get the limit of the joint with the given index.
@@ -130,33 +115,7 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: limit of the joint with the given index
    */
-  inline MatrixX<S> getJointLimit(const size_t &index, const bool &user = true) {
-    auto joint_type = getJointType(index, user);
-    size_t pinocchio_idx = user ? joint_index_user2pinocchio_[index] : index;
-    size_t start_idx = model_.idx_qs[pinocchio_idx], nq = model_.nqs[pinocchio_idx],
-           dim_joint = getJointDim(index, user);
-    MatrixX<S> ret;
-    ASSERT(dim_joint == 1, "Only support joint with dim 1 but joint" +
-                               getJointNames(user)[index] + " has dim " +
-                               std::to_string(dim_joint));
-    // std::cout << joint_type << " " << joint_type[joint_prefix.size()] << " " <<
-    // joint_type[joint_prefix.size() + 1] << " " <<  nq << " " << dim_joint << " " <<
-    // std::endl;
-    if (joint_type[joint_prefix_.size()] == 'P' ||
-        (joint_type[joint_prefix_.size()] == 'R' &&
-         joint_type[joint_prefix_.size() + 1] != 'U')) {
-      ret = MatrixX<S>(nq, 2);
-      for (size_t j = 0; j < nq; j++) {
-        ret(j, 0) = model_.lowerPositionLimit[start_idx + j];
-        ret(j, 1) = model_.upperPositionLimit[start_idx + j];
-      }
-    } else if (joint_type[joint_prefix_.size()] == 'R' &&
-               joint_type[joint_prefix_.size() + 1] == 'U') {
-      ret = MatrixX<S>(1, 2);
-      ret(0, 0) = -3.14159265359, ret(0, 1) = 3.14159265359;
-    }
-    return ret;
-  }
+  inline MatrixX<S> getJointLimit(const size_t &index, const bool &user = true);
 
   /**
    * Get the id of the joint with the given index.
@@ -178,15 +137,7 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: id of the joints
    */
-  inline VectorXi getJointIds(const bool &user = true) {
-    if (user)
-      return vidx_;
-    else {
-      auto ret = VectorXi(model_.idx_vs.size());
-      for (size_t i = 0; i < model_.idx_vs.size(); i++) ret[i] = model_.idx_vs[i];
-      return ret;
-    }
-  }
+  inline VectorXi getJointIds(const bool &user = true);
 
   /**
    * Get the dimension of the joint with the given index.
@@ -208,15 +159,7 @@ class PinocchioModelTpl {
    *    passed to the constructor or the default order
    * @return: dimention of the joints
    */
-  inline VectorXi getJointDims(const bool &user = true) {
-    if (user)
-      return nvs_;
-    else {
-      auto ret = VectorXi(model_.nvs.size());
-      for (size_t i = 0; i < model_.nvs.size(); i++) ret[i] = model_.nvs[i];
-      return ret;
-    }
-  }
+  inline VectorXi getJointDims(const bool &user = true);
 
   /**
    * Get the parent of the joint with the given index.
@@ -238,15 +181,7 @@ class PinocchioModelTpl {
    *    to the constructor or the default order
    * @return: parent of the joints
    */
-  inline VectorXi getParents(const bool &user = true) {
-    if (user)
-      return parents_;
-    else {
-      auto ret = VectorXi(model_.parents.size());
-      for (size_t i = 0; i < model_.parents.size(); i++) ret[i] = model_.parents[i];
-      return ret;
-    }
-  }
+  inline VectorXi getParents(const bool &user = true);
 
   /**
    * Get the name of all the links.
@@ -255,17 +190,7 @@ class PinocchioModelTpl {
    *    to the constructor or the default order
    * @return: name of the links
    */
-  inline std::vector<std::string> getLinkNames(const bool &user = true) {
-    if (user)
-      return user_link_names_;
-    else {
-      std::vector<std::string> link_names;
-      for (size_t i = 0; i < model_.frames.size(); i++)
-        if (model_.frames[i].type == ::pinocchio::BODY)
-          link_names.push_back(model_.frames[i].name);
-      return link_names;
-    }
-  }
+  inline std::vector<std::string> getLinkNames(const bool &user = true);
 
   /**
    * Get the name of all the joints. Again, Pinocchio might split a joint into
@@ -275,27 +200,11 @@ class PinocchioModelTpl {
    *    to the constructor or the default order
    * @return: name of the joints
    */
-  inline std::vector<std::string> getJointNames(const bool &user = true) {
-    if (user) return user_joint_names_;
-    // we need to ignore the "universe" joint
-    return std::vector<std::string>(model_.names.begin() + 1, model_.names.end());
-  }
+  inline std::vector<std::string> getJointNames(const bool &user = true);
 
-  std::vector<std::vector<size_t>> getSupports(const bool &user = true) {
-    if (user) {
-      std::vector<std::vector<size_t>> ret;
-      return ret;
-    } else
-      return model_.supports;
-  }
+  std::vector<std::vector<size_t>> getSupports(const bool &user = true);
 
-  std::vector<std::vector<size_t>> getSubtrees(const bool &user = true) {
-    if (user) {
-      std::vector<std::vector<size_t>> ret;
-      return ret;
-    } else
-      return model_.subtrees;
-  }
+  std::vector<std::vector<size_t>> getSubtrees(const bool &user = true);
 
   /// Frame is a Pinocchio internal data type which is not supported outside this class.
   void printFrames(void);

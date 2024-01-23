@@ -395,6 +395,130 @@ void PinocchioModelTpl<S>::computeForwardKinematics(const VectorX<S> &qpos) {
 }
 
 template <typename S>
+std::string PinocchioModelTpl<S>::getJointType(const size_t &index, const bool &user) {
+  if (user)
+    return model_.joints[joint_index_user2pinocchio_[index]].shortname();
+  else
+    return model_.joints[index].shortname();
+}
+
+template <typename S>
+std::vector<std::string> PinocchioModelTpl<S>::getJointTypes(const bool &user) {
+  std::vector<std::string> ret;
+  auto njoints = user ? user_joint_names_.size() : model_.joints.size();
+  for (size_t i = 0; i < njoints; i++) ret.push_back(getJointType(i, user));
+  return ret;
+}
+
+template <typename S>
+std::vector<MatrixX<S>> PinocchioModelTpl<S>::getJointLimits(const bool &user) {
+  std::vector<MatrixX<S>> ret;
+  auto njoints = user ? user_joint_names_.size() : model_.joints.size();
+  for (size_t i = 0; i < njoints; i++) ret.push_back(getJointLimit(i, user));
+  return ret;
+}
+
+template <typename S>
+MatrixX<S> PinocchioModelTpl<S>::getJointLimit(const size_t &index, const bool &user) {
+  auto joint_type = getJointType(index, user);
+  size_t pinocchio_idx = user ? joint_index_user2pinocchio_[index] : index;
+  size_t start_idx = model_.idx_qs[pinocchio_idx], nq = model_.nqs[pinocchio_idx],
+         dim_joint = getJointDim(index, user);
+  MatrixX<S> ret;
+  ASSERT(dim_joint == 1, "Only support joint with dim 1 but joint" +
+                             getJointNames(user)[index] + " has dim " +
+                             std::to_string(dim_joint));
+  // std::cout << joint_type << " " << joint_type[joint_prefix.size()] << " " <<
+  // joint_type[joint_prefix.size() + 1] << " " <<  nq << " " << dim_joint << " " <<
+  // std::endl;
+  if (joint_type[joint_prefix_.size()] == 'P' ||
+      (joint_type[joint_prefix_.size()] == 'R' &&
+       joint_type[joint_prefix_.size() + 1] != 'U')) {
+    ret = MatrixX<S>(nq, 2);
+    for (size_t j = 0; j < nq; j++) {
+      ret(j, 0) = model_.lowerPositionLimit[start_idx + j];
+      ret(j, 1) = model_.upperPositionLimit[start_idx + j];
+    }
+  } else if (joint_type[joint_prefix_.size()] == 'R' &&
+             joint_type[joint_prefix_.size() + 1] == 'U') {
+    ret = MatrixX<S>(1, 2);
+    ret(0, 0) = -3.14159265359, ret(0, 1) = 3.14159265359;
+  }
+  return ret;
+}
+
+template <typename S>
+std::vector<std::string> PinocchioModelTpl<S>::getJointNames(const bool &user) {
+  if (user) return user_joint_names_;
+  // we need to ignore the "universe" joint
+  return std::vector<std::string>(model_.names.begin() + 1, model_.names.end());
+}
+
+template <typename S>
+VectorXi PinocchioModelTpl<S>::getJointIds(const bool &user) {
+  if (user)
+    return vidx_;
+  else {
+    auto ret = VectorXi(model_.idx_vs.size());
+    for (size_t i = 0; i < model_.idx_vs.size(); i++) ret[i] = model_.idx_vs[i];
+    return ret;
+  }
+}
+
+template <typename S>
+VectorXi PinocchioModelTpl<S>::getJointDims(const bool &user) {
+  if (user)
+    return nvs_;
+  else {
+    auto ret = VectorXi(model_.nvs.size());
+    for (size_t i = 0; i < model_.nvs.size(); i++) ret[i] = model_.nvs[i];
+    return ret;
+  }
+}
+
+template <typename S>
+VectorXi PinocchioModelTpl<S>::getParents(const bool &user) {
+  if (user)
+    return parents_;
+  else {
+    auto ret = VectorXi(model_.parents.size());
+    for (size_t i = 0; i < model_.parents.size(); i++) ret[i] = model_.parents[i];
+    return ret;
+  }
+}
+
+template <typename S>
+std::vector<std::string> PinocchioModelTpl<S>::getLinkNames(const bool &user) {
+  if (user)
+    return user_link_names_;
+  else {
+    std::vector<std::string> link_names;
+    for (size_t i = 0; i < model_.frames.size(); i++)
+      if (model_.frames[i].type == ::pinocchio::BODY)
+        link_names.push_back(model_.frames[i].name);
+    return link_names;
+  }
+}
+
+template <typename S>
+std::vector<std::vector<size_t>> PinocchioModelTpl<S>::getSupports(const bool &user) {
+  if (user) {
+    std::vector<std::vector<size_t>> ret;
+    return ret;
+  } else
+    return model_.supports;
+}
+
+template <typename S>
+std::vector<std::vector<size_t>> PinocchioModelTpl<S>::getSubtrees(const bool &user) {
+  if (user) {
+    std::vector<std::vector<size_t>> ret;
+    return ret;
+  } else
+    return model_.subtrees;
+}
+
+template <typename S>
 Vector7<S> PinocchioModelTpl<S>::getLinkPose(const size_t &index) {
   ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "The link index is out of bound!");
