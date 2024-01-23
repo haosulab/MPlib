@@ -69,7 +69,7 @@ class FCLModelTpl {
    *  objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled
    *  collision pairs
    */
-  inline std::vector<std::pair<size_t, size_t>> &getCollisionPairs() {
+  std::vector<std::pair<size_t, size_t>> &getCollisionPairs() {
     return collision_pairs_;
   }
 
@@ -78,17 +78,15 @@ class FCLModelTpl {
    *
    * @return: all collision objects of the FCL model
    */
-  inline std::vector<CollisionObjectPtr<S>> &getCollisionObjects() {
+  std::vector<CollisionObjectPtr<S>> &getCollisionObjects() {
     return collision_objects_;
   }
 
-  inline std::vector<std::string> getCollisionLinkNames() {
-    return collision_link_names_;
-  }
+  std::vector<std::string> getCollisionLinkNames() { return collision_link_names_; }
 
-  inline std::vector<std::string> getUserLinkNames() { return user_link_names_; }
+  std::vector<std::string> getUserLinkNames() { return user_link_names_; }
 
-  inline std::vector<size_t> getCollisionLinkUserIndices() {
+  std::vector<size_t> getCollisionLinkUserIndices() {
     return collision_link_user_indices_;
   }
 

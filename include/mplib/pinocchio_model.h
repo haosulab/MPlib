@@ -66,9 +66,9 @@ class PinocchioModelTpl {
   PinocchioModelTpl(const std::string &urdf_filename, const Vector3<S> &gravity,
                     const bool &verbose = true);
 
-  inline Model<S> &getModel(void) { return model_; }
+  Model<S> &getModel(void) { return model_; }
 
-  inline Data<S> &getData(void) { return data_; }
+  Data<S> &getData(void) { return data_; }
 
   /**
    * Get the leaf links (links without child) of the kinematic tree.
@@ -85,7 +85,7 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: type of the joint with the given index
    */
-  inline std::string getJointType(const size_t &index, const bool &user = true);
+  std::string getJointType(const size_t &index, const bool &user = true);
 
   /**
    * Get the type of all the joints. Again, Pinocchio might split a joint into
@@ -95,7 +95,7 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: type of the joints
    */
-  inline std::vector<std::string> getJointTypes(const bool &user = true);
+  std::vector<std::string> getJointTypes(const bool &user = true);
 
   /**
    * Get the limit of all the joints. Again, Pinocchio might split a joint into
@@ -105,7 +105,7 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: limit of the joints
    */
-  inline std::vector<MatrixX<S>> getJointLimits(const bool &user = true);
+  std::vector<MatrixX<S>> getJointLimits(const bool &user = true);
 
   /**
    * Get the limit of the joint with the given index.
@@ -115,7 +115,7 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: limit of the joint with the given index
    */
-  inline MatrixX<S> getJointLimit(const size_t &index, const bool &user = true);
+  MatrixX<S> getJointLimit(const size_t &index, const bool &user = true);
 
   /**
    * Get the id of the joint with the given index.
@@ -125,7 +125,7 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: id of the joint with the given index
    */
-  inline size_t getJointId(const size_t &index, const bool &user = true) {
+  size_t getJointId(const size_t &index, const bool &user = true) {
     return user ? vidx_[index] : model_.idx_vs[index];
   }
 
@@ -137,7 +137,7 @@ class PinocchioModelTpl {
    *    the constructor or the default order
    * @return: id of the joints
    */
-  inline VectorXi getJointIds(const bool &user = true);
+  VectorXi getJointIds(const bool &user = true);
 
   /**
    * Get the dimension of the joint with the given index.
@@ -147,7 +147,7 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: dimension of the joint with the given index
    */
-  inline size_t getJointDim(const size_t &index, const bool &user = true) {
+  size_t getJointDim(const size_t &index, const bool &user = true) {
     return user ? nvs_[index] : model_.nvs[index];
   }
 
@@ -159,7 +159,7 @@ class PinocchioModelTpl {
    *    passed to the constructor or the default order
    * @return: dimention of the joints
    */
-  inline VectorXi getJointDims(const bool &user = true);
+  VectorXi getJointDims(const bool &user = true);
 
   /**
    * Get the parent of the joint with the given index.
@@ -169,7 +169,7 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: parent of the joint with the given index
    */
-  inline size_t getParent(const size_t &index, const bool &user = true) {
+  size_t getParent(const size_t &index, const bool &user = true) {
     return user ? parents_[index] : model_.parents[index];
   }
 
@@ -181,7 +181,7 @@ class PinocchioModelTpl {
    *    to the constructor or the default order
    * @return: parent of the joints
    */
-  inline VectorXi getParents(const bool &user = true);
+  VectorXi getParents(const bool &user = true);
 
   /**
    * Get the name of all the links.
@@ -190,7 +190,7 @@ class PinocchioModelTpl {
    *    to the constructor or the default order
    * @return: name of the links
    */
-  inline std::vector<std::string> getLinkNames(const bool &user = true);
+  std::vector<std::string> getLinkNames(const bool &user = true);
 
   /**
    * Get the name of all the joints. Again, Pinocchio might split a joint into
@@ -200,7 +200,7 @@ class PinocchioModelTpl {
    *    to the constructor or the default order
    * @return: name of the joints
    */
-  inline std::vector<std::string> getJointNames(const bool &user = true);
+  std::vector<std::string> getJointNames(const bool &user = true);
 
   std::vector<std::vector<size_t>> getSupports(const bool &user = true);
 
@@ -213,7 +213,7 @@ class PinocchioModelTpl {
 
   /*
       // The original model for debug only
-      inline size_t getDimQpos(void) { return model.nv; }
+      size_t getDimQpos(void) { return model.nv; }
 
       int getNQ(void) { return model.nq; }
 
