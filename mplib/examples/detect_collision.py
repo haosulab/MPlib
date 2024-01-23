@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import mplib
-
 from mplib.examples.demo_setup import DemoSetup
 
 
@@ -29,23 +28,29 @@ class DetectCollisionDemo(DemoSetup):
     def demo(self):
         """
         We test several configurations:
-        1. Set robot to a self-collision-free qpos and check for self-collision returns no collision
-        2. Set robot to a self-collision qpos and check for self-collision returns a collision
-        3. Set robot to a env-collision-free qpos and check for env-collision returns no collision
-        4. Set robot to a env-collision qpos and check for env-collision returns a collision
-        5. Attempts to plan a path to a qpos is in collision with the world. This will cause the planner to timeout
+        1. Set robot to a self-collision-free qpos and check for self-collision returns
+           no collision
+        2. Set robot to a self-collision qpos and check for self-collision returns
+           a collision
+        3. Set robot to a env-collision-free qpos and check for env-collision returns
+           no collision
+        4. Set robot to a env-collision qpos and check for env-collision returns
+           a collision
+        5. Attempts to plan a path to a qpos is in collision with the world.
+           This will cause the planner to timeout
         6. Remove the floor and check for env-collision returns no collision
         """
-        floor = mplib.planner.fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
+        floor = mplib.fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
         # create a collision object for the floor, with a 10cm offset in the z direction
-        floor_fcl_collision_object = mplib.planner.fcl.CollisionObject(
+        floor_fcl_collision_object = mplib.fcl.CollisionObject(
             floor, [0, 0, -0.1], [1, 0, 0, 0]
         )
         # update the planning world with the floor collision object
         self.planner.set_normal_object("floor", floor_fcl_collision_object)
 
         print("\n----- self-collision-free qpos -----")
-        # if the joint qpos does not include the gripper joints, it will be set to the current gripper joint angle
+        # if the joint qpos does not include the gripper joints,
+        # it will be set to the current gripper joint angle
         self_collision_free_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78]
         self.print_collisions(
             self.planner.check_for_self_collision(

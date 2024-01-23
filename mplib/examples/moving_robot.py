@@ -4,21 +4,28 @@ from mplib.examples.demo_setup import DemoSetup
 
 
 class PlanningDemo(DemoSetup):
-    """This is identical to demo.py except the whole scene is shifted to the bottom right by 1 meter respectively"""
+    """
+    This is identical to demo.py except the whole scene is shifted to
+    the bottom right by 1 meter respectively
+    """
 
     def __init__(self):
         """
-        Setting up the scene, the planner, and adding some objects to the scene
-        Note that we place the robot at [1,1,0] in the simulation and also tell the planner that the robot is at [1,1,0]
-        Afterwards, put down a table and three boxes. For details on how to do this, see the sapien documentation
-        Compared to demo.py, all the props are shifted by 1 meter in the x and y direction
+        Setting up the scene, the planner, and adding some objects to the scene.
+        Note that we place the robot at [1, 1, 0] in the simulation and
+        also tell the planner that the robot is at [1, 1, 0].
+        Afterwards, put down a table and three boxes.
+        For details on how to do this, see the sapien documentation.
+        Compared to demo.py, all the props are shifted by 1 meter
+        in the x and y direction.
         """
         super().__init__()
         self.setup_scene()
         self.load_robot(robot_origin_xyz=[1, 1, 0])
         self.setup_planner()
 
-        # We also need to tell the planner where the base is since the sim and planner don't share info
+        # We also need to tell the planner where the base is
+        # since the sim and planner don't share info
         self.planner.set_base_pose([1, 1, 0, 1, 0, 0, 0])
 
         # Set initial joint positions
@@ -54,9 +61,10 @@ class PlanningDemo(DemoSetup):
     def demo(self):
         """
         Same demo as demo.py.
-        Since we shifted the robot, we also need to shift the poses by 1 meter in the x and y direction
+        Since we shifted the robot, we also need to shift the poses
+        by 1 meter in the x and y direction.
         Alternatively, we can keep the poses the same and tell the planner
-        the poses are specified with respect to the base of the robot
+        the poses are specified with respect to the base of the robot.
         """
         poses = [
             [1.4, 1.3, 0.12, 0, 1, 0, 0],

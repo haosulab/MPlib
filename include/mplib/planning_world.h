@@ -6,7 +6,7 @@
 #include "articulated_model.h"
 #include "color_printing.h"
 #include "fcl_model.h"
-#include "macros_utils.hpp"
+#include "macros_utils.h"
 
 /// Result of the collision checking.
 template <typename DATATYPE>
@@ -52,8 +52,8 @@ class PlanningWorldTpl {
   using WorldCollisionResult = WorldCollisionResultTpl<DATATYPE>;
   using WorldCollisionResult_ptr = WorldCollisionResultTpl_ptr<DATATYPE>;
 
-  std::vector<std::string> articulation_names;
   std::vector<ArticulatedModel_ptr> articulations;
+  std::vector<std::string> articulation_names;
   // std::vector<bool> articulation_flags;
   std::unordered_map<std::string, CollisionObject_ptr> normal_object_map;
   int move_articulation_id, attach_link_id;
@@ -273,7 +273,7 @@ class PlanningWorldTpl {
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> selfCollide(
-      int index, const CollisionRequest &request = CollisionRequest());
+      size_t index, const CollisionRequest &request = CollisionRequest());
   /**
    * Check collision between the articulated model and other objects.
    *
@@ -282,7 +282,7 @@ class PlanningWorldTpl {
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> collideWithOthers(
-      int index, const CollisionRequest &request = CollisionRequest());
+      size_t index, const CollisionRequest &request = CollisionRequest());
 
   /**
    * Check collision between the articulated model and all objects.
@@ -292,7 +292,7 @@ class PlanningWorldTpl {
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> collideFull(
-      int index, const CollisionRequest &request = CollisionRequest());
+      size_t index, const CollisionRequest &request = CollisionRequest());
 };
 
 template <typename T>

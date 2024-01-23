@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 #  Derived from https://github.com/pybind/pybind11/
 #
 #  Copyright (c) 2016 Wenzel Jakob <wenzel.jakob@epfl.ch>,
@@ -267,9 +265,9 @@ def extract_comment(cursor, deprecations):
 
     # Append the deprecation text.
     result += (
-        r" (Deprecated.) \deprecated {} "
-        "This will be removed from Drake on or after {}."
-    ).format(message, removal_date)
+        rf" (Deprecated.) \deprecated {message} "
+        f"This will be removed from Drake on or after {removal_date}."
+    )
 
     return result
 
@@ -442,7 +440,7 @@ def choose_doc_var_names(symbols):
                 # overload naming set.
                 result[i] = None
                 continue
-            elif any([symbols[i].comment == x.comment for x in symbols[:i]]):
+            elif any(symbols[i].comment == x.comment for x in symbols[:i]):
                 # If a subsequent overload's API comment *exactly* matches a
                 # prior overload's comment, the first overload's name wins.
                 # This is important because when a function has separate
@@ -518,7 +516,7 @@ def choose_doc_var_names(symbols):
     ]
 
     # The argument count might be sufficient to disambiguate.
-    result = ["doc_{}args".format(len(types)) for types in overload_arg_types]
+    result = [f"doc_{len(types)}args" for types in overload_arg_types]
     specialize_well_known_doc_var_names()
     if is_unique(result):
         return result
@@ -581,11 +579,11 @@ def print_symbols(f, name, node, level=0):
     name_var = sanitize_name(name_var)
     # We may get empty symbols if `libclang` produces warnings.
     assert len(name_var) > 0, node.first_symbol.sorting_key()
-    iprint("// Symbol: {}".format(full_name))
+    iprint(f"// Symbol: {full_name}")
     modifier = ""
     if level == 0:
         modifier = "constexpr "
-    iprint("{}struct /* {} */ {{".format(modifier, name_var))
+    iprint(f"{modifier}struct /* {name_var} */ {{")
 
     # Print documentation items.
     symbol_iter = sorted(node.doc_symbols, key=Symbol.sorting_key)
@@ -599,10 +597,8 @@ def print_symbols(f, name, node, level=0):
         delim = "\n"
         if "\n" not in comment and len(comment) < 40:
             delim = " "
-        iprint("  // Source: {}:{}".format(symbol.include, symbol.line))
-        iprint(
-            '  const char* {} ={}R"""({})""";'.format(doc_var, delim, comment.strip())
-        )
+        iprint(f"  // Source: {symbol.include}:{symbol.line}")
+        iprint(f'  const char* {doc_var} ={delim}R"""({comment.strip()})""";')
 
     # Recurse into child elements.
     keys = sorted(node.children_map.keys())
@@ -624,13 +620,13 @@ def print_symbols(f, name, node, level=0):
             if (node.children_map[x].first_symbol.cursor.kind == CursorKind.FIELD_DECL)
         ]
         if field_names:
-            iprint(f"  auto Serialize__fields() const {{")
-            iprint(f"    return std::array{{")
+            iprint("  auto Serialize__fields() const {")
+            iprint("    return std::array{{")
             for x in field_names:
                 iprint(f'      std::make_pair("{x}", {x}.doc),')
-            iprint(f"    }};")
-            iprint(f"  }}")
-    iprint("}} {};".format(name_var))
+            iprint("    }};")
+            iprint("  }}")
+    iprint(f"}} {name_var};")
 
 
 class FileDict:
@@ -638,7 +634,9 @@ class FileDict:
     Provides a dictionary that hashes based on a file's true path.
     """
 
-    def __init__(self, items=[]):
+    def __init__(self, items=None):
+        if items is None:
+            items = []
         self._d = {self._key(file): value for file, value in items}
 
     def _key(self, file):
@@ -694,14 +692,14 @@ def main():
         eprint("Syntax: %s -output=<file> [.. a list of header files ..]" % sys.argv[0])
         sys.exit(1)
 
-    f = open(output_filename, "w", encoding="utf-8")
+    f = open(output_filename, "w", encoding="utf-8")  # noqa: SIM115
 
     # N.B. We substitute the `GENERATED FILE...` bits in this fashion because
     # otherwise Reviewable gets confused.
     f.write(
         """#pragma once
 
-// {0} {1}
+// {} {}
 // This file contains docstrings for the Python bindings that were
 // automatically extracted by mkdoc.py.
 
@@ -719,14 +717,11 @@ def main():
     # Determine project include directories.
     # N.B. For simplicity when using with Bazel, we do not try to get canonical
     # file paths for determining include files.
-    include_paths = []
-    for param in parameters:
-        # Only check for normal include directories.
-        if param.startswith("-I"):
-            include_paths.append(param[2:])
+    include_paths = [param[2:] for param in parameters if param.startswith("-I")]
+
     # Use longest include directories first to get shortest include file
     # overall.
-    include_paths = list(sorted(include_paths, key=len))[::-1]
+    include_paths = sorted(include_paths, key=len)[::-1]
     include_files = []
     # Create mapping from filename to include file.
     include_file_map = FileDict()
@@ -739,7 +734,7 @@ def main():
                 break
         else:
             raise RuntimeError(
-                "Filename not incorporated into -I includes: {}".format(filename)
+                f"Filename not incorporated into -I includes: {filename}"
             )
         for p in ignore_patterns:
             if fnmatch(include_file, p):
@@ -765,7 +760,7 @@ def main():
         glue_f.write("#include <optional>\n")
         # Add the includes to the glue, and as comments in the output.
         for include_file in sorted(include_files):
-            line = '#include "{}"'.format(include_file)
+            line = f'#include "{include_file}"'
             glue_f.write(line + "\n")
             f.write("// " + line + "\n")
         f.write("\n")
@@ -782,21 +777,23 @@ def main():
             raise RuntimeError("Parsing headers using the clang library failed")
         # If there is an error on line 1, that means the C++ standard library
         # include paths are broken.
-        if translation_unit.diagnostics:
-            if translation_unit.diagnostics[0].location.line == 1:
-                try:
-                    # Use '###' to dump Clang's include paths to stdout.
-                    index.parse("foo", parameters + ["-###"])
-                except Exception:
-                    pass
-                raise RuntimeError(
-                    "The operating system's C++ standard library is not "
-                    "installed correctly or is only partially installed. For "
-                    "example, libgcc-??-dev is installed but libstdc++-??-dev "
-                    "is not installed (the ?? indicates a version number). "
-                    "Try re-running Drake's install_prereqs, or maybe check "
-                    "your system and install anything that's missing by hand."
-                )
+        if (
+            translation_unit.diagnostics
+            and translation_unit.diagnostics[0].location.line == 1
+        ):
+            try:
+                # Use '###' to dump Clang's include paths to stdout.
+                index.parse("foo", parameters + ["-###"])
+            except Exception:
+                pass
+            raise RuntimeError(
+                "The operating system's C++ standard library is not "
+                "installed correctly or is only partially installed. For "
+                "example, libgcc-??-dev is installed but libstdc++-??-dev "
+                "is not installed (the ?? indicates a version number). "
+                "Try re-running Drake's install_prereqs, or maybe check "
+                "your system and install anything that's missing by hand."
+            )
         severities = [
             diagnostic.severity
             for diagnostic in translation_unit.diagnostics
@@ -826,12 +823,12 @@ def main():
     except UnicodeEncodeError as e:
         # User-friendly error for #9903.
         print(
-            """
-Encountered unicode error: {}
+            f"""
+Encountered unicode error: {e}
 If you are on Ubuntu, please ensure you have en_US.UTF-8 locales generated:
     sudo apt-get install --no-install-recommends  locales
     sudo locale-gen en_US.UTF-8
-""".format(e),
+""",
             file=sys.stderr,
         )
         sys.exit(1)

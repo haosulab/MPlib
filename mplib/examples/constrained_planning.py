@@ -9,18 +9,19 @@ from mplib.examples.demo_setup import DemoSetup
 class ConstrainedPlanningDemo(DemoSetup):
     """
     This demo shows the planner's ability to plan with constraints.
-    For this particular demo, we move to several poses while pointing the end effector roughly 15 degrees w.r.t. -z axis
+    For this particular demo, we move to several poses while pointing the end effector
+    roughly 15 degrees w.r.t. -z axis.
     """
 
     def __init__(self):
-        """set up the scene and load the robot"""
+        """Set up the scene and load the robot"""
         super().__init__()
         self.setup_scene()
         self.load_robot()
         self.setup_planner()
 
     def add_point_cloud(self):
-        """add some random obstacles to make the planning more challenging"""
+        """Add some random obstacles to make the planning more challenging"""
         import trimesh
 
         box = trimesh.creation.box([0.1, 0.4, 0.2])
@@ -32,7 +33,7 @@ class ConstrainedPlanningDemo(DemoSetup):
         return
 
     def get_eef_z(self):
-        """helper function for constraint"""
+        """Helper function for constraint"""
         ee_idx = self.planner.link_name_2_idx[self.planner.move_group]
         ee_pose = self.planner.robot.get_pinocchio_model().get_link_pose(ee_idx)
         mat = transforms3d.quaternions.quat2mat(ee_pose[3:])
@@ -40,9 +41,12 @@ class ConstrainedPlanningDemo(DemoSetup):
 
     def make_f(self):
         """
-        create a constraint function that takes in a qpos and outputs a scalar
-        A valid constraint function should evaluates to 0 when the constraint is satisfied
-        See [ompl constrained planning](https://ompl.kavrakilab.org/constrainedPlanning.html) for more details
+        Create a constraint function that takes in a qpos and outputs a scalar.
+        A valid constraint function should evaluates to 0 when the constraint
+        is satisfied.
+
+        See [ompl constrained planning](https://ompl.kavrakilab.org/constrainedPlanning.html)
+        for more details.
         """
 
         def f(x, out):
@@ -55,8 +59,9 @@ class ConstrainedPlanningDemo(DemoSetup):
 
     def make_j(self):
         """
-        create the jacobian of the constraint function w.r.t. qpos
-        This is needed because the planner uses the jacobian to project a random sample to the constraint manifold
+        Create the jacobian of the constraint function w.r.t. qpos.
+        This is needed because the planner uses the jacobian to project a random sample
+        to the constraint manifold.
         """
 
         def j(x, out):
@@ -74,8 +79,10 @@ class ConstrainedPlanningDemo(DemoSetup):
 
     def demo(self):
         """
-        We first plan with constraints to three poses, then plan without constraints to the same poses
-        While not always the case, sometimes without constraints, the end effector will tilt almost upside down
+        We first plan with constraints to three poses, then plan without constraints to
+        the same poses.
+        While not always the case, sometimes without constraints,
+        the end effector will tilt almost upside down.
         """
         # this starting pose has the end effector tilted roughly 15 degrees
         starting_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.88, 0.78, 0, 0]
@@ -88,7 +95,8 @@ class ConstrainedPlanningDemo(DemoSetup):
             [0, -0.3, 0.5, 0.1304237, -0.9914583, 0, 0],
         ]
 
-        # add some point cloud to make the planning more challenging so we can see the effect of no constraint
+        # add some point cloud to make the planning more challenging
+        # so we can see the effect of no constraint
         self.add_point_cloud()
 
         # with constraint

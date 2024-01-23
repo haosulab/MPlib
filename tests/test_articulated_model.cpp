@@ -1,5 +1,6 @@
 #include <Eigen/Core>
-#include <articulated_model.h>
+
+#include "mplib/articulated_model.h"
 
 using ArticulatedModel = ArticulatedModelTpl<double>;
 

@@ -10,7 +10,7 @@
 #include <urdf_world/types.h>
 
 #include "color_printing.h"
-#include "macros_utils.hpp"
+#include "macros_utils.h"
 
 /**
  * Pinocchio model of an articulation

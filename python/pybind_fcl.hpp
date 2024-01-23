@@ -8,9 +8,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "../src/fcl_model.h"
-#include "../src/macros_utils.hpp"
-#include "../src/urdf_utils.h"
 #include "docstring/fcl_model.h"
 #include "docstring/urdf_utils.h"
 #include "fcl/broadphase/broadphase_dynamic_AABB_tree.h"
@@ -29,6 +26,9 @@
 #include "fcl/narrowphase/distance_request.h"
 #include "fcl/narrowphase/distance_result.h"
 #include "fcl/narrowphase/gjk_solver_type.h"
+#include "mplib/fcl_model.h"
+#include "mplib/macros_utils.h"
+#include "mplib/urdf_utils.h"
 
 using DATATYPE = double;
 

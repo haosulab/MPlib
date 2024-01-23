@@ -1,4 +1,4 @@
-#include "kdl_model.h"
+#include "mplib/kdl_model.h"
 
 #define DEFINE_TEMPLATE_FM(DATATYPE) template class KDLModelTpl<DATATYPE>;
 
@@ -11,9 +11,9 @@ KDLModelTpl<DATATYPE>::KDLModelTpl(const std::string &urdf_filename,
                                    const std::vector<std::string> &joint_names,
                                    const std::vector<std::string> &link_names,
                                    const bool &verbose)
-    : user_joint_names(joint_names), user_link_names(link_names), verbose(verbose) {
+    : user_link_names(link_names), user_joint_names(joint_names), verbose(verbose) {
   // std::cout << "Verbose" << verbose << std::endl;
-  for (int i = 0; i < joint_names.size(); i++)
+  for (size_t i = 0; i < joint_names.size(); i++)
     user_joint_idx_mapping[joint_names[i]] = i;
   urdf::ModelInterfaceSharedPtr urdf = urdf::parseURDFFile(urdf_filename);
   treeFromUrdfModel(urdf, tree, tree_root_name, verbose);
@@ -157,7 +157,7 @@ KDLModelTpl<DATATYPE>::TreeIKNRJL(const std::vector<std::string> endpoints,
   }
 
   KDL::Frames frames;
-  for (int i = 0; i < endpoints.size(); i++) {
+  for (size_t i = 0; i < endpoints.size(); i++) {
     frames[endpoints[i]] = KDL::Frame(
         KDL::Rotation::Quaternion(poses[i][4], poses[i][5], poses[i][6], poses[i][3]),
         KDL::Vector(poses[i][0], poses[i][1], poses[i][2]));

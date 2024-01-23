@@ -7,7 +7,7 @@
 # Additional flags that clang understands can be passed in as well
 CLANG_FLAGS="-std=c++17 ${@}"
 PY_SCRIPT_PATH="dev/mkdoc.py"
-CPP_INCLUDE_DIR="src"
+CPP_INCLUDE_DIR="include/mplib"
 OUTPUT_DOCSTRING_DIR="python/docstring"
 
 ############################################################
