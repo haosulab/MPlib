@@ -29,12 +29,11 @@
 namespace mplib::ompl {
 
 template <typename S>
-std::vector<S> compoundstate2vector(const ob::State *state_raw,
-                                    ob::SpaceInformation *const &si_);
+std::vector<S> compoundstate2vector(const State *state_raw,
+                                    SpaceInformation *const &si_);
 
 template <typename S>
-std::vector<S> rvssstate2vector(const ob::State *state_raw,
-                                ob::SpaceInformation *const &si_);
+std::vector<S> rvssstate2vector(const State *state_raw, SpaceInformation *const &si_);
 
 template <typename IN_TYPE, typename OUT_TYPE>
 std::vector<OUT_TYPE> eigen2vector(const VectorX<IN_TYPE> &x) {
@@ -51,7 +50,7 @@ VectorX<OUT_TYPE> vector2eigen(const std::vector<IN_TYPE> &x) {
 }
 
 template <typename S>
-VectorX<S> state2eigen(const ob::State *state_raw, ob::SpaceInformation *const &si_,
+VectorX<S> state2eigen(const State *state_raw, SpaceInformation *const &si_,
                        bool is_rvss = false);
 
 template <typename S>
@@ -90,16 +89,16 @@ VectorX<S> add_fixed_joints(const FixedJointsTpl<S> &fixed_joints,
 MPLIB_CLASS_TEMPLATE_FORWARD(ValidityCheckerTpl);
 
 template <typename S>
-class ValidityCheckerTpl : public ob::StateValidityChecker {
+class ValidityCheckerTpl : public StateValidityChecker {
   PlanningWorldTplPtr<S> world_;
   bool is_rvss_;
   FixedJointsTpl<S> fixed_joints_;
 
  public:
-  ValidityCheckerTpl(PlanningWorldTplPtr<S> world, const ob::SpaceInformationPtr &si,
+  ValidityCheckerTpl(PlanningWorldTplPtr<S> world, const SpaceInformationPtr &si,
                      bool is_rvss,
                      const FixedJointsTpl<S> &fixed_joints = FixedJointsTpl<S>())
-      : ob::StateValidityChecker(si),
+      : StateValidityChecker(si),
         world_(world),
         is_rvss_(is_rvss),
         fixed_joints_(fixed_joints) {}
@@ -113,20 +112,20 @@ class ValidityCheckerTpl : public ob::StateValidityChecker {
     return !world_->collide();
   }
 
-  bool isValid(const ob::State *state_raw) const {
+  bool isValid(const State *state_raw) const {
     auto state = state2eigen<S>(state_raw, si_, is_rvss_);
     return _isValid(state);
   }
 };
 
-class GeneralConstraint : public ob::Constraint {
+class GeneralConstraint : public Constraint {
   std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> f_, j_;
 
  public:
   GeneralConstraint(
       size_t dim, const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> &f,
       const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)> &j)
-      : ob::Constraint(dim, 1), f_(f), j_(j) {}
+      : Constraint(dim, 1), f_(f), j_(j) {}
 
   void function(const Eigen::Ref<const VectorXd> &x,
                 Eigen::Ref<VectorXd> out) const override {
@@ -151,11 +150,11 @@ MPLIB_CLASS_TEMPLATE_FORWARD(OMPLPlannerTpl);
 /// OMPL Planner
 template <typename S>
 class OMPLPlannerTpl {
-  std::shared_ptr<ob::RealVectorStateSpace> p_ambient_space_;
-  std::shared_ptr<ob::ProjectedStateSpace> p_constrained_space_;
+  RealVectorStateSpacePtr p_ambient_space_;
+  ProjectedStateSpacePtr p_constrained_space_;
   CompoundStateSpacePtr cs_;
-  ob::StateSpacePtr state_space_;
-  std::shared_ptr<og::SimpleSetup> ss_;
+  StateSpacePtr state_space_;
+  SimpleSetupPtr ss_;
   SpaceInformationPtr p_compound_si_;
   SpaceInformationPtr p_constrained_si_;
   SpaceInformationPtr si_;
@@ -168,8 +167,7 @@ class OMPLPlannerTpl {
   FixedJointsTpl<S> last_fixed_joints_;
 
   /** Certain joint configurations are the same if some joints are the same fmod 2pi. */
-  std::shared_ptr<ob::GoalStates> make_goal_states(
-      const std::vector<VectorX<S>> &goal_states);
+  GoalStatesPtr make_goal_states(const std::vector<VectorX<S>> &goal_states);
 
   /** build a real vector state space for the robot */
   void build_constrained_ambient_state_space();
@@ -180,7 +178,7 @@ class OMPLPlannerTpl {
    */
   void update_ss(bool is_rvss = false);
 
-  void _simplify_path(og::PathGeometric &path);  // keep this private to avoid confusion
+  void _simplify_path(PathGeometric &path);  // keep this private to avoid confusion
 
  public:
   /**
@@ -259,11 +257,11 @@ using OMPLPlannerTpldPtr = OMPLPlannerTplPtr<double>;
 // Explicit Template Instantiation Declaration =========================================
 #define DECLARE_TEMPLATE_OMPL_PLANNER(S)                                             \
   extern template std::vector<S> compoundstate2vector<S>(                            \
-      const ob::State *state_raw, ob::SpaceInformation *const &si_);                 \
-  extern template std::vector<S> rvssstate2vector<S>(                                \
-      const ob::State *state_raw, ob::SpaceInformation *const &si_);                 \
+      const State *state_raw, SpaceInformation *const &si_);                         \
+  extern template std::vector<S> rvssstate2vector<S>(const State *state_raw,         \
+                                                     SpaceInformation *const &si_);  \
   extern template VectorX<S> state2eigen<S>(                                         \
-      const ob::State *state_raw, ob::SpaceInformation *const &si_, bool is_rvss);   \
+      const State *state_raw, SpaceInformation *const &si_, bool is_rvss);           \
   extern template bool is_fixed_joint<S>(const FixedJointsTpl<S> &fixed_joints,      \
                                          size_t articulation_idx, size_t joint_idx); \
   extern template VectorX<S> remove_fixed_joints<S>(                                 \

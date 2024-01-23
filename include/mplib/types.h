@@ -7,10 +7,21 @@
 #include <fcl/broadphase/broadphase_dynamic_AABB_tree.h>
 #include <fcl/narrowphase/collision.h>
 #include <fcl/narrowphase/distance.h>
+#include <ompl/base/ConstrainedSpaceInformation.h>
+#include <ompl/base/Constraint.h>
 #include <ompl/base/ProblemDefinition.h>
+#include <ompl/base/ScopedState.h>
 #include <ompl/base/SpaceInformation.h>
+#include <ompl/base/State.h>
 #include <ompl/base/StateSpace.h>
+#include <ompl/base/StateValidityChecker.h>
+#include <ompl/base/goals/GoalStates.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/spaces/SO2StateSpace.h>
+#include <ompl/base/spaces/constraint/ProjectedStateSpace.h>
 #include <ompl/geometric/PathGeometric.h>
+#include <ompl/geometric/PathSimplifier.h>
+#include <ompl/geometric/SimpleSetup.h>
 #include <pinocchio/multibody/data.hpp>
 #include <pinocchio/multibody/fwd.hpp>
 #include <pinocchio/parsers/urdf.hpp>
@@ -188,18 +199,58 @@ class KDLModelTpl;
 // OMPL ================================================================================
 namespace ompl {
 
-// namespace alias
+// Namespace alias
 namespace ob = ::ompl::base;
 // namespace oc = ::ompl::control;
 namespace og = ::ompl::geometric;
 
-// common type alias
+// State spaces
+using StateSpace = ob::StateSpace;
+using StateSpacePtr = std::shared_ptr<StateSpace>;
 using CompoundStateSpace = ob::CompoundStateSpace;
-using CompoundStateSpacePtr = std::shared_ptr<ob::CompoundStateSpace>;
+using CompoundStateSpacePtr = std::shared_ptr<CompoundStateSpace>;
+using RealVectorBounds = ob::RealVectorBounds;
+using RealVectorStateSpace = ob::RealVectorStateSpace;
+using RealVectorStateSpacePtr = std::shared_ptr<RealVectorStateSpace>;
+using SO2StateSpace = ob::SO2StateSpace;
+using SO2StateSpacePtr = std::shared_ptr<SO2StateSpace>;
+using ProjectedStateSpace = ob::ProjectedStateSpace;
+using ProjectedStateSpacePtr = std::shared_ptr<ProjectedStateSpace>;
+// State
+using State = ob::State;
+using StatePtr = std::shared_ptr<State>;
+using CompoundState = ob::CompoundState;
+using CompoundStatePtr = std::shared_ptr<CompoundState>;
+template <class T = StateSpace>
+using ScopedState = ob::ScopedState<T>;
+using ScopedStatePtr = std::shared_ptr<ScopedState<>>;
+
+// Common type alias
 using SpaceInformation = ob::SpaceInformation;
-using SpaceInformationPtr = std::shared_ptr<ob::SpaceInformation>;
+using SpaceInformationPtr = std::shared_ptr<SpaceInformation>;
+using ConstrainedSpaceInformation = ob::ConstrainedSpaceInformation;
+using ConstrainedSpaceInformationPtr = std::shared_ptr<ConstrainedSpaceInformation>;
+using StateValidityChecker = ob::StateValidityChecker;
+using StateValidityCheckerPtr = std::shared_ptr<StateValidityChecker>;
 using ProblemDefinition = ob::ProblemDefinition;
-using ProblemDefinitionPtr = std::shared_ptr<ob::ProblemDefinition>;
+using ProblemDefinitionPtr = std::shared_ptr<ProblemDefinition>;
+using Constraint = ob::Constraint;
+using ConstraintPtr = std::shared_ptr<Constraint>;
+using SimpleSetup = og::SimpleSetup;
+using SimpleSetupPtr = std::shared_ptr<SimpleSetup>;
+using GoalStates = ob::GoalStates;
+using GoalStatesPtr = std::shared_ptr<GoalStates>;
+
+// Planner related
+using Planner = ob::Planner;
+using PlannerPtr = std::shared_ptr<Planner>;
+using PlannerStatus = ob::PlannerStatus;
+
+// Solution Path
+using PathGeometric = og::PathGeometric;
+using PathGeometricPtr = std::shared_ptr<PathGeometric>;
+using PathSimplifier = og::PathSimplifier;
+using PathSimplifierPtr = std::shared_ptr<PathSimplifier>;
 
 // FixedJoint / FixedJoints
 template <typename S>
