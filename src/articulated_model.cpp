@@ -21,7 +21,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
                                             const std::vector<std::string> &joint_names,
                                             const bool &convex, const bool &verbose)
     : pinocchio_model_(urdf_filename, gravity, verbose),
-      fcl_model_(urdf_filename, verbose, convex),
+      fcl_model_(urdf_filename, convex, verbose),
       verbose_(verbose) {
   user_link_names_ =
       link_names.size() == 0 ? pinocchio_model_.getLinkNames(false) : link_names;
@@ -30,7 +30,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
   pinocchio_model_.setLinkOrder(user_link_names_);
   pinocchio_model_.setJointOrder(user_joint_names_);
   fcl_model_.setLinkOrder(user_link_names_);
-  fcl_model_.removeCollisionPairsFromSrdf(srdf_filename);
+  fcl_model_.removeCollisionPairsFromSRDF(srdf_filename);
   current_qpos_ = VectorX<S>::Constant(pinocchio_model_.getModel().nv, 0);
   setMoveGroup(user_link_names_);
   setBasePose({0, 0, 0, 1, 0, 0, 0});  // initialize base pose to identity

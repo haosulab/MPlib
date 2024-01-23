@@ -496,26 +496,31 @@ class FCLModel:
     See https://github.com/flexible-collision-library/fcl
     """
     def __init__(
-        self, urdf_filename: str, verbose: bool = True, convex: bool = False
+        self, urdf_filename: str, convex: bool = False, verbose: bool = False
     ) -> None:
         """
         Construct an FCL model from URDF and SRDF files.
 
         :param urdf_filename: path to URDF file, can be relative to the current working
             directory
-        :param verbose: print debug information
-        :param convex: use convex decomposition for collision objects
+        :param convex: use convex decomposition for collision objects. Default:
+            ``False``.
+        :param verbose: print debug information. Default: ``False``.
         """
     def collide(self, request: CollisionRequest = ...) -> bool:
         """
-        Perform collision checking.
+        Perform self-collision checking.
 
         :param request: collision request
-        :return: ``True`` if collision happens
+        :return: ``True`` if any collision pair collides
         """
-    def collide_full(
-        self, request: CollisionRequest = ...
-    ) -> list[CollisionResult]: ...
+    def collide_full(self, request: CollisionRequest = ...) -> list[CollisionResult]:
+        """
+        Perform self-collision checking and returns all found collisions.
+
+        :param request: collision request
+        :return: list of CollisionResult for each collision pair
+        """
     def get_collision_link_names(self) -> list[str]: ...
     def get_collision_objects(self) -> list[CollisionObject]:
         """

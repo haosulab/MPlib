@@ -23,20 +23,39 @@ MPLIB_CLASS_TEMPLATE_FORWARD(FCLModelTpl);
 template <typename S>
 class FCLModelTpl {
  public:
-  FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdfTree,
-              const std::string &package_dir, const bool &verbose = true,
-              const bool &convex = false);
-
   /**
    * Construct an FCL model from URDF and SRDF files.
    *
    * @param urdf_filename: path to URDF file, can be relative to the current working
    *  directory
-   * @param verbose: print debug information
-   * @param convex: use convex decomposition for collision objects
+   * @param convex: use convex decomposition for collision objects. Default: ``false``.
+   * @param verbose: print debug information. Default: ``false``.
    */
-  FCLModelTpl(const std::string &urdf_filename, const bool &verbose = true,
-              const bool &convex = false);
+  FCLModelTpl(const std::string &urdf_filename, const bool &convex = false,
+              const bool &verbose = false);
+
+  /**
+   * Construct an FCL model from URDF and SRDF files.
+   *
+   * @param urdf_tree: a urdf tree as urdf::ModelInterfaceSharedPtr
+   * @param package_dir: path to replace package_dir for mesh files
+   * @param convex: use convex decomposition for collision objects. Default: ``false``.
+   * @param verbose: print debug information. Default: ``false``.
+   */
+  FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdf_tree,
+              const std::string &package_dir, const bool &convex = false,
+              const bool &verbose = false);
+
+  /**
+   * Get the collision objects of the FCL model.
+   *
+   * @return: all collision objects of the FCL model
+   */
+  std::vector<CollisionObjectPtr<S>> &getCollisionObjects() {
+    return collision_objects_;
+  }
+
+  std::vector<std::string> getCollisionLinkNames() { return collision_link_names_; }
 
   /**
    * Get the collision pairs of the FCL model.
@@ -49,16 +68,8 @@ class FCLModelTpl {
     return collision_pairs_;
   }
 
-  /**
-   * Get the collision objects of the FCL model.
-   *
-   * @return: all collision objects of the FCL model
-   */
-  std::vector<CollisionObjectPtr<S>> &getCollisionObjects() {
-    return collision_objects_;
-  }
-
-  std::vector<std::string> getCollisionLinkNames() { return collision_link_names_; }
+  /// Print all collision pairs
+  void printCollisionPairs();
 
   std::vector<std::string> getUserLinkNames() { return user_link_names_; }
 
@@ -73,17 +84,13 @@ class FCLModelTpl {
    */
   void setLinkOrder(const std::vector<std::string> &names);
 
-  void printCollisionPairs(void);
-
   /**
    * Remove collision pairs from SRDF.
    *
    * @param srdf_filename: path to SRDF file, can be relative to the current working
    *  directory
    */
-  void removeCollisionPairsFromSrdf(const std::string &srdf_filename);
-
-  void updateCollisionObjects(const std::vector<Transform3<S>> &link_pose);
+  void removeCollisionPairsFromSRDF(const std::string &srdf_filename);
 
   /**
    * Update the collision objects of the FCL model.
@@ -92,14 +99,22 @@ class FCLModelTpl {
    */
   void updateCollisionObjects(const std::vector<Vector7<S>> &link_pose);
 
+  void updateCollisionObjects(const std::vector<Transform3<S>> &link_pose);
+
   /**
-   * Perform collision checking.
+   * Perform self-collision checking.
    *
    * @param request: collision request
-   * @return: ``true`` if collision happens
+   * @return: ``true`` if any collision pair collides
    */
   bool collide(const CollisionRequest<S> &request = CollisionRequest<S>());
 
+  /**
+   * Perform self-collision checking and returns all found collisions.
+   *
+   * @param request: collision request
+   * @return: list of CollisionResult for each collision pair
+   */
   std::vector<CollisionResult<S>> collideFull(
       const CollisionRequest<S> &request = CollisionRequest<S>(1, false, 1, false, true,
                                                                GJKSolverType::GST_INDEP,
@@ -108,20 +123,23 @@ class FCLModelTpl {
  private:
   void init(const urdf::ModelInterfaceSharedPtr &urdfTree,
             const std::string &package_dir_);
-  void dfs_parse_tree(const urdf::LinkConstSharedPtr &link, std::string);
+
+  void dfsParseTree(const urdf::LinkConstSharedPtr &link, std::string parent_link_name);
 
   urdf::ModelInterfaceSharedPtr urdf_model_;
+  std::string package_dir_;
+  bool use_convex_;
 
   std::vector<CollisionObjectPtr<S>> collision_objects_;
-  std::vector<Transform3<S>> collision_origin2link_poses;
   std::vector<std::string> collision_link_names_;
   std::vector<std::string> parent_link_names_;
+  std::vector<Transform3<S>> collision_origin2link_poses;
   std::vector<std::pair<size_t, size_t>> collision_pairs_;
 
   std::vector<std::string> user_link_names_;
   std::vector<size_t> collision_link_user_indices_;
-  std::string package_dir_;
-  bool have_link_order_, use_convex_, verbose_;
+
+  bool verbose_;
 };
 
 // Common Type Alias ===================================================================

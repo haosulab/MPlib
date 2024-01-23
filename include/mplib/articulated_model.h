@@ -149,7 +149,7 @@ class ArticulatedModelTpl {
    * @param srdf: path to SRDF file, can be relative to the current working directory
    */
   void updateSRDF(const std::string &srdf) {
-    fcl_model_.removeCollisionPairsFromSrdf(srdf);
+    fcl_model_.removeCollisionPairsFromSRDF(srdf);
   }
 
  private:

@@ -346,29 +346,33 @@ inline void build_pyfcl(py::module &m_all) {
       m, "FCLModel", DOC(mplib, fcl, FCLModelTpl));
   PyFCLModel
       .def(py::init<const std::string &, const bool &, const bool &>(),
-           py::arg("urdf_filename"), py::arg("verbose") = true,
-           py::arg("convex") = false, DOC(mplib, fcl, FCLModelTpl, FCLModelTpl, 2))
-      .def("get_collision_pairs", &FCLModel::getCollisionPairs,
-           DOC(mplib, fcl, FCLModelTpl, getCollisionPairs))
+           py::arg("urdf_filename"), py::arg("convex") = false,
+           py::arg("verbose") = false, DOC(mplib, fcl, FCLModelTpl, FCLModelTpl))
+
       .def("get_collision_objects", &FCLModel::getCollisionObjects,
            DOC(mplib, fcl, FCLModelTpl, getCollisionObjects))
+      .def("get_collision_link_names", &FCLModel::getCollisionLinkNames,
+           DOC(mplib, fcl, FCLModelTpl, getCollisionLinkNames))
+      .def("get_collision_pairs", &FCLModel::getCollisionPairs,
+           DOC(mplib, fcl, FCLModelTpl, getCollisionPairs))
+
       .def("set_link_order", &FCLModel::setLinkOrder, py::arg("names"),
            DOC(mplib, fcl, FCLModelTpl, setLinkOrder))
+
+      .def("remove_collision_pairs_from_srdf", &FCLModel::removeCollisionPairsFromSRDF,
+           py::arg("srdf_filename"),
+           DOC(mplib, fcl, FCLModelTpl, removeCollisionPairsFromSRDF))
+
       .def("update_collision_objects",
            py::overload_cast<const std::vector<Vector7<S>> &>(
                &FCLModel::updateCollisionObjects),
-           py::arg("link_poses"),
-           DOC(mplib, fcl, FCLModelTpl, updateCollisionObjects, 2))
+           py::arg("link_poses"), DOC(mplib, fcl, FCLModelTpl, updateCollisionObjects))
+
       .def("collide", &FCLModel::collide, py::arg("request") = CollisionRequest(),
            DOC(mplib, fcl, FCLModelTpl, collide))
       .def("collide_full", &FCLModel::collideFull,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, fcl, FCLModelTpl, collideFull))
-      .def("get_collision_link_names", &FCLModel::getCollisionLinkNames,
-           DOC(mplib, fcl, FCLModelTpl, getCollisionLinkNames))
-      .def("remove_collision_pairs_from_srdf", &FCLModel::removeCollisionPairsFromSrdf,
-           py::arg("srdf_filename"),
-           DOC(mplib, fcl, FCLModelTpl, removeCollisionPairsFromSrdf));
+           DOC(mplib, fcl, FCLModelTpl, collideFull));
 
   // Extra function
   m.def("load_mesh_as_BVH", load_mesh_as_BVH<S>, py::arg("mesh_path"), py::arg("scale"),

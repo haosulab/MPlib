@@ -31,27 +31,37 @@ See https://github.com/flexible-collision-library/fcl)doc";
 
 static const char *__doc_mplib_fcl_FCLModelTpl_FCLModelTpl =
 R"doc(
-)doc";
+Construct an FCL model from URDF and SRDF files.
+
+:param urdf_filename: path to URDF file, can be relative to the current working
+    directory
+:param convex: use convex decomposition for collision objects. Default:
+    ``False``.
+:param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_fcl_FCLModelTpl_FCLModelTpl_2 =
 R"doc(
 Construct an FCL model from URDF and SRDF files.
 
-:param urdf_filename: path to URDF file, can be relative to the current working
-    directory
-:param verbose: print debug information
-:param convex: use convex decomposition for collision objects)doc";
+:param urdf_tree: a urdf tree as urdf::ModelInterfaceSharedPtr
+:param package_dir: path to replace package_dir for mesh files
+:param convex: use convex decomposition for collision objects. Default:
+    ``False``.
+:param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_fcl_FCLModelTpl_collide =
 R"doc(
-Perform collision checking.
+Perform self-collision checking.
 
 :param request: collision request
-:return: ``True`` if collision happens)doc";
+:return: ``True`` if any collision pair collides)doc";
 
 static const char *__doc_mplib_fcl_FCLModelTpl_collideFull =
 R"doc(
-)doc";
+Perform self-collision checking and returns all found collisions.
+
+:param request: collision request
+:return: list of CollisionResult for each collision pair)doc";
 
 static const char *__doc_mplib_fcl_FCLModelTpl_getCollisionLinkNames =
 R"doc(
@@ -81,9 +91,9 @@ R"doc(
 
 static const char *__doc_mplib_fcl_FCLModelTpl_printCollisionPairs =
 R"doc(
-)doc";
+Print all collision pairs)doc";
 
-static const char *__doc_mplib_fcl_FCLModelTpl_removeCollisionPairsFromSrdf =
+static const char *__doc_mplib_fcl_FCLModelTpl_removeCollisionPairsFromSRDF =
 R"doc(
 Remove collision pairs from SRDF.
 
@@ -98,13 +108,13 @@ Set the link order of the FCL model.
 
 static const char *__doc_mplib_fcl_FCLModelTpl_updateCollisionObjects =
 R"doc(
-)doc";
-
-static const char *__doc_mplib_fcl_FCLModelTpl_updateCollisionObjects_2 =
-R"doc(
 Update the collision objects of the FCL model.
 
 :param link_poses: list of link poses in the order of the link order)doc";
+
+static const char *__doc_mplib_fcl_FCLModelTpl_updateCollisionObjects_2 =
+R"doc(
+)doc";
 
 /* ----- Begin of custom docstring section ----- */
 
