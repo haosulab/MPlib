@@ -65,32 +65,67 @@ class PlanningWorldTpl {
                    const std::vector<std::string> &normal_object_names,
                    int plan_articulation_id = 0);
 
-  // std::vector<bool> const &articulation_flags);
-
   /**
    * Get the list of articulated models.
    *
    * @return: list of articulated models
    */
-  std::vector<ArticulatedModelPtr> getArticulations(void) { return articulations_; }
+  std::vector<ArticulatedModelPtr> getArticulations() { return articulations_; }
+
+  /**
+   * Get the names of articulated models.
+   *
+   * @return: list of names of articulated models
+   */
+  std::vector<std::string> &getArticulationNames() { return articulation_names_; }
 
   /**
    * Get the list of non-articulated collision objects.
    *
    * @return: list of non-articulated collision objects
    */
-  std::vector<CollisionObjectPtr> getNormalObjects(void) {
+  std::vector<CollisionObjectPtr> getNormalObjects() {
     std::vector<CollisionObjectPtr> ret;
     for (const auto &itm : normal_object_map_) ret.push_back(itm.second);
     return ret;
   }
 
-  std::vector<std::string> &getArticulationNames() { return articulation_names_; }
-
+  /**
+   * Get the names of non-articulated collision objects.
+   *
+   * @return: list of names of non-articulated collision objects
+   */
   std::vector<std::string> getNormalObjectNames() {
     std::vector<std::string> ret;
     for (const auto &itm : normal_object_map_) ret.push_back(itm.first);
     return ret;
+  }
+
+  int getMoveArticulationId() { return move_articulation_id_; }
+
+  void setMoveArticulationId(int id) { move_articulation_id_ = id; }
+
+  /**
+   * Add an articulated model to the planning world.
+   *
+   * @param model: articulated model to be added
+   * @param name: name of the articulated model
+   */
+  void addArticulation(const ArticulatedModelPtr &model, const std::string &name) {
+    articulations_.push_back(model);
+    articulation_names_.push_back(name);
+  }
+
+  /**
+   * Add a list of articulated models to the planning world.
+   *
+   * @param models: list of articulated models to be added
+   * @param names: list of names of the articulated models
+   */
+  void addArticulations(const std::vector<ArticulatedModelPtr> &models,
+                        const std::vector<std::string> &names) {
+    articulations_.insert(articulations_.end(), models.begin(), models.end());
+    articulation_names_.insert(articulation_names_.end(), names.begin(), names.end());
   }
 
   /**
@@ -115,10 +150,6 @@ class PlanningWorldTpl {
     normal_object_map_.erase(name);
     return true;
   }
-
-  void setMoveArticulationId(int id) { move_articulation_id_ = id; }
-
-  int getMoveArticulationId() { return move_articulation_id_; }
 
   /**
    * Set whether to use point cloud for collision checking.
@@ -163,16 +194,6 @@ class PlanningWorldTpl {
                           const Vector7<S> &pose);
 
   /**
-   * Add a sphere as the attached tool.
-   *
-   * @param radius: radius of the sphere
-   * @param link_id: link id of the attached sphere
-   * @param pose: pose of the attached sphere w.r.t. the link it's attached to.
-   *              [x, y, z, qw, qx, qy, qz]
-   */
-  void updateAttachedSphere(S radius, int link_id, const Vector7<S> &pose);
-
-  /**
    * Add a box as the attached tool.
    *
    * @param size: size of the box, [size_x, size_y, size_z]
@@ -181,6 +202,16 @@ class PlanningWorldTpl {
    *              [x, y, z, qw, qx, qy, qz]
    */
   void updateAttachedBox(const Vector3<S> &size, int link_id, const Vector7<S> &pose);
+
+  /**
+   * Add a sphere as the attached tool.
+   *
+   * @param radius: radius of the sphere
+   * @param link_id: link id of the attached sphere
+   * @param pose: pose of the attached sphere w.r.t. the link it's attached to.
+   *              [x, y, z, qw, qx, qy, qz]
+   */
+  void updateAttachedSphere(S radius, int link_id, const Vector7<S> &pose);
 
   /**
    * Add a mesh as the attached tool.
@@ -198,34 +229,6 @@ class PlanningWorldTpl {
     auto tmp1 = attached_tool_.get()->getTranslation();
     auto tmp2 = attached_tool_.get()->getRotation();
     print_info("Attached tool pose: ", tmp1.transpose(), " ", tmp2);
-  }
-
-  /**
-   * Add an articulated model to the planning world.
-   *
-   * @param model: articulated model to be added
-   * @param name: name of the articulated model
-   */
-  void addArticulation(const ArticulatedModelPtr &model,
-                       const std::string &name) {  // bool const &planning = true) {
-    articulations_.push_back(model);
-    articulation_names_.push_back(name);
-    // articulation_flags.push_back(planning);
-  }
-
-  /**
-   * Add a list of articulated models to the planning world.
-   *
-   * @param models: list of articulated models to be added
-   * @param names: list of names of the articulated models
-   */
-  void addArticulations(
-      const std::vector<ArticulatedModelPtr> &models,
-      const std::vector<std::string> &names) {  // std::vector<bool> const &planning) {
-    articulations_.insert(articulations_.end(), models.begin(), models.end());
-    articulation_names_.insert(articulation_names_.end(), names.begin(), names.end());
-    // articulation_flags.insert(articulation_flags.end(), planning.begin(),
-    // planning.end());
   }
 
   /**
@@ -284,12 +287,14 @@ class PlanningWorldTpl {
  private:
   std::vector<ArticulatedModelPtr> articulations_;
   std::vector<std::string> articulation_names_;
-  // std::vector<bool> articulation_flags;
+
   std::unordered_map<std::string, CollisionObjectPtr> normal_object_map_;
+
   int move_articulation_id_, attach_link_id_;
   CollisionObjectPtr point_cloud_, attached_tool_;
   bool has_point_cloud_, has_attach_;
   Transform3<S> attach_to_link_pose_;
+
   // BroadPhaseCollisionManagerPtr normal_manager;
 };
 

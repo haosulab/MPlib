@@ -74,11 +74,23 @@ class PlanningWorld:
         :param request: collision request params. Can leave empty for default value
         :return: List of WorldCollisionResult objects
         """
+    def get_articulation_names(self) -> list[str]:
+        """
+        Get the names of articulated models.
+
+        :return: list of names of articulated models
+        """
     def get_articulations(self) -> list[mplib.pymp.articulation.ArticulatedModel]:
         """
         Get the list of articulated models.
 
         :return: list of articulated models
+        """
+    def get_normal_object_names(self) -> list[str]:
+        """
+        Get the names of non-articulated collision objects.
+
+        :return: list of names of non-articulated collision objects
         """
     def get_normal_objects(self) -> list[mplib.pymp.fcl.CollisionObject]:
         """

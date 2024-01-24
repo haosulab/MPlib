@@ -38,11 +38,6 @@ PlanningWorldTpl<S>::PlanningWorldTpl(
 }
 
 template <typename S>
-void PlanningWorldTpl<S>::setQpos(const int &index, const VectorX<S> &state) {
-  articulations_[index]->setQpos(state);
-}
-
-template <typename S>
 void PlanningWorldTpl<S>::updatePointCloud(const MatrixX3<S> &vertices,
                                            const double &radius) {
   std::shared_ptr<octomap::OcTree> p_octree = std::make_shared<octomap::OcTree>(radius);
@@ -67,17 +62,17 @@ void PlanningWorldTpl<S>::updateAttachedTool(CollisionGeometryPtr p_geom, int li
 }
 
 template <typename S>
-void PlanningWorldTpl<S>::updateAttachedSphere(S radius, int link_id,
-                                               const Vector7<S> &pose) {
-  CollisionGeometryPtr collision_geometry = std::make_shared<fcl::Sphere<S>>(radius);
-  updateAttachedTool(collision_geometry, link_id, pose);
-}
-
-template <typename S>
 void PlanningWorldTpl<S>::updateAttachedBox(const Vector3<S> &size, int link_id,
                                             const Vector7<S> &pose) {
   CollisionGeometryPtr collision_geometry =
       std::make_shared<fcl::Box<S>>(size[0], size[1], size[2]);
+  updateAttachedTool(collision_geometry, link_id, pose);
+}
+
+template <typename S>
+void PlanningWorldTpl<S>::updateAttachedSphere(S radius, int link_id,
+                                               const Vector7<S> &pose) {
+  CollisionGeometryPtr collision_geometry = std::make_shared<fcl::Sphere<S>>(radius);
   updateAttachedTool(collision_geometry, link_id, pose);
 }
 
@@ -90,12 +85,17 @@ void PlanningWorldTpl<S>::updateAttachedMesh(const std::string &mesh_path, int l
 }
 
 template <typename S>
+void PlanningWorldTpl<S>::setQpos(const int &index, const VectorX<S> &state) {
+  articulations_[index]->setQpos(state);
+}
+
+template <typename S>
 void PlanningWorldTpl<S>::setQposAll(const VectorX<S> &state) {
   size_t total_dim = 0;
   for (size_t i = 0; i < articulations_.size(); i++) {
     auto n = articulations_[i]->getQposDim();
     auto segment =
-        state.segment(total_dim, total_dim + n);  //[total_dim, total_dim + n)
+        state.segment(total_dim, total_dim + n);  // [total_dim, total_dim + n)
     ASSERT(static_cast<size_t>(segment.size()) == n,
            "Bug with size " + std::to_string(segment.size()) + " " + std::to_string(n));
     setQpos(i, segment);
@@ -103,6 +103,12 @@ void PlanningWorldTpl<S>::setQposAll(const VectorX<S> &state) {
   }
   ASSERT(total_dim == static_cast<size_t>(state.size()),
          "State dimension is not correct");
+}
+
+template <typename S>
+bool PlanningWorldTpl<S>::collide() {
+  std::vector<WorldCollisionResult> ret = collideFull(0, CollisionRequest());
+  return ret.size() > 0;
 }
 
 template <typename S>
@@ -223,8 +229,6 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
               .matrix();
       pose.translation() = link_pose.head(3);
       pose = pose * attach_to_link_pose_;
-      // std::cout << attach_link_id << std::endl;
-      // std::cout << "attached box pose: " << pose.linear() << std::endl;
       attached_tool_.get()->setTransform(pose);
 
       CollisionResult result;
@@ -253,41 +257,5 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideFull(
   ret1.insert(ret1.end(), ret2.begin(), ret2.end());
   return ret1;
 }
-
-template <typename S>
-bool PlanningWorldTpl<S>::collide() {
-  std::vector<WorldCollisionResult> ret = collideFull(0, CollisionRequest());
-  return ret.size() > 0;
-  /*for (size_t i = 0; i < articulations.size(); i++)
-      if (articulation_flags[i])
-          if (articulations[i]->getFCLModel().collide())
-              return true;*/
-  // return false;
-}
-
-/*template<typename S>
-std::vector<WorldCollisionResultTpl<S>>
-PlanningWorldTpl<S>::collideFull(void) { std::vector<WorldCollisionResult> ret;
-    for (size_t i = 0; i < articulations.size(); i++)
-        if (articulation_flags[i]) {
-            auto fcl_model = articulations[i]->getFCLModel();
-            auto results = fcl_model.collideFull();
-            auto CollisionLinkNames = fcl_model.getCollisionLinkNames();
-            auto CollisionPairs = fcl_model.getCollisionPairs();
-            for (size_t j = 0; j < results.size(); j++) {
-                WorldCollisionResult tmp;
-                auto x = CollisionPairs[j].first, y = CollisionPairs[j].second;
-                tmp.res = results[j];
-                tmp.object_id1 = i;
-                tmp.object_id2 = i;
-                tmp.object_type1 = "articulation";
-                tmp.object_type2 = "articulation";
-                tmp.link_name1 = CollisionLinkNames[x];
-                tmp.link_name2 = CollisionLinkNames[y];
-                ret.push_back(tmp);
-            }
-        }
-    return ret;
-}*/
 
 }  // namespace mplib

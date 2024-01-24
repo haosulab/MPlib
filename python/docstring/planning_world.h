@@ -75,7 +75,9 @@ Check collision between the articulated model and other objects.
 
 static const char *__doc_mplib_PlanningWorldTpl_getArticulationNames =
 R"doc(
-)doc";
+Get the names of articulated models.
+
+:return: list of names of articulated models)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_getArticulations =
 R"doc(
@@ -89,7 +91,9 @@ R"doc(
 
 static const char *__doc_mplib_PlanningWorldTpl_getNormalObjectNames =
 R"doc(
-)doc";
+Get the names of non-articulated collision objects.
+
+:return: list of names of non-articulated collision objects)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_getNormalObjects =
 R"doc(
