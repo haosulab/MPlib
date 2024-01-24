@@ -20,9 +20,7 @@ class OMPLPlanner:
     """
     OMPL Planner
     """
-    def __init__(
-        self, world: mplib.pymp.planning_world.PlanningWorld, robot_idx: int = 0
-    ) -> None:
+    def __init__(self, world: mplib.pymp.planning_world.PlanningWorld) -> None:
         """
         Construct an OMPLPlanner from a PlanningWorld
 
@@ -39,7 +37,6 @@ class OMPLPlanner:
         planner_name: str = "RRTConnect",
         time: float = 1.0,
         range: float = 0.0,
-        verbose: bool = False,
         fixed_joints: set[...] = set(),
         no_simplification: bool = False,
         constraint_function: typing.Callable[
@@ -57,6 +54,7 @@ class OMPLPlanner:
             None,
         ] = None,
         constraint_tolerance: float = 0.001,
+        verbose: bool = False,
     ) -> tuple[str, numpy.ndarray[tuple[M, N], numpy.dtype[numpy.float64]]]:
         """
         Plan a path from start state to goal states.
@@ -68,7 +66,6 @@ class OMPLPlanner:
         :param time: planning time limit
         :param range: planning range (for RRT family of planners and represents the
             maximum step size)
-        :param verbose: print debug information
         :param fixed_joints: list of fixed joints not considered in planning for this
             particular call
         :param no_simplification: if ``True``, the path will not be simplified
@@ -79,6 +76,7 @@ class OMPLPlanner:
             angles
         :param constraint_tolerance: tolerance of what level of deviation from 0 is
             acceptable
+        :param verbose: print debug information. Default: ``False``.
         :return: pair of planner status and path. If planner succeeds, status is "Exact
             solution."
         """

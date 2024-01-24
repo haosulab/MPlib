@@ -62,21 +62,6 @@ Construct an OMPLPlanner from a PlanningWorld
 
 :param world: planning world)doc";
 
-static const char *__doc_mplib_ompl_OMPLPlannerTpl_build_compound_state_space =
-R"doc(
-Build a new state space given the current planning world and a set of fixed
-joints
-
-:param fixed_joints: a vector of FixedJoint)doc";
-
-static const char *__doc_mplib_ompl_OMPLPlannerTpl_get_dim =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_ompl_OMPLPlannerTpl_get_world =
-R"doc(
-)doc";
-
 static const char *__doc_mplib_ompl_OMPLPlannerTpl_plan =
 R"doc(
 Plan a path from start state to goal states.
@@ -88,7 +73,6 @@ Plan a path from start state to goal states.
 :param time: planning time limit
 :param range: planning range (for RRT family of planners and represents the
     maximum step size)
-:param verbose: print debug information
 :param fixed_joints: list of fixed joints not considered in planning for this
     particular call
 :param no_simplification: if ``True``, the path will not be simplified
@@ -99,14 +83,11 @@ Plan a path from start state to goal states.
     angles
 :param constraint_tolerance: tolerance of what level of deviation from 0 is
     acceptable
+:param verbose: print debug information. Default: ``False``.
 :return: pair of planner status and path. If planner succeeds, status is "Exact
     solution.")doc";
 
-static const char *__doc_mplib_ompl_OMPLPlannerTpl_random_sample_nearby =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_ompl_OMPLPlannerTpl_simplify_path =
+static const char *__doc_mplib_ompl_OMPLPlannerTpl_simplifyPath =
 R"doc(
 Simplify the provided path.
 
@@ -127,15 +108,11 @@ static const char *__doc_mplib_ompl_ValidityCheckerTpl_isValid_2 =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_ValidityCheckerTpl_update_fixed_joints =
+static const char *__doc_mplib_ompl_addFixedJoints =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_add_fixed_joints =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_ompl_compoundstate2vector =
+static const char *__doc_mplib_ompl_compoundState2vector =
 R"doc(
 )doc";
 
@@ -143,15 +120,15 @@ static const char *__doc_mplib_ompl_eigen2vector =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_is_fixed_joint =
+static const char *__doc_mplib_ompl_isFixedJoint =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_remove_fixed_joints =
+static const char *__doc_mplib_ompl_removeFixedJoints =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_rvssstate2vector =
+static const char *__doc_mplib_ompl_rvssState2vector =
 R"doc(
 )doc";
 

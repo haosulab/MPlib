@@ -519,13 +519,13 @@ class Planner:
         fix_joint_limits=True,
         use_point_cloud=False,
         use_attach=False,
-        verbose=False,
         planner_name="RRTConnect",
         no_simplification=False,
         constraint_function=None,
         constraint_jacobian=None,
         constraint_tolerance=1e-3,
         fixed_joint_indices=None,
+        verbose=False,
     ):
         """
         plan a path from a specified joint position to a goal pose
@@ -542,15 +542,15 @@ class Planner:
                 the joint limits
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will consider the attached tool collision when planning
-            verbose: if True, will print the log of OMPL and TOPPRA
             planner_name: planner name pick from {"RRTConnect", "RRT*"}
-            fixed_joint_indices: list of indices of joints that are fixed during
-                planning
+            no_simplification: if true, will not simplify the path. constraint planning
+                does not support simplification
             constraint_function: evals to 0 when constraint is satisfied
             constraint_jacobian: jacobian of constraint_function
             constraint_tolerance: tolerance for constraint_function
-            no_simplification: if true, will not simplify the path. constraint planning
-                does not support simplification
+            fixed_joint_indices: list of indices of joints that are fixed during
+                planning
+            verbose: if True, will print the log of OMPL and TOPPRA
         """
         if fixed_joint_indices is None:
             fixed_joint_indices = []
@@ -588,12 +588,12 @@ class Planner:
             range=rrt_range,
             time=planning_time,
             fixed_joints=fixed_joints,
-            verbose=verbose,
             planner_name=planner_name,
             no_simplification=no_simplification,
             constraint_function=constraint_function,
             constraint_jacobian=constraint_jacobian,
             constraint_tolerance=constraint_tolerance,
+            verbose=verbose,
         )
 
         if status == "Exact solution":
@@ -638,13 +638,13 @@ class Planner:
         fix_joint_limits=True,
         use_point_cloud=False,
         use_attach=False,
-        verbose=False,
         wrt_world=True,
         planner_name="RRTConnect",
         no_simplification=False,
         constraint_function=None,
         constraint_jacobian=None,
         constraint_tolerance=1e-3,
+        verbose=False,
     ):
         """
         plan from a start configuration to a goal pose of the end-effector
@@ -661,9 +661,9 @@ class Planner:
                 the joint limits
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will consider the attached tool collision when planning
-            verbose: if True, will print the log of OMPL and TOPPRA
             wrt_world: if true, interpret the target pose with respect to
                 the world frame instead of the base frame
+            verbose: if True, will print the log of OMPL and TOPPRA
         """
         if mask is None:
             mask = []
@@ -711,12 +711,12 @@ class Planner:
             fix_joint_limits,
             use_point_cloud,
             use_attach,
-            verbose,
             planner_name,
             no_simplification,
             constraint_function,
             constraint_jacobian,
             constraint_tolerance,
+            verbose,
         )
 
     def plan_screw(
@@ -727,8 +727,8 @@ class Planner:
         time_step=0.1,
         use_point_cloud=False,
         use_attach=False,
-        verbose=False,
         wrt_world=True,
+        verbose=False,
     ):
         """
         Plan from a start configuration to a goal pose of the end-effector using
@@ -741,9 +741,9 @@ class Planner:
             time_step: time step for the discretization
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will use the attached tool to avoid collision
-            verbose: if True, will print the log of TOPPRA
             wrt_world: if True, interpret the target pose with respect to the
                 world frame instead of the base frame
+            verbose: if True, will print the log of TOPPRA
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
