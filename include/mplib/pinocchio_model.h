@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -23,22 +24,31 @@ MPLIB_CLASS_TEMPLATE_FORWARD(PinocchioModelTpl);
 template <typename S>
 class PinocchioModelTpl {
  public:
-  PinocchioModelTpl(const urdf::ModelInterfaceSharedPtr &urdfTree,
-                    const Vector3<S> &gravity, const bool &verbose = true);
-
   /**
    * Construct a Pinocchio model from the given URDF file.
    *
    * @param urdf_filename: path to the URDF file
    * @param gravity: gravity vector
-   * @param verbose: print debug information
+   * @param verbose: print debug information. Default: ``false``.
    */
   PinocchioModelTpl(const std::string &urdf_filename, const Vector3<S> &gravity,
-                    const bool &verbose = true);
+                    const bool &verbose = false);
 
-  Model<S> &getModel(void) { return model_; }
+  /**
+   * Construct a Pinocchio model from the given URDF file.
+   *
+   * @param urdf_tree: a urdf tree as urdf::ModelInterfaceSharedPtr
+   * @param gravity: gravity vector
+   * @param verbose: print debug information. Default: ``false``.
+   */
+  PinocchioModelTpl(const urdf::ModelInterfaceSharedPtr &urdf_tree,
+                    const Vector3<S> &gravity, const bool &verbose = false);
 
-  Data<S> &getData(void) { return data_; }
+  /// Get the underlying pinocchio::Model
+  Model<S> &getModel() { return model_; }
+
+  /// Get the underlying pinocchio::Data
+  Data<S> &getData() { return data_; }
 
   /**
    * Get the leaf links (links without child) of the kinematic tree.
@@ -48,44 +58,43 @@ class PinocchioModelTpl {
   std::vector<std::string> getLeafLinks() { return leaf_links_; }
 
   /**
-   * Get the type of the joint with the given index.
+   * Pinocchio might have a different link order or it might add additional links.
    *
-   * @param index: joint index to query
-   * @param user: if ``true``, the joint index follows the order you passed to the
-   *    constructor or the default order
-   * @return: type of the joint with the given index
+   * If you do not pass the the list of link names, the default order might not be the
+   * one you want.
+   *
+   * @param names: list of link names in the order you want
    */
-  std::string getJointType(const size_t &index, const bool &user = true);
+  void setLinkOrder(const std::vector<std::string> &names);
 
   /**
-   * Get the type of all the joints. Again, Pinocchio might split a joint into
+   * Pinocchio might have a different joint order or it might add additional joints.
+   *
+   * If you do not pass the the list of joint names, the default order might not be the
+   * one you want.
+   *
+   * @param names: list of joint names in the order you want
+   */
+  void setJointOrder(const std::vector<std::string> &names);
+
+  /**
+   * Get the name of all the links.
+   *
+   * @param user: if ``true``, we get the name of the links in the order you passed
+   *    to the constructor or the default order
+   * @return: name of the links
+   */
+  std::vector<std::string> getLinkNames(const bool &user = true);
+
+  /**
+   * Get the name of all the joints. Again, Pinocchio might split a joint into
    * multiple joints.
    *
-   * @param user: if ``true``, we get the type of the joints in the order you passed to
-   *    the constructor or the default order
-   * @return: type of the joints
+   * @param user: if ``true``, we get the name of the joints in the order you passed
+   *    to the constructor or the default order
+   * @return: name of the joints
    */
-  std::vector<std::string> getJointTypes(const bool &user = true);
-
-  /**
-   * Get the limit of all the joints. Again, Pinocchio might split a joint into
-   * multiple joints.
-   *
-   * @param user: if ``true``, we get the limit of the joints in the order you passed to
-   *    the constructor or the default order
-   * @return: limit of the joints
-   */
-  std::vector<MatrixX<S>> getJointLimits(const bool &user = true);
-
-  /**
-   * Get the limit of the joint with the given index.
-   *
-   * @param index: joint index to query
-   * @param user: if ``true``, the joint index follows the order you passed to the
-   *    constructor or the default order
-   * @return: limit of the joint with the given index
-   */
-  MatrixX<S> getJointLimit(const size_t &index, const bool &user = true);
+  std::vector<std::string> getJointNames(const bool &user = true);
 
   /**
    * Get the id of the joint with the given index.
@@ -110,6 +119,26 @@ class PinocchioModelTpl {
   VectorXi getJointIds(const bool &user = true);
 
   /**
+   * Get the type of the joint with the given index.
+   *
+   * @param index: joint index to query
+   * @param user: if ``true``, the joint index follows the order you passed to the
+   *    constructor or the default order
+   * @return: type of the joint with the given index
+   */
+  std::string getJointType(const size_t &index, const bool &user = true);
+
+  /**
+   * Get the type of all the joints. Again, Pinocchio might split a joint into
+   * multiple joints.
+   *
+   * @param user: if ``true``, we get the type of the joints in the order you passed to
+   *    the constructor or the default order
+   * @return: type of the joints
+   */
+  std::vector<std::string> getJointTypes(const bool &user = true);
+
+  /**
    * Get the dimension of the joint with the given index.
    *
    * @param index: joint index to query
@@ -132,6 +161,26 @@ class PinocchioModelTpl {
   VectorXi getJointDims(const bool &user = true);
 
   /**
+   * Get the limit of the joint with the given index.
+   *
+   * @param index: joint index to query
+   * @param user: if ``true``, the joint index follows the order you passed to the
+   *    constructor or the default order
+   * @return: limit of the joint with the given index
+   */
+  MatrixX<S> getJointLimit(const size_t &index, const bool &user = true);
+
+  /**
+   * Get the limit of all the joints. Again, Pinocchio might split a joint into
+   * multiple joints.
+   *
+   * @param user: if ``true``, we get the limit of the joints in the order you passed to
+   *    the constructor or the default order
+   * @return: limit of the joints
+   */
+  std::vector<MatrixX<S>> getJointLimits(const bool &user = true);
+
+  /**
    * Get the parent of the joint with the given index.
    *
    * @param index: joint index to query
@@ -139,7 +188,7 @@ class PinocchioModelTpl {
    *    constructor or the default order
    * @return: parent of the joint with the given index
    */
-  size_t getParent(const size_t &index, const bool &user = true) {
+  size_t getJointParent(const size_t &index, const bool &user = true) {
     return user ? parents_[index] : model_.parents[index];
   }
 
@@ -151,103 +200,10 @@ class PinocchioModelTpl {
    *    to the constructor or the default order
    * @return: parent of the joints
    */
-  VectorXi getParents(const bool &user = true);
-
-  /**
-   * Get the name of all the links.
-   *
-   * @param user: if ``true``, we get the name of the links in the order you passed
-   *    to the constructor or the default order
-   * @return: name of the links
-   */
-  std::vector<std::string> getLinkNames(const bool &user = true);
-
-  /**
-   * Get the name of all the joints. Again, Pinocchio might split a joint into
-   * multiple joints.
-   *
-   * @param user: if ``true``, we get the name of the joints in the order you passed
-   *    to the constructor or the default order
-   * @return: name of the joints
-   */
-  std::vector<std::string> getJointNames(const bool &user = true);
-
-  std::vector<std::vector<size_t>> getSupports(const bool &user = true);
-
-  std::vector<std::vector<size_t>> getSubtrees(const bool &user = true);
+  VectorXi getJointParents(const bool &user = true);
 
   /// Frame is a Pinocchio internal data type which is not supported outside this class.
-  void printFrames(void);
-
-  int getNFrames(void) { return model_.nframes; }
-
-  /*
-      // The original model for debug only
-      size_t getDimQpos(void) { return model.nv; }
-
-      int getNQ(void) { return model.nq; }
-
-      int getNV(void) { return model.nv; }
-
-      int getNJoints(void) { return model.njoints; }
-
-      int getNBodies(void) { return model.nbodies; }
-
-      std::vector<std::vector<size_t>> getSupports(void) { return model.supports; };
-
-      std::vector<std::vector<size_t>> getSubtrees(void) { return model.subtrees; };
-
-      int getNLinks(void);
-
-      int getNFrames(void) { return model.nframes; }
-
-      std::vector<int> getNQs(void) { return model.nqs; }
-
-      std::vector<int> getNVs(void) { return model.nvs; }
-
-      std::vector<int> getIDXVs(void) { return model.idx_vs; }
-
-      std::vector<int> getIDXQs(void) { return model.idx_qs; }
-
-      std::vector<std::string> getJointNames(void) { return model.names; }
-
-      std::vector<std::string> getFrameNames(void);
-
-      std::vector<std::string> getLinkNames(void);
-
-      std::vector<size_t> getParents(void) { return model.parents; }
-
-      void printFrames(void);
-  */
-
-  /**
-   * Pinocchio might have a different joint order or it might add additional joints.
-   *
-   * If you do not pass the the list of joint names, the default order might not be the
-   * one you want.
-   *
-   * @param names: list of joint names in the order you want
-   */
-  void setJointOrder(const std::vector<std::string> &names);
-
-  /**
-   * Pinocchio might have a different link order or it might add additional links.
-   *
-   * If you do not pass the the list of link names, the default order might not be the
-   * one you want.
-   *
-   * @param names: list of link names in the order you want
-   */
-  void setLinkOrder(const std::vector<std::string> &names);
-
-  /**
-   * Get the joint indices of the joints in the chain from the root to the given link.
-   *
-   * @param index: index of the link (in the order you passed to the constructor or the
-   *    default order)
-   * @return: joint indices of the joints in the chain
-   */
-  std::vector<std::size_t> getChainJointIndex(const std::string &end_effector);
+  void printFrames();
 
   /**
    * Get the joint names of the joints in the chain from the root to the given link.
@@ -257,6 +213,15 @@ class PinocchioModelTpl {
    * @return: joint names of the joints in the chain
    */
   std::vector<std::string> getChainJointName(const std::string &end_effector);
+
+  /**
+   * Get the joint indices of the joints in the chain from the root to the given link.
+   *
+   * @param index: index of the link (in the order you passed to the constructor or the
+   *    default order)
+   * @return: joint indices of the joints in the chain
+   */
+  std::vector<std::size_t> getChainJointIndex(const std::string &end_effector);
 
   /**
    * Get a random configuration.
@@ -363,30 +328,30 @@ class PinocchioModelTpl {
       const int &maxIter = 1000, const double &dt = 1e-1, const double &damp = 1e-12);
 
  private:
+  static constexpr std::string_view joint_prefix_ {"JointModel"};
+
+  void init(const urdf::ModelInterfaceSharedPtr &urdf_tree, const Vector3<S> &gravity);
+
+  void dfsParseTree(urdf::LinkConstSharedPtr link, UrdfVisitorBase<S> &visitor);
+
   VectorX<S> qposUser2Pinocchio(const VectorX<S> &qpos);
 
   VectorX<S> qposPinocchio2User(const VectorX<S> &qpos);
 
-  void init(const urdf::ModelInterfaceSharedPtr &urdfTree, const Vector3<S> &gravity);
-
-  void dfs_parse_tree(urdf::LinkConstSharedPtr link, UrdfVisitorBase<S> &visitor);
-
   urdf::ModelInterfaceSharedPtr urdf_model_;
   Model<S> model_;
   Data<S> data_;
-
-  VectorXi joint_index_user2pinocchio_, joint_index_pinocchio2user_;
-  VectorXi v_index_user2pinocchio_;  // the joint index in model
-  // map between user and pinocchio
-  PermutationMatrixX v_map_user2pinocchio_;
-  VectorXi link_index_user2pinocchio_;
+  std::vector<std::string> leaf_links_;
 
   std::vector<std::string> user_link_names_;
-  std::vector<std::string> user_joint_names_;
-  std::vector<std::string> leaf_links_;
-  VectorXi qidx_, vidx_, nqs_, nvs_, parents_;
+  VectorXi link_index_user2pinocchio_;
 
-  const std::string joint_prefix_ = "JointModel";
+  std::vector<std::string> user_joint_names_;
+  VectorXi v_index_user2pinocchio_;  // the joint index in model
+  VectorXi vidx_, qidx_, nvs_, nqs_, parents_;
+  VectorXi joint_index_user2pinocchio_, joint_index_pinocchio2user_;
+  PermutationMatrixX v_map_user2pinocchio_;  // map between user and pinocchio
+
   bool verbose_;
 };
 

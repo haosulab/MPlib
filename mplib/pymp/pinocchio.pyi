@@ -18,14 +18,14 @@ class PinocchioModel:
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
         ] = ...,
-        verbose: bool = True,
+        verbose: bool = False,
     ) -> None:
         """
         Construct a Pinocchio model from the given URDF file.
 
         :param urdf_filename: path to the URDF file
         :param gravity: gravity vector
-        :param verbose: print debug information
+        :param verbose: print debug information. Default: ``False``.
         """
     def compute_IK_CLIK(
         self,
@@ -175,6 +175,15 @@ class PinocchioModel:
             passed to the constructor or the default order
         :return: dimention of the joints
         """
+    def get_joint_id(self, index: int, user: bool = True) -> int:
+        """
+        Get the id of the joint with the given index.
+
+        :param index: joint index to query
+        :param user: if ``True``, the joint index follows the order you passed to the
+            constructor or the default order
+        :return: id of the joint with the given index
+        """
     def get_joint_ids(
         self, user: bool = True
     ) -> numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.int32]]:
@@ -185,6 +194,17 @@ class PinocchioModel:
         :param user: if ``True``, we get the id of the joints in the order you passed to
             the constructor or the default order
         :return: id of the joints
+        """
+    def get_joint_limit(
+        self, index: int, user: bool = True
+    ) -> numpy.ndarray[tuple[M, N], numpy.dtype[numpy.float64]]:
+        """
+        Get the limit of the joint with the given index.
+
+        :param index: joint index to query
+        :param user: if ``True``, the joint index follows the order you passed to the
+            constructor or the default order
+        :return: limit of the joint with the given index
         """
     def get_joint_limits(
         self, user: bool = True
@@ -205,6 +225,35 @@ class PinocchioModel:
         :param user: if ``True``, we get the name of the joints in the order you passed
             to the constructor or the default order
         :return: name of the joints
+        """
+    def get_joint_parent(self, index: int, user: bool = True) -> int:
+        """
+        Get the parent of the joint with the given index.
+
+        :param index: joint index to query
+        :param user: if ``True``, the joint index follows the order you passed to the
+            constructor or the default order
+        :return: parent of the joint with the given index
+        """
+    def get_joint_parents(
+        self, user: bool = True
+    ) -> numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.int32]]:
+        """
+        Get the parent of all the joints. Again, Pinocchio might split a joint into
+        multiple joints.
+
+        :param user: if ``True``, we get the parent of the joints in the order you
+            passed to the constructor or the default order
+        :return: parent of the joints
+        """
+    def get_joint_type(self, index: int, user: bool = True) -> str:
+        """
+        Get the type of the joint with the given index.
+
+        :param index: joint index to query
+        :param user: if ``True``, the joint index follows the order you passed to the
+            constructor or the default order
+        :return: type of the joint with the given index
         """
     def get_joint_types(self, user: bool = True) -> list[str]:
         """
@@ -252,17 +301,6 @@ class PinocchioModel:
         :param index: index of the link (in the order you passed to the constructor or
             the default order)
         :return: pose of the link [x, y, z, qw, qx, qy, qz]
-        """
-    def get_parents(
-        self, user: bool = True
-    ) -> numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.int32]]:
-        """
-        Get the parent of all the joints. Again, Pinocchio might split a joint into
-        multiple joints.
-
-        :param user: if ``True``, we get the parent of the joints in the order you
-            passed to the constructor or the default order
-        :return: parent of the joints
         """
     def get_random_configuration(
         self,

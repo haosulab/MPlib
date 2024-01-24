@@ -31,15 +31,19 @@ See https://github.com/stack-of-tasks/pinocchio)doc";
 
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_PinocchioModelTpl =
 R"doc(
-)doc";
+Construct a Pinocchio model from the given URDF file.
+
+:param urdf_filename: path to the URDF file
+:param gravity: gravity vector
+:param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_PinocchioModelTpl_2 =
 R"doc(
 Construct a Pinocchio model from the given URDF file.
 
-:param urdf_filename: path to the URDF file
+:param urdf_tree: a urdf tree as urdf::ModelInterfaceSharedPtr
 :param gravity: gravity vector
-:param verbose: print debug information)doc";
+:param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_computeForwardKinematics =
 R"doc(
@@ -123,7 +127,7 @@ Get the joint names of the joints in the chain from the root to the given link.
 
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getData =
 R"doc(
-)doc";
+Get the underlying pinocchio::Data)doc";
 
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointDim =
 R"doc(
@@ -188,6 +192,24 @@ multiple joints.
     to the constructor or the default order
 :return: name of the joints)doc";
 
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointParent =
+R"doc(
+Get the parent of the joint with the given index.
+
+:param index: joint index to query
+:param user: if ``True``, the joint index follows the order you passed to the
+    constructor or the default order
+:return: parent of the joint with the given index)doc";
+
+static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointParents =
+R"doc(
+Get the parent of all the joints. Again, Pinocchio might split a joint into
+multiple joints.
+
+:param user: if ``True``, we get the parent of the joints in the order you
+    passed to the constructor or the default order
+:return: parent of the joints)doc";
+
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getJointPose =
 R"doc(
 )doc";
@@ -244,43 +266,13 @@ Get the pose of the given link.
 
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getModel =
 R"doc(
-)doc";
-
-static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getNFrames =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getParent =
-R"doc(
-Get the parent of the joint with the given index.
-
-:param index: joint index to query
-:param user: if ``True``, the joint index follows the order you passed to the
-    constructor or the default order
-:return: parent of the joint with the given index)doc";
-
-static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getParents =
-R"doc(
-Get the parent of all the joints. Again, Pinocchio might split a joint into
-multiple joints.
-
-:param user: if ``True``, we get the parent of the joints in the order you
-    passed to the constructor or the default order
-:return: parent of the joints)doc";
+Get the underlying pinocchio::Model)doc";
 
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getRandomConfiguration =
 R"doc(
 Get a random configuration.
 
 :return: random joint configuration)doc";
-
-static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getSubtrees =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_pinocchio_PinocchioModelTpl_getSupports =
-R"doc(
-)doc";
 
 static const char *__doc_mplib_pinocchio_PinocchioModelTpl_printFrames =
 R"doc(
