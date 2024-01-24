@@ -159,8 +159,8 @@ class PlanningDemo(DemoSetup):
 
         self.add_point_cloud()
         # also add the target as a collision object so we don't hit it
-        fcl_red_cube = fcl.Box([0.04, 0.04, 0.14])
-        collision_object = fcl.CollisionObject(
+        fcl_red_cube = mplib.fcl.Box([0.04, 0.04, 0.14])
+        collision_object = mplib.fcl.CollisionObject(
             fcl_red_cube, [0.7, 0, 0.07], [1, 0, 0, 0]
         )
         self.planner.planning_world.set_normal_object("target", collision_object)

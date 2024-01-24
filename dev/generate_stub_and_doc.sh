@@ -71,25 +71,28 @@ mv -v stubs/mplib/pymp/* mplib/pymp
 echo_info "Removing 'stubs/'"
 rm -rfv stubs/
 
-############################################################
-# Section 3: Build docs                                    #
-############################################################
-# TODO: switch to other tools to generate docs, README.md should not be included in wheels
-# TODO: do we must install sapien to generate doc?
-BUILD_DOC_CMD="\
-  export PATH=\"\$(find /opt/python -name \"cp${PY_VERSION}*\")/bin:\${PATH}\" \
-  && python3 -m pip install pdoc \
-  && python3 -m pip install sapien==3.0.0.dev0 \
-  && python3 -m pip install wheelhouse/mplib*.whl \
-  && cp -v README.md /opt/python/cp${PY_VERSION}-cp${PY_VERSION}/lib/python*/site-packages/mplib \
-  && pdoc -o docs mplib
-"
 
-echo_info "Removing previous docs under 'mplib/docs/'"
-rm -rfv mplib/docs/
+# No need to build docs for now since we are using readthedocs
 
-echo_info "Building docs in docker '${IMGNAME}'"
-docker run -it --rm \
-  -v "$REPO_DIR":/${REPO_NAME} \
-  "$IMGNAME" \
-  bash -c "$BUILD_DOC_CMD"
+# ############################################################
+# # Section 3: Build docs                                    #
+# ############################################################
+# # TODO: switch to other tools to generate docs, README.md should not be included in wheels
+# # TODO: do we must install sapien to generate doc?
+# BUILD_DOC_CMD="\
+#   export PATH=\"\$(find /opt/python -name \"cp${PY_VERSION}*\")/bin:\${PATH}\" \
+#   && python3 -m pip install pdoc \
+#   && python3 -m pip install sapien==3.0.0.dev0 \
+#   && python3 -m pip install wheelhouse/mplib*.whl \
+#   && cp -v README.md /opt/python/cp${PY_VERSION}-cp${PY_VERSION}/lib/python*/site-packages/mplib \
+#   && pdoc -o docs mplib
+# "
+
+# echo_info "Removing previous docs under 'mplib/docs/'"
+# rm -rfv mplib/docs/
+
+# echo_info "Building docs in docker '${IMGNAME}'"
+# docker run -it --rm \
+#   -v "$REPO_DIR":/${REPO_NAME} \
+#   "$IMGNAME" \
+#   bash -c "$BUILD_DOC_CMD"
