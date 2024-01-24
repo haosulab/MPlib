@@ -14,30 +14,22 @@
 namespace mplib {
 
 template <typename S>
-Transform3<S> se3_to_transform(const pinocchio::SE3<S> &T);
+Transform3<S> toTransform(const pinocchio::SE3<S> &T);
 
 template <typename S>
-pinocchio::SE3<S> transform_to_se3(const Transform3<S> &T);
+Transform3<S> toTransform(const urdf::Pose &M);
 
 template <typename S>
-Transform3<S> pose_to_transform(const urdf::Pose &M);
+pinocchio::SE3<S> toSE3(const Transform3<S> &T);
 
 template <typename S>
-pinocchio::SE3<S> pose_to_se3(const urdf::Pose &M);
+pinocchio::SE3<S> toSE3(const urdf::Pose &M);
 
 template <typename S>
-pinocchio::Inertia<S> convert_inertial(const urdf::Inertial &Y);
+pinocchio::Inertia<S> convertInertial(const urdf::Inertial &Y);
 
 template <typename S>
-pinocchio::Inertia<S> convert_inertial(const urdf::InertialSharedPtr &Y);
-
-template <typename S>
-std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH(
-    const std::string &mesh_path, const Vector3<S> &scale);
-
-template <typename S>
-std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex(const std::string &mesh_path,
-                                                    const Vector3<S> &scale);
+pinocchio::Inertia<S> convertInertial(const urdf::InertialSharedPtr &Y);
 
 struct AssimpLoader {
   AssimpLoader();
@@ -49,22 +41,30 @@ struct AssimpLoader {
   const aiScene *scene;
 };
 
+template <typename S>
+std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> loadMeshAsBVH(
+    const std::string &mesh_path, const Vector3<S> &scale);
+
+template <typename S>
+std::shared_ptr<fcl::Convex<S>> loadMeshAsConvex(const std::string &mesh_path,
+                                                 const Vector3<S> &scale);
+
 bool treeFromUrdfModel(const urdf::ModelInterfaceSharedPtr &robot_model,
                        KDL::Tree &tree, std::string &tree_root_name,
                        const bool &verbose = false);
 
 // Explicit Template Instantiation Declaration =========================================
-#define DECLARE_TEMPLATE_URDF_UTILS(S)                                                \
-  extern template Transform3<S> se3_to_transform<S>(const pinocchio::SE3<S> &T);      \
-  extern template pinocchio::SE3<S> transform_to_se3<S>(const Transform3<S> &T);      \
-  extern template Transform3<S> pose_to_transform<S>(const urdf::Pose &M);            \
-  extern template pinocchio::SE3<S> pose_to_se3<S>(const urdf::Pose &M);              \
-  extern template pinocchio::Inertia<S> convert_inertial<S>(const urdf::Inertial &Y); \
-  extern template pinocchio::Inertia<S> convert_inertial<S>(                          \
-      const urdf::InertialSharedPtr &Y);                                              \
-  extern template std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH<S>( \
-      const std::string &mesh_path, const Vector3<S> &scale);                         \
-  extern template std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex<S>(             \
+#define DECLARE_TEMPLATE_URDF_UTILS(S)                                               \
+  extern template Transform3<S> toTransform<S>(const pinocchio::SE3<S> &T);          \
+  extern template Transform3<S> toTransform<S>(const urdf::Pose &M);                 \
+  extern template pinocchio::SE3<S> toSE3<S>(const Transform3<S> &T);                \
+  extern template pinocchio::SE3<S> toSE3<S>(const urdf::Pose &M);                   \
+  extern template pinocchio::Inertia<S> convertInertial<S>(const urdf::Inertial &Y); \
+  extern template pinocchio::Inertia<S> convertInertial<S>(                          \
+      const urdf::InertialSharedPtr &Y);                                             \
+  extern template std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> loadMeshAsBVH<S>(   \
+      const std::string &mesh_path, const Vector3<S> &scale);                        \
+  extern template std::shared_ptr<fcl::Convex<S>> loadMeshAsConvex<S>(               \
       const std::string &mesh_path, const Vector3<S> &scale)
 
 DECLARE_TEMPLATE_URDF_UTILS(float);

@@ -10,17 +10,16 @@
 namespace mplib {
 
 // Explicit Template Instantiation Definition ==========================================
-#define DEFINE_TEMPLATE_URDF_UTILS(S)                                          \
-  template Transform3<S> se3_to_transform<S>(const pinocchio::SE3<S> &T);      \
-  template pinocchio::SE3<S> transform_to_se3<S>(const Transform3<S> &T);      \
-  template Transform3<S> pose_to_transform<S>(const urdf::Pose &M);            \
-  template pinocchio::SE3<S> pose_to_se3<S>(const urdf::Pose &M);              \
-  template pinocchio::Inertia<S> convert_inertial<S>(const urdf::Inertial &Y); \
-  template pinocchio::Inertia<S> convert_inertial<S>(                          \
-      const urdf::InertialSharedPtr &Y);                                       \
-  template std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH<S>( \
-      const std::string &mesh_path, const Vector3<S> &scale);                  \
-  template std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex<S>(             \
+#define DEFINE_TEMPLATE_URDF_UTILS(S)                                                  \
+  template Transform3<S> toTransform<S>(const pinocchio::SE3<S> &T);                   \
+  template Transform3<S> toTransform<S>(const urdf::Pose &M);                          \
+  template pinocchio::SE3<S> toSE3<S>(const Transform3<S> &T);                         \
+  template pinocchio::SE3<S> toSE3<S>(const urdf::Pose &M);                            \
+  template pinocchio::Inertia<S> convertInertial<S>(const urdf::Inertial &Y);          \
+  template pinocchio::Inertia<S> convertInertial<S>(const urdf::InertialSharedPtr &Y); \
+  template std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> loadMeshAsBVH<S>(            \
+      const std::string &mesh_path, const Vector3<S> &scale);                          \
+  template std::shared_ptr<fcl::Convex<S>> loadMeshAsConvex<S>(                        \
       const std::string &mesh_path, const Vector3<S> &scale)
 
 DEFINE_TEMPLATE_URDF_UTILS(float);
@@ -29,7 +28,7 @@ DEFINE_TEMPLATE_URDF_UTILS(double);
 // copy code from pinocchio/src/parsers/urdf/model.cpp and add template to support float
 
 template <typename S>
-Transform3<S> se3_to_transform(const pinocchio::SE3<S> &T) {
+Transform3<S> toTransform(const pinocchio::SE3<S> &T) {
   Transform3<S> ret;
   ret.linear() = T.rotation_impl();
   ret.translation() = T.translation_impl();
@@ -37,12 +36,7 @@ Transform3<S> se3_to_transform(const pinocchio::SE3<S> &T) {
 }
 
 template <typename S>
-pinocchio::SE3<S> transform_to_se3(const Transform3<S> &T) {
-  return pinocchio::SE3<S>(T.linear(), T.translation());
-}
-
-template <typename S>
-Transform3<S> pose_to_transform(const urdf::Pose &M) {
+Transform3<S> toTransform(const urdf::Pose &M) {
   const urdf::Vector3 &p = M.position;
   const urdf::Rotation &q = M.rotation;
   Transform3<S> ret = Transform3<S>::Identity();
@@ -52,7 +46,12 @@ Transform3<S> pose_to_transform(const urdf::Pose &M) {
 }
 
 template <typename S>
-pinocchio::SE3<S> pose_to_se3(const urdf::Pose &M) {
+pinocchio::SE3<S> toSE3(const Transform3<S> &T) {
+  return pinocchio::SE3<S>(T.linear(), T.translation());
+}
+
+template <typename S>
+pinocchio::SE3<S> toSE3(const urdf::Pose &M) {
   const urdf::Vector3 &p = M.position;
   const urdf::Rotation &q = M.rotation;
   return pinocchio::SE3<S>(Quaternion<S>(q.w, q.x, q.y, q.z).matrix(),
@@ -60,7 +59,7 @@ pinocchio::SE3<S> pose_to_se3(const urdf::Pose &M) {
 }
 
 template <typename S>
-pinocchio::Inertia<S> convert_inertial(const urdf::Inertial &Y) {
+pinocchio::Inertia<S> convertInertial(const urdf::Inertial &Y) {
   const urdf::Vector3 &p = Y.origin.position;
   const urdf::Rotation &q = Y.origin.rotation;
   const Vector3<S> com(p.x, p.y, p.z);
@@ -71,8 +70,8 @@ pinocchio::Inertia<S> convert_inertial(const urdf::Inertial &Y) {
 }
 
 template <typename S>
-pinocchio::Inertia<S> convert_inertial(const urdf::InertialSharedPtr &Y) {
-  if (Y) return convert_inertial<S>(*Y);
+pinocchio::Inertia<S> convertInertial(const urdf::InertialSharedPtr &Y) {
+  if (Y) return convertInertial<S>(*Y);
   return pinocchio::Inertia<S>::Zero();
 }
 
@@ -118,9 +117,9 @@ void AssimpLoader::load(const std::string &file_name) {
 }
 
 template <typename S>
-int dfs_build_mesh(const aiScene *scene, const aiNode *node, const Vector3<S> &scale,
-                   int vertices_offset, std::vector<Vector3<S>> &vertices,
-                   std::vector<fcl::Triangle> &triangles) {
+int dfsBuildMesh(const aiScene *scene, const aiNode *node, const Vector3<S> &scale,
+                 int vertices_offset, std::vector<Vector3<S>> &vertices,
+                 std::vector<fcl::Triangle> &triangles) {
   if (!node) return 0;
 
   aiMatrix4x4 transform = node->mTransformation;
@@ -172,13 +171,13 @@ int dfs_build_mesh(const aiScene *scene, const aiNode *node, const Vector3<S> &s
   }
 
   for (uint32_t i = 0; i < node->mNumChildren; ++i)
-    nbVertices += dfs_build_mesh(scene, node->mChildren[i], scale, nbVertices, vertices,
-                                 triangles);
+    nbVertices +=
+        dfsBuildMesh(scene, node->mChildren[i], scale, nbVertices, vertices, triangles);
   return nbVertices;
 }
 
 template <typename S>
-std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH(
+std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> loadMeshAsBVH(
     const std::string &mesh_path, const Vector3<S> &scale) {
   auto loader = AssimpLoader();  // TODO[Xinsong] change to a global loader so we do not
                                  // initialize it every time
@@ -187,8 +186,7 @@ std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH(
   std::vector<Vector3<S>> vertices;
   std::vector<fcl::Triangle> triangles;
 
-  dfs_build_mesh<S>(loader.scene, loader.scene->mRootNode, scale, 0, vertices,
-                    triangles);
+  dfsBuildMesh<S>(loader.scene, loader.scene->mRootNode, scale, 0, vertices, triangles);
   // std::cout << "Num of vertex " << nbVertices << " " << vertices.size() << " " <<
   // triangles.size() << std::endl;
   auto geom = std::make_shared<fcl::BVHModel<fcl::OBBRSS<S>>>();
@@ -199,8 +197,8 @@ std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> load_mesh_as_BVH(
 }
 
 template <typename S>
-std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex(const std::string &mesh_path,
-                                                    const Vector3<S> &scale) {
+std::shared_ptr<fcl::Convex<S>> loadMeshAsConvex(const std::string &mesh_path,
+                                                 const Vector3<S> &scale) {
   auto loader = AssimpLoader();
   loader.load(mesh_path);
 
@@ -211,8 +209,7 @@ std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex(const std::string &mesh_path
           int num_faces, const std::shared_ptr<const std::vector<int>>& faces,
   bool throw_if_invalid = false);
   */
-  dfs_build_mesh<S>(loader.scene, loader.scene->mRootNode, scale, 0, vertices,
-                    triangles);
+  dfsBuildMesh<S>(loader.scene, loader.scene->mRootNode, scale, 0, vertices, triangles);
 
   auto faces = std::make_shared<std::vector<int>>();
   for (size_t i = 0; i < triangles.size(); i++) {
@@ -227,29 +224,29 @@ std::shared_ptr<fcl::Convex<S>> load_mesh_as_Convex(const std::string &mesh_path
   return convex;
 }
 
-KDL::Vector toKdl(urdf::Vector3 v) { return KDL::Vector(v.x, v.y, v.z); }
+KDL::Vector toKDL(urdf::Vector3 v) { return KDL::Vector(v.x, v.y, v.z); }
 
-KDL::Rotation toKdl(urdf::Rotation r) {
+KDL::Rotation toKDL(urdf::Rotation r) {
   return KDL::Rotation::Quaternion(r.x, r.y, r.z, r.w);
 }
 
-KDL::Frame toKdl(urdf::Pose p) {
-  return KDL::Frame(toKdl(p.rotation), toKdl(p.position));
+KDL::Frame toKDL(urdf::Pose p) {
+  return KDL::Frame(toKDL(p.rotation), toKDL(p.position));
 }
 
-KDL::Joint toKdl(urdf::JointSharedPtr jnt) {
-  KDL::Frame F_parent_jnt = toKdl(jnt->parent_to_joint_origin_transform);
+KDL::Joint toKDL(urdf::JointSharedPtr jnt) {
+  KDL::Frame F_parent_jnt = toKDL(jnt->parent_to_joint_origin_transform);
   switch (jnt->type) {
     case urdf::Joint::FIXED:
       return KDL::Joint(jnt->name, KDL::Joint::None);
     case urdf::Joint::REVOLUTE:
-      return KDL::Joint(jnt->name, F_parent_jnt.p, F_parent_jnt.M * toKdl(jnt->axis),
+      return KDL::Joint(jnt->name, F_parent_jnt.p, F_parent_jnt.M * toKDL(jnt->axis),
                         KDL::Joint::RotAxis);
     case urdf::Joint::CONTINUOUS:
-      return KDL::Joint(jnt->name, F_parent_jnt.p, F_parent_jnt.M * toKdl(jnt->axis),
+      return KDL::Joint(jnt->name, F_parent_jnt.p, F_parent_jnt.M * toKDL(jnt->axis),
                         KDL::Joint::RotAxis);
     case urdf::Joint::PRISMATIC:
-      return KDL::Joint(jnt->name, F_parent_jnt.p, F_parent_jnt.M * toKdl(jnt->axis),
+      return KDL::Joint(jnt->name, F_parent_jnt.p, F_parent_jnt.M * toKDL(jnt->axis),
                         KDL::Joint::TransAxis);
     default:
       std::cerr << "Converting unknown joint type of joint " + jnt->name +
@@ -260,8 +257,8 @@ KDL::Joint toKdl(urdf::JointSharedPtr jnt) {
   return KDL::Joint();
 }
 
-KDL::RigidBodyInertia toKdl(urdf::InertialSharedPtr i) {
-  KDL::Frame origin = toKdl(i->origin);
+KDL::RigidBodyInertia toKDL(urdf::InertialSharedPtr i) {
+  KDL::Frame origin = toKDL(i->origin);
 
   // the mass is frame independent
   double kdl_mass = i->mass;
@@ -297,12 +294,12 @@ bool addChildrenToTree(const urdf::LinkConstSharedPtr &root, KDL::Tree &tree,
 
   // constructs the optional inertia
   KDL::RigidBodyInertia inert(0);
-  if (root->inertial) inert = toKdl(root->inertial);
+  if (root->inertial) inert = toKDL(root->inertial);
   // constructs the kdl joint
-  KDL::Joint jnt = toKdl(root->parent_joint);
+  KDL::Joint jnt = toKDL(root->parent_joint);
   // construct the kdl segment
   KDL::Segment sgm(root->name, jnt,
-                   toKdl(root->parent_joint->parent_to_joint_origin_transform), inert);
+                   toKDL(root->parent_joint->parent_to_joint_origin_transform), inert);
 
   // add segment to tree
   tree.addSegment(sgm, root->parent_joint->parent_link_name);

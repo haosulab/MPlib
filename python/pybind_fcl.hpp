@@ -375,10 +375,10 @@ inline void build_pyfcl(py::module &m_all) {
            DOC(mplib, fcl, FCLModelTpl, collideFull));
 
   // Extra function
-  m.def("load_mesh_as_BVH", load_mesh_as_BVH<S>, py::arg("mesh_path"), py::arg("scale"),
-        DOC(mplib, load_mesh_as_BVH));
-  m.def("load_mesh_as_Convex", load_mesh_as_Convex<S>, py::arg("mesh_path"),
-        py::arg("scale"), DOC(mplib, load_mesh_as_Convex));
+  m.def("load_mesh_as_BVH", loadMeshAsBVH<S>, py::arg("mesh_path"), py::arg("scale"),
+        DOC(mplib, loadMeshAsBVH));
+  m.def("load_mesh_as_Convex", loadMeshAsConvex<S>, py::arg("mesh_path"),
+        py::arg("scale"), DOC(mplib, loadMeshAsConvex));
 }
 
 }  // namespace mplib

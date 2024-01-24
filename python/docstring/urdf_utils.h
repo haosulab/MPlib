@@ -38,35 +38,35 @@ R"doc(
 
 static const char *__doc_mplib_AssimpLoader_scene = R"doc()doc";
 
-static const char *__doc_mplib_convert_inertial =
+static const char *__doc_mplib_convertInertial =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_convert_inertial_2 =
+static const char *__doc_mplib_convertInertial_2 =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_load_mesh_as_BVH =
+static const char *__doc_mplib_loadMeshAsBVH =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_load_mesh_as_Convex =
+static const char *__doc_mplib_loadMeshAsConvex =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_pose_to_se3 =
+static const char *__doc_mplib_toSE3 =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_pose_to_transform =
+static const char *__doc_mplib_toSE3_2 =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_se3_to_transform =
+static const char *__doc_mplib_toTransform =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_transform_to_se3 =
+static const char *__doc_mplib_toTransform_2 =
 R"doc(
 )doc";
 

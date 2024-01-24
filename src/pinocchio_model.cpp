@@ -47,7 +47,7 @@ void PinocchioModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_tree,
 
   visitor.setName(urdf_model_->getName());
   urdf::LinkConstSharedPtr root_link = urdf_model_->getRoot();
-  visitor.addRootJoint(convert_inertial<S>(root_link->inertial), root_link->name);
+  visitor.addRootJoint(convertInertial<S>(root_link->inertial), root_link->name);
   for (auto child : root_link->child_links) dfsParseTree(child, visitor);
 
   model_.gravity = {gravity, Vector3<S> {0, 0, 0}};
@@ -72,9 +72,8 @@ void PinocchioModelTpl<S>::dfsParseTree(urdf::LinkConstSharedPtr link,
     FrameIndex parent_frame_id = visitor.getBodyId(parent_link_name);
 
     // Transformation from the parent link to the joint origin
-    const SE3<S> joint_placement =
-        pose_to_se3<S>(joint->parent_to_joint_origin_transform);
-    const Inertia<S> Y = convert_inertial<S>(link->inertial);
+    const SE3<S> joint_placement = toSE3<S>(joint->parent_to_joint_origin_transform);
+    const Inertia<S> Y = convertInertial<S>(link->inertial);
 
     const S infty = std::numeric_limits<S>::infinity();
     VectorX<S> max_effort(1), max_velocity(1), min_config(1), max_config(1);

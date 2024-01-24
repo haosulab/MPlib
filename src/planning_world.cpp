@@ -80,7 +80,7 @@ template <typename S>
 void PlanningWorldTpl<S>::updateAttachedMesh(const std::string &mesh_path, int link_id,
                                              const Vector7<S> &pose) {
   CollisionGeometryPtr collision_geometry =
-      load_mesh_as_BVH(mesh_path, Vector3<S>(1, 1, 1));
+      loadMeshAsBVH(mesh_path, Vector3<S>(1, 1, 1));
   updateAttachedTool(collision_geometry, link_id, pose);
 }
 

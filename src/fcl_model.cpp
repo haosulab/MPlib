@@ -86,9 +86,9 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
         Vector3<S> scale = {(S)urdf_mesh->scale.x, (S)urdf_mesh->scale.y,
                             (S)urdf_mesh->scale.z};
         if (use_convex_)
-          collision_geometry = load_mesh_as_Convex(mesh_path, scale);
+          collision_geometry = loadMeshAsConvex(mesh_path, scale);
         else
-          collision_geometry = load_mesh_as_BVH(mesh_path, scale);
+          collision_geometry = loadMeshAsBVH(mesh_path, scale);
         if (verbose_) print_verbose(scale, " ", collision_geometry);
       } else if (geom_model->type == urdf::Geometry::CYLINDER) {
         const urdf::CylinderSharedPtr cylinder =
@@ -114,7 +114,7 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
       collision_objects_.push_back(obj);
       collision_link_names_.push_back(link->name);
       parent_link_names_.push_back(parent_link_name);
-      collision_origin2link_poses.push_back(pose_to_transform<S>(geom->origin));
+      collision_origin2link_poses.push_back(toTransform<S>(geom->origin));
     }
   }
   for (auto child : link->child_links) dfsParseTree(child, link->name);
