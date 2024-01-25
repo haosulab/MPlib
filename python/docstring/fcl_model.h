@@ -312,8 +312,8 @@ R"doc(
 Construct a collision object with given collision geometry and transformation.
 
 :param collision_geometry: collision geometry of the object
-:param translation: translation of the object
-:param rotation: rotation of the object)doc";
+:param position: position of the object
+:param quaternion: quatenion of the object pose in [w, x, y, z] format)doc";
 
 /* ----- End of custom docstring section ----- */
 

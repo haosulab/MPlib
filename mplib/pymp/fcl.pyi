@@ -215,19 +215,19 @@ class CollisionObject:
     def __init__(
         self,
         collision_geometry: CollisionGeometry,
-        translation: numpy.ndarray[
+        position: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
-        rotation: numpy.ndarray[
+        ] = ...,
+        quaternion: numpy.ndarray[
             tuple[typing.Literal[4], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        ] = ...,
     ) -> None:
         """
         Construct a collision object with given collision geometry and transformation.
 
         :param collision_geometry: collision geometry of the object
-        :param translation: translation of the object
-        :param rotation: rotation of the object
+        :param position: position of the object
+        :param quaternion: quatenion of the object pose in [w, x, y, z] format
         """
     def get_collision_geometry(self) -> CollisionGeometry: ...
     def get_rotation(

@@ -213,7 +213,8 @@ inline void build_pyfcl(py::module &m_all) {
              auto q_mat = Quaternion<S>(q(0), q(1), q(2), q(3)).matrix();
              return CollisionObject(a, q_mat, p);
            }),
-           py::arg("collision_geometry"), py::arg("translation"), py::arg("rotation"),
+           py::arg("collision_geometry"), py::arg("position") = Vector3<S>(0, 0, 0),
+           py::arg("quaternion") = Vector4<S>(1, 0, 0, 0),
            DOC(fcl, CollisionObject, CollisionObject))
       .def("get_collision_geometry", &CollisionObject::collisionGeometry)
       .def("get_translation", &CollisionObject::getTranslation)
