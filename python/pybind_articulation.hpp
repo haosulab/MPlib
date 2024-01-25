@@ -28,7 +28,7 @@ inline void build_pyarticulation(py::module &m_all) {
           m, "ArticulatedModel", DOC(mplib, ArticulatedModelTpl));
 
   PyArticulatedModel
-      .def(py::init<const std::string &, const std::string &, Eigen::Matrix<S, 3, 1>,
+      .def(py::init<const std::string &, const std::string &, const Vector3<S> &,
                     const std::vector<std::string> &, const std::vector<std::string> &,
                     const bool &, const bool &>(),
            py::arg("urdf_filename"), py::arg("srdf_filename"), py::arg("gravity"),

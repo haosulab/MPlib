@@ -43,14 +43,14 @@ class ArticulatedModelTpl {
    *
    * @return: Pinocchio model used for kinematics and dynamics computations
    */
-  PinocchioModelTpl<S> &getPinocchioModel() { return pinocchio_model_; }
+  pinocchio::PinocchioModelTplPtr<S> getPinocchioModel() { return pinocchio_model_; }
 
   /**
    * Get the underlying FCL model.
    *
    * @return: FCL model used for collision checking
    */
-  FCLModelTpl<S> &getFCLModel() { return fcl_model_; }
+  fcl::FCLModelTplPtr<S> getFCLModel() { return fcl_model_; }
 
   /**
    * Get the link names that the user has provided for planning.
@@ -149,12 +149,12 @@ class ArticulatedModelTpl {
    * @param srdf: path to SRDF file, can be relative to the current working directory
    */
   void updateSRDF(const std::string &srdf) {
-    fcl_model_.removeCollisionPairsFromSRDF(srdf);
+    fcl_model_->removeCollisionPairsFromSRDF(srdf);
   }
 
  private:
-  pinocchio::PinocchioModelTpl<S> pinocchio_model_;
-  fcl::FCLModelTpl<S> fcl_model_;
+  pinocchio::PinocchioModelTplPtr<S> pinocchio_model_;
+  fcl::FCLModelTplPtr<S> fcl_model_;
 
   // all links and joints you want to control. order matters
   std::vector<std::string> user_link_names_;

@@ -116,9 +116,9 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
     size_t index, const CollisionRequest &request) {
   std::vector<WorldCollisionResult> ret;
   auto fcl_model = articulations_[index]->getFCLModel();
-  auto results = fcl_model.collideFull(request);
-  auto CollisionLinkNames = fcl_model.getCollisionLinkNames();
-  auto CollisionPairs = fcl_model.getCollisionPairs();
+  auto results = fcl_model->collideFull(request);
+  auto CollisionLinkNames = fcl_model->getCollisionLinkNames();
+  auto CollisionPairs = fcl_model->getCollisionPairs();
   for (size_t j = 0; j < results.size(); j++) {
     if (results[j].isCollision()) {
       WorldCollisionResult tmp;
@@ -141,15 +141,15 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
   std::vector<WorldCollisionResult> ret;
   auto pinocchio_model = articulations_[index]->getPinocchioModel();
   auto fcl_model = articulations_[index]->getFCLModel();
-  auto CollisionObjects = fcl_model.getCollisionObjects();
-  auto CollisionLinkNames = fcl_model.getCollisionLinkNames();
+  auto CollisionObjects = fcl_model->getCollisionObjects();
+  auto CollisionLinkNames = fcl_model->getCollisionLinkNames();
 
   // collision with other articulationed objects
   for (size_t i = 0; i < articulations_.size(); i++) {
     if (i == index) continue;  // don't collide with itself
     auto fcl_model_other = articulations_[i]->getFCLModel();
-    auto CollisionObjects_other = fcl_model.getCollisionObjects();
-    auto CollisionLinkNames_other = fcl_model.getCollisionLinkNames();
+    auto CollisionObjects_other = fcl_model_other->getCollisionObjects();
+    auto CollisionLinkNames_other = fcl_model_other->getCollisionLinkNames();
     for (size_t j = 0; j < CollisionObjects.size(); j++) {
       for (size_t k = 0; k < CollisionObjects_other.size(); k++) {
         CollisionResult result;
@@ -222,7 +222,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       print_warning("No Point Cloud Provided!");
     } else {  // currently, only collide with the point cloud, only support one
               // articulation
-      Vector7<S> link_pose = pinocchio_model.getLinkPose(attach_link_id_);
+      Vector7<S> link_pose = pinocchio_model->getLinkPose(attach_link_id_);
       Transform3<S> pose;
       pose.linear() =
           Quaternion<S>(link_pose[3], link_pose[4], link_pose[5], link_pose[6])

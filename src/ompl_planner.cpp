@@ -142,7 +142,7 @@ void OMPLPlannerTpl<S>::buildConstrainedAmbientStateSpace() {
   ambient_space_ = std::make_shared<RealVectorStateSpace>(dim_);
   RealVectorBounds ambient_space_bounds(dim_);
   auto pinocchio_model = robot->getPinocchioModel();
-  auto joint_types = pinocchio_model.getJointTypes();
+  auto joint_types = pinocchio_model->getJointTypes();
   auto indices = robot->getMoveGroupJointIndices();
   ASSERT(dim_ == indices.size(), "movegroupQposDim != size of the movegroup joints");
   for (size_t i = 0; i < dim_; i++) {
@@ -156,7 +156,7 @@ void OMPLPlannerTpl<S>::buildConstrainedAmbientStateSpace() {
     }
     if (joint_type[joint_prefix.size()] == 'P' ||
         joint_type[joint_prefix.size()] == 'R') {
-      auto bound = pinocchio_model.getJointLimit(pinocchio_id);
+      auto bound = pinocchio_model->getJointLimit(pinocchio_id);
       ASSERT(bound.rows() == 1,
              "Only support simple joint with dim of joint being one");
       auto lower_joint_limit = bound(0, 0), upper_joint_limit = bound(0, 1);
@@ -180,7 +180,7 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
     auto robot = robots[robot_idx];
     size_t dim_i = 0;
     auto model = robot->getPinocchioModel();
-    auto joint_types = model.getJointTypes();
+    auto joint_types = model->getJointTypes();
     size_t d = robot->getQposDim();  // TODO!!! only construct for move group joints
     auto indices = robot->getMoveGroupJointIndices();
     ASSERT(d == indices.size(), "QposDim != size of the movegroup joints");
@@ -198,7 +198,7 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
           (joint_type[joint_prefix.size()] == 'R' &&
            joint_type[joint_prefix.size() + 1] != 'U'))  // PRISMATIC and REVOLUTE
       {
-        auto bound = model.getJointLimit(id);
+        auto bound = model->getJointLimit(id);
         auto subspcae = std::make_shared<RealVectorStateSpace>(bound.rows());
         auto ob_bounds = RealVectorBounds(bound.rows());
         ASSERT(bound.rows() == 1,
