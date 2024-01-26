@@ -48,10 +48,11 @@ class PlanningWorld:
         :param models: list of articulated models to be added
         :param names: list of names of the articulated models
         """
-    def collide(self) -> bool:
+    def collide(self, request: mplib.pymp.fcl.CollisionRequest = ...) -> bool:
         """
         Check collision in the planning world.
 
+        :param request: collision request params. Can leave empty for default value
         :return: ``True`` if collision exists
         """
     def collide_full(

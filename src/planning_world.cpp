@@ -109,12 +109,6 @@ void PlanningWorldTpl<S>::setQposAll(const VectorX<S> &state) const {
 }
 
 template <typename S>
-bool PlanningWorldTpl<S>::collide() {
-  std::vector<WorldCollisionResult> ret = collideFull(0, CollisionRequest());
-  return ret.size() > 0;
-}
-
-template <typename S>
 std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
     size_t index, const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret;

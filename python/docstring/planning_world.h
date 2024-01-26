@@ -55,6 +55,7 @@ static const char *__doc_mplib_PlanningWorldTpl_collide =
 R"doc(
 Check collision in the planning world.
 
+:param request: collision request params. Can leave empty for default value
 :return: ``True`` if collision exists)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_collideFull =

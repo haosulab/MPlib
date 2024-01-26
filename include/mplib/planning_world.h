@@ -253,9 +253,12 @@ class PlanningWorldTpl {
   /**
    * Check collision in the planning world.
    *
+   * @param request: collision request params. Can leave empty for default value
    * @return: ``true`` if collision exists
    */
-  bool collide();
+  bool collide(const CollisionRequest &request = CollisionRequest()) const {
+    return collideFull(0, request).size() > 0;
+  }
 
   /**
    * Check collision between the articulated model and itself.
