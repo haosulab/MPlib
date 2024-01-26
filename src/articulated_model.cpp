@@ -82,9 +82,13 @@ std::vector<std::string> ArticulatedModelTpl<DATATYPE>::getMoveGroupJointName(vo
 
 template <typename DATATYPE>
 void ArticulatedModelTpl<DATATYPE>::setQpos(const VectorX &qpos, const bool &full) {
-  if (full)
+  if (full) {
+    ASSERT(static_cast<size_t>(qpos.size()) == static_cast<size_t>(current_qpos.size()),
+           "Length of provided qpos " + std::to_string(qpos.size()) +
+               " =/= dimension of full qpos: " +
+               std::to_string(current_qpos.size()));
     current_qpos = qpos;
-  else {
+  } else {
     ASSERT(static_cast<size_t>(qpos.size()) == move_group_qpos_dim,
            "Length of provided qpos " + std::to_string(qpos.size()) +
                " =/= dimension of move_group qpos: " +

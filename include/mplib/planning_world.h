@@ -148,17 +148,14 @@ class PlanningWorldTpl {
    * @param vertices: vertices of the point cloud
    * @param radius: radius of each point in the point cloud
    */
-  void updatePointCloud(const Matrixx3 &vertices, const double &radius = 0.0);
+  void updatePointCloud(const Matrixx3 &vertices, const double &radius = 1e-3);
 
   /**
    * Set whether to use attached tool for collision checking.
    *
    * @param use: whether to use attached tool
    */
-  void setUseAttach(const bool &use) {
-    use_attach = use;
-    if (!use) removeAttach();
-  }
+  void setUseAttach(const bool &use) { use_attach = use; }
 
   /**
    * Remove attach object so there won't be anything on the end effector when
