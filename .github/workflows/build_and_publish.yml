@@ -2,8 +2,10 @@ name: build-and-publish
 
 on:
   push:
-    branches: [testing]
+    branches: [main]
     tags: ['v*']
+  pull_request:
+    branches: [main]
 
 jobs:
   build:
@@ -61,7 +63,7 @@ jobs:
 
   nightly-release:
     if: startsWith(github.ref, 'refs/heads/')  # if a commit is pushed
-    needs: [build-and-test, build-sdist]
+    needs: [build, build-sdist]
     runs-on: ubuntu-latest
     permissions:
       contents: write  # create nightly release
