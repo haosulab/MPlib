@@ -37,7 +37,7 @@ inline void build_planning_world(py::module &m_all) {
       .def(py::init<const std::vector<ArticulatedModelPtr> &,
                     const std::vector<std::string> &,
                     const std::vector<CollisionObjectPtr> &,
-                    const std::vector<std::string> &, const int &>(),
+                    const std::vector<std::string> &, int>(),
            py::arg("articulations"), py::arg("articulation_names"),
            py::arg("normal_objects"), py::arg("normal_object_names"),
            py::arg("plan_articulation_id") = 0,

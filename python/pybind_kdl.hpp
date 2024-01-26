@@ -27,7 +27,7 @@ inline void build_pykdl(py::module &m_all) {
 
   PyKDLModel
       .def(py::init<const std::string &, const std::vector<std::string> &,
-                    const std::vector<std::string> &, const bool &>(),
+                    const std::vector<std::string> &, bool>(),
            py::arg("urdf_filename"), py::arg("link_names"), py::arg("joint_names"),
            py::arg("verbose") = false, DOC(mplib, kdl, KDLModelTpl, KDLModelTpl))
 

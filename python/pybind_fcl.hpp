@@ -54,13 +54,15 @@ inline void build_pyfcl(py::module &m_all) {
   auto m = m_all.def_submodule("fcl");
 
   // Data type
-  auto PyTriangle = py::class_<Triangle, std::shared_ptr<Triangle>>(m, "Triangle");
+  auto PyTriangle = py::class_<Triangle, std::shared_ptr<Triangle>>(m, "Triangle",
+                                                                    DOC(fcl, Triangle));
   PyTriangle.def(py::init())
-      .def(py::init<unsigned long, unsigned long, unsigned long>())
-      .def("set", [](Triangle &a, const int &p1, const int &p2,
-                     const int &p3) { a.set(p1, p2, p3); })
-      .def("get", [](Triangle &a, int i) { return a[i]; })
-      .def("__getitem__", [](Triangle &a, int i) { return a[i]; });
+      .def(py::init<size_t, size_t, size_t>(), py::arg("p1"), py::arg("p2"),
+           py::arg("p3"))
+      .def("set",
+           [](Triangle &a, size_t p1, size_t p2, size_t p3) { a.set(p1, p2, p3); })
+      .def("get", [](const Triangle &a, int i) { return a[i]; })
+      .def("__getitem__", [](const Triangle &a, int i) { return a[i]; });
 
   // Collision Geometry type
   auto PyCollisionGeometry =
@@ -95,31 +97,11 @@ inline void build_pyfcl(py::module &m_all) {
       .def_readwrite("radius", &Capsule::radius)
       .def_readwrite("lz", &Capsule::lz);
 
-  auto PyCylinder = py::class_<Cylinder, std::shared_ptr<Cylinder>>(
-      m, "Cylinder", PyCollisionGeometry, DOC(fcl, Cylinder));
-  PyCylinder
-      .def(py::init<S, S>(), py::arg("radius"), py::arg("lz"),
-           DOC(fcl, Cylinder, Cylinder))
-      .def_readwrite("radius", &Cylinder::radius)
-      .def_readwrite("lz", &Cylinder::lz);
-
-  auto PyOcTree = py::class_<OcTree, std::shared_ptr<OcTree>>(
-      m, "OcTree", PyCollisionGeometry, DOC(fcl, OcTree));
-  PyOcTree.def(py::init<S>(), py::arg("resolution"), DOC(fcl, OcTree, OcTree))
-      .def(py::init([](const MatrixX3<S> &vertices, const double &resolution) {
-             octomap::OcTree *tree = new octomap::OcTree(resolution);
-
-             // insert some measurements of occupied cells
-             for (auto i = 0; i < vertices.rows(); i++)
-               tree->updateNode(
-                   octomap::point3d(vertices(i, 0), vertices(i, 1), vertices(i, 2)),
-                   true);
-
-             auto tree_ptr = std::shared_ptr<const octomap::OcTree>(tree);
-             OcTree *octree = new OcTree(tree_ptr);
-             return octree;
-           }),
-           py::arg("vertices"), py::arg("resolution"), DOC(fcl, OcTree, OcTree, 2));
+  auto PyCone = py::class_<Cone, std::shared_ptr<Cone>>(m, "Cone", PyCollisionGeometry,
+                                                        DOC(fcl, Cone));
+  PyCone.def(py::init<S, S>(), py::arg("radius"), py::arg("lz"), DOC(fcl, Cone, Cone))
+      .def_readwrite("radius", &Cone::radius)
+      .def_readwrite("lz", &Cone::lz);
 
   auto PyConvex = py::class_<Convex, std::shared_ptr<Convex>>(
       m, "Convex", PyCollisionGeometry, DOC(fcl, Convex));
@@ -129,16 +111,11 @@ inline void build_pyfcl(py::module &m_all) {
            py::arg("vertices"), py::arg("num_faces"), py::arg("faces"),
            py::arg("throw_if_invalid") = true, DOC(fcl, Convex, Convex))
       .def(py::init([](const MatrixX3<S> &vertices, const MatrixX3i &faces,
-                       const bool &throw_if_invalid) {
-             auto vertices_new = std::make_shared<std::vector<Vector3<S>>>();
-             auto faces_new = std::make_shared<std::vector<int>>();
-             for (auto i = 0; i < vertices.rows(); i++) {
-               Vector3<S> tmp_i;
-               tmp_i(0) = vertices(i, 0);
-               tmp_i(1) = vertices(i, 1);
-               tmp_i(2) = vertices(i, 2);
-               vertices_new->push_back(tmp_i);
-             }
+                       bool throw_if_invalid) {
+             auto vertices_new {std::make_shared<std::vector<Vector3<S>>>()};
+             auto faces_new {std::make_shared<std::vector<int>>()};
+             for (const Vector3<S> &row : vertices.rowwise())
+               vertices_new->push_back(row);
              for (auto i = 0; i < faces.rows(); i++) {
                faces_new->push_back(3);
                for (size_t j = 0; j < 3; j++) faces_new->push_back(faces(i, j));
@@ -147,7 +124,6 @@ inline void build_pyfcl(py::module &m_all) {
            }),
            py::arg("vertices"), py::arg("faces"), py::arg("throw_if_invalid") = true,
            DOC(fcl, Convex, Convex, 2))
-      //.def("radius", &Convex::getRadius)
       .def("get_face_count", &Convex::getFaceCount, DOC(fcl, Convex, getFaceCount))
       .def("get_faces", &Convex::getFaces, DOC(fcl, Convex, getFaces))
       .def("get_vertices", &Convex::getVertices, DOC(fcl, Convex, getVertices))
@@ -155,10 +131,32 @@ inline void build_pyfcl(py::module &m_all) {
       .def("get_interior_point", &Convex::getInteriorPoint,
            DOC(fcl, Convex, getInteriorPoint));
 
+  auto PyCylinder = py::class_<Cylinder, std::shared_ptr<Cylinder>>(
+      m, "Cylinder", PyCollisionGeometry, DOC(fcl, Cylinder));
+  PyCylinder
+      .def(py::init<S, S>(), py::arg("radius"), py::arg("lz"),
+           DOC(fcl, Cylinder, Cylinder))
+      .def_readwrite("radius", &Cylinder::radius)
+      .def_readwrite("lz", &Cylinder::lz);
+
+  auto PyPlane = py::class_<Plane, std::shared_ptr<Plane>>(
+      m, "Plane", PyCollisionGeometry, DOC(fcl, Plane));
+  PyPlane
+      .def(py::init<const Vector3<S> &, S>(), py::arg("n"), py::arg("d"),
+           DOC(fcl, Plane, Plane))
+      .def(py::init<S, S, S, S>(), py::arg("a"), py::arg("b"), py::arg("c"),
+           py::arg("d"), DOC(fcl, Plane, Plane, 2))
+      .def_readwrite("n", &Plane::n)
+      .def_readwrite("d", &Plane::d);
+
+  auto PySphere = py::class_<Sphere, std::shared_ptr<Sphere>>(
+      m, "Sphere", PyCollisionGeometry, DOC(fcl, Sphere));
+  PySphere.def(py::init<S>(), py::arg("radius"), DOC(fcl, Sphere, Sphere))
+      .def_readwrite("radius", &Sphere::radius);
+
   auto PyBVHModel_OBBRSS =
       py::class_<BVHModel_OBBRSS, std::shared_ptr<BVHModel_OBBRSS>>(
           m, "BVHModel", PyCollisionGeometry, DOC(fcl, BVHModel_OBBRSS));
-
   PyBVHModel_OBBRSS.def(py::init<>())
       .def("beginModel", &BVHModel_OBBRSS::beginModel, py::arg("num_faces") = 0,
            py::arg("num_vertices") = 0, DOC(fcl, BVHModel_OBBRSS, beginModel))
@@ -178,15 +176,17 @@ inline void build_pyfcl(py::module &m_all) {
           [](BVHModel_OBBRSS &a, const std::vector<Vector3<S>> &vertices,
              const std::vector<Vector3i> &faces) {
             std::vector<Triangle> face_list;
-            for (size_t i = 0; i < faces.size(); i++)
-              face_list.push_back(Triangle(faces[i][0], faces[i][1], faces[i][2]));
+            for (const auto &face : faces)
+              face_list.push_back(Triangle(static_cast<size_t>(face[0]),
+                                           static_cast<size_t>(face[1]),
+                                           static_cast<size_t>(face[2])));
             a.addSubModel(vertices, face_list);
           },
           py::arg("vertices"), py::arg("faces"),
           DOC(fcl, BVHModel_OBBRSS, addSubModel, 3))
       .def(
           "get_vertices",
-          [](BVHModel_OBBRSS &a) {
+          [](const BVHModel_OBBRSS &a) {
             std::vector<Vector3<S>> ret;
             for (auto i = 0; i < a.num_vertices; i++) ret.push_back(*(a.vertices + i));
             return ret;
@@ -194,7 +194,7 @@ inline void build_pyfcl(py::module &m_all) {
           DOC(fcl, BVHModel_OBBRSS, getVertices))
       .def(
           "get_faces",
-          [](BVHModel_OBBRSS &a) {
+          [](const BVHModel_OBBRSS &a) {
             std::vector<Triangle> ret;
             for (auto i = 0; i < a.num_tris; i++) ret.push_back(*(a.tri_indices + i));
             return ret;
@@ -203,25 +203,40 @@ inline void build_pyfcl(py::module &m_all) {
       .def_readonly("num_faces", &BVHModel_OBBRSS::num_tris)
       .def_readonly("num_vertices", &BVHModel_OBBRSS::num_vertices);
 
+  auto PyOcTree = py::class_<OcTree, std::shared_ptr<OcTree>>(
+      m, "OcTree", PyCollisionGeometry, DOC(fcl, OcTree));
+  PyOcTree.def(py::init<S>(), py::arg("resolution") = 0.01, DOC(fcl, OcTree, OcTree))
+      .def(py::init([](const MatrixX3<S> &vertices, double resolution) {
+             auto tree = std::make_shared<octomap::OcTree>(resolution);
+             for (const auto &row : vertices.rowwise())
+               tree->updateNode(octomap::point3d {static_cast<float>(row(0)),
+                                                  static_cast<float>(row(1)),
+                                                  static_cast<float>(row(2))},
+                                true);
+             return std::make_shared<OcTree>(tree);
+           }),
+           py::arg("vertices"), py::arg("resolution") = 0.01,
+           DOC(fcl, OcTree, OcTree, 2));
+
   // Collision Object = Geometry + Transformation
   auto PyCollisionObject =
       py::class_<CollisionObject, std::shared_ptr<CollisionObject>>(
           m, "CollisionObject", DOC(fcl, CollisionObject));
   PyCollisionObject
-      .def(py::init([](const std::shared_ptr<CollisionGeometry> &a, const Vector3<S> &p,
-                       const Vector4<S> &q) {
-             auto q_mat = Quaternion<S>(q(0), q(1), q(2), q(3)).matrix();
-             return CollisionObject(a, q_mat, p);
+      .def(py::init([](const std::shared_ptr<CollisionGeometry> &cgeom,
+                       const Vector3<S> &p, const Vector4<S> &q) {
+             auto rot_mat = Quaternion<S> {q(0), q(1), q(2), q(3)}.matrix();
+             return CollisionObject(cgeom, rot_mat, p);
            }),
-           py::arg("collision_geometry"), py::arg("position") = Vector3<S>(0, 0, 0),
-           py::arg("quaternion") = Vector4<S>(1, 0, 0, 0),
+           py::arg("collision_geometry"), py::arg("position") = Vector3<S> {0, 0, 0},
+           py::arg("quaternion") = Vector4<S> {1, 0, 0, 0},
            DOC(fcl, CollisionObject, CollisionObject))
       .def("get_collision_geometry", &CollisionObject::collisionGeometry)
       .def("get_translation", &CollisionObject::getTranslation)
       .def("get_rotation", &CollisionObject::getRotation)
       .def("set_transformation", [](CollisionObject &a, const Vector7<S> &pose) {
         Transform3<S> trans;
-        trans.linear() = Quaternion<S>(pose[3], pose[4], pose[5], pose[6]).matrix();
+        trans.linear() = Quaternion<S> {pose[3], pose[4], pose[5], pose[6]}.matrix();
         trans.translation() = pose.head(3);
         a.setTransform(trans);
       });
@@ -245,27 +260,6 @@ inline void build_pyfcl(py::module &m_all) {
            py::arg("gjk_tolerance") = 1e-6)
       .def("isSatisfied", &CollisionRequest::isSatisfied, py::arg("result"));
 
-  // DistanceRequest
-  auto PyDistanceRequest =
-      py::class_<DistanceRequest, std::shared_ptr<DistanceRequest>>(m,
-                                                                    "DistanceRequest");
-  PyDistanceRequest
-      .def(py::init<bool, bool, S, S, S, GJKSolverType>(),
-           py::arg("enable_nearest_points") = false,
-           py::arg("enable_signed_distance") = false, py::arg("rel_err") = 0.0,
-           py::arg("abs_err") = 0.0, py::arg("distance_tolerance") = 1e-6,
-           py::arg("gjk_solver_type") = GJKSolverType::GST_LIBCCD)
-      .def("isSatisfied", &DistanceRequest::isSatisfied, py::arg("result"));
-
-  // DistanceResult Not full suuport
-  auto PyDistanceResult =
-      py::class_<DistanceResult, std::shared_ptr<DistanceResult>>(m, "DistanceResult");
-  PyDistanceResult
-      .def(py::init<S>(), py::arg("min_distance") = std::numeric_limits<S>::max())
-      .def_readonly("nearest_points", &DistanceResult::nearest_points)
-      .def_readonly("min_distance", &DistanceResult::min_distance)
-      .def("clear", &DistanceResult::clear);
-
   // CollisionResult
   auto PyCollisionResult =
       py::class_<CollisionResult, std::shared_ptr<CollisionResult>>(m,
@@ -279,42 +273,41 @@ inline void build_pyfcl(py::module &m_all) {
       .def("num_cost_sources", &CollisionResult::numCostSources)
       .def("get_contact", &CollisionResult::getContact, py::arg("i"))
       .def("get_contacts",
-           [](CollisionResult &a) {
+           [](CollisionResult &result) {
              std::vector<Contact> contacts;
-             a.getContacts(contacts);
+             result.getContacts(contacts);
              return contacts;
            })
       .def("get_cost_sources",
-           [](CollisionResult &a) {
+           [](CollisionResult &result) {
              std::vector<CostSource> cost_sources;
-             a.getCostSources(cost_sources);
+             result.getCostSources(cost_sources);
              return cost_sources;
            })
       .def("clear", &CollisionResult::clear);
 
-  // CostSource Not full support
+  // DistanceRequest
+  auto PyDistanceRequest =
+      py::class_<DistanceRequest, std::shared_ptr<DistanceRequest>>(m,
+                                                                    "DistanceRequest");
+  PyDistanceRequest
+      .def(py::init<bool, bool, S, S, S, GJKSolverType>(),
+           py::arg("enable_nearest_points") = false,
+           py::arg("enable_signed_distance") = false, py::arg("rel_err") = 0.0,
+           py::arg("abs_err") = 0.0, py::arg("distance_tolerance") = 1e-6,
+           py::arg("gjk_solver_type") = GJKSolverType::GST_LIBCCD)
+      .def("isSatisfied", &DistanceRequest::isSatisfied, py::arg("result"));
 
-  auto PyCostSource =
-      py::class_<CostSource, std::shared_ptr<CostSource>>(m, "CostSource");
-  PyCostSource.def(py::init<>())
-      .def(py::init<const Vector3<S> &, const Vector3<S> &, S>(), py::arg("aabb_min"),
-           py::arg("aabb_max"), py::arg("cost_density"))
-      .def_readonly("aabb_min", &CostSource::aabb_min)
-      .def_readonly("aabb_max", &CostSource::aabb_max)
-      .def_readonly("cost_density", &CostSource::cost_density)
-      .def_readonly("total_cost", &CostSource::total_cost);
+  // DistanceResult
+  auto PyDistanceResult =
+      py::class_<DistanceResult, std::shared_ptr<DistanceResult>>(m, "DistanceResult");
+  PyDistanceResult
+      .def(py::init<S>(), py::arg("min_distance") = std::numeric_limits<S>::max())
+      .def_readonly("min_distance", &DistanceResult::min_distance)
+      .def_readonly("nearest_points", &DistanceResult::nearest_points)
+      .def("clear", &DistanceResult::clear);
 
-  // ContactPoint Not full support
-  auto PyContactPoint =
-      py::class_<ContactPoint, std::shared_ptr<ContactPoint>>(m, "ContactPoint");
-  PyContactPoint.def(py::init<>())
-      .def(py::init<const Vector3<S> &, const Vector3<S> &, S>(), py::arg("normal"),
-           py::arg("pos"), py::arg("penetration_depth"))
-      .def_readonly("normal", &ContactPoint::normal)
-      .def_readonly("pos", &ContactPoint::pos)
-      .def_readonly("penetration_depth", &ContactPoint::penetration_depth);
-
-  // Contact Not full support
+  // Contact
   auto PyContact = py::class_<Contact, std::shared_ptr<Contact>>(m, "Contact");
   PyContact.def(py::init<>())
       .def(py::init<const CollisionGeometry *, const CollisionGeometry *, int, int>(),
@@ -327,7 +320,28 @@ inline void build_pyfcl(py::module &m_all) {
       .def_readonly("pos", &Contact::pos)
       .def_readonly("penetration_depth", &Contact::penetration_depth);
 
-  // Collision function Not full suuport
+  // ContactPoint
+  auto PyContactPoint =
+      py::class_<ContactPoint, std::shared_ptr<ContactPoint>>(m, "ContactPoint");
+  PyContactPoint.def(py::init<>())
+      .def(py::init<const Vector3<S> &, const Vector3<S> &, S>(), py::arg("normal"),
+           py::arg("pos"), py::arg("penetration_depth"))
+      .def_readonly("normal", &ContactPoint::normal)
+      .def_readonly("pos", &ContactPoint::pos)
+      .def_readonly("penetration_depth", &ContactPoint::penetration_depth);
+
+  // CostSource
+  auto PyCostSource =
+      py::class_<CostSource, std::shared_ptr<CostSource>>(m, "CostSource");
+  PyCostSource.def(py::init<>())
+      .def(py::init<const Vector3<S> &, const Vector3<S> &, S>(), py::arg("aabb_min"),
+           py::arg("aabb_max"), py::arg("cost_density"))
+      .def_readonly("aabb_min", &CostSource::aabb_min)
+      .def_readonly("aabb_max", &CostSource::aabb_max)
+      .def_readonly("cost_density", &CostSource::cost_density)
+      .def_readonly("total_cost", &CostSource::total_cost);
+
+  // collide / distance functions
   m.def("collide",
         [](const CollisionObject *o1, const CollisionObject *o2,
            const CollisionRequest &request) {
@@ -346,9 +360,9 @@ inline void build_pyfcl(py::module &m_all) {
   auto PyFCLModel = py::class_<FCLModel, std::shared_ptr<FCLModel>>(
       m, "FCLModel", DOC(mplib, fcl, FCLModelTpl));
   PyFCLModel
-      .def(py::init<const std::string &, const bool &, const bool &>(),
-           py::arg("urdf_filename"), py::arg("convex") = false,
-           py::arg("verbose") = false, DOC(mplib, fcl, FCLModelTpl, FCLModelTpl))
+      .def(py::init<const std::string &, bool, bool>(), py::arg("urdf_filename"),
+           py::arg("convex") = false, py::arg("verbose") = false,
+           DOC(mplib, fcl, FCLModelTpl, FCLModelTpl))
 
       .def("get_collision_objects", &FCLModel::getCollisionObjects,
            DOC(mplib, fcl, FCLModelTpl, getCollisionObjects))
@@ -366,7 +380,7 @@ inline void build_pyfcl(py::module &m_all) {
 
       .def("update_collision_objects",
            py::overload_cast<const std::vector<Vector7<S>> &>(
-               &FCLModel::updateCollisionObjects),
+               &FCLModel::updateCollisionObjects, py::const_),
            py::arg("link_poses"), DOC(mplib, fcl, FCLModelTpl, updateCollisionObjects))
 
       .def("collide", &FCLModel::collide, py::arg("request") = CollisionRequest(),

@@ -43,7 +43,7 @@ static const char *__doc_mplib_fcl_FCLModelTpl_FCLModelTpl_2 =
 R"doc(
 Construct an FCL model from URDF and SRDF files.
 
-:param urdf_tree: a urdf tree as urdf::ModelInterfaceSharedPtr
+:param urdf_model: a urdf tree as urdf::ModelInterfaceSharedPtr
 :param package_dir: path to replace package_dir for mesh files
 :param convex: use convex decomposition for collision objects. Default:
     ``False``.
@@ -118,6 +118,13 @@ R"doc(
 
 /* ----- Begin of custom docstring section ----- */
 
+// ----- fcl::Triangle ----- //
+static const char *__doc_fcl_Triangle =
+R"doc(Triangle with 3 indices for points.
+
+This is an FCL class so you can refer to the FCL doc here.
+https://flexible-collision-library.github.io/de/daa/classfcl_1_1Triangle.html)doc";
+
 // ----- fcl::CollisionGeometry ----- //
 static const char *__doc_fcl_CollisionGeometry =
 R"doc(Collision geometry base class.
@@ -156,42 +163,20 @@ R"doc(
 Construct a capsule with given radius and height.
 
 :param radius: radius of the capsule
-:param lz: height of the capsule)doc";
+:param lz: height of the capsule along z axis)doc";
 
-// ----- fcl::Cylinder ----- //
-static const char *__doc_fcl_Cylinder =
-R"doc(Cylinder collision geometry.
+// ----- fcl::Cone ----- //
+static const char *__doc_fcl_Cone =
+R"doc(Cone collision geometry.
 
-Inheriting from CollisionGeometry, this class specializes to a cylinder
-geometry.)doc";
+Inheriting from CollisionGeometry, this class specializes to a cone geometry.)doc";
 
-static const char *__doc_fcl_Cylinder_Cylinder =
+static const char *__doc_fcl_Cone_Cone =
 R"doc(
-Construct a cylinder with given radius and height.
+Construct a cone with given radius and height.
 
-:param radius: radius of the cylinder
-:param lz: height of the cylinder)doc";
-
-// ----- fcl::OcTree ----- //
-static const char *__doc_fcl_OcTree =
-R"doc(OcTree collision geometry.
-
-Inheriting from CollisionGeometry, this class specializes to a point cloud
-geometry represented by an OcTree.)doc";
-
-static const char *__doc_fcl_OcTree_OcTree =
-R"doc(
-Construct an OcTree with given resolution.
-
-:param resolution: resolution of the OcTree (smallest size of a voxel).
-    You can treat this is as the diameter of a point.)doc";
-
-static const char *__doc_fcl_OcTree_OcTree_2 =
-R"doc(
-Construct an OcTree with given vertices and resolution.
-
-:param vertices: vertices of the point cloud
-:param resolution: resolution of the OcTree)doc";
+:param radius: radius of the cone
+:param lz: height of the cone along z axis)doc";
 
 // ----- fcl::Convex ----- //
 static const char *__doc_fcl_Convex =
@@ -250,6 +235,49 @@ Sample a random interior point of the convex geometry
 
 :return: interior point of the convex)doc";
 
+// ----- fcl::Cylinder ----- //
+static const char *__doc_fcl_Cylinder =
+R"doc(Cylinder collision geometry.
+
+Inheriting from CollisionGeometry, this class specializes to a cylinder
+geometry.)doc";
+
+static const char *__doc_fcl_Cylinder_Cylinder =
+R"doc(
+Construct a cylinder with given radius and height.
+
+:param radius: radius of the cylinder
+:param lz: height of the cylinder along z axis)doc";
+
+// ----- fcl::Plane ----- //
+static const char *__doc_fcl_Plane =
+R"doc(Infinite plane collision geometry.
+
+Inheriting from CollisionGeometry, this class specializes to a plane geometry.)doc";
+
+static const char *__doc_fcl_Plane_Plane =
+R"doc(
+Construct a plane with given normal direction and offset where ``n * v = d``.
+
+:param n: normal direction of the plane
+:param d: offset of the plane)doc";
+
+static const char *__doc_fcl_Plane_Plane_2 =
+R"doc(
+Construct a plane with given plane parameters where ``ax + by + cz = d``.)doc";
+
+// ----- fcl::Sphere ----- //
+static const char *__doc_fcl_Sphere =
+R"doc(Sphere collision geometry.
+
+Inheriting from CollisionGeometry, this class specializes to a sphere geometry.)doc";
+
+static const char *__doc_fcl_Sphere_Sphere =
+R"doc(
+Construct a sphere with given radius.
+
+:param radius: radius of the sphere)doc";
+
 // ----- fcl::BVHModel<fcl::OBBRSS> ----- //
 static const char *__doc_fcl_BVHModel_OBBRSS =
 R"doc(BVHModel collision geometry.
@@ -299,6 +327,27 @@ R"doc(
 Get the faces of the BVHModel.
 
 :return: faces of the BVHModel)doc";
+
+// ----- fcl::OcTree ----- //
+static const char *__doc_fcl_OcTree =
+R"doc(OcTree collision geometry.
+
+Inheriting from CollisionGeometry, this class specializes to a point cloud
+geometry represented by an OcTree.)doc";
+
+static const char *__doc_fcl_OcTree_OcTree =
+R"doc(
+Construct an OcTree with given resolution.
+
+:param resolution: resolution of the OcTree (smallest size of a voxel).
+    You can treat this is as the diameter of a point. Default is 0.01.)doc";
+
+static const char *__doc_fcl_OcTree_OcTree_2 =
+R"doc(
+Construct an OcTree with given vertices and resolution.
+
+:param vertices: vertices of the point cloud
+:param resolution: resolution of the OcTree. Default is 0.01)doc";
 
 // ----- fcl::CollisionObject ----- //
 static const char *__doc_fcl_CollisionObject =

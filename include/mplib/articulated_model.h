@@ -36,42 +36,46 @@ class ArticulatedModelTpl {
                       const std::string &srdf_filename, const Vector3<S> &gravity,
                       const std::vector<std::string> &link_names = {},
                       const std::vector<std::string> &joint_names = {},
-                      const bool &convex = false, const bool &verbose = false);
+                      bool convex = false, bool verbose = false);
 
   /**
    * Get the underlying Pinocchio model.
    *
    * @return: Pinocchio model used for kinematics and dynamics computations
    */
-  pinocchio::PinocchioModelTplPtr<S> getPinocchioModel() { return pinocchio_model_; }
+  pinocchio::PinocchioModelTplPtr<S> getPinocchioModel() const {
+    return pinocchio_model_;
+  }
 
   /**
    * Get the underlying FCL model.
    *
    * @return: FCL model used for collision checking
    */
-  fcl::FCLModelTplPtr<S> getFCLModel() { return fcl_model_; }
+  fcl::FCLModelTplPtr<S> getFCLModel() const { return fcl_model_; }
 
   /**
    * Get the link names that the user has provided for planning.
    *
    * @return: list of link names of the user
    */
-  std::vector<std::string> getUserLinkNames() { return user_link_names_; }
+  const std::vector<std::string> &getUserLinkNames() const { return user_link_names_; }
 
   /**
    * Get the joint names that the user has provided for planning.
    *
    * @return: list of joint names of the user
    */
-  std::vector<std::string> getUserJointNames() { return user_joint_names_; }
+  const std::vector<std::string> &getUserJointNames() const {
+    return user_joint_names_;
+  }
 
   /**
    * Get the end effectors of the move group.
    *
    * @return: list of end effectors of the move group
    */
-  std::vector<std::string> getMoveGroupEndEffectors() {
+  const std::vector<std::string> &getMoveGroupEndEffectors() const {
     return move_group_end_effectors_;
   }
 
@@ -80,14 +84,16 @@ class ArticulatedModelTpl {
    *
    * @return: list of user joint indices of the move group
    */
-  std::vector<size_t> getMoveGroupJointIndices() { return move_group_user_joints_; }
+  const std::vector<size_t> &getMoveGroupJointIndices() const {
+    return move_group_user_joints_;
+  }
 
   /**
    * Get the joint names of the move group.
    *
    * @return: list of joint names of the move group
    */
-  std::vector<std::string> getMoveGroupJointNames();
+  std::vector<std::string> getMoveGroupJointNames() const;
 
   /**
    * Set the move group, i.e. the chain ending in end effector for which to compute the
@@ -110,14 +116,14 @@ class ArticulatedModelTpl {
    *
    * @return: dimension of the move group qpos
    */
-  size_t getQposDim() { return move_group_qpos_dim_; }
+  size_t getQposDim() const { return move_group_qpos_dim_; }
 
   /**
    * Get the current joint position of all active joints inside the URDF.
    *
    * @return: current qpos of all active joints
    */
-  VectorX<S> getQpos() { return current_qpos_; }
+  const VectorX<S> &getQpos() const { return current_qpos_; }
 
   /**
    * Let the planner know the current joint positions.
@@ -127,14 +133,14 @@ class ArticulatedModelTpl {
    *    If full is ``false``, we will pad the missing joints with current known qpos.
    *    The default is ``false``
    */
-  void setQpos(const VectorX<S> &qpos, const bool &full = false);
+  void setQpos(const VectorX<S> &qpos, bool full = false);
 
   /**
    * Get the base pose of the robot.
    *
    * @return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
    */
-  Vector7<S> getBasePose() { return base_pose_; }
+  const Vector7<S> &getBasePose() const { return base_pose_; }
 
   /**
    * Set the base pose of the robot.

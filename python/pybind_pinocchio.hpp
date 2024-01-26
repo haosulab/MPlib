@@ -27,8 +27,9 @@ inline void build_pypinocchio(py::module &m_all) {
       m, "PinocchioModel", DOC(mplib, pinocchio, PinocchioModelTpl));
 
   PyPinocchioModel
-      .def(py::init<const std::string &, Vector3<S>, bool>(), py::arg("urdf_filename"),
-           py::arg("gravity") = Vector3<S>(0, 0, -9.81), py::arg("verbose") = false,
+      .def(py::init<const std::string &, const Vector3<S> &, bool>(),
+           py::arg("urdf_filename"), py::arg("gravity") = Vector3<S> {0, 0, -9.81},
+           py::arg("verbose") = false,
            DOC(mplib, pinocchio, PinocchioModelTpl, PinocchioModelTpl))
 
       .def("get_leaf_links", &PinocchioModel::getLeafLinks,
@@ -100,12 +101,12 @@ inline void build_pypinocchio(py::module &m_all) {
 
       .def("compute_IK_CLIK", &PinocchioModel::computeIKCLIK, py::arg("index"),
            py::arg("pose"), py::arg("q_init"), py::arg("mask") = std::vector<bool>(),
-           py::arg("eps") = 1e-5, py::arg("maxIter") = 1000, py::arg("dt") = 1e-1,
+           py::arg("eps") = 1e-5, py::arg("max_iter") = 1000, py::arg("dt") = 1e-1,
            py::arg("damp") = 1e-12,
            DOC(mplib, pinocchio, PinocchioModelTpl, computeIKCLIK))
       .def("compute_IK_CLIK_JL", &PinocchioModel::computeIKCLIKJL, py::arg("index"),
            py::arg("pose"), py::arg("q_init"), py::arg("q_min"), py::arg("q_max"),
-           py::arg("eps") = 1e-5, py::arg("maxIter") = 1000, py::arg("dt") = 1e-1,
+           py::arg("eps") = 1e-5, py::arg("max_iter") = 1000, py::arg("dt") = 1e-1,
            py::arg("damp") = 1e-12,
            DOC(mplib, pinocchio, PinocchioModelTpl, computeIKCLIKJL));
 }

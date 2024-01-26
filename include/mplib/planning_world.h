@@ -70,21 +70,25 @@ class PlanningWorldTpl {
    *
    * @return: list of articulated models
    */
-  std::vector<ArticulatedModelPtr> getArticulations() { return articulations_; }
+  const std::vector<ArticulatedModelPtr> &getArticulations() const {
+    return articulations_;
+  }
 
   /**
    * Get the names of articulated models.
    *
    * @return: list of names of articulated models
    */
-  std::vector<std::string> &getArticulationNames() { return articulation_names_; }
+  const std::vector<std::string> &getArticulationNames() const {
+    return articulation_names_;
+  }
 
   /**
    * Get the list of non-articulated collision objects.
    *
    * @return: list of non-articulated collision objects
    */
-  std::vector<CollisionObjectPtr> getNormalObjects() {
+  std::vector<CollisionObjectPtr> getNormalObjects() const {
     std::vector<CollisionObjectPtr> ret;
     for (const auto &itm : normal_object_map_) ret.push_back(itm.second);
     return ret;
@@ -95,13 +99,13 @@ class PlanningWorldTpl {
    *
    * @return: list of names of non-articulated collision objects
    */
-  std::vector<std::string> getNormalObjectNames() {
+  std::vector<std::string> getNormalObjectNames() const {
     std::vector<std::string> ret;
     for (const auto &itm : normal_object_map_) ret.push_back(itm.first);
     return ret;
   }
 
-  int getMoveArticulationId() { return move_articulation_id_; }
+  int getMoveArticulationId() const { return move_articulation_id_; }
 
   void setMoveArticulationId(int id) { move_articulation_id_ = id; }
 
@@ -156,7 +160,7 @@ class PlanningWorldTpl {
    *
    * @param use: whether to use point cloud
    */
-  void setUsePointCloud(const bool &use) { use_point_cloud_ = use; }
+  void setUsePointCloud(bool use) { use_point_cloud_ = use; }
 
   /**
    * Update the point cloud for collision checking.
@@ -164,14 +168,14 @@ class PlanningWorldTpl {
    * @param vertices: vertices of the point cloud
    * @param radius: radius of each point in the point cloud
    */
-  void updatePointCloud(const MatrixX3<S> &vertices, const double &radius = 0.0);
+  void updatePointCloud(const MatrixX3<S> &vertices, double radius = 0.0);
 
   /**
    * Set whether to use attached tool for collision checking.
    *
    * @param use: whether to use attached tool
    */
-  void setUseAttach(const bool &use) {
+  void setUseAttach(bool use) {
     use_attach_ = use;
     if (!use) removeAttach();
   }
@@ -190,7 +194,7 @@ class PlanningWorldTpl {
    * @param pose: pose of the attached object w.r.t. the link it's attached to.
    *              [x, y, z, qw, qx, qy, qz]
    */
-  void updateAttachedTool(CollisionGeometryPtr p_geom, int link_id,
+  void updateAttachedTool(const CollisionGeometryPtr &p_geom, int link_id,
                           const Vector7<S> &pose);
 
   /**
@@ -225,9 +229,9 @@ class PlanningWorldTpl {
                           const Vector7<S> &pose);
 
   /// Print the pose of the attached tool.
-  void printAttachedToolPose() {
-    auto tmp1 = attached_tool_.get()->getTranslation();
-    auto tmp2 = attached_tool_.get()->getRotation();
+  void printAttachedToolPose() const {
+    const auto tmp1 = attached_tool_.get()->getTranslation();
+    const auto tmp2 = attached_tool_.get()->getRotation();
     print_info("Attached tool pose: ", tmp1.transpose(), " ", tmp2);
   }
 
@@ -237,14 +241,14 @@ class PlanningWorldTpl {
    * @param index: index of the articulated model
    * @param qpos: joint angles of the *movegroup only*
    */
-  void setQpos(const int &index, const VectorX<S> &qpos);
+  void setQpos(int index, const VectorX<S> &qpos) const;
 
   /**
    * Set the joint qpos of all articulated models.
    *
    * @param qpos: joint angles of all the models (*movegroup only*)
    */
-  void setQposAll(const VectorX<S> &qpos);
+  void setQposAll(const VectorX<S> &qpos) const;
 
   /**
    * Check collision in the planning world.
@@ -261,7 +265,7 @@ class PlanningWorldTpl {
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> selfCollide(
-      size_t index, const CollisionRequest &request = CollisionRequest());
+      size_t index, const CollisionRequest &request = CollisionRequest()) const;
   /**
    * Check collision between the articulated model and other objects.
    *
@@ -270,7 +274,7 @@ class PlanningWorldTpl {
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> collideWithOthers(
-      size_t index, const CollisionRequest &request = CollisionRequest());
+      size_t index, const CollisionRequest &request = CollisionRequest()) const;
 
   /**
    * Check collision between the articulated model and all objects.
@@ -280,7 +284,7 @@ class PlanningWorldTpl {
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> collideFull(
-      size_t index, const CollisionRequest &request = CollisionRequest());
+      size_t index, const CollisionRequest &request = CollisionRequest()) const;
 
   bool use_point_cloud_, use_attach_;  // expose to python
 

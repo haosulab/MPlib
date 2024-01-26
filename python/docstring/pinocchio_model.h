@@ -41,7 +41,7 @@ static const char *__doc_mplib_pinocchio_PinocchioModelTpl_PinocchioModelTpl_2 =
 R"doc(
 Construct a Pinocchio model from the given URDF file.
 
-:param urdf_tree: a urdf tree as urdf::ModelInterfaceSharedPtr
+:param urdf_model: a urdf tree as urdf::ModelInterfaceSharedPtr
 :param gravity: gravity vector
 :param verbose: print debug information. Default: ``False``.)doc";
 
@@ -74,7 +74,7 @@ Compute the inverse kinematics using close loop inverse kinematics.
 :param mask: if the value at a given index is ``True``, the joint is *not* used
     in the IK
 :param eps: tolerance for the IK
-:param maxIter: maximum number of iterations
+:param max_iter: maximum number of iterations
 :param dt: time step for the CLIK
 :param damp: damping for the CLIK
 :return: joint configuration)doc";
@@ -91,7 +91,7 @@ the given limits.
 :param q_min: minimum joint configuration
 :param q_max: maximum joint configuration
 :param eps: tolerance for the IK
-:param maxIter: maximum number of iterations
+:param max_iter: maximum number of iterations
 :param dt: time step for the CLIK
 :param damp: damping for the CLIK
 :return: joint configuration)doc";

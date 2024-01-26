@@ -1,6 +1,7 @@
 #include "mplib/ompl_planner.h"
 
 #include <memory>
+#include <string_view>
 
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
@@ -11,12 +12,12 @@ namespace mplib::ompl {
 
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_OMPL_PLANNER(S)                                           \
-  template std::vector<S> compoundState2vector<S>(const State *state_raw,         \
-                                                  SpaceInformation *const &si_);  \
-  template std::vector<S> rvssState2vector<S>(const State *state_raw,             \
-                                              SpaceInformation *const &si_);      \
-  template VectorX<S> state2eigen<S>(const State *state_raw,                      \
-                                     SpaceInformation *const &si_, bool is_rvss); \
+  template std::vector<S> compoundState2Vector<S>(const State *state_raw,         \
+                                                  const SpaceInformation *si);    \
+  template std::vector<S> rvssState2Vector<S>(const State *state_raw,             \
+                                              const SpaceInformation *si);        \
+  template VectorX<S> state2Eigen<S>(const State *state_raw,                      \
+                                     const SpaceInformation *si, bool is_rvss);   \
   template bool isFixedJoint<S>(const FixedJointsTpl<S> &fixed_joints,            \
                                 size_t articulation_idx, size_t joint_idx);       \
   template VectorX<S> removeFixedJoints<S>(const FixedJointsTpl<S> &fixed_joints, \
@@ -33,24 +34,24 @@ DEFINE_TEMPLATE_OMPL_PLANNER(double);
 #define PI 3.14159265359
 
 template <typename S>
-std::vector<S> compoundState2vector(const State *state_raw,
-                                    SpaceInformation *const &si_) {
-  auto state = state_raw->as<CompoundState>();
-  std::vector<S> ret;
-  auto si = si_->getStateSpace()->as<CompoundStateSpace>();
+std::vector<S> compoundState2Vector(const State *state_raw,
+                                    const SpaceInformation *si) {
+  const auto state = state_raw->as<CompoundState>();
+  const auto cs = si->getStateSpace()->as<CompoundStateSpace>();
 
-  for (size_t i = 0; i < si->getSubspaceCount(); i++) {
-    auto subspace(si->getSubspace(i));
-    size_t n;
+  std::vector<S> ret;
+  for (size_t i = 0; i < cs->getSubspaceCount(); i++) {
+    const auto subspace = cs->getSubspace(i);
     switch (subspace->getType()) {
       case ob::STATE_SPACE_REAL_VECTOR:
-        n = subspace->as<RealVectorStateSpace>()->getDimension();
-        for (size_t j = 0; j < n; j++)
-          ret.push_back(
-              (S)(*state)[i]->as<RealVectorStateSpace::StateType>()->values[j]);
+        for (size_t j = 0; j < subspace->as<RealVectorStateSpace>()->getDimension();
+             j++)
+          ret.push_back(static_cast<S>(
+              (*state)[i]->as<RealVectorStateSpace::StateType>()->values[j]));
         break;
       case ob::STATE_SPACE_SO2:
-        ret.push_back((S)(*state)[i]->as<SO2StateSpace::StateType>()->value);
+        ret.push_back(
+            static_cast<S>((*state)[i]->as<SO2StateSpace::StateType>()->value));
         break;
       default:
         throw std::invalid_argument("Unhandled subspace type.");
@@ -61,33 +62,29 @@ std::vector<S> compoundState2vector(const State *state_raw,
 }
 
 template <typename S>
-std::vector<S> rvssState2vector(const State *state_raw, SpaceInformation *const &si_) {
-  auto dim = si_->getStateDimension();
-  auto state = state_raw->as<ProjectedStateSpace::StateType>();
+std::vector<S> rvssState2Vector(const State *state_raw, const SpaceInformation *si) {
+  const auto state = state_raw->as<ProjectedStateSpace::StateType>();
+  auto dim = si->getStateDimension();
   std::vector<S> ret;
-  for (size_t i = 0; i < dim; i++) {
-    ret.push_back((S)(*state)[i]);
-  }
+  for (size_t i = 0; i < dim; i++) ret.push_back(static_cast<S>((*state)[i]));
   return ret;
 }
 
 template <typename S>
-VectorX<S> state2eigen(const State *state_raw, SpaceInformation *const &si_,
+VectorX<S> state2Eigen(const State *state_raw, const SpaceInformation *si,
                        bool is_rvss) {
-  std::vector<S> vec_ret = is_rvss ? rvssState2vector<S>(state_raw, si_)
-                                   : compoundState2vector<S>(state_raw, si_);
-  auto ret = vector2eigen<S, S>(vec_ret);
-  return ret;
+  std::vector<S> state_vec = is_rvss ? rvssState2Vector<S>(state_raw, si)
+                                     : compoundState2Vector<S>(state_raw, si);
+  return vector2Eigen<S, S>(state_vec);
 }
 
 template <typename S>
 bool isFixedJoint(const FixedJointsTpl<S> &fixed_joints, size_t articulation_idx,
                   size_t joint_idx) {
-  for (const auto &fixed_joint : fixed_joints) {
+  for (const auto &fixed_joint : fixed_joints)
     if (fixed_joint.articulation_idx == articulation_idx &&
         fixed_joint.joint_idx == joint_idx)
       return true;
-  }
   return false;
 }
 
@@ -133,35 +130,37 @@ void OMPLPlannerTpl<S>::buildConstrainedAmbientStateSpace() {
   lower_joint_limits_.clear();
   upper_joint_limits_.clear();
   is_revolute_.clear();
-  const std::string joint_prefix = "JointModel";
+
+  constexpr std::string_view joint_prefix {"JointModel"};
+
   ASSERT(world_->getArticulations().size() == 1,
          "only support one robot for constrained planning");
-  auto robot = world_->getArticulations()[0];
+  const auto robot = world_->getArticulations()[0];
+
   // we assume each joint has only one DoF
   dim_ = robot->getQposDim();  // this getQposDim() is really getMoveGroupQposDim()
   ambient_space_ = std::make_shared<RealVectorStateSpace>(dim_);
-  RealVectorBounds ambient_space_bounds(dim_);
-  auto pinocchio_model = robot->getPinocchioModel();
-  auto joint_types = pinocchio_model->getJointTypes();
-  auto indices = robot->getMoveGroupJointIndices();
+  const auto pinocchio_model = robot->getPinocchioModel();
+  const auto joint_types = pinocchio_model->getJointTypes();
+  const auto indices = robot->getMoveGroupJointIndices();
   ASSERT(dim_ == indices.size(), "movegroupQposDim != size of the movegroup joints");
+
+  RealVectorBounds ambient_space_bounds(dim_);
   for (size_t i = 0; i < dim_; i++) {
-    auto pinocchio_id = indices[i];  // joint_id to pinocchio_id
-    auto joint_type = joint_types[pinocchio_id];
+    const auto pinocchio_id = indices[i];  // joint_id to pinocchio_id
+    const auto joint_type = joint_types[pinocchio_id];
     // P stands for PRISMATIC, R stands for REVOLUTE, U stands for UNBOUNDED (continuous
     // joint)
-    if (joint_type[joint_prefix.size()] == 'R') {
+    if (joint_type[joint_prefix.size()] == 'R')
       ASSERT(joint_type[joint_prefix.size() + 1] != 'U',
              "Do not support continuous revolute joint for constrained planning");
-    }
     if (joint_type[joint_prefix.size()] == 'P' ||
         joint_type[joint_prefix.size()] == 'R') {
-      auto bound = pinocchio_model->getJointLimit(pinocchio_id);
+      const auto bound = pinocchio_model->getJointLimit(pinocchio_id);
       ASSERT(bound.rows() == 1,
              "Only support simple joint with dim of joint being one");
-      auto lower_joint_limit = bound(0, 0), upper_joint_limit = bound(0, 1);
-      ambient_space_bounds.setLow(i, lower_joint_limit);
-      ambient_space_bounds.setHigh(i, upper_joint_limit);
+      ambient_space_bounds.setLow(i, bound(0, 0));
+      ambient_space_bounds.setHigh(i, bound(0, 1));
     }
   }
   ambient_space_->setBounds(ambient_space_bounds);
@@ -174,47 +173,51 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
   lower_joint_limits_.clear();
   upper_joint_limits_.clear();
   is_revolute_.clear();
-  const std::string joint_prefix = "JointModel";
-  auto robots = world_->getArticulations();
+
+  constexpr std::string_view joint_prefix {"JointModel"};
+
+  const auto robots = world_->getArticulations();
   for (size_t robot_idx = 0; robot_idx < robots.size(); ++robot_idx) {
-    auto robot = robots[robot_idx];
-    size_t dim_i = 0;
-    auto model = robot->getPinocchioModel();
-    auto joint_types = model->getJointTypes();
-    size_t d = robot->getQposDim();  // TODO!!! only construct for move group joints
-    auto indices = robot->getMoveGroupJointIndices();
-    ASSERT(d == indices.size(), "QposDim != size of the movegroup joints");
-    size_t ignored_dim = 0;
-    for (size_t i = 0; i < d; i++) {
-      auto id = indices[i];
+    const auto robot = robots[robot_idx];
+    const size_t dof = robot->getQposDim();  // TODO: only construct move group joints
+    const auto pinocchio_model = robot->getPinocchioModel();
+    const auto joint_types = pinocchio_model->getJointTypes();
+    const auto indices = robot->getMoveGroupJointIndices();
+    ASSERT(dof == indices.size(), "QposDim != size of the movegroup joints");
+
+    size_t dim_cnt = 0;
+    size_t ignored_dim_cnt = 0;
+    for (size_t i = 0; i < dof; i++) {
       // if we have already fixed this joint, we don't need to add it to the state space
       if (isFixedJoint<S>(fixed_joints, robot_idx, i)) {
-        ++ignored_dim;
+        ++ignored_dim_cnt;
         continue;
       }
 
-      auto joint_type = joint_types[id];
+      const auto pinocchio_id = indices[i];
+      const auto joint_type = joint_types[pinocchio_id];
       if (joint_type[joint_prefix.size()] == 'P' ||
           (joint_type[joint_prefix.size()] == 'R' &&
            joint_type[joint_prefix.size() + 1] != 'U'))  // PRISMATIC and REVOLUTE
       {
-        auto bound = model->getJointLimit(id);
-        auto subspcae = std::make_shared<RealVectorStateSpace>(bound.rows());
+        const auto bound = pinocchio_model->getJointLimit(pinocchio_id);
+        const auto subspace = std::make_shared<RealVectorStateSpace>(bound.rows());
         auto ob_bounds = RealVectorBounds(bound.rows());
         ASSERT(bound.rows() == 1,
                "Only support simple joint the dim of joint is not 1!");
+
         lower_joint_limits_.push_back(bound(0, 0));
         upper_joint_limits_.push_back(bound(0, 1));
         ob_bounds.setLow(0, bound(0, 0)), ob_bounds.setHigh(0, bound(0, 1));
-        ++dim_i;
-        subspcae->setBounds(ob_bounds);
-        cs_->addSubspace(subspcae, 1.0);
+        subspace->setBounds(ob_bounds);
+        cs_->addSubspace(subspace, 1.0);
+        ++dim_cnt;
       } else if (joint_type[joint_prefix.size()] == 'R' &&
                  joint_type[joint_prefix.size() + 1] == 'U') {
         cs_->addSubspace(std::make_shared<SO2StateSpace>(), 1.0);
         lower_joint_limits_.push_back(-PI);
         upper_joint_limits_.push_back(PI);
-        ++dim_i;
+        ++dim_cnt;
       }
       if (joint_type[joint_prefix.size()] == 'R' ||
           joint_type[joint_prefix.size()] == 'P') {
@@ -225,11 +228,11 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
           is_revolute_.push_back(false);
       }
     }
-    ASSERT(dim_i + ignored_dim == robot->getQposDim(),
-           "Dim of bound is different from dim of qpos: " + std::to_string(dim_i) +
-               " active dims " + std::to_string(ignored_dim) +
-               " ignored dims not equal to " + std::to_string(d) + " qpos dim");
-    dim_ += dim_i;
+    ASSERT(dim_cnt + ignored_dim_cnt == robot->getQposDim(),
+           "Dim of bound is different from dim of qpos: " + std::to_string(dim_cnt) +
+               " active dims " + std::to_string(ignored_dim_cnt) +
+               " ignored dims not equal to " + std::to_string(dof) + " qpos dim");
+    dim_ += dim_cnt;
   }
 
   state_space_ = cs_;
@@ -242,12 +245,12 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
 }
 
 template <typename S>
-VectorX<S> OMPLPlannerTpl<S>::randomSampleNearby(const VectorX<S> &start_state) {
+VectorX<S> OMPLPlannerTpl<S>::randomSampleNearby(const VectorX<S> &start_state) const {
   for (int cnt = 0; cnt < 1000; ++cnt) {
-    S ratio = (S)(cnt + 1) / 1000;
+    S ratio = static_cast<S>((cnt + 1)) / 1000;
     VectorX<S> new_state = start_state;
     for (size_t i = 0; i < dim_; i++) {
-      S r = (S)rand() / RAND_MAX * 2 - 1;
+      S r = static_cast<S>(rand()) / RAND_MAX * 2 - 1;
       new_state[i] += (upper_joint_limits_[i] - lower_joint_limits_[i]) * ratio * r;
       if (new_state[i] < lower_joint_limits_[i])
         new_state[i] = lower_joint_limits_[i];
@@ -265,7 +268,7 @@ VectorX<S> OMPLPlannerTpl<S>::randomSampleNearby(const VectorX<S> &start_state) 
 
 template <typename S>
 GoalStatesPtr OMPLPlannerTpl<S>::makeGoalStates(
-    const std::vector<VectorX<S>> &goal_states) {
+    const std::vector<VectorX<S>> &goal_states) const {
   auto goals = std::make_shared<GoalStates>(si_);
 
   int tot_enum_states = 1, tot_goal_state = 0;
@@ -314,13 +317,13 @@ GoalStatesPtr OMPLPlannerTpl<S>::makeGoalStates(
 template <typename S>
 std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
     const VectorX<S> &start_state, const std::vector<VectorX<S>> &goal_states,
-    const std::string &planner_name, const double &time, const double &range,
-    const FixedJointsTpl<S> &fixed_joints, const bool no_simplification,
+    const std::string &planner_name, double time, double range,
+    const FixedJointsTpl<S> &fixed_joints, bool no_simplification,
     const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
         &constraint_function,
     const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
         &constraint_jacobian,
-    double constraint_tolerance, const bool verbose) {
+    double constraint_tolerance, bool verbose) {
   if (fixed_joints.size() || last_fixed_joints_.size()) {
     ASSERT(constraint_function == nullptr && constraint_jacobian == nullptr,
            "Cannot do constrained planning with fixed joints");
@@ -343,7 +346,7 @@ std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
 
   VectorX<S> reduced_start_state = removeFixedJoints<S>(fixed_joints, start_state);
   std::vector<VectorX<S>> reduced_goal_states;
-  for (auto &goal_state : goal_states)
+  for (const auto &goal_state : goal_states)
     reduced_goal_states.push_back(removeFixedJoints<S>(fixed_joints, goal_state));
 
   ASSERT(reduced_start_state.rows() == reduced_goal_states[0].rows(),
@@ -353,13 +356,13 @@ std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
   if (verbose == false) ::ompl::msg::noOutputHandler();
 
   ScopedState<> start(state_space_);
-  start = eigen2vector<S, double>(reduced_start_state);
+  start = eigen2Vector<S, double>(reduced_start_state);
 
   bool invalid_start = !valid_checker_->_isValid(reduced_start_state);
   if (invalid_start) {
     print_warning("invalid start state!! (collision)");
     VectorX<S> new_reduced_start_state = randomSampleNearby(reduced_start_state);
-    start = eigen2vector<S, double>(new_reduced_start_state);
+    start = eigen2Vector<S, double>(new_reduced_start_state);
   }
 
   auto goals = makeGoalStates(reduced_goal_states);
@@ -402,7 +405,7 @@ std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
       for (auto j = 0; j < start_state.rows(); j++) ret(0, j) = start_state(j);
     }
     for (size_t i = 0; i < len; i++) {
-      auto res_i = state2eigen<S>(path.getState(i), si_.get(),
+      auto res_i = state2Eigen<S>(path.getState(i), si_.get(),
                                   state_space_ == constrained_space_);
       ASSERT(static_cast<size_t>(res_i.rows()) == dim_,
              "Result dimension is not correct!");
@@ -418,15 +421,15 @@ std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
 }
 
 template <typename S>
-void OMPLPlannerTpl<S>::_simplifyPath(PathGeometric &path) {
+void OMPLPlannerTpl<S>::_simplifyPath(PathGeometric &path) const {
   // try to simply the path and restore if new path contains collision
-  PathSimplifier simplifer(si_);
   PathGeometric backup_path = path;
+  PathSimplifier simplifer(si_);
   if (!simplifer.simplifyMax(path)) path = backup_path;
 }
 
 template <typename S>
-MatrixX<S> OMPLPlannerTpl<S>::simplifyPath(MatrixX<S> &path) {
+MatrixX<S> OMPLPlannerTpl<S>::simplifyPath(const MatrixX<S> &path) const {
   if (si_ == constrained_si_) {  // warning
     print_warning("Current space information is for constrained planning");
     print_warning("doing simplification in non-constrained space");
@@ -434,14 +437,14 @@ MatrixX<S> OMPLPlannerTpl<S>::simplifyPath(MatrixX<S> &path) {
   PathGeometric geo_path(si_);
   for (size_t i = 0; i < static_cast<size_t>(path.rows()); i++) {
     ScopedState<> state(cs_);
-    state = eigen2vector<S, double>(path.row(i));
+    state = eigen2Vector<S, double>(path.row(i));
     geo_path.append(state.get());
   }
   _simplifyPath(geo_path);
   MatrixX<S> ret(geo_path.getStateCount(), dim_);
   for (size_t i = 0; i < geo_path.getStateCount(); i++) {
     // we should only simplify the path when not doing constrained planning
-    ret.row(i) = state2eigen<S>(geo_path.getState(i), si_.get(), false);
+    ret.row(i) = state2Eigen<S>(geo_path.getState(i), si_.get(), false);
   }
   return ret;
 }

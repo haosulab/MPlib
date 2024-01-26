@@ -1,5 +1,7 @@
 #include "mplib/urdf_utils.h"
 
+#include <sstream>
+
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <urdf_model/link.h>
@@ -39,9 +41,12 @@ template <typename S>
 Transform3<S> toTransform(const urdf::Pose &M) {
   const urdf::Vector3 &p = M.position;
   const urdf::Rotation &q = M.rotation;
-  Transform3<S> ret = Transform3<S>::Identity();
-  ret.linear() = Quaternion<S>(q.w, q.x, q.y, q.z).matrix();
-  ret.translation() = Vector3<S>(p.x, p.y, p.z);
+  Transform3<S> ret;
+  ret.linear() = Quaternion<S> {static_cast<S>(q.w), static_cast<S>(q.x),
+                                static_cast<S>(q.y), static_cast<S>(q.z)}
+                     .matrix();
+  ret.translation() =
+      Vector3<S> {static_cast<S>(p.x), static_cast<S>(p.y), static_cast<S>(p.z)};
   return ret;
 }
 
@@ -54,16 +59,21 @@ template <typename S>
 pinocchio::SE3<S> toSE3(const urdf::Pose &M) {
   const urdf::Vector3 &p = M.position;
   const urdf::Rotation &q = M.rotation;
-  return pinocchio::SE3<S>(Quaternion<S>(q.w, q.x, q.y, q.z).matrix(),
-                           Vector3<S>(p.x, p.y, p.z));
+  return pinocchio::SE3<S>(
+      Quaternion<S> {static_cast<S>(q.w), static_cast<S>(q.x), static_cast<S>(q.y),
+                     static_cast<S>(q.z)}
+          .matrix(),
+      Vector3<S> {static_cast<S>(p.x), static_cast<S>(p.y), static_cast<S>(p.z)});
 }
 
 template <typename S>
 pinocchio::Inertia<S> convertInertial(const urdf::Inertial &Y) {
   const urdf::Vector3 &p = Y.origin.position;
   const urdf::Rotation &q = Y.origin.rotation;
-  const Vector3<S> com(p.x, p.y, p.z);
-  const Matrix3<S> &R = Quaternion<S>(q.w, q.x, q.y, q.z).matrix();
+  const Vector3<S> com {static_cast<S>(p.x), static_cast<S>(p.y), static_cast<S>(p.z)};
+  const Matrix3<S> &R = Quaternion<S> {static_cast<S>(q.w), static_cast<S>(q.x),
+                                       static_cast<S>(q.y), static_cast<S>(q.z)}
+                            .matrix();
   Matrix3<S> I;
   I << Y.ixx, Y.ixy, Y.ixz, Y.ixy, Y.iyy, Y.iyz, Y.ixz, Y.iyz, Y.izz;
   return pinocchio::Inertia<S>(Y.mass, com, R * I * R.transpose());
@@ -101,58 +111,55 @@ void AssimpLoader::load(const std::string &file_name) {
           // aiProcess_FindDegenerates |
           aiProcess_PreTransformVertices | aiProcess_JoinIdenticalVertices);
 
-  if (!scene) {
-    const std::string exception_message(std::string("Could not load resource ") +
-                                        file_name + std::string("\n") +
-                                        importer->GetErrorString() + std::string("\n") +
-                                        "Hint: the mesh directory may be wrong.");
-    throw std::invalid_argument(exception_message);
-  }
+  if (!scene)
+    throw std::invalid_argument("Could not load resource " + file_name + "\n" +
+                                importer->GetErrorString() + "\n" +
+                                "Hint: the mesh directory may be wrong.");
 
   if (!scene->HasMeshes())
-    throw std::invalid_argument(std::string("No meshes found in file ") + file_name);
+    throw std::invalid_argument("No meshes found in file " + file_name);
 
   // cast away the const since we need to give it a name
   const_cast<aiString &>(scene->mName) = file_name;
 }
 
 template <typename S>
-int dfsBuildMesh(const aiScene *scene, const aiNode *node, const Vector3<S> &scale,
-                 int vertices_offset, std::vector<Vector3<S>> &vertices,
-                 std::vector<fcl::Triangle> &triangles) {
+size_t dfsBuildMesh(const aiScene *scene, const aiNode *node, const Vector3<S> &scale,
+                    int vertices_offset, std::vector<Vector3<S>> &vertices,
+                    std::vector<fcl::Triangle> &triangles) {
   if (!node) return 0;
 
   aiMatrix4x4 transform = node->mTransformation;
-  aiNode *pnode = node->mParent;
+  const aiNode *pnode = node->mParent;
   while (pnode) {
     // Don't convert to y-up orientation, which is what the root node in Assimp does
     if (pnode->mParent != NULL) transform = pnode->mTransformation * transform;
     pnode = pnode->mParent;
   }
 
-  unsigned nbVertices = 0;
-  for (uint32_t i = 0; i < node->mNumMeshes; i++) {
-    aiMesh *input_mesh = scene->mMeshes[node->mMeshes[i]];
+  size_t nbVertices = 0;
+  for (size_t i = 0; i < node->mNumMeshes; i++) {
+    const aiMesh *const input_mesh = scene->mMeshes[node->mMeshes[i]];
 
     // Add the vertices
     S max_dim = 0;
-    for (uint32_t j = 0; j < input_mesh->mNumVertices; j++) {
+    for (size_t j = 0; j < input_mesh->mNumVertices; j++) {
       aiVector3D p = input_mesh->mVertices[j];
       p *= transform;
-      vertices.push_back(
-          Vector3<S>((S)p.x * scale[0], (S)p.y * scale[1], (S)p.z * scale[2]));
+      vertices.push_back(Vector3<S> {static_cast<S>(p.x * scale[0]),
+                                     static_cast<S>(p.y * scale[1]),
+                                     static_cast<S>(p.z * scale[2])});
       max_dim = std::max({max_dim, std::abs(p.x) * scale[0], std::abs(p.y) * scale[1],
                           std::abs(p.z) * scale[2]});
     }
-    if (max_dim < 1e-2 || max_dim > 1e1) {
+    if (max_dim < 1e-2 || max_dim > 1e1)
       print_warning("Mesh ", scene->mName.C_Str(), " has side length ", max_dim,
                     "m which is suspiciously large or small. If this is indeed a unit "
                     "or scaling error, you can set the scale factor in the urdf file.");
-    }
 
     // add the indices
-    for (uint32_t j = 0; j < input_mesh->mNumFaces; j++) {
-      aiFace &face = input_mesh->mFaces[j];
+    for (size_t j = 0; j < input_mesh->mNumFaces; j++) {
+      const aiFace &face = input_mesh->mFaces[j];
       if (face.mNumIndices != 3) {
         std::stringstream ss;
         ss << "Mesh " << input_mesh->mName.C_Str() << " has a face with "
@@ -170,7 +177,7 @@ int dfsBuildMesh(const aiScene *scene, const aiNode *node, const Vector3<S> &sca
     nbVertices += input_mesh->mNumVertices;
   }
 
-  for (uint32_t i = 0; i < node->mNumChildren; ++i)
+  for (size_t i = 0; i < node->mNumChildren; ++i)
     nbVertices +=
         dfsBuildMesh(scene, node->mChildren[i], scale, nbVertices, vertices, triangles);
   return nbVertices;
@@ -179,16 +186,15 @@ int dfsBuildMesh(const aiScene *scene, const aiNode *node, const Vector3<S> &sca
 template <typename S>
 std::shared_ptr<fcl::BVHModel<fcl::OBBRSS<S>>> loadMeshAsBVH(
     const std::string &mesh_path, const Vector3<S> &scale) {
-  auto loader = AssimpLoader();  // TODO[Xinsong] change to a global loader so we do not
-                                 // initialize it every time
+  // TODO[Xinsong] change to a global loader so we do not initialize it every time
+  auto loader = AssimpLoader();
   loader.load(mesh_path);
 
   std::vector<Vector3<S>> vertices;
   std::vector<fcl::Triangle> triangles;
 
   dfsBuildMesh<S>(loader.scene, loader.scene->mRootNode, scale, 0, vertices, triangles);
-  // std::cout << "Num of vertex " << nbVertices << " " << vertices.size() << " " <<
-  // triangles.size() << std::endl;
+
   auto geom = std::make_shared<fcl::BVHModel<fcl::OBBRSS<S>>>();
   geom->beginModel();
   geom->addSubModel(vertices, triangles);
@@ -204,38 +210,32 @@ std::shared_ptr<fcl::Convex<S>> loadMeshAsConvex(const std::string &mesh_path,
 
   std::vector<Vector3<S>> vertices;
   std::vector<fcl::Triangle> triangles;
-  /*
-  Convex(const std::shared_ptr<const std::vector<Vector3<S>>>& vertices,
-          int num_faces, const std::shared_ptr<const std::vector<int>>& faces,
-  bool throw_if_invalid = false);
-  */
+
   dfsBuildMesh<S>(loader.scene, loader.scene->mRootNode, scale, 0, vertices, triangles);
 
   auto faces = std::make_shared<std::vector<int>>();
-  for (size_t i = 0; i < triangles.size(); i++) {
+  for (const auto &triangle : triangles) {
     faces->push_back(3);
-    faces->push_back(triangles[i][0]);
-    faces->push_back(triangles[i][1]);
-    faces->push_back(triangles[i][2]);
+    faces->push_back(triangle[0]);
+    faces->push_back(triangle[1]);
+    faces->push_back(triangle[2]);
   }
-  auto vertices_ptr = std::make_shared<std::vector<Vector3<S>>>(vertices);
-  auto convex =
-      std::make_shared<fcl::Convex<S>>(vertices_ptr, triangles.size(), faces, true);
-  return convex;
+  const auto vertices_ptr = std::make_shared<const std::vector<Vector3<S>>>(vertices);
+  return std::make_shared<fcl::Convex<S>>(vertices_ptr, triangles.size(), faces, true);
 }
 
-KDL::Vector toKDL(urdf::Vector3 v) { return KDL::Vector(v.x, v.y, v.z); }
+KDL::Vector toKDL(const urdf::Vector3 &v) { return KDL::Vector(v.x, v.y, v.z); }
 
-KDL::Rotation toKDL(urdf::Rotation r) {
+KDL::Rotation toKDL(const urdf::Rotation &r) {
   return KDL::Rotation::Quaternion(r.x, r.y, r.z, r.w);
 }
 
-KDL::Frame toKDL(urdf::Pose p) {
+KDL::Frame toKDL(const urdf::Pose &p) {
   return KDL::Frame(toKDL(p.rotation), toKDL(p.position));
 }
 
-KDL::Joint toKDL(urdf::JointSharedPtr jnt) {
-  KDL::Frame F_parent_jnt = toKDL(jnt->parent_to_joint_origin_transform);
+KDL::Joint toKDL(const urdf::JointSharedPtr &jnt) {
+  const KDL::Frame F_parent_jnt = toKDL(jnt->parent_to_joint_origin_transform);
   switch (jnt->type) {
     case urdf::Joint::FIXED:
       return KDL::Joint(jnt->name, KDL::Joint::None);
@@ -254,32 +254,31 @@ KDL::Joint toKDL(urdf::JointSharedPtr jnt) {
                 << std::endl;
       return KDL::Joint(jnt->name, KDL::Joint::None);
   }
-  return KDL::Joint();
 }
 
-KDL::RigidBodyInertia toKDL(urdf::InertialSharedPtr i) {
-  KDL::Frame origin = toKDL(i->origin);
+KDL::RigidBodyInertia toKDL(const urdf::InertialSharedPtr &i) {
+  const KDL::Frame origin = toKDL(i->origin);
 
   // the mass is frame independent
-  double kdl_mass = i->mass;
+  const double kdl_mass = i->mass;
 
   // kdl and urdf both specify the com position in the reference frame of the link
-  KDL::Vector kdl_com = origin.p;
+  const KDL::Vector kdl_com = origin.p;
 
   // kdl specifies the inertia matrix in the reference frame of the link,
   // while the urdf specifies the inertia matrix in the inertia reference frame
-  KDL::RotationalInertia urdf_inertia =
+  const KDL::RotationalInertia urdf_inertia =
       KDL::RotationalInertia(i->ixx, i->iyy, i->izz, i->ixy, i->ixz, i->iyz);
 
   // Rotation operators are not defined for rotational inertia,
   // so we use the RigidBodyInertia operators (with com = 0) as a workaround
-  KDL::RigidBodyInertia kdl_inertia_wrt_com_workaround =
+  const KDL::RigidBodyInertia kdl_inertia_wrt_com_workaround =
       origin.M * KDL::RigidBodyInertia(0, KDL::Vector::Zero(), urdf_inertia);
 
   // Note that the RigidBodyInertia constructor takes the 3d inertia wrt the com
   // while the getRotationalInertia method returns the 3d inertia wrt the frame origin
   // (but having com = Vector::Zero() in kdl_inertia_wrt_com_workaround they match)
-  KDL::RotationalInertia kdl_inertia_wrt_com =
+  const KDL::RotationalInertia kdl_inertia_wrt_com =
       kdl_inertia_wrt_com_workaround.getRotationalInertia();
 
   return KDL::RigidBodyInertia(kdl_mass, kdl_com, kdl_inertia_wrt_com);
@@ -287,8 +286,8 @@ KDL::RigidBodyInertia toKDL(urdf::InertialSharedPtr i) {
 
 // recursive function to walk through tree
 bool addChildrenToTree(const urdf::LinkConstSharedPtr &root, KDL::Tree &tree,
-                       const bool &verbose) {
-  std::vector<urdf::LinkSharedPtr> children = root->child_links;
+                       bool verbose) {
+  const std::vector<urdf::LinkSharedPtr> children = root->child_links;
   if (verbose)
     print_verbose("Link ", root->name, " has ", children.size(), " children");
 
@@ -296,28 +295,29 @@ bool addChildrenToTree(const urdf::LinkConstSharedPtr &root, KDL::Tree &tree,
   KDL::RigidBodyInertia inert(0);
   if (root->inertial) inert = toKDL(root->inertial);
   // constructs the kdl joint
-  KDL::Joint jnt = toKDL(root->parent_joint);
+  const KDL::Joint jnt = toKDL(root->parent_joint);
   // construct the kdl segment
-  KDL::Segment sgm(root->name, jnt,
-                   toKDL(root->parent_joint->parent_to_joint_origin_transform), inert);
+  const KDL::Segment sgm(root->name, jnt,
+                         toKDL(root->parent_joint->parent_to_joint_origin_transform),
+                         inert);
 
   // add segment to tree
   tree.addSegment(sgm, root->parent_joint->parent_link_name);
   // recurslively add all children
-  for (size_t i = 0; i < children.size(); i++)
-    if (!addChildrenToTree(children[i], tree, verbose)) return false;
+  for (const auto &child : children)
+    if (!addChildrenToTree(child, tree, verbose)) return false;
   return true;
 }
 
-bool treeFromUrdfModel(const urdf::ModelInterfaceSharedPtr &robot_model,
-                       KDL::Tree &tree, std::string &tree_root_name,
-                       const bool &verbose) {
-  if (!robot_model->getRoot()) return false;
-  tree_root_name = robot_model->getRoot()->name;
-  tree = KDL::Tree(robot_model->getRoot()->name);
-  for (size_t i = 0; i < robot_model->getRoot()->child_links.size(); i++)
-    if (!addChildrenToTree(robot_model->getRoot()->child_links[i], tree, verbose))
-      return false;
+bool treeFromUrdfModel(const urdf::ModelInterfaceSharedPtr &urdf_model, KDL::Tree &tree,
+                       std::string &tree_root_name, bool verbose) {
+  const urdf::LinkConstSharedPtr root_link = urdf_model->getRoot();
+  if (!root_link) return false;
+
+  tree_root_name = root_link->name;
+  tree = KDL::Tree(tree_root_name);
+  for (const auto &child_link : root_link->child_links)
+    if (!addChildrenToTree(child_link, tree, verbose)) return false;
   return true;
 }
 

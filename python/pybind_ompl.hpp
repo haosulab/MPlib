@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
@@ -25,11 +24,6 @@ using FixedJoints = ompl::FixedJointsTpl<S>;
 using PlannerStatus = ompl::ob::PlannerStatus;
 using Path = ompl::ob::Path;
 using PathGeometric = ompl::og::PathGeometric;
-
-template <typename T>
-py::array_t<T> make_array(const std::vector<T> &values) {
-  return py::array_t<T>(values.size(), values.data());
-}
 
 inline void build_pyompl(py::module &m_all) {
   auto m = m_all.def_submodule("ompl");

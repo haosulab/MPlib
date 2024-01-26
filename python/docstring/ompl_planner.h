@@ -112,11 +112,11 @@ static const char *__doc_mplib_ompl_addFixedJoints =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_compoundState2vector =
+static const char *__doc_mplib_ompl_compoundState2Vector =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_eigen2vector =
+static const char *__doc_mplib_ompl_eigen2Vector =
 R"doc(
 )doc";
 
@@ -128,15 +128,21 @@ static const char *__doc_mplib_ompl_removeFixedJoints =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_rvssState2vector =
+static const char *__doc_mplib_ompl_rvssState2Vector =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_ompl_state2eigen =
+static const char *__doc_mplib_ompl_state2Eigen =
 R"doc(
-)doc";
+Convert a ompl::base::State to Eigen::VectorX.
 
-static const char *__doc_mplib_ompl_vector2eigen =
+:param state_raw: pointer to a raw state.
+:param si: pointer to ompl::base::SpaceInformation.
+:param is_rvss: whether the state space is an ompl::base::RealVectorStateSpace.
+    If ``True``, we are using constrained planning.
+:return: an Eigen::VectorX of the ompl::base::State.)doc";
+
+static const char *__doc_mplib_ompl_vector2Eigen =
 R"doc(
 )doc";
 

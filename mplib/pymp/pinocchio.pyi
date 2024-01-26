@@ -36,7 +36,7 @@ class PinocchioModel:
         q_init: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         mask: list[bool] = [],
         eps: float = 1e-05,
-        maxIter: int = 1000,
+        max_iter: int = 1000,
         dt: float = 0.1,
         damp: float = 1e-12,
     ) -> tuple[
@@ -56,7 +56,7 @@ class PinocchioModel:
         :param mask: if the value at a given index is ``True``, the joint is *not* used
             in the IK
         :param eps: tolerance for the IK
-        :param maxIter: maximum number of iterations
+        :param max_iter: maximum number of iterations
         :param dt: time step for the CLIK
         :param damp: damping for the CLIK
         :return: joint configuration
@@ -71,7 +71,7 @@ class PinocchioModel:
         q_min: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         q_max: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         eps: float = 1e-05,
-        maxIter: int = 1000,
+        max_iter: int = 1000,
         dt: float = 0.1,
         damp: float = 1e-12,
     ) -> tuple[
@@ -92,7 +92,7 @@ class PinocchioModel:
         :param q_min: minimum joint configuration
         :param q_max: maximum joint configuration
         :param eps: tolerance for the IK
-        :param maxIter: maximum number of iterations
+        :param max_iter: maximum number of iterations
         :param dt: time step for the CLIK
         :param damp: damping for the CLIK
         :return: joint configuration

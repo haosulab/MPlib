@@ -38,24 +38,26 @@ PlanningWorldTpl<S>::PlanningWorldTpl(
 }
 
 template <typename S>
-void PlanningWorldTpl<S>::updatePointCloud(const MatrixX3<S> &vertices,
-                                           const double &radius) {
-  std::shared_ptr<octomap::OcTree> p_octree = std::make_shared<octomap::OcTree>(radius);
+void PlanningWorldTpl<S>::updatePointCloud(const MatrixX3<S> &vertices, double radius) {
+  auto tree = std::make_shared<octomap::OcTree>(radius);
   for (const auto &row : vertices.rowwise())
-    p_octree->updateNode(octomap::point3d(row(0), row(1), row(2)), true);
+    tree->updateNode(
+        octomap::point3d {static_cast<float>(row(0)), static_cast<float>(row(1)),
+                          static_cast<float>(row(2))},
+        true);
   point_cloud_ = std::make_shared<CollisionObject>(
-      std::make_shared<fcl::OcTree<S>>(p_octree), Transform3<S>::Identity());
+      std::make_shared<fcl::OcTree<S>>(tree), Transform3<S>::Identity());
   has_point_cloud_ = true;
 }
 
 template <typename S>
-void PlanningWorldTpl<S>::updateAttachedTool(CollisionGeometryPtr p_geom, int link_id,
-                                             const Vector7<S> &pose) {
+void PlanningWorldTpl<S>::updateAttachedTool(const CollisionGeometryPtr &p_geom,
+                                             int link_id, const Vector7<S> &pose) {
   attach_link_id_ = link_id;
   // linear here means the upper left 3x3 matrix, which is not necessarily a rotation
   // matrix if scaling is involved
   attach_to_link_pose_.linear() =
-      Quaternion<S>(pose[3], pose[4], pose[5], pose[6]).matrix();
+      Quaternion<S> {pose[3], pose[4], pose[5], pose[6]}.matrix();
   attach_to_link_pose_.translation() = pose.head(3);
   attached_tool_ = std::make_shared<CollisionObject>(p_geom, attach_to_link_pose_);
   has_attach_ = true;
@@ -64,7 +66,7 @@ void PlanningWorldTpl<S>::updateAttachedTool(CollisionGeometryPtr p_geom, int li
 template <typename S>
 void PlanningWorldTpl<S>::updateAttachedBox(const Vector3<S> &size, int link_id,
                                             const Vector7<S> &pose) {
-  CollisionGeometryPtr collision_geometry =
+  const CollisionGeometryPtr collision_geometry =
       std::make_shared<fcl::Box<S>>(size[0], size[1], size[2]);
   updateAttachedTool(collision_geometry, link_id, pose);
 }
@@ -72,29 +74,30 @@ void PlanningWorldTpl<S>::updateAttachedBox(const Vector3<S> &size, int link_id,
 template <typename S>
 void PlanningWorldTpl<S>::updateAttachedSphere(S radius, int link_id,
                                                const Vector7<S> &pose) {
-  CollisionGeometryPtr collision_geometry = std::make_shared<fcl::Sphere<S>>(radius);
+  const CollisionGeometryPtr collision_geometry =
+      std::make_shared<fcl::Sphere<S>>(radius);
   updateAttachedTool(collision_geometry, link_id, pose);
 }
 
 template <typename S>
 void PlanningWorldTpl<S>::updateAttachedMesh(const std::string &mesh_path, int link_id,
                                              const Vector7<S> &pose) {
-  CollisionGeometryPtr collision_geometry =
-      loadMeshAsBVH(mesh_path, Vector3<S>(1, 1, 1));
+  const CollisionGeometryPtr collision_geometry =
+      loadMeshAsBVH(mesh_path, Vector3<S> {1, 1, 1});
   updateAttachedTool(collision_geometry, link_id, pose);
 }
 
 template <typename S>
-void PlanningWorldTpl<S>::setQpos(const int &index, const VectorX<S> &state) {
+void PlanningWorldTpl<S>::setQpos(int index, const VectorX<S> &state) const {
   articulations_[index]->setQpos(state);
 }
 
 template <typename S>
-void PlanningWorldTpl<S>::setQposAll(const VectorX<S> &state) {
+void PlanningWorldTpl<S>::setQposAll(const VectorX<S> &state) const {
   size_t total_dim = 0;
   for (size_t i = 0; i < articulations_.size(); i++) {
-    auto n = articulations_[i]->getQposDim();
-    auto segment =
+    const auto n = articulations_[i]->getQposDim();
+    const auto segment =
         state.segment(total_dim, total_dim + n);  // [total_dim, total_dim + n)
     ASSERT(static_cast<size_t>(segment.size()) == n,
            "Bug with size " + std::to_string(segment.size()) + " " + std::to_string(n));
@@ -113,16 +116,16 @@ bool PlanningWorldTpl<S>::collide() {
 
 template <typename S>
 std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
-    size_t index, const CollisionRequest &request) {
+    size_t index, const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret;
-  auto fcl_model = articulations_[index]->getFCLModel();
-  auto results = fcl_model->collideFull(request);
-  auto CollisionLinkNames = fcl_model->getCollisionLinkNames();
-  auto CollisionPairs = fcl_model->getCollisionPairs();
+  const auto fcl_model = articulations_[index]->getFCLModel();
+  const auto results = fcl_model->collideFull(request);
+  const auto CollisionLinkNames = fcl_model->getCollisionLinkNames();
+  const auto CollisionPairs = fcl_model->getCollisionPairs();
   for (size_t j = 0; j < results.size(); j++) {
     if (results[j].isCollision()) {
       WorldCollisionResult tmp;
-      auto x = CollisionPairs[j].first, y = CollisionPairs[j].second;
+      const auto x = CollisionPairs[j].first, y = CollisionPairs[j].second;
       tmp.res = results[j];
       tmp.object_name1 = articulation_names_[index];
       tmp.object_name2 = articulation_names_[index];
@@ -137,19 +140,19 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
 
 template <typename S>
 std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
-    size_t index, const CollisionRequest &request) {
+    size_t index, const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret;
-  auto pinocchio_model = articulations_[index]->getPinocchioModel();
-  auto fcl_model = articulations_[index]->getFCLModel();
-  auto CollisionObjects = fcl_model->getCollisionObjects();
-  auto CollisionLinkNames = fcl_model->getCollisionLinkNames();
+  const auto pinocchio_model = articulations_[index]->getPinocchioModel();
+  const auto fcl_model = articulations_[index]->getFCLModel();
+  const auto CollisionObjects = fcl_model->getCollisionObjects();
+  const auto CollisionLinkNames = fcl_model->getCollisionLinkNames();
 
   // collision with other articulationed objects
   for (size_t i = 0; i < articulations_.size(); i++) {
     if (i == index) continue;  // don't collide with itself
-    auto fcl_model_other = articulations_[i]->getFCLModel();
-    auto CollisionObjects_other = fcl_model_other->getCollisionObjects();
-    auto CollisionLinkNames_other = fcl_model_other->getCollisionLinkNames();
+    const auto fcl_model_other = articulations_[i]->getFCLModel();
+    const auto CollisionObjects_other = fcl_model_other->getCollisionObjects();
+    const auto CollisionLinkNames_other = fcl_model_other->getCollisionLinkNames();
     for (size_t j = 0; j < CollisionObjects.size(); j++) {
       for (size_t k = 0; k < CollisionObjects_other.size(); k++) {
         CollisionResult result;
@@ -222,10 +225,10 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       print_warning("No Point Cloud Provided!");
     } else {  // currently, only collide with the point cloud, only support one
               // articulation
-      Vector7<S> link_pose = pinocchio_model->getLinkPose(attach_link_id_);
+      const Vector7<S> link_pose = pinocchio_model->getLinkPose(attach_link_id_);
       Transform3<S> pose;
       pose.linear() =
-          Quaternion<S>(link_pose[3], link_pose[4], link_pose[5], link_pose[6])
+          Quaternion<S> {link_pose[3], link_pose[4], link_pose[5], link_pose[6]}
               .matrix();
       pose.translation() = link_pose.head(3);
       pose = pose * attach_to_link_pose_;
@@ -251,9 +254,9 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
 
 template <typename S>
 std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideFull(
-    size_t index, const CollisionRequest &request) {
+    size_t index, const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret1 = selfCollide(index, request);
-  std::vector<WorldCollisionResult> ret2 = collideWithOthers(index, request);
+  const std::vector<WorldCollisionResult> ret2 = collideWithOthers(index, request);
   ret1.insert(ret1.end(), ret2.begin(), ret2.end());
   return ret1;
 }

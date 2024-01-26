@@ -10,6 +10,7 @@ __all__ = [
     "CollisionObject",
     "CollisionRequest",
     "CollisionResult",
+    "Cone",
     "Contact",
     "ContactPoint",
     "Convex",
@@ -22,6 +23,8 @@ __all__ = [
     "GST_INDEP",
     "GST_LIBCCD",
     "OcTree",
+    "Plane",
+    "Sphere",
     "Triangle",
     "collide",
     "distance",
@@ -168,7 +171,7 @@ class Capsule(CollisionGeometry):
         Construct a capsule with given radius and height.
 
         :param radius: radius of the capsule
-        :param lz: height of the capsule
+        :param lz: height of the capsule along z axis
         """
 
 class CollisionGeometry:
@@ -271,6 +274,23 @@ class CollisionResult:
     def is_collision(self) -> bool: ...
     def num_contacts(self) -> int: ...
     def num_cost_sources(self) -> int: ...
+
+class Cone(CollisionGeometry):
+    """
+    Cone collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a cone geometry.
+    """
+
+    lz: float
+    radius: float
+    def __init__(self, radius: float, lz: float) -> None:
+        """
+        Construct a cone with given radius and height.
+
+        :param radius: radius of the cone
+        :param lz: height of the cone along z axis
+        """
 
 class Contact:
     @typing.overload
@@ -462,7 +482,7 @@ class Cylinder(CollisionGeometry):
         Construct a cylinder with given radius and height.
 
         :param radius: radius of the cylinder
-        :param lz: height of the cylinder
+        :param lz: height of the cylinder along z axis
         """
 
 class DistanceRequest:
@@ -600,12 +620,12 @@ class OcTree(CollisionGeometry):
     geometry represented by an OcTree.
     """
     @typing.overload
-    def __init__(self, resolution: float) -> None:
+    def __init__(self, resolution: float = 0.01) -> None:
         """
         Construct an OcTree with given resolution.
 
         :param resolution: resolution of the OcTree (smallest size of a voxel).
-            You can treat this is as the diameter of a point.
+            You can treat this is as the diameter of a point. Default is 0.01.
         """
     @typing.overload
     def __init__(
@@ -613,21 +633,73 @@ class OcTree(CollisionGeometry):
         vertices: numpy.ndarray[
             tuple[M, typing.Literal[3]], numpy.dtype[numpy.float64]
         ],
-        resolution: float,
+        resolution: float = 0.01,
     ) -> None:
         """
         Construct an OcTree with given vertices and resolution.
 
         :param vertices: vertices of the point cloud
-        :param resolution: resolution of the OcTree
+        :param resolution: resolution of the OcTree. Default is 0.01
+        """
+
+class Plane(CollisionGeometry):
+    """
+    Infinite plane collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a plane geometry.
+    """
+
+    d: float
+    n: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    @typing.overload
+    def __init__(
+        self,
+        n: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        d: float,
+    ) -> None:
+        """
+        Construct a plane with given normal direction and offset where ``n * v = d``.
+
+        :param n: normal direction of the plane
+        :param d: offset of the plane
+        """
+    @typing.overload
+    def __init__(self, a: float, b: float, c: float, d: float) -> None:
+        """
+        Construct a plane with given plane parameters where ``ax + by + cz = d``.
+        """
+
+class Sphere(CollisionGeometry):
+    """
+    Sphere collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a sphere geometry.
+    """
+
+    radius: float
+    def __init__(self, radius: float) -> None:
+        """
+        Construct a sphere with given radius.
+
+        :param radius: radius of the sphere
         """
 
 class Triangle:
+    """
+    Triangle with 3 indices for points.
+
+    This is an FCL class so you can refer to the FCL doc here.
+    https://flexible-collision-library.github.io/de/daa/classfcl_1_1Triangle.html
+    """
     def __getitem__(self, arg0: int) -> int: ...
     @typing.overload
     def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, arg0: int, arg1: int, arg2: int) -> None: ...
+    def __init__(self, p1: int, p2: int, p3: int) -> None: ...
     def get(self, arg0: int) -> int: ...
     def set(self, arg0: int, arg1: int, arg2: int) -> None: ...
 

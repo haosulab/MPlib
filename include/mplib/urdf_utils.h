@@ -49,9 +49,8 @@ template <typename S>
 std::shared_ptr<fcl::Convex<S>> loadMeshAsConvex(const std::string &mesh_path,
                                                  const Vector3<S> &scale);
 
-bool treeFromUrdfModel(const urdf::ModelInterfaceSharedPtr &robot_model,
-                       KDL::Tree &tree, std::string &tree_root_name,
-                       const bool &verbose = false);
+bool treeFromUrdfModel(const urdf::ModelInterfaceSharedPtr &urdf_model, KDL::Tree &tree,
+                       std::string &tree_root_name, bool verbose = false);
 
 // Explicit Template Instantiation Declaration =========================================
 #define DECLARE_TEMPLATE_URDF_UTILS(S)                                               \

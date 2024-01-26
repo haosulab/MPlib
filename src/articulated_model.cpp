@@ -19,7 +19,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
                                             const Vector3<S> &gravity,
                                             const std::vector<std::string> &link_names,
                                             const std::vector<std::string> &joint_names,
-                                            const bool &convex, const bool &verbose)
+                                            bool convex, bool verbose)
     : pinocchio_model_(
           std::make_shared<PinocchioModelTpl<S>>(urdf_filename, gravity, verbose)),
       fcl_model_(std::make_shared<FCLModelTpl<S>>(urdf_filename, convex, verbose)),
@@ -38,15 +38,15 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
 }
 
 template <typename S>
-std::vector<std::string> ArticulatedModelTpl<S>::getMoveGroupJointNames() {
+std::vector<std::string> ArticulatedModelTpl<S>::getMoveGroupJointNames() const {
   std::vector<std::string> ret;
-  for (auto i : move_group_user_joints_) ret.push_back(user_joint_names_[i]);
+  for (const auto &i : move_group_user_joints_) ret.push_back(user_joint_names_[i]);
   return ret;
 }
 
 template <typename S>
 void ArticulatedModelTpl<S>::setMoveGroup(const std::string &end_effector) {
-  std::vector<std::string> end_effectors = {end_effector};
+  std::vector<std::string> end_effectors {end_effector};
   setMoveGroup(end_effectors);
 }
 
@@ -55,7 +55,7 @@ void ArticulatedModelTpl<S>::setMoveGroup(
     const std::vector<std::string> &end_effectors) {
   move_group_end_effectors_ = end_effectors;
   move_group_user_joints_ = {};
-  for (auto end_effector : end_effectors) {
+  for (const auto &end_effector : end_effectors) {
     auto joint_i = pinocchio_model_->getChainJointIndex(end_effector);
     move_group_user_joints_.insert(move_group_user_joints_.begin(), joint_i.begin(),
                                    joint_i.end());
@@ -65,12 +65,12 @@ void ArticulatedModelTpl<S>::setMoveGroup(
       std::unique(move_group_user_joints_.begin(), move_group_user_joints_.end());
   move_group_user_joints_.erase(end_unique, move_group_user_joints_.end());
   move_group_qpos_dim_ = 0;
-  for (auto i : move_group_user_joints_)
+  for (const auto &i : move_group_user_joints_)
     move_group_qpos_dim_ += pinocchio_model_->getJointDim(i);
 }
 
 template <typename S>
-void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, const bool &full) {
+void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, bool full) {
   if (full)
     current_qpos_ = qpos;
   else {
@@ -79,7 +79,7 @@ void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, const bool &full) {
                " =/= dimension of move_group qpos: " +
                std::to_string(move_group_qpos_dim_));
     size_t len = 0;
-    for (auto i : move_group_user_joints_) {
+    for (const auto &i : move_group_user_joints_) {
       auto start_idx = pinocchio_model_->getJointId(i),
            dim_i = pinocchio_model_->getJointDim(i);
       for (size_t j = 0; j < dim_i; j++) current_qpos_[start_idx + j] = qpos[len++];
@@ -91,7 +91,8 @@ void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, const bool &full) {
   for (size_t i = 0; i < user_link_names_.size(); i++) {
     Vector7<S> pose_i = pinocchio_model_->getLinkPose(i);
     Transform3<S> tmp_i;
-    tmp_i.linear() = Quaternion<S>(pose_i[3], pose_i[4], pose_i[5], pose_i[6]).matrix();
+    tmp_i.linear() =
+        Quaternion<S> {pose_i[3], pose_i[4], pose_i[5], pose_i[6]}.matrix();
     tmp_i.translation() = pose_i.head(3);
     tmp_i = base_tf_ * tmp_i;  // base_tf is the pose of the robot base
     link_pose.push_back(tmp_i);
@@ -104,7 +105,7 @@ void ArticulatedModelTpl<S>::setBasePose(const Vector7<S> &pose) {
   base_pose_ = pose;
   base_tf_.translation() = pose.head(3);
   base_tf_.linear() =
-      Quaternion<S>(pose[3], pose[4], pose[5], pose[6]).toRotationMatrix();
+      Quaternion<S> {pose[3], pose[4], pose[5], pose[6]}.toRotationMatrix();
   // we don't need to update Qpos, but this also updates fcl, which we need
   setQpos(current_qpos_, true);
 }

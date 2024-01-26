@@ -30,7 +30,7 @@ inline void build_pyarticulation(py::module &m_all) {
   PyArticulatedModel
       .def(py::init<const std::string &, const std::string &, const Vector3<S> &,
                     const std::vector<std::string> &, const std::vector<std::string> &,
-                    const bool &, const bool &>(),
+                    bool, bool>(),
            py::arg("urdf_filename"), py::arg("srdf_filename"), py::arg("gravity"),
            py::arg("link_names"), py::arg("joint_names"), py::arg("convex") = false,
            py::arg("verbose") = false,
