@@ -2,8 +2,10 @@ name: build-and-publish
 
 on:
   push:
-    branches: [testing]
+    branches: [main]
     tags: ['v*']
+  pull_request:
+    branches: [main]
 
 jobs:
   build:
@@ -26,3 +28,66 @@ jobs:
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.pyver }}-${{ strategy.job-index }}
           path: wheelhouse/*
+
+  build-sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install pypa/build
+        run: "python -m pip install build --user"
+      - name: Build a source tarball
+        run: "python -m build --sdist"
+      - name: Upload sdist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*
+
+  nightly-release:
+    if: startsWith(github.ref, 'refs/heads/')  # if a commit is pushed
+    needs: [build, build-sdist]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # create nightly release
+    steps:
+      - name: Download wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+      - name: Update Nightly Release
+        uses: andelf/nightly-release@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly
+          name: 'Nightly Release'
+          prerelease: true
+          body: 'MPlib development nightly release. This release is mainly for internal testing. Stable releases are published to pypi https://pypi.org/p/mplib/'
+          files: |
+            dist/*
+
+  publish-pypi:
+    if: startsWith(github.ref, 'refs/tags/v')  # if a tag is pushed
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi_publish
+    permissions:
+      id-token: write  # mandatory for PyPI trusted publishing
+    steps:
+      - name: Download wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
