@@ -1,13 +1,16 @@
+import os
 import numpy as np
 import unittest
+from transforms3d.quaternions import mat2quat, quat2mat
 from mplib import Planner
 import mplib
 import trimesh
-from transforms3d.quaternions import mat2quat, quat2mat
+
+FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 PANDA_SPEC = {
-  "urdf": "data/panda/panda.urdf",
-  "srdf": "data/panda/panda.srdf",
+  "urdf": f"{FILE_ABS_DIR}/../data/panda/panda.urdf",
+  "srdf": f"{FILE_ABS_DIR}/../data/panda/panda.srdf",
   "move_group": "panda_hand",
 }
 
