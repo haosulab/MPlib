@@ -542,7 +542,7 @@ class Planner:
                 the joint limits
             use_point_cloud: if True, will use the point cloud to avoid collision
             use_attach: if True, will consider the attached tool collision when planning
-            planner_name: planner name pick from {"RRTConnect", "RRT*"}
+            planner_name: planner name pick from {"RRTConnect", "RRTstar"}
             no_simplification: if true, will not simplify the path. constraint planning
                 does not support simplification
             constraint_function: evals to 0 when constraint is satisfied

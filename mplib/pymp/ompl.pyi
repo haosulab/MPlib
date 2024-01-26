@@ -62,7 +62,7 @@ class OMPLPlanner:
         :param start_state: start state of the movegroup joints
         :param goal_states: list of goal states. Planner will stop when one of them is
             reached
-        :param planner_name: name of the planner pick between {RRTConnect, RRT*}
+        :param planner_name: name of the planner pick between {RRTConnect, RRTstar}
         :param time: planning time limit
         :param range: planning range (for RRT family of planners and represents the
             maximum step size)

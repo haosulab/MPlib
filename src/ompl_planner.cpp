@@ -377,13 +377,13 @@ std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
     auto rrt_connect = std::make_shared<og::RRTConnect>(si_);
     if (range > 1E-6) rrt_connect->setRange(range);
     planner = rrt_connect;
-  } else if (planner_name == "RRT*") {
+  } else if (planner_name == "RRTstar") {
     auto rrt_star = std::make_shared<og::RRTstar>(si_);
     if (range > 1E-6) rrt_star->setRange(range);
     planner = rrt_star;
   } else {
     throw std::runtime_error(
-        "Planner Not implemented, please choose from {RRTConnect, RRT*}");
+        "Planner Not implemented, please choose from {RRTConnect, RRTstar}");
   }
 
   ss_->setPlanner(planner);
