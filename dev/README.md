@@ -11,7 +11,7 @@ To building python wheels, run `./dev/build_wheels.sh --py 310`
 This will create a docker container from [`kolinguo/mplib-build`](https://hub.docker.com/r/kolinguo/mplib-build)
 and use it to build wheel for the specified python version.  
 The wheel will be generated in the `wheelhouse/` and the generated pybind11 docstring
-will be in `python/docstring/`.
+will be in [`./pybind/docstring/`](../pybind/docstring/).
 
 If you want to start a docker container for debugging, run `./dev/docker_setup.sh`
 
@@ -76,7 +76,7 @@ Based on [`pybind11_mkdoc`](https://github.com/pybind/pybind11_mkdoc), we create
 [`./dev/mkdoc.py`](./mkdoc.py) to automatically generate pybind11 docstrings from
 C++ code comments. In [`CMakeLists.txt`](../CMakeLists.txt), a custom target will run
 [`./dev/mkdoc.sh`](./mkdoc.sh) which calls `./dev/mkdoc.py` for all header files.
-The generated docstrings will be stored in [`./python/docstring/`](../python/docstring/).
+The generated docstrings will be stored in [`./pybind/docstring/`](../pybind/docstring/).
 
 The expected C++ code comments should follow the [`doxygen`](https://doxygen.nl/manual/docblocks.html) format
 ([an example header file](./test_mkdoc/mplib_sample/sample_header.h))
@@ -118,7 +118,7 @@ publishing them to [MPlib PyPI](https://pypi.org/p/mplib/).
 ## Code formatting
 * C++:
   ```bash
-  find ./include/ ./python/ ./src/ ! -path "*docstring*" \( -name "*.h" -o -name "*.cpp" -o -name "*.hpp" \) -exec clang-format -i {} \;
+  find ./include/ ./pybind/ ./src/ ! -path "*docstring*" \( -name "*.h" -o -name "*.cpp" -o -name "*.hpp" \) -exec clang-format -i {} \;
   ```
 * Python:
   ```bash

@@ -4,10 +4,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "articulated_model.h"
-#include "color_printing.h"
-#include "macros_utils.h"
-#include "types.h"
+#include "mplib/core/articulated_model.h"
+#include "mplib/macros/class_forward.h"
+#include "mplib/types.h"
+#include "mplib/utils/color_printing.h"
 
 namespace mplib {
 
@@ -43,7 +43,7 @@ class PlanningWorldTpl {
   using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
   using CollisionObject = fcl::CollisionObject<S>;
   using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
-  using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
+  // using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
   using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
 
   using WorldCollisionResult = WorldCollisionResultTpl<S>;

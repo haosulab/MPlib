@@ -8,7 +8,7 @@
 CLANG_FLAGS="-std=c++17 ${@}"
 PY_SCRIPT_PATH="dev/mkdoc.py"
 CPP_INCLUDE_DIR="include/mplib"
-OUTPUT_DOCSTRING_DIR="python/docstring"
+OUTPUT_DOCSTRING_DIR="pybind/docstring"
 
 ############################################################
 # Section 0: Bash Error Handling                           #
@@ -38,12 +38,12 @@ SCRIPT_PATH=$(readlink -f "$0")
 REPO_DIR=$(dirname "$(dirname "$SCRIPT_PATH")")
 cd "$REPO_DIR"
 
-# Create output dir
-mkdir -p "$OUTPUT_DOCSTRING_DIR"
+for filepath in `find "$CPP_INCLUDE_DIR" -name "*.h" ! -name "types.h" ! -path "*macros*"`; do
+  output_path="${OUTPUT_DOCSTRING_DIR}/$(realpath --relative-to="$CPP_INCLUDE_DIR" "$filepath")"
 
-shopt -s nullglob
-for filepath in "$CPP_INCLUDE_DIR"/*.h; do
-  output_path="${OUTPUT_DOCSTRING_DIR}/$(basename "$filepath")"
+  # Create output dir
+  mkdir -p "$(dirname "$output_path")"
+
   python3 "$PY_SCRIPT_PATH" -o="$output_path" $CLANG_FLAGS "$filepath" &
 done
 

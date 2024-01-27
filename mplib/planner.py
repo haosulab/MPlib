@@ -9,7 +9,8 @@ import toppra.algorithm as algo
 import toppra.constraint as constraint
 from transforms3d.quaternions import mat2quat, quat2mat
 
-from mplib.pymp import articulation, ompl, planning_world
+from mplib.pymp import ArticulatedModel, PlanningWorld
+from mplib.pymp.planning import ompl
 
 
 class Planner:
@@ -60,7 +61,7 @@ class Planner:
         # replace package:// keyword if exists
         urdf = self.replace_package_keyword(package_keyword_replacement)
 
-        self.robot = articulation.ArticulatedModel(
+        self.robot = ArticulatedModel(
             urdf,
             srdf,
             [0, 0, -9.81],
@@ -71,7 +72,7 @@ class Planner:
         )
         self.pinocchio_model = self.robot.get_pinocchio_model()
 
-        self.planning_world = planning_world.PlanningWorld(
+        self.planning_world = PlanningWorld(
             [self.robot],
             ["robot"],
             kwargs.get("normal_objects", []),
@@ -126,9 +127,7 @@ class Planner:
             f"number of total joints ({len(self.joint_limits)})"
         )
 
-        self.planning_world = planning_world.PlanningWorld(
-            [self.robot], ["robot"], [], []
-        )
+        self.planning_world = PlanningWorld([self.robot], ["robot"], [], [])
         self.planner = ompl.OMPLPlanner(world=self.planning_world)
 
     def replace_package_keyword(self, package_keyword_replacement):
@@ -268,8 +267,8 @@ class Planner:
     def check_for_collision(
         self,
         collision_function,
-        articulation: articulation.ArticulatedModel = None,
-        qpos: np.ndarray = None,
+        articulation: Optional[ArticulatedModel] = None,
+        qpos: Optional[np.ndarray] = None,
     ) -> list:
         """helper function to check for collision"""
         # handle no user input
@@ -293,8 +292,8 @@ class Planner:
 
     def check_for_self_collision(
         self,
-        articulation: articulation.ArticulatedModel = None,
-        qpos: np.ndarray = None,
+        articulation: Optional[ArticulatedModel] = None,
+        qpos: Optional[np.ndarray] = None,
     ) -> list:
         """Check if the robot is in self-collision.
 
@@ -311,8 +310,8 @@ class Planner:
 
     def check_for_env_collision(
         self,
-        articulation: articulation.ArticulatedModel = None,
-        qpos: np.ndarray = None,
+        articulation: Optional[ArticulatedModel] = None,
+        qpos: Optional[np.ndarray] = None,
         with_point_cloud=False,
         use_attach=False,
     ) -> list:

@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include "mplib/articulated_model.h"
+#include "mplib/core/articulated_model.h"
 
 using ArticulatedModel = mplib::ArticulatedModelTpl<double>;
 

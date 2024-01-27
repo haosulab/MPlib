@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "mplib/macros_utils.h"
-#include "mplib/urdf_utils.h"
+#include "mplib/collision_detection/fcl/fcl_utils.h"
+#include "mplib/macros/assert.h"
 
 namespace mplib {
 
@@ -83,7 +83,7 @@ template <typename S>
 void PlanningWorldTpl<S>::updateAttachedMesh(const std::string &mesh_path, int link_id,
                                              const Vector7<S> &pose) {
   const CollisionGeometryPtr collision_geometry =
-      loadMeshAsBVH(mesh_path, Vector3<S> {1, 1, 1});
+      collision_detection::fcl::loadMeshAsBVH<S>(mesh_path, Vector3<S> {1, 1, 1});
   updateAttachedTool(collision_geometry, link_id, pose);
 }
 
@@ -151,8 +151,8 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       for (size_t k = 0; k < CollisionObjects_other.size(); k++) {
         CollisionResult result;
         result.clear();
-        ::fcl::collide(CollisionObjects[j].get(), CollisionObjects_other[k].get(),
-                       request, result);
+        fcl::collide(CollisionObjects[j].get(), CollisionObjects_other[k].get(),
+                     request, result);
         if (result.isCollision()) {
           WorldCollisionResult tmp;
           tmp.res = result;
@@ -174,7 +174,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       result.clear();
       const std::string &normal_object_name = itm.first;
       const auto &normal_object = itm.second;
-      ::fcl::collide(CollisionObjects[i].get(), normal_object.get(), request, result);
+      fcl::collide(CollisionObjects[i].get(), normal_object.get(), request, result);
       if (result.isCollision()) {
         WorldCollisionResult tmp;
         tmp.res = result;
@@ -195,7 +195,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       for (size_t i = 0; i < CollisionObjects.size(); i++) {
         CollisionResult result;
         result.clear();
-        ::fcl::collide(CollisionObjects[i].get(), point_cloud_.get(), request, result);
+        fcl::collide(CollisionObjects[i].get(), point_cloud_.get(), request, result);
         if (result.isCollision()) {
           WorldCollisionResult tmp;
           tmp.res = result;
@@ -230,7 +230,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
 
       CollisionResult result;
       result.clear();
-      ::fcl::collide(attached_tool_.get(), point_cloud_.get(), request, result);
+      fcl::collide(attached_tool_.get(), point_cloud_.get(), request, result);
       if (result.isCollision()) {
         WorldCollisionResult tmp;
         tmp.res = result;
