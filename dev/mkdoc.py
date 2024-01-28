@@ -150,16 +150,6 @@ SKIP_RECURSE_NAMES = [
     "tinyxml2",
 ]
 
-# Filter based on partial names.
-SKIP_PARTIAL_NAMES = [
-    "operator new",
-    "operator delete",
-    "operator=",
-    "operator->",
-    "operator<<",
-    "operator>>",
-]
-
 # Filter based on access.
 SKIP_ACCESS = [
     AccessSpecifier.PRIVATE,
@@ -188,9 +178,6 @@ def is_accepted_cursor(cursor, name_chain) -> bool:
     # N.B. See TODO in `get_name_chain`.
     for piece in name_chain + (name,):
         if piece in SKIP_RECURSE_NAMES:
-            return False
-    for skip_partial_name in SKIP_PARTIAL_NAMES:
-        if skip_partial_name in name:
             return False
     if cursor.access_specifier in SKIP_ACCESS:
         return False
