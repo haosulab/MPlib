@@ -115,6 +115,16 @@ with the built wheels.
 This triggers building wheels for all supported python versions and
 publishing them to [MPlib PyPI](https://pypi.org/p/mplib/).
 
+## Code formatting
+* C++:
+  ```bash
+  find ./include/ ./python/ ./src/ ! -path "*docstring*" \( -name "*.h" -o -name "*.cpp" -o -name "*.hpp" \) -exec clang-format -i {} \;
+  ```
+* Python:
+  ```bash
+  ruff check --select I --fix . && ruff format .
+  ```
+
 ## FAQ
 
 <details>
