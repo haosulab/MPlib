@@ -11,7 +11,6 @@ from . import collision_detection, kinematics, planning
 __all__ = [
     "ArticulatedModel",
     "PlanningWorld",
-    "WorldCollisionResult",
     "collision_detection",
     "kinematics",
     "planning",
@@ -207,7 +206,7 @@ class PlanningWorld:
         """
     def collide_full(
         self, index: int = 0, request: collision_detection.fcl.CollisionRequest = ...
-    ) -> list[...]:
+    ) -> list[collision_detection.WorldCollisionResult]:
         """
         Check collision between the articulated model and all objects.
 
@@ -217,7 +216,7 @@ class PlanningWorld:
         """
     def collide_with_others(
         self, index: int = 0, request: collision_detection.fcl.CollisionRequest = ...
-    ) -> list[...]:
+    ) -> list[collision_detection.WorldCollisionResult]:
         """
         Check collision between the articulated model and other objects.
 
@@ -267,7 +266,7 @@ class PlanningWorld:
         """
     def self_collide(
         self, index: int = 0, request: collision_detection.fcl.CollisionRequest = ...
-    ) -> list[...]:
+    ) -> list[collision_detection.WorldCollisionResult]:
         """
         Check collision between the articulated model and itself.
 
@@ -399,38 +398,3 @@ class PlanningWorld:
     def use_attach(self) -> bool: ...
     @property
     def use_point_cloud(self) -> bool: ...
-
-class WorldCollisionResult:
-    """
-    Result of the collision checking.
-    """
-    @property
-    def collision_type(self) -> str:
-        """
-        type of the collision
-        """
-    @property
-    def link_name1(self) -> str:
-        """
-        link name of the first object in collision
-        """
-    @property
-    def link_name2(self) -> str:
-        """
-        link name of the second object in collision
-        """
-    @property
-    def object_name1(self) -> str:
-        """
-        name of the first object
-        """
-    @property
-    def object_name2(self) -> str:
-        """
-        name of the second object
-        """
-    @property
-    def res(self) -> collision_detection.fcl.CollisionResult:
-        """
-        the fcl CollisionResult
-        """

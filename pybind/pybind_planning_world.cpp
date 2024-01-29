@@ -16,7 +16,6 @@ namespace py = pybind11;
 namespace mplib {
 
 using PlanningWorld = PlanningWorldTpl<S>;
-using WorldCollisionResult = WorldCollisionResultTpl<S>;
 
 using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 using CollisionRequest = fcl::CollisionRequest<S>;
@@ -99,23 +98,6 @@ void build_pyplanning_world(py::module &pymp) {
 
       .def_readonly("use_point_cloud", &PlanningWorld::use_point_cloud_)
       .def_readonly("use_attach", &PlanningWorld::use_attach_);
-
-  auto PyWorldCollisionResult =
-      py::class_<WorldCollisionResult, std::shared_ptr<WorldCollisionResult>>(
-          pymp, "WorldCollisionResult", DOC(mplib, WorldCollisionResultTpl));
-  PyWorldCollisionResult
-      .def_readonly("res", &WorldCollisionResult::res,
-                    DOC(mplib, WorldCollisionResultTpl, res))
-      .def_readonly("collision_type", &WorldCollisionResult::collision_type,
-                    DOC(mplib, WorldCollisionResultTpl, collision_type))
-      .def_readonly("object_name1", &WorldCollisionResult::object_name1,
-                    DOC(mplib, WorldCollisionResultTpl, object_name1))
-      .def_readonly("object_name2", &WorldCollisionResult::object_name2,
-                    DOC(mplib, WorldCollisionResultTpl, object_name2))
-      .def_readonly("link_name1", &WorldCollisionResult::link_name1,
-                    DOC(mplib, WorldCollisionResultTpl, link_name1))
-      .def_readonly("link_name2", &WorldCollisionResult::link_name2,
-                    DOC(mplib, WorldCollisionResultTpl, link_name2));
 }
 
 }  // namespace mplib

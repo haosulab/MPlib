@@ -4,7 +4,7 @@
 
 namespace mplib {
 
-// Eigen
+// Eigen ===============================================================================
 template <typename S>
 using Vector3 = Eigen::Matrix<S, 3, 1>;
 

@@ -209,20 +209,6 @@ static const char *__doc_mplib_PlanningWorldTpl_use_attach = R"doc()doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_use_point_cloud = R"doc()doc";
 
-static const char *__doc_mplib_WorldCollisionResultTpl = R"doc(Result of the collision checking.)doc";
-
-static const char *__doc_mplib_WorldCollisionResultTpl_collision_type = R"doc(type of the collision)doc";
-
-static const char *__doc_mplib_WorldCollisionResultTpl_link_name1 = R"doc(link name of the first object in collision)doc";
-
-static const char *__doc_mplib_WorldCollisionResultTpl_link_name2 = R"doc(link name of the second object in collision)doc";
-
-static const char *__doc_mplib_WorldCollisionResultTpl_object_name1 = R"doc(name of the first object)doc";
-
-static const char *__doc_mplib_WorldCollisionResultTpl_object_name2 = R"doc(name of the second object)doc";
-
-static const char *__doc_mplib_WorldCollisionResultTpl_res = R"doc(the fcl CollisionResult)doc";
-
 /* ----- Begin of custom docstring section ----- */
 
 /* ----- End of custom docstring section ----- */

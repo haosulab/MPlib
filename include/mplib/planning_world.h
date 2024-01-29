@@ -4,32 +4,13 @@
 #include <unordered_map>
 #include <vector>
 
+#include "mplib/collision_detection/types.h"
 #include "mplib/core/articulated_model.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
 #include "mplib/utils/color_printing.h"
 
 namespace mplib {
-
-// WorldCollisionResultTplPtr
-MPLIB_STRUCT_TEMPLATE_FORWARD(WorldCollisionResultTpl);
-
-/// Result of the collision checking.
-template <typename S>
-struct WorldCollisionResultTpl {
-  fcl::CollisionResult<S> res;  ///< the fcl CollisionResult
-  std::string collision_type,   ///< type of the collision
-      object_name1,             ///< name of the first object
-      object_name2,             ///< name of the second object
-      link_name1,               ///< link name of the first object in collision
-      link_name2;               ///< link name of the second object in collision
-};
-
-// Common Type Alias ===================================================================
-using WorldCollisionResultf = WorldCollisionResultTpl<float>;
-using WorldCollisionResultd = WorldCollisionResultTpl<double>;
-using WorldCollisionResultfPtr = WorldCollisionResultTplPtr<float>;
-using WorldCollisionResultdPtr = WorldCollisionResultTplPtr<double>;
 
 // PlanningWorldTplPtr
 MPLIB_CLASS_TEMPLATE_FORWARD(PlanningWorldTpl);
@@ -312,9 +293,7 @@ using PlanningWorldfPtr = PlanningWorldTplPtr<float>;
 using PlanningWorlddPtr = PlanningWorldTplPtr<double>;
 
 // Explicit Template Instantiation Declaration =========================================
-#define DECLARE_TEMPLATE_PLANNING_WORLD(S)           \
-  extern template struct WorldCollisionResultTpl<S>; \
-  extern template class PlanningWorldTpl<S>
+#define DECLARE_TEMPLATE_PLANNING_WORLD(S) extern template class PlanningWorldTpl<S>
 
 DECLARE_TEMPLATE_PLANNING_WORLD(float);
 DECLARE_TEMPLATE_PLANNING_WORLD(double);

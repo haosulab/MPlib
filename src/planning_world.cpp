@@ -8,9 +8,7 @@
 namespace mplib {
 
 // Explicit Template Instantiation Definition ==========================================
-#define DEFINE_TEMPLATE_PLANNING_WORLD(S)     \
-  template struct WorldCollisionResultTpl<S>; \
-  template class PlanningWorldTpl<S>
+#define DEFINE_TEMPLATE_PLANNING_WORLD(S) template class PlanningWorldTpl<S>
 
 DEFINE_TEMPLATE_PLANNING_WORLD(float);
 DEFINE_TEMPLATE_PLANNING_WORLD(double);
