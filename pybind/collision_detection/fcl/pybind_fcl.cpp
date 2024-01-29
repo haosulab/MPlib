@@ -10,6 +10,7 @@
 
 #include "docstring/collision_detection/fcl/fcl.h"
 #include "mplib/types.h"
+#include "mplib/utils/conversion.h"
 #include "pybind_macros.hpp"
 
 namespace py = pybind11;
@@ -224,10 +225,7 @@ void build_pyfcl(py::module &m) {
       .def("get_translation", &CollisionObject::getTranslation)
       .def("get_rotation", &CollisionObject::getRotation)
       .def("set_transformation", [](CollisionObject &a, const Vector7<S> &pose) {
-        Isometry3<S> trans;
-        trans.linear() = Quaternion<S> {pose[3], pose[4], pose[5], pose[6]}.matrix();
-        trans.translation() = pose.head(3);
-        a.setTransform(trans);
+        a.setTransform(toIsometry<S>(pose));
       });
 
   /**********    narrowphase    *******/

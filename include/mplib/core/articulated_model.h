@@ -7,6 +7,7 @@
 #include "mplib/kinematics/types.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
+#include "mplib/utils/conversion.h"
 
 namespace mplib {
 
@@ -140,7 +141,7 @@ class ArticulatedModelTpl {
    *
    * @return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
    */
-  const Vector7<S> &getBasePose() const { return base_pose_; }
+  Vector7<S> getBasePose() const { return toPoseVec<S>(base_pose_); }
 
   /**
    * Set the base pose of the robot.
@@ -173,8 +174,7 @@ class ArticulatedModelTpl {
   VectorX<S> current_qpos_;
 
   // the base pose of the robot
-  Vector7<S> base_pose_;
-  Isometry3<S> base_tf_;
+  Isometry3<S> base_pose_;
 
   bool verbose_;
 };

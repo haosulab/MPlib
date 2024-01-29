@@ -182,12 +182,8 @@ void FCLModelTpl<S>::updateCollisionObjects(
     const std::vector<Vector7<S>> &link_pose) const {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
-    Isometry3<S> tt_i;
-    tt_i.linear() = Quaternion<S> {link_pose[link_i][3], link_pose[link_i][4],
-                                   link_pose[link_i][5], link_pose[link_i][6]}
-                        .matrix();
-    tt_i.translation() = link_pose[link_i].head(3);
-    collision_objects_[i]->setTransform(tt_i * collision_origin2link_poses[i]);
+    collision_objects_[i]->setTransform(toIsometry<S>(link_pose[link_i]) *
+                                        collision_origin2link_poses[i]);
   }
 }
 

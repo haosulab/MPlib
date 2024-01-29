@@ -4,6 +4,8 @@ namespace mplib {
 
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_CONVERSION(S)                                            \
+  template Vector7<S> toPoseVec<S>(const Isometry3<S> &pose);                    \
+  template Isometry3<S> toIsometry<S>(const Vector7<S> &pose_vec);               \
   template Isometry3<S> toIsometry<S>(const pinocchio::SE3Tpl<S> &T);            \
   template Isometry3<S> toIsometry<S>(const urdf::Pose &M);                      \
   template pinocchio::SE3Tpl<S> toSE3<S>(const Isometry3<S> &T);                 \
@@ -13,6 +15,26 @@ namespace mplib {
 
 DEFINE_TEMPLATE_CONVERSION(float);
 DEFINE_TEMPLATE_CONVERSION(double);
+
+template <typename S>
+Vector7<S> toPoseVec(const Isometry3<S> &pose) {
+  const auto q = Quaternion<S> {pose.linear()};
+  Vector7<S> pose_vec;
+  pose_vec.template head<3>() = pose.translation();
+  pose_vec(3) = q.w();
+  pose_vec.template tail<3>() = q.vec();
+  return pose_vec;
+}
+
+template <typename S>
+Isometry3<S> toIsometry(const Vector7<S> &pose_vec) {
+  Isometry3<S> ret;
+  // NOTE: The quaternion is required to be normalized, otherwise it's UB
+  ret.linear() = Quaternion<S> {pose_vec[3], pose_vec[4], pose_vec[5], pose_vec[6]}
+                     .toRotationMatrix();
+  ret.translation() = pose_vec.template head<3>();
+  return ret;
+}
 
 template <typename S>
 Isometry3<S> toIsometry(const pinocchio::SE3Tpl<S> &T) {

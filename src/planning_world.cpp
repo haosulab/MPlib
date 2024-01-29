@@ -4,6 +4,7 @@
 
 #include "mplib/collision_detection/fcl/fcl_utils.h"
 #include "mplib/macros/assert.h"
+#include "mplib/utils/conversion.h"
 
 namespace mplib {
 
@@ -52,11 +53,7 @@ template <typename S>
 void PlanningWorldTpl<S>::updateAttachedTool(const CollisionGeometryPtr &p_geom,
                                              int link_id, const Vector7<S> &pose) {
   attach_link_id_ = link_id;
-  // linear here means the upper left 3x3 matrix, which is not necessarily a rotation
-  // matrix if scaling is involved
-  attach_to_link_pose_.linear() =
-      Quaternion<S> {pose[3], pose[4], pose[5], pose[6]}.matrix();
-  attach_to_link_pose_.translation() = pose.head(3);
+  attach_to_link_pose_ = toIsometry<S>(pose);
   attached_tool_ = std::make_shared<CollisionObject>(p_geom, attach_to_link_pose_);
   has_attach_ = true;
 }
@@ -218,13 +215,8 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
     } else {  // currently, only collide with the point cloud, only support one
               // articulation
       const Vector7<S> link_pose = pinocchio_model->getLinkPose(attach_link_id_);
-      Isometry3<S> pose;
-      pose.linear() =
-          Quaternion<S> {link_pose[3], link_pose[4], link_pose[5], link_pose[6]}
-              .matrix();
-      pose.translation() = link_pose.head(3);
-      pose = pose * attach_to_link_pose_;
-      attached_tool_.get()->setTransform(pose);
+      attached_tool_.get()->setTransform(toIsometry<S>(link_pose) *
+                                         attach_to_link_pose_);
 
       CollisionResult result;
       result.clear();

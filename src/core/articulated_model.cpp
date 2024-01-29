@@ -91,23 +91,15 @@ void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, bool full) {
   if (verbose_) print_verbose("current_qpos ", current_qpos_);
   std::vector<Isometry3<S>> link_pose;
   for (size_t i = 0; i < user_link_names_.size(); i++) {
-    Vector7<S> pose_i = pinocchio_model_->getLinkPose(i);
-    Isometry3<S> tmp_i;
-    tmp_i.linear() =
-        Quaternion<S> {pose_i[3], pose_i[4], pose_i[5], pose_i[6]}.matrix();
-    tmp_i.translation() = pose_i.head(3);
-    tmp_i = base_tf_ * tmp_i;  // base_tf is the pose of the robot base
-    link_pose.push_back(tmp_i);
+    const Vector7<S> pose_i = pinocchio_model_->getLinkPose(i);
+    link_pose.push_back(base_pose_ * toIsometry<S>(pose_i));
   }
   fcl_model_->updateCollisionObjects(link_pose);
 }
 
 template <typename S>
 void ArticulatedModelTpl<S>::setBasePose(const Vector7<S> &pose) {
-  base_pose_ = pose;
-  base_tf_.translation() = pose.head(3);
-  base_tf_.linear() =
-      Quaternion<S> {pose[3], pose[4], pose[5], pose[6]}.toRotationMatrix();
+  base_pose_ = toIsometry<S>(pose);
   // we don't need to update Qpos, but this also updates fcl, which we need
   setQpos(current_qpos_, true);
 }
