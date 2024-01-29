@@ -44,7 +44,7 @@ void PlanningWorldTpl<S>::updatePointCloud(const MatrixX3<S> &vertices, double r
                           static_cast<float>(row(2))},
         true);
   point_cloud_ = std::make_shared<CollisionObject>(
-      std::make_shared<fcl::OcTree<S>>(tree), Transform3<S>::Identity());
+      std::make_shared<fcl::OcTree<S>>(tree), Isometry3<S>::Identity());
   has_point_cloud_ = true;
 }
 
@@ -218,7 +218,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
     } else {  // currently, only collide with the point cloud, only support one
               // articulation
       const Vector7<S> link_pose = pinocchio_model->getLinkPose(attach_link_id_);
-      Transform3<S> pose;
+      Isometry3<S> pose;
       pose.linear() =
           Quaternion<S> {link_pose[3], link_pose[4], link_pose[5], link_pose[6]}
               .matrix();

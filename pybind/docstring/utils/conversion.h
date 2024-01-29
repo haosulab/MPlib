@@ -32,19 +32,19 @@ static const char *__doc_mplib_convertInertial_2 =
 R"doc(
 )doc";
 
+static const char *__doc_mplib_toIsometry =
+R"doc(
+)doc";
+
+static const char *__doc_mplib_toIsometry_2 =
+R"doc(
+)doc";
+
 static const char *__doc_mplib_toSE3 =
 R"doc(
 )doc";
 
 static const char *__doc_mplib_toSE3_2 =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_toTransform =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_toTransform_2 =
 R"doc(
 )doc";
 

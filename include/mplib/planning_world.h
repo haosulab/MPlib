@@ -281,7 +281,7 @@ class PlanningWorldTpl {
   int move_articulation_id_, attach_link_id_;
   CollisionObjectPtr point_cloud_, attached_tool_;
   bool has_point_cloud_, has_attach_;
-  Transform3<S> attach_to_link_pose_;
+  Isometry3<S> attach_to_link_pose_;
 
   // BroadPhaseCollisionManagerPtr normal_manager;
 };

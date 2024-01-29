@@ -4,9 +4,9 @@ namespace mplib {
 
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_CONVERSION(S)                                            \
-  template Transform3<S> toTransform<S>(const pinocchio::SE3Tpl<S> &T);          \
-  template Transform3<S> toTransform<S>(const urdf::Pose &M);                    \
-  template pinocchio::SE3Tpl<S> toSE3<S>(const Transform3<S> &T);                \
+  template Isometry3<S> toIsometry<S>(const pinocchio::SE3Tpl<S> &T);            \
+  template Isometry3<S> toIsometry<S>(const urdf::Pose &M);                      \
+  template pinocchio::SE3Tpl<S> toSE3<S>(const Isometry3<S> &T);                 \
   template pinocchio::SE3Tpl<S> toSE3<S>(const urdf::Pose &M);                   \
   template pinocchio::InertiaTpl<S> convertInertial<S>(const urdf::Inertial &Y); \
   template pinocchio::InertiaTpl<S> convertInertial<S>(const urdf::InertialSharedPtr &Y)
@@ -15,18 +15,18 @@ DEFINE_TEMPLATE_CONVERSION(float);
 DEFINE_TEMPLATE_CONVERSION(double);
 
 template <typename S>
-Transform3<S> toTransform(const pinocchio::SE3Tpl<S> &T) {
-  Transform3<S> ret;
+Isometry3<S> toIsometry(const pinocchio::SE3Tpl<S> &T) {
+  Isometry3<S> ret;
   ret.linear() = T.rotation_impl();
   ret.translation() = T.translation_impl();
   return ret;
 }
 
 template <typename S>
-Transform3<S> toTransform(const urdf::Pose &M) {
+Isometry3<S> toIsometry(const urdf::Pose &M) {
   const urdf::Vector3 &p = M.position;
   const urdf::Rotation &q = M.rotation;
-  Transform3<S> ret;
+  Isometry3<S> ret;
   ret.linear() = Quaternion<S> {static_cast<S>(q.w), static_cast<S>(q.x),
                                 static_cast<S>(q.y), static_cast<S>(q.z)}
                      .matrix();
@@ -36,7 +36,7 @@ Transform3<S> toTransform(const urdf::Pose &M) {
 }
 
 template <typename S>
-pinocchio::SE3Tpl<S> toSE3(const Transform3<S> &T) {
+pinocchio::SE3Tpl<S> toSE3(const Isometry3<S> &T) {
   return pinocchio::SE3Tpl<S>(T.linear(), T.translation());
 }
 

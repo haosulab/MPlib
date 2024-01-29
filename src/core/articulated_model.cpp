@@ -89,10 +89,10 @@ void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, bool full) {
   }
   pinocchio_model_->computeForwardKinematics(current_qpos_);
   if (verbose_) print_verbose("current_qpos ", current_qpos_);
-  std::vector<Transform3<S>> link_pose;
+  std::vector<Isometry3<S>> link_pose;
   for (size_t i = 0; i < user_link_names_.size(); i++) {
     Vector7<S> pose_i = pinocchio_model_->getLinkPose(i);
-    Transform3<S> tmp_i;
+    Isometry3<S> tmp_i;
     tmp_i.linear() =
         Quaternion<S> {pose_i[3], pose_i[4], pose_i[5], pose_i[6]}.matrix();
     tmp_i.translation() = pose_i.head(3);

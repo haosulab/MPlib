@@ -174,7 +174,7 @@ class ArticulatedModelTpl {
 
   // the base pose of the robot
   Vector7<S> base_pose_;
-  Transform3<S> base_tf_;
+  Isometry3<S> base_tf_;
 
   bool verbose_;
 };

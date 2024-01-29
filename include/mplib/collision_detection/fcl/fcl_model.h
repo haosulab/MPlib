@@ -104,7 +104,7 @@ class FCLModelTpl {
    */
   void updateCollisionObjects(const std::vector<Vector7<S>> &link_pose) const;
 
-  void updateCollisionObjects(const std::vector<Transform3<S>> &link_pose) const;
+  void updateCollisionObjects(const std::vector<Isometry3<S>> &link_pose) const;
 
   /**
    * Perform self-collision checking.
@@ -139,7 +139,7 @@ class FCLModelTpl {
   std::vector<fcl::CollisionObjectPtr<S>> collision_objects_;
   std::vector<std::string> collision_link_names_;
   std::vector<std::string> parent_link_names_;
-  std::vector<Transform3<S>> collision_origin2link_poses;
+  std::vector<Isometry3<S>> collision_origin2link_poses;
   std::vector<std::pair<size_t, size_t>> collision_pairs_;
 
   std::vector<std::string> user_link_names_;

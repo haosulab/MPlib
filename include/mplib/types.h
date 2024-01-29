@@ -48,6 +48,6 @@ template <typename S>
 using Quaternion = Eigen::Quaternion<S>;
 
 template <typename S>
-using Transform3 = Eigen::Transform<S, 3, Eigen::Isometry>;
+using Isometry3 = Eigen::Transform<S, 3, Eigen::Isometry>;
 
 }  // namespace mplib

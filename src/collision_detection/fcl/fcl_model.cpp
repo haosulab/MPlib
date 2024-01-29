@@ -69,7 +69,7 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
     for (const auto &geom : link->collision_array) {
       auto geom_model = geom->geometry;
       fcl::CollisionGeometryPtr<S> collision_geometry;
-      auto pose = Transform3<S>::Identity();
+      auto pose = Isometry3<S>::Identity();
       if (geom_model->type == urdf::Geometry::MESH) {
         const urdf::MeshSharedPtr urdf_mesh =
             urdf::dynamic_pointer_cast<urdf::Mesh>(geom_model);
@@ -117,7 +117,7 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
       collision_objects_.push_back(obj);
       collision_link_names_.push_back(link->name);
       parent_link_names_.push_back(parent_link_name);
-      collision_origin2link_poses.push_back(toTransform<S>(geom->origin));
+      collision_origin2link_poses.push_back(toIsometry<S>(geom->origin));
     }
   for (const auto &child : link->child_links) dfsParseTree(child, link->name);
 }
@@ -182,7 +182,7 @@ void FCLModelTpl<S>::updateCollisionObjects(
     const std::vector<Vector7<S>> &link_pose) const {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
-    Transform3<S> tt_i;
+    Isometry3<S> tt_i;
     tt_i.linear() = Quaternion<S> {link_pose[link_i][3], link_pose[link_i][4],
                                    link_pose[link_i][5], link_pose[link_i][6]}
                         .matrix();
@@ -193,7 +193,7 @@ void FCLModelTpl<S>::updateCollisionObjects(
 
 template <typename S>
 void FCLModelTpl<S>::updateCollisionObjects(
-    const std::vector<Transform3<S>> &link_pose) const {
+    const std::vector<Isometry3<S>> &link_pose) const {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
     collision_objects_[i]->setTransform(link_pose[link_i] *
