@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -330,8 +329,6 @@ class PinocchioModelTpl {
       int max_iter = 1000, double dt = 1e-1, double damp = 1e-12);
 
  private:
-  static constexpr std::string_view joint_prefix_ {"JointModel"};
-
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model, const Vector3<S> &gravity);
 
   void dfsParseTree(const urdf::LinkConstSharedPtr &link,

@@ -340,16 +340,16 @@ MatrixX<S> PinocchioModelTpl<S>::getJointLimit(size_t index, bool user) const {
                              getJointNames(user)[index] + " has dim " +
                              std::to_string(dim_joint));
   MatrixX<S> ret;
-  if (joint_type[joint_prefix_.size()] == 'P' ||
-      (joint_type[joint_prefix_.size()] == 'R' &&
-       joint_type[joint_prefix_.size() + 1] != 'U')) {
+  if (joint_type[pinocchio::joint_type_prefix.size()] == 'P' ||
+      (joint_type[pinocchio::joint_type_prefix.size()] == 'R' &&
+       joint_type[pinocchio::joint_type_prefix.size() + 1] != 'U')) {
     ret = MatrixX<S>(nq, 2);
     for (size_t j = 0; j < nq; j++) {
       ret(j, 0) = model_.lowerPositionLimit[start_idx + j];
       ret(j, 1) = model_.upperPositionLimit[start_idx + j];
     }
-  } else if (joint_type[joint_prefix_.size()] == 'R' &&
-             joint_type[joint_prefix_.size() + 1] == 'U') {
+  } else if (joint_type[pinocchio::joint_type_prefix.size()] == 'R' &&
+             joint_type[pinocchio::joint_type_prefix.size() + 1] == 'U') {
     ret = MatrixX<S>(1, 2);
     ret(0, 0) = -3.14159265359, ret(0, 1) = 3.14159265359;
   }

@@ -1,7 +1,6 @@
 #include "mplib/planning/ompl/ompl_planner.h"
 
 #include <memory>
-#include <string_view>
 
 #include <ompl/base/ConstrainedSpaceInformation.h>
 #include <ompl/base/spaces/SO2StateSpace.h>
@@ -36,8 +35,6 @@ void OMPLPlannerTpl<S>::buildConstrainedAmbientStateSpace() {
   upper_joint_limits_.clear();
   is_revolute_.clear();
 
-  constexpr std::string_view joint_prefix {"JointModel"};
-
   ASSERT(world_->getArticulations().size() == 1,
          "only support one robot for constrained planning");
   const auto robot = world_->getArticulations()[0];
@@ -56,11 +53,11 @@ void OMPLPlannerTpl<S>::buildConstrainedAmbientStateSpace() {
     const auto joint_type = joint_types[pinocchio_id];
     // P stands for PRISMATIC, R stands for REVOLUTE, U stands for UNBOUNDED (continuous
     // joint)
-    if (joint_type[joint_prefix.size()] == 'R')
-      ASSERT(joint_type[joint_prefix.size() + 1] != 'U',
+    if (joint_type[pinocchio::joint_type_prefix.size()] == 'R')
+      ASSERT(joint_type[pinocchio::joint_type_prefix.size() + 1] != 'U',
              "Do not support continuous revolute joint for constrained planning");
-    if (joint_type[joint_prefix.size()] == 'P' ||
-        joint_type[joint_prefix.size()] == 'R') {
+    if (joint_type[pinocchio::joint_type_prefix.size()] == 'P' ||
+        joint_type[pinocchio::joint_type_prefix.size()] == 'R') {
       const auto bound = pinocchio_model->getJointLimit(pinocchio_id);
       ASSERT(bound.rows() == 1,
              "Only support simple joint with dim of joint being one");
@@ -78,8 +75,6 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
   lower_joint_limits_.clear();
   upper_joint_limits_.clear();
   is_revolute_.clear();
-
-  constexpr std::string_view joint_prefix {"JointModel"};
 
   const auto robots = world_->getArticulations();
   for (size_t robot_idx = 0; robot_idx < robots.size(); ++robot_idx) {
@@ -101,10 +96,10 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
 
       const auto pinocchio_id = indices[i];
       const auto joint_type = joint_types[pinocchio_id];
-      if (joint_type[joint_prefix.size()] == 'P' ||
-          (joint_type[joint_prefix.size()] == 'R' &&
-           joint_type[joint_prefix.size() + 1] != 'U'))  // PRISMATIC and REVOLUTE
-      {
+      // PRISMATIC or REVOLUTE joint
+      if (joint_type[pinocchio::joint_type_prefix.size()] == 'P' ||
+          (joint_type[pinocchio::joint_type_prefix.size()] == 'R' &&
+           joint_type[pinocchio::joint_type_prefix.size() + 1] != 'U')) {
         const auto bound = pinocchio_model->getJointLimit(pinocchio_id);
         const auto subspace = std::make_shared<ob::RealVectorStateSpace>(bound.rows());
         auto ob_bounds = ob::RealVectorBounds(bound.rows());
@@ -117,17 +112,17 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
         subspace->setBounds(ob_bounds);
         cs_->addSubspace(subspace, 1.0);
         ++dim_cnt;
-      } else if (joint_type[joint_prefix.size()] == 'R' &&
-                 joint_type[joint_prefix.size() + 1] == 'U') {
+      } else if (joint_type[pinocchio::joint_type_prefix.size()] == 'R' &&
+                 joint_type[pinocchio::joint_type_prefix.size() + 1] == 'U') {
         cs_->addSubspace(std::make_shared<ob::SO2StateSpace>(), 1.0);
         lower_joint_limits_.push_back(-PI);
         upper_joint_limits_.push_back(PI);
         ++dim_cnt;
       }
-      if (joint_type[joint_prefix.size()] == 'R' ||
-          joint_type[joint_prefix.size()] == 'P') {
-        if (joint_type[joint_prefix.size()] == 'R' &&
-            joint_type[joint_prefix.size() + 1] != 'U')
+      if (joint_type[pinocchio::joint_type_prefix.size()] == 'R' ||
+          joint_type[pinocchio::joint_type_prefix.size()] == 'P') {
+        if (joint_type[pinocchio::joint_type_prefix.size()] == 'R' &&
+            joint_type[pinocchio::joint_type_prefix.size() + 1] != 'U')
           is_revolute_.push_back(true);
         else
           is_revolute_.push_back(false);
