@@ -23,8 +23,8 @@ Plan with sampling-based algorithms
 
 .. literalinclude:: ../../../mplib/examples/demo_setup.py
    :dedent: 0
-   :lines: 169-177
-   :emphasize-lines: 2
+   :start-after: # plan_qpos_to_pose ankor
+   :end-before: # plan_qpos_to_pose ankor end
 
 Specifically, ``planner.plan_qpos_to_pose()`` takes two required arguments as input. The first one is the target pose of the ``move_group`` link. It's a 7-dim list, where the first three elements describe the position part, and the remaining four elements describe the quaternion (wxyz) for the rotation part. **Note that the pose is relative to the world frame**. Normally, the base link of the robot is the world frame unless you have called ``set_base_pose(new_pose)`` in on the planner. You can also temporarily plan w.r.t. the robot base by passing in ``wrt_world=False``.
 
@@ -54,7 +54,8 @@ Follow a path
 
 .. literalinclude:: ../../../mplib/examples/demo_setup.py
    :dedent: 0
-   :lines: 109-130
+   :start-after: # follow path ankor
+   :end-before: # follow path ankor end
 
 .. note::
     If you find your robot doesn't move as expected, please **double-check** your controller, especially the controller's parameters. In many cases, the planner finds a good path while the controller fails to follow the path.
@@ -74,7 +75,8 @@ You can call ``planner.plan_screw()`` to plan a path with screw motion. Similar 
 
 .. literalinclude:: ../../../mplib/planner.py
    :dedent: 0
-   :lines: 701-711
+   :start-after: # plan_screw ankor
+   :end-before: # plan_screw ankor end
 
 However, planning with screw motion only succeeds when there is no collision during the planning since it can not detour or replan. We thus recommend use ``planner.plan_screw()`` for some simple tasks or combined with ``planner.plan_qpos_to_pose()``. As shown in the code, we first try ``planner.plan_screw()``, if it fails (e.g., collision during the planning), we then turn to the sampling-based algorithms. Other arguments are the same with ``planner.plan_qpos_to_pose()``.
 
@@ -86,19 +88,22 @@ In this example, we create some boxes inside the simulation like so:
 
 .. literalinclude:: ../../../mplib/examples/demo.py
    :dedent: 0
-   :lines: 34-50
+   :start-after: # boxes ankor
+   :end-before: # boxes ankor end
 
-We then find the target poses needed to reach the boxes:
+We then find the target poses needed to reach the boxes. The poses are specified in [x,y,z,qw,qx,qy,qz]:
 
 .. literalinclude:: ../../../mplib/examples/demo.py
    :dedent: 0
-   :lines: 57-61
+   :start-after: # target poses ankor
+   :end-before: # target poses ankor end
 
 Then, we plan and execute the motion:
 
 .. literalinclude:: ../../../mplib/examples/demo.py
    :dedent: 0
-   :lines: 62-78
+   :start-after: # execute motion ankor
+   :end-before: # execute motion ankor end
 
 .. figure:: assets/screw.gif
    :width: 320px

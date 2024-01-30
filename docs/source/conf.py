@@ -28,7 +28,6 @@ exclude_patterns = []
 
 import os
 import shutil
-sys.path.insert(0, os.path.abspath(os.path.join('..', '..', 'mplib')))
 
 def copy_readme_gif(app, docname):
   if app.builder.name == 'html':

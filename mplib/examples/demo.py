@@ -33,7 +33,7 @@ class PlanningDemo(DemoSetup):
         table = builder.build_kinematic(name="table")
         table.set_pose(sapien.Pose([0.56, 0, -0.025]))
 
-        # boxes
+        # boxes ankor
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.06])
         builder.add_box_visual(half_size=[0.02, 0.02, 0.06], color=[1, 0, 0])
@@ -51,6 +51,7 @@ class PlanningDemo(DemoSetup):
         builder.add_box_visual(half_size=[0.02, 0.02, 0.07], color=[0, 0, 1])
         blue_cube = builder.build(name="blue_cube")
         blue_cube.set_pose(sapien.Pose([0.6, 0.1, 0.07]))
+        # boxes ankor end
 
     def demo(self):
         """
@@ -58,11 +59,14 @@ class PlanningDemo(DemoSetup):
         the position of a box.
         Pick up the box, and set it down 0.1m to the right of its original position.
         """
+        # target poses ankor
         poses = [
             [0.4, 0.3, 0.12, 0, 1, 0, 0],
             [0.2, -0.3, 0.08, 0, 1, 0, 0],
             [0.6, 0.1, 0.14, 0, 1, 0, 0],
         ]
+        # target poses ankor end
+        # execute motion ankor
         for i in range(3):
             pose = poses[i]
             pose[2] += 0.2
@@ -80,7 +84,7 @@ class PlanningDemo(DemoSetup):
             self.open_gripper()
             pose[2] += 0.12
             self.move_to_pose(pose)
-
+        # execute motion ankor end
 
 if __name__ == "__main__":
     demo = PlanningDemo()
