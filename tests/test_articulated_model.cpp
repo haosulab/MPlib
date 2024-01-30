@@ -1,8 +1,10 @@
+#include <string>
+
 #include <Eigen/Core>
 
-#include "mplib/articulated_model.h"
+#include "mplib/core/articulated_model.h"
 
-using ArticulatedModel = ArticulatedModelTpl<double>;
+using ArticulatedModel = mplib::ArticulatedModelTpl<double>;
 
 int main() {
   // set up an articulated model
