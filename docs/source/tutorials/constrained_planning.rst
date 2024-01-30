@@ -15,13 +15,15 @@ The constrained function is a :math:`R^d \rightarrow R` function that evaulates 
 
 .. literalinclude:: ../../../mplib/examples/constrained_planning.py
    :language: python
-   :lines: 48-52
+   :start-after: # constraint function ankor
+   :end-before: # constraint function ankor end
 
 Moreover, due to the projection-based method, we also need to provide the jacobian of the constrained function. In this example, we define the jacobian of the constrained function as follows.
 
 .. literalinclude:: ../../../mplib/examples/constrained_planning.py
    :language: python
-   :lines: 62-71
+   :start-after: # constraint jacobian ankor
+   :end-before: # constraint jacobian ankor end
 
 One can usually calculate the jacobian of the constraint by manipulating the jacobian of the forward kinematics. We need the jacobian calculation to be fast or else the planner will be slow. In the case above, we used the single link jacobian of the endeffector and used its rotational part to calculate how much the z-axis of the endeffector is changing.
 
@@ -32,5 +34,6 @@ The interface to the constrained planner is just some parameters when calling th
 
 .. literalinclude:: ../../../mplib/examples/constrained_planning.py
    :language: python
-   :lines: 99-109
-   :emphasize-lines: 8-10
+   :start-after: # with constraint
+   :end-before: # without constraint
+   :emphasize-lines: 12-14

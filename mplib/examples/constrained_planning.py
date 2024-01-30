@@ -48,13 +48,13 @@ class ConstrainedPlanningDemo(DemoSetup):
         See [ompl constrained planning](https://ompl.kavrakilab.org/constrainedPlanning.html)
         for more details.
         """
-
+        # constraint function ankor
         def f(x, out):
             self.planner.robot.set_qpos(x)
             out[0] = (
                 self.get_eef_z().dot(np.array([0, 0, -1])) - 0.966
             )  # maintain 15 degrees w.r.t. -z axis
-
+        # constraint function ankor end
         return f
 
     def make_j(self):
@@ -63,7 +63,7 @@ class ConstrainedPlanningDemo(DemoSetup):
         This is needed because the planner uses the jacobian to project a random sample
         to the constraint manifold.
         """
-
+        # constraint jacobian ankor
         def j(x, out):
             full_qpos = self.planner.pad_qpos(x)
             jac = self.planner.robot.get_pinocchio_model().compute_single_link_jacobian(
@@ -74,7 +74,7 @@ class ConstrainedPlanningDemo(DemoSetup):
                 out[i] = np.cross(rot_jac[:, i], self.get_eef_z()).dot(
                     np.array([0, 0, -1])
                 )
-
+        # constraint jacobian ankor end
         return j
 
     def demo(self):

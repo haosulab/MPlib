@@ -10,19 +10,23 @@ The planner also has the ability to temporarily fix certain joints during planni
 
 .. literalinclude:: ../../../mplib/examples/two_stage_motion.py
    :language: python
-   :lines: 25-61
+   :start-after: self.setup_scene()
+   :end-before: # Set initial joint positions
 
 The optional `link_names` and `joint_names` parameters used to order the joints and links in a certain way are in this case used to show what the joints of the models are. Then, we set up the planning scene as usual and first move the arm on the track before moving the arm itself to grab the object.
 
 .. literalinclude:: ../../../mplib/examples/two_stage_motion.py
    :language: python
-   :lines: 152-174
+   :start-after: # pickup ankor
+   :end-before: # pickup ankor end
+   :emphasize-lines: 14
 
 Notice we have abstracted away how to decouple this motion into two stages. Here is the function definition:
 
 .. literalinclude:: ../../../mplib/examples/two_stage_motion.py
    :language: python
-   :lines: 123-146
+   :start-after: # move_in_two_stage ankor
+   :end-before: # move_in_two_stage ankor end
    :emphasize-lines: 18
 
 The highlighted line is how we ignore the arm joints during planning. We ignore joints 2-9, keeping only joint 0 and 1 active. We then do the same thing except the joints fixed are 0 and 1, and the active joints are 2-9.
