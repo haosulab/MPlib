@@ -15,20 +15,19 @@ PANDA_SPEC = {
 }
 
 class TestPlannerSimple(unittest.TestCase):
-  def __init__(self, methodName: str = "runTest") -> None:
-    super().__init__(methodName)
+  def setUp(self):
     self.planner = Planner(**PANDA_SPEC)
     self.target_pose = [0.4, 0.3, 0.12, 0, 1, 0, 0]
     self.init_qpos = np.array([0, 0.2, 0, -2.6, 0, 3.0, 0.8, 0, 0])
     self.joint_limits = [[-2.8973, 2.8973],
-                         [-1.7628, 1.7628],
-                         [-2.8973, 2.8973],
-                         [-3.0718, -0.0698],
-                         [-2.8973, 2.8973],
-                         [-0.0175, 3.7525],
-                         [-2.8973, 2.8973],
-                         [0, 0.04],
-                         [0, 0.04]]
+               [-1.7628, 1.7628],
+               [-2.8973, 2.8973],
+               [-3.0718, -0.0698],
+               [-2.8973, 2.8973],
+               [-0.0175, 3.7525],
+               [-2.8973, 2.8973],
+               [0, 0.04],
+               [0, 0.04]]
 
   def get_end_effector_pose(self):
     ee_idx = self.planner.link_name_2_idx[self.planner.move_group]
