@@ -715,7 +715,7 @@ class Planner:
             constraint_function,
             constraint_jacobian,
             constraint_tolerance,
-            verbose,
+            verbose=verbose,
         )
 
     def plan_screw(

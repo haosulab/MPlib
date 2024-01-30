@@ -23,9 +23,12 @@ void build_pyfixed_joint(py::module &m) {
                    DOC(mplib, planning, ompl, FixedJointTpl, operator_eq));
   PyFixedJoint.def(py::self < py::self,
                    DOC(mplib, planning, ompl, FixedJointTpl, operator_lt));
-  PyFixedJoint.def_readwrite("articulation_idx", &FixedJoint::articulation_idx);
-  PyFixedJoint.def_readwrite("joint_idx", &FixedJoint::joint_idx);
-  PyFixedJoint.def_readwrite("value", &FixedJoint::value);
+  PyFixedJoint.def("__hash__", [](const FixedJoint &self) {
+    return py::hash(py::make_tuple(self.articulation_idx, self.joint_idx));
+  });
+  PyFixedJoint.def_readonly("articulation_idx", &FixedJoint::articulation_idx);
+  PyFixedJoint.def_readonly("joint_idx", &FixedJoint::joint_idx);
+  PyFixedJoint.def_readonly("value", &FixedJoint::value);
 }
 
 }  // namespace mplib::planning::ompl
