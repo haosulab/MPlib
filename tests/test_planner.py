@@ -4,6 +4,7 @@ import unittest
 from transforms3d.quaternions import mat2quat, quat2mat
 from mplib import Planner
 import mplib
+from mplib.pymp.collision_detection import fcl
 import trimesh
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -107,9 +108,9 @@ class TestPlannerSimple(unittest.TestCase):
     self.assertFalse(self.planner.check_for_self_collision(self.planner.robot, collision_free_qpos))
 
   def test_env_collision(self):
-    floor = mplib.fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
+    floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
     # create a collision object for the floor, with a 10cm offset in the z direction
-    floor_fcl_collision_object = mplib.fcl.CollisionObject(
+    floor_fcl_collision_object = fcl.CollisionObject(
         floor, [0, 0, -0.1], [1, 0, 0, 0]
     )
     # update the planning world with the floor collision object
@@ -137,9 +138,9 @@ class TestPlannerSimple(unittest.TestCase):
     self.assertGreaterEqual(num_success, expected_least_num_success)
 
     # now put down a floor and check that the robot can't reach the pose
-    floor = mplib.fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
+    floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
     # create a collision object for the floor, with a 10cm offset in the z direction
-    floor_fcl_collision_object = mplib.fcl.CollisionObject(
+    floor_fcl_collision_object = fcl.CollisionObject(
         floor, [0, 0, -0.1], [1, 0, 0, 0]
     )
     status, _ = self.planner.IK([0.4,0.3,-0.1,0,1,0,0], self.init_qpos)
