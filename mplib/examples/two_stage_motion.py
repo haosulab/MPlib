@@ -3,8 +3,8 @@ import sys
 import numpy as np
 import sapien.core as sapien
 
-import mplib
 from mplib.examples.demo_setup import DemoSetup
+from mplib.pymp.collision_detection import fcl
 
 
 class PlanningDemo(DemoSetup):
@@ -159,8 +159,8 @@ class PlanningDemo(DemoSetup):
 
         self.add_point_cloud()
         # also add the target as a collision object so we don't hit it
-        fcl_red_cube = mplib.planner.fcl.Box([0.04, 0.04, 0.14])
-        collision_object = mplib.planner.fcl.CollisionObject(
+        fcl_red_cube = fcl.Box([0.04, 0.04, 0.14])
+        collision_object = fcl.CollisionObject(
             fcl_red_cube, [0.7, 0, 0.07], [1, 0, 0, 0]
         )
         self.planner.planning_world.set_normal_object("target", collision_object)
