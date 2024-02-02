@@ -67,7 +67,7 @@ docker run -it --rm \
 echo_info "Removing previous stubs under 'mplib/'"
 find mplib -name "*.pyi" -exec rm -v {} \;
 echo_info "Moving generated stubs into 'mplib/pymp'"
-mv -v stubs/mplib/pymp mplib
+mv -v stubs/mplib/pymp/* mplib/pymp
 echo_info "Removing 'stubs/'"
 rm -rfv stubs/
 

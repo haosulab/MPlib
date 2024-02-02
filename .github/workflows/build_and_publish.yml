@@ -20,7 +20,7 @@ jobs:
         with:
           submodules: "true"
       - name: Build wheels and test
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.4
         env:
           CIBW_BUILD: ${{ matrix.pyver }}-*
       - name: Upload wheel artifacts

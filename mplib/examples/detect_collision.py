@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import mplib
 from mplib.examples.demo_setup import DemoSetup
+from mplib.pymp.collision_detection import fcl
 
 
 class DetectCollisionDemo(DemoSetup):
@@ -40,9 +40,9 @@ class DetectCollisionDemo(DemoSetup):
            This will cause the planner to timeout
         6. Remove the floor and check for env-collision returns no collision
         """
-        floor = mplib.fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
+        floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
         # create a collision object for the floor, with a 10cm offset in the z direction
-        floor_fcl_collision_object = mplib.fcl.CollisionObject(
+        floor_fcl_collision_object = fcl.CollisionObject(
             floor, [0, 0, -0.1], [1, 0, 0, 0]
         )
         # update the planning world with the floor collision object

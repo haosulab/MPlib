@@ -24,7 +24,7 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_mplib_PlanningWorld =
+static const char *__doc_mplib_PlanningWorldTpl =
 R"doc(PlanningWorld
 
 - Begin first unordered list element. Volutpat blandit aliquam etiam erat
@@ -35,7 +35,7 @@ R"doc(PlanningWorld
 - Begin third unordered list element. Hac habitasse platea dictumst quisque
   sagittis purus sit. End third unordered list element.)doc";
 
-static const char *__doc_mplib_PlanningWorld_attachObject =
+static const char *__doc_mplib_PlanningWorldTpl_attachObject =
 R"doc(
 Attaches existing normal object to specified link of articulation.
 
@@ -54,6 +54,10 @@ and touch_links.
 :return: the attached object
 :raises ValueError: if normal object with given name does not exist or if
     planned articulation with given name does not exist)doc";
+
+static const char *__doc_mplib_compoundstate2vector =
+R"doc(
+)doc";
 
 /* ----- Begin of custom docstring section ----- */
 

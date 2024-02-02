@@ -150,16 +150,6 @@ SKIP_RECURSE_NAMES = [
     "tinyxml2",
 ]
 
-# Filter based on partial names.
-SKIP_PARTIAL_NAMES = [
-    "operator new",
-    "operator delete",
-    "operator=",
-    "operator->",
-    "operator<<",
-    "operator>>",
-]
-
 # Filter based on access.
 SKIP_ACCESS = [
     AccessSpecifier.PRIVATE,
@@ -189,9 +179,6 @@ def is_accepted_cursor(cursor, name_chain) -> bool:
     for piece in name_chain + (name,):
         if piece in SKIP_RECURSE_NAMES:
             return False
-    for skip_partial_name in SKIP_PARTIAL_NAMES:
-        if skip_partial_name in name:
-            return False
     if cursor.access_specifier in SKIP_ACCESS:
         return False
     # TODO(eric.cousineau): Remove `cursor.is_default_method()`? May make
@@ -199,6 +186,17 @@ def is_accepted_cursor(cursor, name_chain) -> bool:
     if cursor.kind in CLASS_KINDS and not cursor.is_definition():
         # Don't process forward declarations.  If we did, we'd define the class
         # overview documentation twice; both cursors have a .raw_comment value.
+        return False
+
+    # Explicit Template Instantiation Declaration
+    init_token_str = " ".join([token.spelling for token in cursor.get_tokens()][:3])
+    if (
+        cursor.kind == CursorKind.CLASS_DECL
+        and init_token_str == "extern template class"
+    ) or (
+        cursor.kind == CursorKind.STRUCT_DECL
+        and init_token_str == "extern template struct"
+    ):
         return False
     return True
 

@@ -72,7 +72,7 @@ build_wheel() {
   docker cp . "${temp_cont_name}:/MPlib"
   docker start -a "$temp_cont_name"
   docker cp "${temp_cont_name}:/MPlib/wheelhouse" .
-  docker cp "${temp_cont_name}:/MPlib/python/docstring" ./python
+  docker cp "${temp_cont_name}:/MPlib/pybind/docstring" ./pybind
   docker rm -f "$temp_cont_name"
 }
 

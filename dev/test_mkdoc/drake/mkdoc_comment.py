@@ -497,9 +497,7 @@ def process_doxygen_commands(s):
         ("startuml", "enduml"),
         ("xmlonly", "endxmlonly"),
     ):
-        s = re.sub(
-            rf"[@\\]{start_}\s?(.*?)\s?[@\\]{end_}", r"", s, flags=re.DOTALL
-        )
+        s = re.sub(rf"[@\\]{start_}\s?(.*?)\s?[@\\]{end_}", r"", s, flags=re.DOTALL)
 
         # Some command pairs may bridge multiple comment blocks, so individual
         # start and end commands may appear alone.
