@@ -3,6 +3,7 @@ import numpy as np
 import unittest
 from transforms3d.quaternions import mat2quat, quat2mat
 import mplib
+from mplib.pymp.collision_detection import fcl
 import trimesh
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -37,7 +38,7 @@ ALL_JOINTS = ['panda_joint1',
 
 class TestArticulation(unittest.TestCase):
   def setUp(self):
-    self.robot = mplib.articulation.ArticulatedModel(
+    self.robot = mplib.ArticulatedModel(
       PANDA_SPEC["urdf"],
       PANDA_SPEC["srdf"],
       gravity=[0, 0, -9.81],
@@ -66,7 +67,7 @@ class TestArticulation(unittest.TestCase):
 
   def test_get_fcl_model(self):
     fcl_model = self.robot.get_fcl_model()
-    self.assertIsInstance(fcl_model, mplib.fcl.FCLModel)
+    self.assertIsInstance(fcl_model, fcl.FCLModel)
 
   def test_get_move_group_end_effectors(self):
     end_effectors = self.robot.get_move_group_end_effectors()
@@ -99,7 +100,7 @@ class TestArticulation(unittest.TestCase):
 
   def test_get_pinocchio_model(self):
     pinocchio_model = self.robot.get_pinocchio_model()
-    self.assertIsInstance(pinocchio_model, mplib.pinocchio.PinocchioModel)
+    self.assertIsInstance(pinocchio_model, mplib.pymp.kinematics.pinocchio.PinocchioModel)
 
   def test_get_qpos(self):
     qpos = self.robot.get_qpos()
