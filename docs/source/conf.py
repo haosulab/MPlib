@@ -3,9 +3,6 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
-import shutil
-
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -36,15 +33,3 @@ exclude_patterns = []
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
-
-
-def copy_readme_gif(app, docname):
-    if app.builder.name == "html":
-        print(app.srcdir)
-        source = os.path.join(app.srcdir, "..", "..", "demo.gif")
-        target = os.path.join(app.outdir, "demo.gif")
-        shutil.copyfile(source, target)
-
-
-def setup(app):
-    app.connect("build-finished", copy_readme_gif)
