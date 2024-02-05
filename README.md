@@ -25,4 +25,4 @@ pip install mplib
 
 ## Usage
 
-See our [tutorial](https://sapien.ucsd.edu/docs/latest/tutorial/motion_planning/getting_started.html) for detailed usage and examples.
+See our [tutorial](https://motion-planning-lib.readthedocs.io/latest/tutorials/getting_started.html) for detailed usage and examples.
