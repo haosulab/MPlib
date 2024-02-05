@@ -72,27 +72,27 @@ class PlanningDemo(DemoSetup):
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.4, 0.4, 0.025])
         builder.add_box_visual(half_size=[0.4, 0.4, 0.025])
-        self.table = builder.build_kinematic(name="table")
-        self.table.set_pose(sapien.Pose([0.56, 0, -0.025]))
+        table = builder.build_kinematic(name="table")
+        table.set_pose(sapien.Pose([0.56, 0, -0.025]))
 
         # boxes
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.06])
         builder.add_box_visual(half_size=[0.02, 0.02, 0.06], color=[1, 0, 0])
-        self.red_cube = builder.build(name="red_cube")
-        self.red_cube.set_pose(sapien.Pose([0.7, 0, 0.06]))
+        red_cube = builder.build(name="red_cube")
+        red_cube.set_pose(sapien.Pose([0.7, 0, 0.06]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.04, 0.04, 0.005])
         builder.add_box_visual(half_size=[0.04, 0.04, 0.005], color=[0, 1, 0])
-        self.green_cube = builder.build(name="green_cube")
-        self.green_cube.set_pose(sapien.Pose([0.4, 0.3, 0.005]))
+        green_cube = builder.build(name="green_cube")
+        green_cube.set_pose(sapien.Pose([0.4, 0.3, 0.005]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.05, 0.2, 0.1])
         builder.add_box_visual(half_size=[0.05, 0.2, 0.1], color=[0, 0, 1])
-        self.blue_cube = builder.build(name="blue_cube")
-        self.blue_cube.set_pose(sapien.Pose([0.55, 0, 0.1]))
+        blue_cube = builder.build(name="blue_cube")
+        blue_cube.set_pose(sapien.Pose([0.55, 0, 0.1]))
 
     def add_point_cloud(self):
         """see collision_avoidance.py for details"""
@@ -123,7 +123,7 @@ class PlanningDemo(DemoSetup):
             fixed_joint_indices=range(2),
         )
         return result
-
+    # move_in_two_stage ankor
     def move_in_two_stage(self, pose, has_attach=False):
         """
         first, we do a full IK but only generate motions for the base
@@ -148,12 +148,13 @@ class PlanningDemo(DemoSetup):
         result = self.plan_without_base(pose, has_attach)
         # execute the planned path
         self.follow_path(result)
-
+    # move_in_two_stage ankor end
     def demo(self):
         """
         We reach the pick up and drop off poses in two stages,
         first by moving the base only and then the arm only
         """
+        # pickup ankor
         pickup_pose = [0.7, 0, 0.12, 0, 1, 0, 0]
         delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]
 
@@ -168,6 +169,7 @@ class PlanningDemo(DemoSetup):
         # go above the target
         pickup_pose[2] += 0.2
         self.move_in_two_stage(pickup_pose)
+        # pickup ankor end
         self.open_gripper()
         # move down to pick
         self.planner.planning_world.remove_normal_object(

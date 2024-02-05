@@ -1,7 +1,3 @@
-"""
-.. include:: ./README.md
-"""
-
 from importlib.metadata import version
 
 from mplib.planner import Planner

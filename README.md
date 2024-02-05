@@ -1,7 +1,7 @@
 # MPlib
 
 <p align="center">
-  <img src="demo.gif">
+  <img src="https://raw.githubusercontent.com/haosulab/MPlib/main/docs/demo.gif">
 </p>
 
 [![PyPI - Version](https://img.shields.io/pypi/v/mplib)](https://pypi.org/project/mplib/)
