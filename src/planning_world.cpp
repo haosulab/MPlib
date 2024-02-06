@@ -205,13 +205,12 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
     }
   }
 
-  if (use_attach_ &&
-      use_point_cloud_) {  // TODO: attached box with other articulated objects
-    if (has_attach_ == false) {
-      print_warning("No Attached Box Provided but use_attach is true!");
-    }
-    if (has_point_cloud_ == false) {
-      print_warning("No Point Cloud Provided!");
+  if (use_attach_ && use_point_cloud_) {
+    if (!has_attach_ || !has_point_cloud_) {
+      if (!has_attach_)
+        print_warning("No Attached Box Provided but use_attach is true!");
+      if (!has_point_cloud_)
+        print_warning("No Point Cloud Provided but use_point_cloud is true!");
     } else {  // currently, only collide with the point cloud, only support one
               // articulation
       const Vector7<S> link_pose = pinocchio_model->getLinkPose(attach_link_id_);

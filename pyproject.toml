@@ -36,6 +36,9 @@ classifiers=[
   "Topic :: Utilities",
 ]
 
+[tool.setuptools.package-data]
+mplib = ["examples/*.md", "examples/*.png"]  # include all md files in mplib/examples
+
 [tool.setuptools-git-versioning]
 enabled = true
 version_file = "VERSION"
@@ -133,6 +136,10 @@ skip = ["*-musllinux_*", "pp*"]
 build-frontend = "build"
 manylinux-x86_64-image = "kolinguo/mplib-build:latest"
 container-engine = { name = "docker", create-args = ["--rm"]}
+# only run tests on python3.10
+test-requires = ["trimesh", "transforms3d"]
+test-command = "python3.10 -m unittest discover -s {project}/tests -v"
+test-skip = ["cp37-*", "cp38-*", "cp39-*", "cp311-*", "cp312-*"]
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64"]
