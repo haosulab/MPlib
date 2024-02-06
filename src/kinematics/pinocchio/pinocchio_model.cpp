@@ -3,6 +3,7 @@
 #include <pinocchio/algorithm/jacobian.hpp>
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
+#include <pinocchio/algorithm/frames.hpp>
 #include <urdf_parser/urdf_parser.h>
 
 #include "mplib/macros/assert.h"
@@ -523,6 +524,8 @@ Vector7<S> PinocchioModelTpl<S>::getJointPose(size_t index) const {
 
 template <typename S>
 void PinocchioModelTpl<S>::computeFullJacobian(const VectorX<S> &qpos) {
+  ASSERT(static_cast<size_t>(qpos.size()) == static_cast<size_t>(model_.nv),
+         "qpos size mismatch");
   pinocchio::computeJointJacobians(model_, data_, qposUser2Pinocchio(qpos));
 }
 
@@ -550,19 +553,14 @@ Matrix6X<S> PinocchioModelTpl<S>::computeSingleLinkJacobian(const VectorX<S> &qp
                                                             size_t index, bool local) {
   ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "link index out of bound");
+  ASSERT(static_cast<size_t>(qpos.size()) == static_cast<size_t>(model_.nv),
+         "qpos size mismatch");
   const auto frameId = link_index_user2pinocchio_[index];
-  const auto jointId = model_.frames[frameId].parent;
-
-  const auto link2joint = model_.frames[frameId].placement;
-  const auto joint2world = data_.oMi[jointId];
-
   Matrix6X<S> J(6, model_.nv);
   J.fill(0);
-  pinocchio::computeJointJacobian(model_, data_, qposUser2Pinocchio(qpos), jointId, J);
-  if (local)
-    J = link2joint.toActionMatrixInverse() * J;
-  else
-    J = joint2world.toActionMatrix() * J;
+  auto rf = local ? pinocchio::LOCAL : pinocchio::WORLD;
+  pinocchio::computeFrameJacobian(model_, data_, qposUser2Pinocchio(qpos), frameId,
+                                  rf, J);
   return J * v_map_user2pinocchio_;
 }
 

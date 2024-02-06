@@ -254,7 +254,7 @@ class PinocchioModelTpl {
 
   /**
    * Compute the full jacobian for the given joint configuration.
-   *
+   * Note you need to call computeForwardKinematics() first.
    * If you want the result you need to call ``get_link_jacobian()``
    *
    * @param qpos: joint configuration. Needs to be full configuration, not just the
@@ -275,7 +275,8 @@ class PinocchioModelTpl {
 
   /**
    * Compute the jacobian of the given link.
-   *
+   * Note you need to call computeForwardKinematics() first.
+   * 
    * @param qpos: joint configuration. Needs to be full configuration, not just the
    *    movegroup joints.
    * @param index: index of the link (in the order you passed to the constructor or the
