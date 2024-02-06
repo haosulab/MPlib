@@ -57,12 +57,12 @@ class PlanningDemo(DemoSetup):
     def add_point_cloud(self):
         """We tell the planner about the obstacle through a point cloud"""
         import trimesh
-
+        # add_point_cloud ankor
         box = trimesh.creation.box([0.1, 0.4, 0.2])
         points, _ = trimesh.sample.sample_surface(box, 1000)
         points += [0.55, 0, 0.1]
         self.planner.update_point_cloud(points, radius=0.02)
-        return
+        # add_point_cloud ankor end
 
     def demo(self, with_screw=True, use_point_cloud=True, use_attach=True):
         """
@@ -85,11 +85,12 @@ class PlanningDemo(DemoSetup):
         # no attach since nothing picked up yet
         self.move_to_pose(pickup_pose, with_screw, use_point_cloud, use_attach=False)
         self.close_gripper()
-
+        # use_attach ankor
         if use_attach:
             self.planner.update_attached_box(
                 [0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0]
             )
+        # use_attach ankor end
 
         # move to the delivery pose
         pickup_pose[2] += 0.12

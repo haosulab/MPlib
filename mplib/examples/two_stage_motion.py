@@ -123,7 +123,7 @@ class PlanningDemo(DemoSetup):
             fixed_joint_indices=range(2),
         )
         return result
-
+    # move_in_two_stage ankor
     def move_in_two_stage(self, pose, has_attach=False):
         """
         first, we do a full IK but only generate motions for the base
@@ -148,12 +148,13 @@ class PlanningDemo(DemoSetup):
         result = self.plan_without_base(pose, has_attach)
         # execute the planned path
         self.follow_path(result)
-
+    # move_in_two_stage ankor end
     def demo(self):
         """
         We reach the pick up and drop off poses in two stages,
         first by moving the base only and then the arm only
         """
+        # pickup ankor
         pickup_pose = [0.7, 0, 0.12, 0, 1, 0, 0]
         delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]
 
@@ -168,6 +169,7 @@ class PlanningDemo(DemoSetup):
         # go above the target
         pickup_pose[2] += 0.2
         self.move_in_two_stage(pickup_pose)
+        # pickup ankor end
         self.open_gripper()
         # move down to pick
         self.planner.planning_world.remove_normal_object(

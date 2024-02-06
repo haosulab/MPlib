@@ -13,7 +13,7 @@ class DetectCollisionDemo(DemoSetup):
         """Only the planner is needed this time. No simulation env required"""
         super().__init__()
         self.setup_planner()
-
+    # print_collision ankor
     def print_collisions(self, collisions):
         """Helper function to abstract away the printing of collisions"""
         if len(collisions) == 0:
@@ -24,7 +24,7 @@ class DetectCollisionDemo(DemoSetup):
                 f"{collision.link_name1} of entity {collision.object_name1} collides"
                 f" with {collision.link_name2} of entity {collision.object_name2}"
             )
-
+    # print_collision ankor end
     def demo(self):
         """
         We test several configurations:
@@ -40,6 +40,7 @@ class DetectCollisionDemo(DemoSetup):
            This will cause the planner to timeout
         6. Remove the floor and check for env-collision returns no collision
         """
+        # floor ankor
         floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
         # create a collision object for the floor, with a 10cm offset in the z direction
         floor_fcl_collision_object = fcl.CollisionObject(
@@ -47,7 +48,7 @@ class DetectCollisionDemo(DemoSetup):
         )
         # update the planning world with the floor collision object
         self.planner.set_normal_object("floor", floor_fcl_collision_object)
-
+        # floor ankor end
         print("\n----- self-collision-free qpos -----")
         # if the joint qpos does not include the gripper joints,
         # it will be set to the current gripper joint angle
@@ -75,15 +76,8 @@ class DetectCollisionDemo(DemoSetup):
         )
 
         print("\n----- env-collision qpos -----")
-        env_collision_qpos = [
-            0,
-            1.5,
-            0,
-            -1.5,
-            0,
-            0,
-            0,
-        ]  # this qpos causes several joints to dip below the floor
+        # this qpos causes several joints to dip below the floor
+        env_collision_qpos = [0,1.5,0,-1.5,0,0,0]
         self.print_collisions(
             self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos)
         )
@@ -99,6 +93,7 @@ class DetectCollisionDemo(DemoSetup):
         self.print_collisions(
             self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos)
         )
+        # end ankor
 
 
 if __name__ == "__main__":

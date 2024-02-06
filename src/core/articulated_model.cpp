@@ -74,10 +74,10 @@ void ArticulatedModelTpl<S>::setMoveGroup(
 template <typename S>
 void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, bool full) {
   if (full) {
-    ASSERT(static_cast<size_t>(qpos.size()) == static_cast<size_t>(current_qpos_.size()),
-           "Length of provided qpos " + std::to_string(qpos.size()) +
-               " =/= dimension of full qpos: " +
-               std::to_string(current_qpos_.size()));
+    ASSERT(
+        static_cast<size_t>(qpos.size()) == static_cast<size_t>(current_qpos_.size()),
+        "Length of provided qpos " + std::to_string(qpos.size()) +
+            " =/= dimension of full qpos: " + std::to_string(current_qpos_.size()));
     current_qpos_ = qpos;
   } else {
     ASSERT(static_cast<size_t>(qpos.size()) == move_group_qpos_dim_,

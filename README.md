@@ -1,7 +1,7 @@
 # MPlib
 
 <p align="center">
-  <img src="demo.gif">
+  <img src="https://raw.githubusercontent.com/haosulab/MPlib/main/docs/demo.gif">
 </p>
 
 [![PyPI - Version](https://img.shields.io/pypi/v/mplib)](https://pypi.org/project/mplib/)
@@ -25,4 +25,4 @@ pip install mplib
 
 ## Usage
 
-See our [tutorial](https://sapien.ucsd.edu/docs/latest/tutorial/motion_planning/getting_started.html) for detailed usage and examples.
+See our [tutorial](https://motion-planning-lib.readthedocs.io/latest/tutorials/getting_started.html) for detailed usage and examples.
