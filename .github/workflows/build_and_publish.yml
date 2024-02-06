@@ -48,6 +48,17 @@ jobs:
           name: sdist
           path: dist/*
 
+  trigger-build-doc:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Trigger ReadTheDocs build
+      uses: dfm/rtds-action@v1
+      with:
+        webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
+        webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
+        commit_ref: ${{ github.ref }}
+
   nightly-release:
     if: startsWith(github.ref, 'refs/heads/')  # if a commit is pushed
     needs: [build, build-sdist]
@@ -74,7 +85,7 @@ jobs:
 
   publish-pypi:
     if: startsWith(github.ref, 'refs/tags/v')  # if a tag is pushed
-    needs: build
+    needs: [build, build-sdist]
     runs-on: ubuntu-latest
     environment: pypi_publish
     permissions:
