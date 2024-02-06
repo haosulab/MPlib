@@ -13,7 +13,7 @@ We will use the convenient function `setup_planner` provided by `mplib.examples.
 .. literalinclude:: ../../../mplib/examples/detect_collision.py
     :language: python
     :start-after: # print_collision ankor
-    :end-before: # print_collision end
+    :end-before: # print_collision ankor end
 
 We will also create a floor as one of the collision objects to demonstrate the `check_for_env_collision` API.
 
