@@ -6,6 +6,7 @@ Inverse Kinematics
 Inverse kinematics determine the joint positions that provide the desired pose for the robot's end-effectors. In ``mplib``, you can solve the inverse kinematics of the ``move_group`` link with:
 
 .. automethod:: mplib.planner.Planner.IK
+   :no-index:
 
 ``Planner.IK()`` internally implements a numerical method and takes the following arguments:
 

@@ -47,6 +47,7 @@ The second argument is the current joint positions of all the active joints (not
 ``planner.plan_qpos_to_pose()`` also takes other optional arguments with default values:
 
 .. automethod:: mplib.planner.Planner.plan_qpos_to_pose
+   :no-index:
 
 Follow a path
 --------------------------------------
