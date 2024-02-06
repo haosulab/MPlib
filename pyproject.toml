@@ -47,6 +47,9 @@ tag_filter = "v.*"
 [tool.ruff]
 line-length = 88
 preview = true  # for certain rules and black preview behavior
+exclude = ["third_party"]
+
+[tool.ruff.lint]
 select = [
   "F",  # Flake8
   "E", "W",  # pycodestyle
@@ -84,7 +87,6 @@ select = [
   "PT025",
   "PT026",
   "PYI",  # flake8-pyi
-  "TRY200",
   "TRY302",
   "RUF008",  # mutable dataclass default
   "RUF013",  # implicit typing.Optional is disallowed
@@ -97,7 +99,6 @@ ignore = [
   "EXE002",  # ntfs has no executable bit
   "SIM105",  # allow try-except-pass blocks
 ]
-exclude = ["third_party"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
