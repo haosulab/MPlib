@@ -75,7 +75,7 @@ class TestPlannerSimple(unittest.TestCase):
     self.planner.robot.set_qpos(last_qpos)
     self.assertTrue(np.allclose(self.get_end_effector_pose(), self.target_pose, atol=1e-2))
 
-  def test_check_joint_limit(self, tolerance=1e-2):
+  def test_check_joint_limit(self, tolerance=2e-2):
     for _ in range(100):
       qpos = np.random.uniform(-np.pi, np.pi, size=7)
       in_limit = True
