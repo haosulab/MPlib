@@ -263,7 +263,7 @@ class PinocchioModelTpl {
   void computeFullJacobian(const VectorX<S> &qpos);
 
   /**
-   * Get the jacobian of the given link.
+   * Get the jacobian of the given link. You must call ``compute_full_jacobian()`` first.
    *
    * @param index: index of the link (in the order you passed to the constructor or the
    *    default order)
