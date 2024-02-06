@@ -29,9 +29,9 @@ API Reference
 -------------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   mplib.pymp
+   pymp/index
 
 Indices and tables
 ==================
