@@ -134,7 +134,7 @@ class TestPinocchioModel(unittest.TestCase):
       self.model.compute_forward_kinematics(qpos)
       analytical_jacobian = self.model.compute_single_link_jacobian(qpos, ee_idx)
       numerical_jacobian = self.get_numerical_jacobian(qpos, ee_idx)
-      self.assertTrue(np.allclose(analytical_jacobian[3:], numerical_jacobian[3:], atol=1e-3))
+      self.assertTrue(np.allclose(analytical_jacobian, numerical_jacobian, atol=1e-3))
 
 if __name__ == "__main__":
   unittest.main()
