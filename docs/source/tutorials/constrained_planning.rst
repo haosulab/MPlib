@@ -5,6 +5,7 @@ Constrained Planning
 
 .. image:: assets/constrained_planning.gif
    :width: 50%
+   :align: center
 
 This is a simple implementation of a constrained planner. It is based on OMPL's projection-based planner. Roughly, OMPL does sampling based planning and projects a joint configuration into a valid configuration using the constrained function we provide. The above gif shows the robot execute two trajectories. The first one generated with constraint that the z-axis of the endeffector pointing downwards. The second one generated without any constraints. We can see that the second trajectory tilts the endeffector sideways.
 

@@ -1,4 +1,4 @@
- .. _inverse_kinematics:
+.. _inverse_kinematics:
 
 Inverse Kinematics
 ==================

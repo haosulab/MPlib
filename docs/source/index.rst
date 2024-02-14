@@ -3,19 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to mplib's documentation!
-=================================
-
 .. include:: ../../README.md
    :parser: myst_parser.sphinx_
-
-Planner Documentation
----------------------
-
-.. toctree::
-   :maxdepth: 1
-
-   mplib
 
 Examples
 -----------
@@ -31,7 +20,7 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   pymp/index
+   reference/index
 
 Indices and tables
 ==================

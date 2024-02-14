@@ -1,8 +1,5 @@
-Planner
-=======
-
-mplib.planner
---------------------
+``Planner``
+-------------
 
 .. automodule:: mplib.planner
    :members:

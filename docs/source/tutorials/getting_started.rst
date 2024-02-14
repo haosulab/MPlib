@@ -1,4 +1,4 @@
- .. _motion_planning_getting_started:
+.. _motion_planning_getting_started:
 
 Getting Started
 ==================

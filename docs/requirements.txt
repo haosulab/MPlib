@@ -1,3 +1,4 @@
 myst-parser
-sphinx-rtd-theme
+furo
 sphinx-copybutton
+sphinxext-opengraph

@@ -20,8 +20,9 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "sphinx_rtd_theme",
     "myst_parser",
+    "sphinx_copybutton",
+    "sphinxext.opengraph",
 ]
 
 templates_path = ["_templates"]
@@ -31,5 +32,15 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
+# https://pradyunsg.me/furo/customisation/
+html_theme = "furo"
+# html_theme = "sphinx_book_theme"
 html_static_path = []
+html_theme_options = {
+    # "announcement": "<em>Important</em> announcement!",
+    # Comment out for Read the Docs
+    # "top_of_page_button": "edit",
+    # "source_repository": "https://github.com/haosulab/MPlib",
+    # "source_branch": "main",
+    # "source_directory": "docs/source/",
+}

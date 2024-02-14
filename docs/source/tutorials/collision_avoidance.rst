@@ -1,4 +1,4 @@
- .. _collision_avoidance:
+.. _collision_avoidance:
 
 Collision Avoidance
 ====================

@@ -1,4 +1,4 @@
-# MPlib
+# MPlib: a Lightweight Motion Planning Library
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/haosulab/MPlib/main/docs/demo.gif">

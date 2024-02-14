@@ -1,4 +1,4 @@
- .. _plan_a_path:
+.. _plan_a_path:
 
 Plan a Path
 ==================
@@ -9,7 +9,7 @@ In this tutorial, we will talk about how to plan paths for the agent. As shown i
 
 .. figure:: assets/RRT.gif
    :width: 320px
-   :align: left
+   :align: center
 
    plan with RRTConnect
 
@@ -34,9 +34,9 @@ The second argument is the current joint positions of all the active joints (not
 
 - ``status``: a string indicates the status:
 
-    - ``Success``: planned a path successfully.
-    - ``IK Failed``: failed to solve the inverse kinematics. This may happen when the target pose is not reachable.
-    - ``RRT Failed``: failed to find a valid path in the joint space. This may happen when there is no valid path or the task is too complicated.
+  - ``Success``: planned a path successfully.
+  - ``IK Failed``: failed to solve the inverse kinematics. This may happen when the target pose is not reachable.
+  - ``RRT Failed``: failed to find a valid path in the joint space. This may happen when there is no valid path or the task is too complicated.
 - ``position``: a NumPy array of shape :math:`(n \times m)` describes the joint positions of the waypoints. :math:`n` is the number of waypoints in the path, and each row describes a waypoint. :math:`m` is the number of active joints that affect the pose of the ``move_group`` link. For example, for our panda robot arm, each row includes the positions for the first seven joints. 
 - ``duration``: a scalar indicates the duration of the output path. ``mplib`` returns the optimal duration considering the velocity and acceleration constraints. 
 - ``time``: a NumPy array of shape :math:`(n)` describes the time step of each waypoint. The first element is equal to 0, and the last one is equal to the ``duration``. Argument ``time_step`` determines the interval of the elements.
@@ -108,6 +108,6 @@ Then, we plan and execute the motion:
 
 .. figure:: assets/screw.gif
    :width: 320px
-   :align: left
+   :align: center
 
    plan with screw motion
