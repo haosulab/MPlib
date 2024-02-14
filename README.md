@@ -7,7 +7,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/mplib)](https://pypi.org/project/mplib/)
 [![Downloads](https://static.pepy.tech/badge/mplib)](https://pepy.tech/project/mplib)
 [![Build python wheels](https://img.shields.io/github/actions/workflow/status/haosulab/MPlib/build_and_publish.yml)](https://github.com/haosulab/MPlib/releases/tag/nightly)
-[![Documentation](https://github.com/haosulab/MPlib/actions/workflows/pages/pages-build-deployment/badge.svg)](https://haosulab.github.io/MPlib/mplib.html)
+[![Documentation](https://img.shields.io/readthedocs/motion-planning-lib)](https://motion-planning-lib.readthedocs.io/)
 [![License](https://img.shields.io/github/license/haosulab/MPlib)](https://github.com/haosulab/MPlib?tab=MIT-1-ov-file#readme)
 
 MPlib is a lightweight python package for motion planning,
