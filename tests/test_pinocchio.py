@@ -1,6 +1,7 @@
 import os
 import unittest
 import numpy as np
+from transforms3d.quaternions import qmult, qinverse, quat2axangle
 from mplib.pymp.kinematics.pinocchio import PinocchioModel
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,6 +16,15 @@ class TestPinocchioModel(unittest.TestCase):
   def setUp(self):
     # Create a PinocchioModel instance for testing
     self.model = PinocchioModel(PANDA_SPEC["urdf"], [0, 0, -9.81], verbose=False)
+    self.joint_limits = [[-2.8973, 2.8973],
+                         [-1.7628, 1.7628],
+                         [-2.8973, 2.8973],
+                         [-3.0718, -0.0698],
+                         [-2.8973, 2.8973],
+                         [-0.0175, 3.7525],
+                         [-2.8973, 2.8973],
+                         [0, 0.04],
+                         [0, 0.04]]
 
   def test_get_leaf_links(self):
     # Test the getLeafLinks method
@@ -69,6 +79,62 @@ class TestPinocchioModel(unittest.TestCase):
     expected = [0, 1, 7, 3, 2, 4, 6, 5, 7]
     for i in range(len(self.model.get_joint_names())):
       self.assertEqual(self.model.get_joint_parent(i), expected[i])
+
+  def sample_qpos(self):
+    qpos = []
+    for limit in self.joint_limits:
+      qpos.append(np.random.uniform(limit[0], limit[1]))
+    return np.array(qpos)
+  
+  def test_two_jacobian_methods(self):
+    ee_idx = self.model.get_link_names().index("panda_hand")
+    for local in [True, False]:
+      for _ in range(10):
+        qpos = self.sample_qpos()
+        self.model.compute_forward_kinematics(qpos)
+        self.model.compute_full_jacobian(qpos)
+        analytical_jacobian_method1 = self.model.get_link_jacobian(ee_idx, local=local)
+        analytical_jacobian_method2 = self.model.compute_single_link_jacobian(qpos, ee_idx, local=local)
+        self.assertTrue(np.allclose(analytical_jacobian_method1, analytical_jacobian_method2))
+
+  def get_numerical_jacobian(self, qpos, link_idx, epsilon=1e-3):
+    jacobian = np.zeros((6, len(qpos)))
+    for i in range(len(qpos)):
+      perturbation = np.zeros(len(qpos))
+      perturbation[i] = epsilon
+      self.model.compute_forward_kinematics(qpos + perturbation)
+      pose_plus = self.model.get_link_pose(link_idx)
+      self.model.compute_forward_kinematics(qpos - perturbation)
+      pose_minus = self.model.get_link_pose(link_idx)
+      
+      position_diff = pose_plus[:3] - pose_minus[:3]
+      jacobian[:3, i] = position_diff / (2 * epsilon)
+
+      orientation_plus = pose_plus[3:]
+      orientation_minus = pose_minus[3:]
+      # get the difference quaternion
+      orientation_diff = qmult(orientation_plus, qinverse(orientation_minus))
+      # get the axis-angle representation
+      axis, angle = quat2axangle(orientation_diff)
+      jacobian[3:, i] = angle / (2 * epsilon) * axis
+
+      self.model.compute_forward_kinematics(qpos)
+      curr_pos = self.model.get_link_pose(link_idx)[:3]
+      speed_due_to_rotation = np.cross(jacobian[3:, i], curr_pos)
+      jacobian[:3, i] -= speed_due_to_rotation
+
+    return jacobian
+
+  def test_link_jacobian(self):
+    # idea is to calculate the jacobian numerically by perturbing the joint angles one by one
+    # and comparing the result to the analytical jacobian
+    ee_idx = self.model.get_link_names().index("panda_hand")
+    for _ in range(10):
+      qpos = self.sample_qpos()
+      self.model.compute_forward_kinematics(qpos)
+      analytical_jacobian = self.model.compute_single_link_jacobian(qpos, ee_idx)
+      numerical_jacobian = self.get_numerical_jacobian(qpos, ee_idx)
+      self.assertTrue(np.allclose(analytical_jacobian, numerical_jacobian, atol=1e-3))
 
 if __name__ == "__main__":
   unittest.main()
