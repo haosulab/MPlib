@@ -75,21 +75,18 @@ class TestPlanner(unittest.TestCase):
     self.planner.robot.set_qpos(last_qpos)
     self.assertTrue(np.allclose(self.get_end_effector_pose(), self.target_pose, atol=1e-2))
 
-  # this test is a bit cursed
-  # def test_check_joint_limit(self, tolerance=2e-2):
-  #   for _ in range(100):
-  #     qpos = np.random.uniform(-np.pi, np.pi, size=7)
-  #     in_limit = True
-  #     for joint_angle, limit in zip(qpos, self.joint_limits):
-  #       if joint_angle < limit[0]:
-  #         joint_angle += 2 * np.pi - tolerance
-  #       elif joint_angle > limit[1]:
-  #         joint_angle -= 2 * np.pi + tolerance
-  #       if not (limit[0] <= joint_angle <= limit[1]):
-  #         in_limit = False
-  #         break
+  def test_wrap_joint_limit(self, tolerance=2e-2):
+    for _ in range(100):
+      qpos = np.random.uniform(-100, 100, size=7)
+      in_limit = True
+      for joint_angle, limit in zip(qpos, self.joint_limits):
+        k = np.ceil((limit[0]-joint_angle)/2/np.pi)
+        joint_angle += 2*np.pi*k
+        if not (limit[0]-tolerance <= joint_angle <= limit[1]+tolerance):
+          in_limit = False
+          break
 
-  #     self.assertEqual(self.planner.check_joint_limit(qpos), in_limit, f"Joint limit check failed for qpos: {qpos} which should be {'in' if in_limit else 'out'} of limit")
+      self.assertEqual(self.planner.wrap_joint_limit(qpos), in_limit, f"Joint limit check failed for qpos: {qpos} which should be {'in' if in_limit else 'out'} of limit")
     
   def test_pad_qpos(self):
     for _ in range(100):

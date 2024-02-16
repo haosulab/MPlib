@@ -215,15 +215,15 @@ class Planner:
             np.linalg.norm(q1 - q2), np.linalg.norm(q1 + q2)
         )
 
-    def check_joint_limit(self, q):
+    def wrap_joint_limit(self, q):
         """
-        check if the joint configuration is within the joint limits
+        finds a k such that q - 2 * k * pi is within the joint limits if possible
 
         Args:
-            q: joint configuration
+            q: joint configuration that might be modified
 
         Returns:
-            True if the joint configuration is within the joint limits
+            True if q cam be wrapped to be within the joint limits
         """
         n = len(q)
         flag = True
@@ -368,7 +368,7 @@ class Planner:
             ik_results = self.pinocchio_model.compute_IK_CLIK(
                 index, goal_pose, start_qpos, mask
             )
-            flag = self.check_joint_limit(ik_results[0])  # will clip qpos
+            flag = self.wrap_joint_limit(ik_results[0])  # will mutate ik_results[0]
 
             # check collision
             self.planning_world.set_qpos_all(ik_results[0][idx])
