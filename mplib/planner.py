@@ -230,7 +230,7 @@ class Planner:
         flag = True
         for i in range(n):
             if self.joint_types[i].startswith("JointModelR"):
-                if -1e-3 < q[i] - self.joint_limits[i][0] < 0:
+                if -1e-3 <= q[i] - self.joint_limits[i][0] < 0:
                     continue
                 q[i] -= (
                     2 * np.pi * np.floor((q[i] - self.joint_limits[i][0]) / (2 * np.pi))

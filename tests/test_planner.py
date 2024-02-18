@@ -34,6 +34,7 @@ class TestPlanner(unittest.TestCase):
             [0, 0.04],
             [0, 0.04],
         ]
+        self.joint_types = self.planner.joint_types
 
     def get_end_effector_pose(self):
         ee_idx = self.planner.link_name_2_idx[self.planner.move_group]
@@ -88,22 +89,26 @@ class TestPlanner(unittest.TestCase):
             np.allclose(self.get_end_effector_pose(), self.target_pose, atol=1e-2)
         )
 
-    def test_wrap_joint_limit(self, tolerance=2e-2):
+    def test_wrap_joint_limit(self, tolerance=1e-3):
+        # Test using np.ceil
         for _ in range(100):
             qpos = np.random.uniform(-100, 100, size=7)
+
             in_limit = True
-            for joint_angle, limit in zip(qpos, self.joint_limits):
-                k = np.ceil((limit[0] - joint_angle) / 2 / np.pi)
-                joint_angle += 2 * np.pi * k
-                if not (limit[0] - tolerance <= joint_angle <= limit[1] + tolerance):
+            for i, (q, (q_min, q_max)) in enumerate(zip(qpos, self.joint_limits)):
+                if self.joint_types[i].startswith("JointModelR"):
+                    if -1e-3 <= q - q_min < 0:
+                        continue
+                    q += 2 * np.pi * np.ceil((q_min - q) / (2 * np.pi))
+                if not (q_min - tolerance <= q <= q_max + tolerance):
                     in_limit = False
                     break
 
             self.assertEqual(
-                self.planner.wrap_joint_limit(qpos),
+                self.planner.wrap_joint_limit(qpos.copy()),
                 in_limit,
                 f"Joint limit check failed for qpos: {qpos} which should be "
-                f"{'in' if in_limit else 'out'} of limit",
+                f"{'in' if in_limit else 'out of'} limit",
             )
 
     def test_pad_qpos(self):
