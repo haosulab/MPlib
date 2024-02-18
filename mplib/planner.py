@@ -31,7 +31,7 @@ class Planner:
         joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
         **kwargs,
     ):
-    # constructor ankor end
+        # constructor ankor end
         """Motion planner for robots.
 
         Args:
@@ -215,21 +215,22 @@ class Planner:
             np.linalg.norm(q1 - q2), np.linalg.norm(q1 + q2)
         )
 
-    def check_joint_limit(self, q):
+    def wrap_joint_limit(self, q) -> bool:
         """
-        check if the joint configuration is within the joint limits
+        Checks if the joint configuration is within the joint limits.
+        For revolute joints, the joint angle is wrapped to be within [q_min, q_min+2*pi)
 
         Args:
-            q: joint configuration
+            q: joint configuration, angles of revolute joints might be modified
 
         Returns:
-            True if the joint configuration is within the joint limits
+            True if q can be wrapped to be within the joint limits
         """
         n = len(q)
         flag = True
         for i in range(n):
             if self.joint_types[i].startswith("JointModelR"):
-                if np.abs(q[i] - self.joint_limits[i][0]) < 1e-3:
+                if -1e-3 < q[i] - self.joint_limits[i][0] < 0:
                     continue
                 q[i] -= (
                     2 * np.pi * np.floor((q[i] - self.joint_limits[i][0]) / (2 * np.pi))
@@ -368,7 +369,7 @@ class Planner:
             ik_results = self.pinocchio_model.compute_IK_CLIK(
                 index, goal_pose, start_qpos, mask
             )
-            flag = self.check_joint_limit(ik_results[0])  # will clip qpos
+            flag = self.wrap_joint_limit(ik_results[0])  # will wrap revolute joints
 
             # check collision
             self.planning_world.set_qpos_all(ik_results[0][idx])
@@ -718,6 +719,7 @@ class Planner:
             constraint_tolerance,
             verbose=verbose,
         )
+
     # plan_screw ankor
     def plan_screw(
         self,
@@ -730,7 +732,7 @@ class Planner:
         wrt_world=True,
         verbose=False,
     ):
-    # plan_screw ankor end
+        # plan_screw ankor end
         """
         Plan from a start configuration to a goal pose of the end-effector using
         screw motion
