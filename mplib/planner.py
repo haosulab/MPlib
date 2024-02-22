@@ -72,6 +72,8 @@ class Planner:
             verbose=False,
         )
         self.pinocchio_model = self.robot.get_pinocchio_model()
+        self.user_link_names = self.pinocchio_model.get_link_names()
+        self.user_joint_names = self.pinocchio_model.get_joint_names()
 
         self.planning_world = PlanningWorld(
             [self.robot],
@@ -83,10 +85,6 @@ class Planner:
         if srdf == "":
             self.generate_collision_pair()
             self.robot.update_SRDF(self.srdf)
-
-        self.pinocchio_model = self.robot.get_pinocchio_model()
-        self.user_link_names = self.pinocchio_model.get_link_names()
-        self.user_joint_names = self.pinocchio_model.get_joint_names()
 
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
