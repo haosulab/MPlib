@@ -5,8 +5,7 @@
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <fcl/math/triangle.h>
-
+#include <hpp/fcl/data_types.h>
 #include "mplib/types.h"
 
 namespace mplib {
@@ -20,8 +19,8 @@ class AssimpLoader {
 
   template <typename S>
   size_t dfsBuildMesh(const Vector3<S> &scale, int vertices_offset,
-                      std::vector<Vector3<S>> &vertices,
-                      std::vector<fcl::Triangle> &triangles) const {
+                      std::vector<hpp::fcl::Vec3f> &vertices,
+                      std::vector<hpp::fcl::Triangle> &triangles) const {
     return _dfsBuildMesh(scene_->mRootNode, scale, vertices_offset, vertices,
                          triangles);
   }
@@ -29,8 +28,8 @@ class AssimpLoader {
  private:
   template <typename S>
   size_t _dfsBuildMesh(const aiNode *node, const Vector3<S> &scale, int vertices_offset,
-                       std::vector<Vector3<S>> &vertices,
-                       std::vector<fcl::Triangle> &triangles) const;
+                       std::vector<hpp::fcl::Vec3f> &vertices,
+                       std::vector<hpp::fcl::Triangle> &triangles) const;
 
   Assimp::Importer *importer_;
   const aiScene *scene_;
@@ -40,9 +39,9 @@ class AssimpLoader {
 #define DECLARE_TEMPLATE_ASSIMP_LOADER(S)                               \
   extern template size_t AssimpLoader::_dfsBuildMesh<S>(                \
       const aiNode *node, const Vector3<S> &scale, int vertices_offset, \
-      std::vector<Vector3<S>> &vertices, std::vector<fcl::Triangle> &triangles) const
+      std::vector<hpp::fcl::Vec3f> &vertices, std::vector<hpp::fcl::Triangle> &triangles) const
 
-DECLARE_TEMPLATE_ASSIMP_LOADER(float);
+// DECLARE_TEMPLATE_ASSIMP_LOADER(float);
 DECLARE_TEMPLATE_ASSIMP_LOADER(double);
 
 }  // namespace mplib

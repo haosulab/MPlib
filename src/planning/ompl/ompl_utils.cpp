@@ -14,7 +14,7 @@ namespace mplib::planning::ompl {
   template VectorX<S> state2Eigen<S>(const ob::State *state_raw,                   \
                                      const ob::SpaceInformation *si, bool is_rvss)
 
-DEFINE_TEMPLATE_OMPL_UTILS(float);
+// DEFINE_TEMPLATE_OMPL_UTILS(float);
 DEFINE_TEMPLATE_OMPL_UTILS(double);
 
 template <typename S>

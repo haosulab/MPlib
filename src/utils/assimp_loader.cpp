@@ -13,9 +13,9 @@ namespace mplib {
 #define DEFINE_TEMPLATE_ASSIMP_LOADER(S)                                \
   template size_t AssimpLoader::_dfsBuildMesh<S>(                       \
       const aiNode *node, const Vector3<S> &scale, int vertices_offset, \
-      std::vector<Vector3<S>> &vertices, std::vector<fcl::Triangle> &triangles) const
+      std::vector<Vector3<S>> &vertices, std::vector<hpp::fcl::Triangle> &triangles) const
 
-DEFINE_TEMPLATE_ASSIMP_LOADER(float);
+// DEFINE_TEMPLATE_ASSIMP_LOADER(float);
 DEFINE_TEMPLATE_ASSIMP_LOADER(double);
 
 AssimpLoader::AssimpLoader() : importer_(new Assimp::Importer()) {
@@ -59,10 +59,10 @@ void AssimpLoader::load(const std::string &file_name) {
 template <typename S>
 size_t AssimpLoader::_dfsBuildMesh(const aiNode *node, const Vector3<S> &scale,
                                    int vertices_offset,
-                                   std::vector<Vector3<S>> &vertices,
-                                   std::vector<fcl::Triangle> &triangles) const {
+                                   std::vector<hpp::fcl::Vec3f> &vertices,
+                                   std::vector<hpp::fcl::Triangle> &triangles) const {
   if (!node) return 0;
-
+  // std::cout << "AssimpLoader::_dfsBuildMesh" << std::endl;
   aiMatrix4x4 transform = node->mTransformation;
   const aiNode *pnode = node->mParent;
   while (pnode) {
@@ -103,9 +103,9 @@ size_t AssimpLoader::_dfsBuildMesh(const aiNode *node, const Vector3<S> &scale,
         ss << "Face index: " << j << "\n";
         throw std::invalid_argument(ss.str());
       }
-      triangles.push_back(fcl::Triangle(vertices_offset + face.mIndices[0],
-                                        vertices_offset + face.mIndices[1],
-                                        vertices_offset + face.mIndices[2]));
+      triangles.push_back(hpp::fcl::Triangle(vertices_offset + face.mIndices[0],
+                                             vertices_offset + face.mIndices[1],
+                                             vertices_offset + face.mIndices[2]));
     }
 
     nbVertices += input_mesh->mNumVertices;

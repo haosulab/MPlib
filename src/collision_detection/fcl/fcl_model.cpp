@@ -40,12 +40,14 @@ FCLModelTpl<S>::FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdf_model,
 template <typename S>
 void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
                           const std::string &package_dir) {
+  // std::cout << "FCLModelTpl init" << std::endl;
   urdf_model_ = urdf_model;
   package_dir_ = package_dir;
   if (not urdf_model_)
     throw std::invalid_argument("The XML stream does not contain a valid URDF model.");
   urdf::LinkConstSharedPtr root_link = urdf_model_->getRoot();
   dfsParseTree(root_link, "root's parent");
+  // std::cout << "dfsParseTree done" << std::endl;
   auto tmp_user_link_names = collision_link_names_;
   auto last = std::unique(tmp_user_link_names.begin(), tmp_user_link_names.end());
   tmp_user_link_names.erase(last, tmp_user_link_names.end());
@@ -65,11 +67,12 @@ void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
 template <typename S>
 void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
                                   const std::string &parent_link_name) {
-  if (link->collision)
+  if (link->collision) {
     for (const auto &geom : link->collision_array) {
       auto geom_model = geom->geometry;
       fcl::CollisionGeometryPtr collision_geometry;
       if (geom_model->type == urdf::Geometry::MESH) {
+        // std::cout << "MESH 1" << std::endl;
         const urdf::MeshSharedPtr urdf_mesh =
             urdf::dynamic_pointer_cast<urdf::Mesh>(geom_model);
         std::string file_name = urdf_mesh->filename;
@@ -82,6 +85,7 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
           throw std::invalid_argument(ss.str());
         }
         if (verbose_) print_verbose("File name ", file_name);
+        // std::cout << "MESH 2 " << file_name << std::endl;
         Vector3<S> scale {static_cast<S>(urdf_mesh->scale.x),
                           static_cast<S>(urdf_mesh->scale.y),
                           static_cast<S>(urdf_mesh->scale.z)};
@@ -118,6 +122,7 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
       parent_link_names_.push_back(parent_link_name);
       collision_origin2link_poses.push_back(toIsometry<S>(geom->origin));
     }
+  }
   for (const auto &child : link->child_links) dfsParseTree(child, link->name);
 }
 

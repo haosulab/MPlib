@@ -15,7 +15,7 @@ namespace mplib::kinematics::pinocchio {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_PINOCCHIO_MODEL(S) template class PinocchioModelTpl<S>
 
-DEFINE_TEMPLATE_PINOCCHIO_MODEL(float);
+// DEFINE_TEMPLATE_PINOCCHIO_MODEL(float);
 DEFINE_TEMPLATE_PINOCCHIO_MODEL(double);
 
 template <typename S>

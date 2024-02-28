@@ -13,7 +13,7 @@ namespace mplib {
   template pinocchio::InertiaTpl<S> convertInertial<S>(const urdf::Inertial &Y); \
   template pinocchio::InertiaTpl<S> convertInertial<S>(const urdf::InertialSharedPtr &Y)
 
-DEFINE_TEMPLATE_CONVERSION(float);
+// DEFINE_TEMPLATE_CONVERSION(float);
 DEFINE_TEMPLATE_CONVERSION(double);
 
 template <typename S>

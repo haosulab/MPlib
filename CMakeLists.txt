@@ -28,13 +28,14 @@ set(Boost_NO_WARN_NEW_VERSIONS 1)  # silence Boost CMake warnings
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 find_package(ompl REQUIRED)
 find_package(hpp-fcl REQUIRED)
+message(STATUS "hpp-fcl lib found at ${HPP_FCL_LIBRARIES}")
 find_package(pinocchio REQUIRED)
 find_package(assimp REQUIRED)
 find_package(orocos_kdl REQUIRED)
 find_package(urdfdom REQUIRED)
 
 # store libries in a variable
-set(LIBS ompl hpp-fcl assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
+set(LIBS ompl ${hpp-fcl_LIBRARIES} assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
 # mp
 file(GLOB_RECURSE MPLIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 add_library(mp STATIC ${MPLIB_SRC})
@@ -43,27 +44,27 @@ target_include_directories(mp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DI
 target_include_directories(mp PUBLIC ${OMPL_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
 set_target_properties(mp PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
-# pybind11_mkdoc
-file(GLOB_RECURSE MPLIB_MKDOC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/mplib/*.h")
-list(FILTER MPLIB_MKDOC_HEADER EXCLUDE REGEX "types.h|macros")
-add_custom_target(
-  pybind11_mkdoc ALL
-  COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/dev/mkdoc.sh"
-               "-I$<JOIN:$<TARGET_PROPERTY:mp,INCLUDE_DIRECTORIES>,;-I>"
-  BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/pybind/docstring/*.h"
-  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/dev/mkdoc.sh" "${MPLIB_MKDOC_HEADER}"
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMAND_EXPAND_LISTS
-  VERBATIM
-)
+# # pybind11_mkdoc
+# file(GLOB_RECURSE MPLIB_MKDOC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/mplib/*.h")
+# list(FILTER MPLIB_MKDOC_HEADER EXCLUDE REGEX "types.h|macros")
+# add_custom_target(
+#   pybind11_mkdoc ALL
+#   COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/dev/mkdoc.sh"
+#                "-I$<JOIN:$<TARGET_PROPERTY:mp,INCLUDE_DIRECTORIES>,;-I>"
+#   BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/pybind/docstring/*.h"
+#   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/dev/mkdoc.sh" "${MPLIB_MKDOC_HEADER}"
+#   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#   COMMAND_EXPAND_LISTS
+#   VERBATIM
+# )
 
-# Pybind11
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11")
-file(GLOB_RECURSE PYBIND_SRC "${CMAKE_CURRENT_SOURCE_DIR}/pybind/*.cpp")
-pybind11_add_module(pymp ${PYBIND_SRC})
-target_link_libraries(pymp PRIVATE mp)
-target_include_directories(pymp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/pybind")
-add_dependencies(pymp pybind11_mkdoc)
+# # Pybind11
+# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11")
+# file(GLOB_RECURSE PYBIND_SRC "${CMAKE_CURRENT_SOURCE_DIR}/pybind/*.cpp")
+# pybind11_add_module(pymp ${PYBIND_SRC})
+# target_link_libraries(pymp PRIVATE mp)
+# target_include_directories(pymp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/pybind")
+# add_dependencies(pymp pybind11_mkdoc)
 
 # compile test_articulated_model and run the test
 add_executable(test_articulated_model "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_articulated_model.cpp")

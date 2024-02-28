@@ -1,8 +1,8 @@
 #include <memory>
 #include <vector>
 
-#include <fcl/narrowphase/collision.h>
-#include <fcl/narrowphase/distance.h>
+#include <hpp/fcl/collision.h>
+#include <hpp/fcl/distance.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -18,29 +18,29 @@ namespace py = pybind11;
 namespace mplib::collision_detection::fcl {
 
 // Namespace alias
-namespace fcl = ::fcl;
+namespace fcl = ::hpp::fcl;
 
 using Triangle = fcl::Triangle;
-using CollisionGeometry = fcl::CollisionGeometry<S>;
-using Box = fcl::Box<S>;
-using Capsule = fcl::Capsule<S>;
-using Cone = fcl::Cone<S>;
-using Convex = fcl::Convex<S>;
-using Cylinder = fcl::Cylinder<S>;
-using Plane = fcl::Plane<S>;
-using Sphere = fcl::Sphere<S>;
-using BVHModel_OBBRSS = fcl::BVHModel<fcl::OBBRSS<S>>;
-using OcTree = fcl::OcTree<S>;
+using CollisionGeometry = fcl::CollisionGeometry;
+using Box = fcl::Box;
+using Capsule = fcl::Capsule;
+using Cone = fcl::Cone;
+using Convex = fcl::Convex;
+using Cylinder = fcl::Cylinder;
+using Plane = fcl::Plane;
+using Sphere = fcl::Sphere;
+using BVHModel_OBBRSS = fcl::BVHModel<fcl::OBBRSS>;
+using OcTree = fcl::OcTree;
 
-using CollisionObject = fcl::CollisionObject<S>;
+using CollisionObject = fcl::CollisionObject;
 using GJKSolverType = fcl::GJKSolverType;
-using CollisionRequest = fcl::CollisionRequest<S>;
-using CollisionResult = fcl::CollisionResult<S>;
-using DistanceRequest = fcl::DistanceRequest<S>;
-using DistanceResult = fcl::DistanceResult<S>;
-using Contact = fcl::Contact<S>;
-using ContactPoint = fcl::ContactPoint<S>;
-using CostSource = fcl::CostSource<S>;
+using CollisionRequest = fcl::CollisionRequest;
+using CollisionResult = fcl::CollisionResult;
+using DistanceRequest = fcl::DistanceRequest;
+using DistanceResult = fcl::DistanceResult;
+using Contact = fcl::Contact;
+using ContactPoint = fcl::ContactPoint;
+using CostSource = fcl::CostSource;
 
 void build_pyfcl(py::module &m) {
   // Data type

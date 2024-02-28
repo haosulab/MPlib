@@ -11,9 +11,9 @@ namespace py = pybind11;
 namespace mplib::collision_detection::fcl {
 
 void build_pyfcl_utils(py::module &m) {
-  m.def("load_mesh_as_BVH", loadMeshAsBVH<S>, py::arg("mesh_path"), py::arg("scale"),
+  m.def("load_mesh_as_BVH", loadMeshAsBVH, py::arg("mesh_path"), py::arg("scale"),
         DOC(mplib, collision_detection, fcl, loadMeshAsBVH));
-  m.def("load_mesh_as_Convex", loadMeshAsConvex<S>, py::arg("mesh_path"),
+  m.def("load_mesh_as_Convex", loadMeshAsConvex, py::arg("mesh_path"),
         py::arg("scale"), DOC(mplib, collision_detection, fcl, loadMeshAsConvex));
 }
 

@@ -22,7 +22,7 @@ namespace mplib::kinematics::kdl {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_KDL_MODEL(S) template class KDLModelTpl<S>
 
-DEFINE_TEMPLATE_KDL_MODEL(float);
+// DEFINE_TEMPLATE_KDL_MODEL(float);
 DEFINE_TEMPLATE_KDL_MODEL(double);
 
 template <typename S>

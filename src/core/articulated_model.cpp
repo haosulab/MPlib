@@ -11,7 +11,7 @@ namespace mplib {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_ARTICULATED_MODEL(S) template class ArticulatedModelTpl<S>
 
-DEFINE_TEMPLATE_ARTICULATED_MODEL(float);
+// DEFINE_TEMPLATE_ARTICULATED_MODEL(float);
 DEFINE_TEMPLATE_ARTICULATED_MODEL(double);
 
 template <typename S>
@@ -26,6 +26,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
       fcl_model_(std::make_shared<collision_detection::FCLModelTpl<S>>(
           urdf_filename, convex, verbose)),
       verbose_(verbose) {
+  std::cout << "ArticulatedModelTpl constructor" << std::endl;
   user_link_names_ =
       link_names.size() == 0 ? pinocchio_model_->getLinkNames(false) : link_names;
   user_joint_names_ =
