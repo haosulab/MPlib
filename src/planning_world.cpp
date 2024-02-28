@@ -1,7 +1,7 @@
-#include "mplib/planning_world.h"
-
 #include <memory>
+#include <hpp/fcl/octree.h>
 
+#include "mplib/planning_world.h"
 #include "mplib/collision_detection/fcl/fcl_utils.h"
 #include "mplib/macros/assert.h"
 #include "mplib/utils/conversion.h"
@@ -11,7 +11,7 @@ namespace mplib {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_PLANNING_WORLD(S) template class PlanningWorldTpl<S>
 
-DEFINE_TEMPLATE_PLANNING_WORLD(float);
+// DEFINE_TEMPLATE_PLANNING_WORLD(float);
 DEFINE_TEMPLATE_PLANNING_WORLD(double);
 
 template <typename S>
@@ -45,7 +45,7 @@ void PlanningWorldTpl<S>::updatePointCloud(const MatrixX3<S> &vertices, double r
                           static_cast<float>(row(2))},
         true);
   point_cloud_ = std::make_shared<CollisionObject>(
-      std::make_shared<fcl::OcTree<S>>(tree), Isometry3<S>::Identity());
+      std::make_shared<hpp::fcl::OcTree>(tree), hpp::fcl::Transform3f::Identity());
   has_point_cloud_ = true;
 }
 
@@ -54,7 +54,8 @@ void PlanningWorldTpl<S>::updateAttachedTool(const CollisionGeometryPtr &p_geom,
                                              int link_id, const Vector7<S> &pose) {
   attach_link_id_ = link_id;
   attach_to_link_pose_ = toIsometry<S>(pose);
-  attached_tool_ = std::make_shared<CollisionObject>(p_geom, attach_to_link_pose_);
+  attached_tool_ = std::make_shared<CollisionObject>(p_geom,
+      attach_to_link_pose_.linear(), attach_to_link_pose_.translation());
   has_attach_ = true;
 }
 
@@ -62,7 +63,7 @@ template <typename S>
 void PlanningWorldTpl<S>::updateAttachedBox(const Vector3<S> &size, int link_id,
                                             const Vector7<S> &pose) {
   const CollisionGeometryPtr collision_geometry =
-      std::make_shared<fcl::Box<S>>(size[0], size[1], size[2]);
+      std::make_shared<hpp::fcl::Box>(size[0], size[1], size[2]);
   updateAttachedTool(collision_geometry, link_id, pose);
 }
 
@@ -70,7 +71,7 @@ template <typename S>
 void PlanningWorldTpl<S>::updateAttachedSphere(S radius, int link_id,
                                                const Vector7<S> &pose) {
   const CollisionGeometryPtr collision_geometry =
-      std::make_shared<fcl::Sphere<S>>(radius);
+      std::make_shared<hpp::fcl::Sphere>(radius);
   updateAttachedTool(collision_geometry, link_id, pose);
 }
 
@@ -146,8 +147,8 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       for (size_t k = 0; k < CollisionObjects_other.size(); k++) {
         CollisionResult result;
         result.clear();
-        fcl::collide(CollisionObjects[j].get(), CollisionObjects_other[k].get(),
-                     request, result);
+        hpp::fcl::collide(CollisionObjects[j].get(), CollisionObjects_other[k].get(),
+                          request, result);
         if (result.isCollision()) {
           WorldCollisionResult tmp;
           tmp.res = result;
@@ -169,7 +170,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       result.clear();
       const std::string &normal_object_name = itm.first;
       const auto &normal_object = itm.second;
-      fcl::collide(CollisionObjects[i].get(), normal_object.get(), request, result);
+      hpp::fcl::collide(CollisionObjects[i].get(), normal_object.get(), request, result);
       if (result.isCollision()) {
         WorldCollisionResult tmp;
         tmp.res = result;
@@ -190,7 +191,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       for (size_t i = 0; i < CollisionObjects.size(); i++) {
         CollisionResult result;
         result.clear();
-        fcl::collide(CollisionObjects[i].get(), point_cloud_.get(), request, result);
+        hpp::fcl::collide(CollisionObjects[i].get(), point_cloud_.get(), request, result);
         if (result.isCollision()) {
           WorldCollisionResult tmp;
           tmp.res = result;
@@ -214,12 +215,13 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
     } else {  // currently, only collide with the point cloud, only support one
               // articulation
       const Vector7<S> link_pose = pinocchio_model->getLinkPose(attach_link_id_);
-      attached_tool_.get()->setTransform(toIsometry<S>(link_pose) *
-                                         attach_to_link_pose_);
+      auto link_pose_isometry = toIsometry<S>(link_pose) * attach_to_link_pose_;
+      attached_tool_.get()->setTransform(link_pose_isometry.linear(),
+                                         link_pose_isometry.translation());
 
       CollisionResult result;
       result.clear();
-      fcl::collide(attached_tool_.get(), point_cloud_.get(), request, result);
+      hpp::fcl::collide(attached_tool_.get(), point_cloud_.get(), request, result);
       if (result.isCollision()) {
         WorldCollisionResult tmp;
         tmp.res = result;

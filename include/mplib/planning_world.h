@@ -19,13 +19,13 @@ MPLIB_CLASS_TEMPLATE_FORWARD(PlanningWorldTpl);
 template <typename S>
 class PlanningWorldTpl {
   // Common type alias
-  using CollisionRequest = fcl::CollisionRequest<S>;
-  using CollisionResult = fcl::CollisionResult<S>;
-  using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
-  using CollisionObject = fcl::CollisionObject<S>;
-  using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
-  // using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
-  using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
+  using CollisionRequest = hpp::fcl::CollisionRequest;
+  using CollisionResult = hpp::fcl::CollisionResult;
+  using CollisionGeometryPtr = hpp::fcl::CollisionGeometryPtr;
+  using CollisionObject = hpp::fcl::CollisionObject;
+  using CollisionObjectPtr = hpp::fcl::CollisionObjectPtr;
+  // using DynamicAABBTreeCollisionManager = hpp::fcl::DynamicAABBTreeCollisionManager;
+  using BroadPhaseCollisionManagerPtr = hpp::fcl::BroadPhaseCollisionManagerPtr;
 
   using WorldCollisionResult = WorldCollisionResultTpl<S>;
   using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;

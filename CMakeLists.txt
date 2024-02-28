@@ -27,14 +27,14 @@ find_package(Eigen3 3.4.0 REQUIRED)
 set(Boost_NO_WARN_NEW_VERSIONS 1)  # silence Boost CMake warnings
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 find_package(ompl REQUIRED)
-find_package(fcl REQUIRED)
+find_package(hpp-fcl REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(assimp REQUIRED)
 find_package(orocos_kdl REQUIRED)
 find_package(urdfdom REQUIRED)
 
 # store libries in a variable
-set(LIBS ompl fcl assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
+set(LIBS ompl hpp-fcl assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
 # mp
 file(GLOB_RECURSE MPLIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 add_library(mp STATIC ${MPLIB_SRC})

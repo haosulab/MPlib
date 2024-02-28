@@ -2,38 +2,32 @@
 
 #include <memory>
 
-#include <fcl/broadphase/broadphase_collision_manager.h>
-#include <fcl/geometry/bvh/BVH_model.h>
-#include <fcl/geometry/collision_geometry.h>
-#include <fcl/geometry/shape/convex.h>
-#include <fcl/narrowphase/collision_object.h>
+#include <hpp/fcl/broadphase/broadphase_collision_manager.h>
+// #include <hpp/fcl/geometry/bvh/BVH_model.h>
+#include <hpp/fcl/BVH/BVH_model.h>
+#include <hpp/fcl/shape/convex.h>
+#include <hpp/fcl/collision.h>
 
 namespace mplib::collision_detection::fcl {
 
 // Namespace alias
-namespace fcl = ::fcl;
+namespace fcl = ::hpp::fcl;
 
 }  // namespace mplib::collision_detection::fcl
 
-namespace fcl {
+namespace hpp::fcl {
 
-template <typename S>
-using CollisionGeometryPtr = std::shared_ptr<fcl::CollisionGeometry<S>>;
+using CollisionGeometryPtr = std::shared_ptr<CollisionGeometry>;
 
-template <typename S>
-using ConvexPtr = std::shared_ptr<fcl::Convex<S>>;
+using ConvexPtr = std::shared_ptr<Convex<Triangle>>;
 
-template <typename S>
-using BVHModel_OBBRSS = fcl::BVHModel<fcl::OBBRSS<S>>;
+using BVHModel_OBBRSS = BVHModel<OBBRSS>;
 
-template <typename S>
-using BVHModel_OBBRSSPtr = std::shared_ptr<BVHModel_OBBRSS<S>>;
+using BVHModel_OBBRSSPtr = std::shared_ptr<BVHModel_OBBRSS>;
 
-template <typename S>
-using CollisionObjectPtr = std::shared_ptr<fcl::CollisionObject<S>>;
+using CollisionObjectPtr = std::shared_ptr<CollisionObject>;
 
-template <typename S>
 using BroadPhaseCollisionManagerPtr =
-    std::shared_ptr<fcl::BroadPhaseCollisionManager<S>>;
+    std::shared_ptr<BroadPhaseCollisionManager>;
 
 }  // namespace fcl

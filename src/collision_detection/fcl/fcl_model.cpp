@@ -18,7 +18,7 @@ namespace mplib::collision_detection::fcl {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_FCL_MODEL(S) template class FCLModelTpl<S>
 
-DEFINE_TEMPLATE_FCL_MODEL(float);
+// DEFINE_TEMPLATE_FCL_MODEL(float);
 DEFINE_TEMPLATE_FCL_MODEL(double);
 
 template <typename S>
@@ -68,8 +68,7 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
   if (link->collision)
     for (const auto &geom : link->collision_array) {
       auto geom_model = geom->geometry;
-      fcl::CollisionGeometryPtr<S> collision_geometry;
-      auto pose = Isometry3<S>::Identity();
+      fcl::CollisionGeometryPtr collision_geometry;
       if (geom_model->type == urdf::Geometry::MESH) {
         const urdf::MeshSharedPtr urdf_mesh =
             urdf::dynamic_pointer_cast<urdf::Mesh>(geom_model);
@@ -94,25 +93,25 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
       } else if (geom_model->type == urdf::Geometry::CYLINDER) {
         const urdf::CylinderSharedPtr cylinder =
             urdf::dynamic_pointer_cast<urdf::Cylinder>(geom_model);
-        collision_geometry = std::make_shared<fcl::Cylinder<S>>(
+        collision_geometry = std::make_shared<fcl::Cylinder>(
             static_cast<S>(cylinder->radius), static_cast<S>(cylinder->length));
       } else if (geom_model->type == urdf::Geometry::BOX) {
         const urdf::BoxSharedPtr box =
             urdf::dynamic_pointer_cast<urdf::Box>(geom_model);
-        collision_geometry = std::make_shared<fcl::Box<S>>(static_cast<S>(box->dim.x),
+        collision_geometry = std::make_shared<fcl::Box>(static_cast<S>(box->dim.x),
                                                            static_cast<S>(box->dim.y),
                                                            static_cast<S>(box->dim.z));
       } else if (geom_model->type == ::urdf::Geometry::SPHERE) {
         const urdf::SphereSharedPtr sphere =
             urdf::dynamic_pointer_cast<urdf::Sphere>(geom_model);
         collision_geometry =
-            std::make_shared<fcl::Sphere<S>>(static_cast<S>(sphere->radius));
+            std::make_shared<fcl::Sphere>(static_cast<S>(sphere->radius));
       } else
         throw std::invalid_argument("Unknown geometry type :");
 
       if (!collision_geometry)
         throw std::invalid_argument("The polyhedron retrived is empty");
-      auto obj {std::make_shared<fcl::CollisionObject<S>>(collision_geometry, pose)};
+      auto obj {std::make_shared<fcl::CollisionObject>(collision_geometry, fcl::Transform3f::Identity())};
 
       collision_objects_.push_back(obj);
       collision_link_names_.push_back(link->name);
@@ -182,8 +181,9 @@ void FCLModelTpl<S>::updateCollisionObjects(
     const std::vector<Vector7<S>> &link_pose) const {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
-    collision_objects_[i]->setTransform(toIsometry<S>(link_pose[link_i]) *
-                                        collision_origin2link_poses[i]);
+    //TODO[xinsong] do some more type conversion. currently float is disabled
+    auto isometry_pose = toIsometry<fcl::FCL_REAL>(link_pose[link_i])*collision_origin2link_poses[i];
+    collision_objects_[i]->setTransform(isometry_pose.linear(), isometry_pose.translation());
   }
 }
 
@@ -192,14 +192,15 @@ void FCLModelTpl<S>::updateCollisionObjects(
     const std::vector<Isometry3<S>> &link_pose) const {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
-    collision_objects_[i]->setTransform(link_pose[link_i] *
-                                        collision_origin2link_poses[i]);
+    auto isometry_pose = link_pose[link_i] * collision_origin2link_poses[i];
+    collision_objects_[i]->setTransform(isometry_pose.linear(),
+                                        isometry_pose.translation());
   }
 }
 
 template <typename S>
-bool FCLModelTpl<S>::collide(const fcl::CollisionRequest<S> &request) const {
-  fcl::CollisionResult<S> result;
+bool FCLModelTpl<S>::collide(const fcl::CollisionRequest &request) const {
+  fcl::CollisionResult result;
   for (const auto &col_pair : collision_pairs_) {
     fcl::collide(collision_objects_[col_pair.first].get(),
                  collision_objects_[col_pair.second].get(), request, result);
@@ -209,12 +210,12 @@ bool FCLModelTpl<S>::collide(const fcl::CollisionRequest<S> &request) const {
 }
 
 template <typename S>
-std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::collideFull(
-    const fcl::CollisionRequest<S> &request) const {
+std::vector<fcl::CollisionResult> FCLModelTpl<S>::collideFull(
+    const fcl::CollisionRequest &request) const {
   // Result will be returned via the collision result structure
-  std::vector<fcl::CollisionResult<S>> ret;
+  std::vector<fcl::CollisionResult> ret;
   for (const auto &col_pair : collision_pairs_) {
-    fcl::CollisionResult<S> result;
+    fcl::CollisionResult result;
     fcl::collide(collision_objects_[col_pair.first].get(),
                  collision_objects_[col_pair.second].get(), request, result);
     ret.push_back(result);

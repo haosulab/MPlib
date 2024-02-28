@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <fcl/narrowphase/collision_result.h>
+#include <hpp/fcl/collision.h>
 
 namespace mplib::collision_detection {
 
@@ -12,7 +12,7 @@ struct WorldCollisionResultTpl {
   // TODO: Update with
   // https://moveit.picknik.ai/main/api/html/structcollision__detection_1_1CollisionResult.html
 
-  ::fcl::CollisionResult<S> res;  ///< the fcl CollisionResult
+  ::hpp::fcl::CollisionResult res;  ///< the fcl CollisionResult
   std::string collision_type,     ///< type of the collision
       object_name1,               ///< name of the first object
       object_name2,               ///< name of the second object

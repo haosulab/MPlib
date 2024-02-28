@@ -4,8 +4,8 @@
 #include <utility>
 #include <vector>
 
-#include <fcl/narrowphase/collision.h>
-#include <fcl/narrowphase/distance.h>
+#include <hpp/fcl/collision.h>
+#include <hpp/fcl/distance.h>
 #include <urdf_model/types.h>
 #include <urdf_world/types.h>
 
@@ -54,7 +54,7 @@ class FCLModelTpl {
    *
    * @return: all collision objects of the FCL model
    */
-  const std::vector<fcl::CollisionObjectPtr<S>> &getCollisionObjects() const {
+  const std::vector<fcl::CollisionObjectPtr> &getCollisionObjects() const {
     return collision_objects_;
   }
 
@@ -113,7 +113,7 @@ class FCLModelTpl {
    * @return: ``true`` if any collision pair collides
    */
   bool collide(
-      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
+      const fcl::CollisionRequest &request = fcl::CollisionRequest()) const;
 
   /**
    * Perform self-collision checking and returns all found collisions.
@@ -121,9 +121,8 @@ class FCLModelTpl {
    * @param request: collision request
    * @return: list of CollisionResult for each collision pair
    */
-  std::vector<fcl::CollisionResult<S>> collideFull(
-      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>(
-          1, false, 1, false, true, fcl::GJKSolverType::GST_INDEP, 1e-6)) const;
+  std::vector<fcl::CollisionResult> collideFull(
+      const fcl::CollisionRequest &request = fcl::CollisionRequest()) const;
 
  private:
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model,
@@ -136,7 +135,7 @@ class FCLModelTpl {
   std::string package_dir_;
   bool use_convex_;
 
-  std::vector<fcl::CollisionObjectPtr<S>> collision_objects_;
+  std::vector<fcl::CollisionObjectPtr> collision_objects_;
   std::vector<std::string> collision_link_names_;
   std::vector<std::string> parent_link_names_;
   std::vector<Isometry3<S>> collision_origin2link_poses;
@@ -150,14 +149,14 @@ class FCLModelTpl {
 
 // Common Type Alias ===================================================================
 using FCLModelf = FCLModelTpl<float>;
-using FCLModeld = FCLModelTpl<double>;
+// using FCLModeld = FCLModelTpl<double>;
 using FCLModelfPtr = FCLModelTplPtr<float>;
-using FCLModeldPtr = FCLModelTplPtr<double>;
+// using FCLModeldPtr = FCLModelTplPtr<double>;
 
 // Explicit Template Instantiation Declaration =========================================
 #define DECLARE_TEMPLATE_FCL_MODEL(S) extern template class FCLModelTpl<S>
 
-DECLARE_TEMPLATE_FCL_MODEL(float);
+// DECLARE_TEMPLATE_FCL_MODEL(float);
 DECLARE_TEMPLATE_FCL_MODEL(double);
 
 }  // namespace mplib::collision_detection::fcl
