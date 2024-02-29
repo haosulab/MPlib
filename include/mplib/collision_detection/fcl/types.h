@@ -3,7 +3,6 @@
 #include <memory>
 
 #include <hpp/fcl/broadphase/broadphase_collision_manager.h>
-// #include <hpp/fcl/geometry/bvh/BVH_model.h>
 #include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/fcl/shape/convex.h>
 #include <hpp/fcl/collision.h>

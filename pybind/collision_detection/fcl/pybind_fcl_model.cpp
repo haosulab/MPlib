@@ -18,7 +18,7 @@ namespace mplib::collision_detection::fcl {
 
 using FCLModel = FCLModelTpl<S>;
 
-using CollisionRequest = fcl::CollisionRequest<S>;
+using CollisionRequest = hpp::fcl::CollisionRequest;
 
 void build_pyfcl_model(py::module &m) {
   auto PyFCLModel = py::class_<FCLModel, std::shared_ptr<FCLModel>>(

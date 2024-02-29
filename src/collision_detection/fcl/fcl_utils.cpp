@@ -51,7 +51,7 @@ fcl::ConvexPtr loadMeshAsConvex(const std::string &mesh_path,
   }
   // hpp::fcl::Triangle *polygons_
   auto hppfcl_polygons_ptr = new hpp::fcl::Triangle[triangles.size()];
-  for (int i = 0; i < triangles.size(); i++) {
+  for (size_t i = 0; i < triangles.size(); i++) {
     hppfcl_polygons_ptr[i] = triangles[i];
   }
   return std::make_shared<hpp::fcl::Convex<hpp::fcl::Triangle>>(true,

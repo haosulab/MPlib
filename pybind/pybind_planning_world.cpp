@@ -18,8 +18,8 @@ namespace mplib {
 using PlanningWorld = PlanningWorldTpl<S>;
 
 using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
-using CollisionRequest = fcl::CollisionRequest<S>;
-using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
+using CollisionRequest = hpp::fcl::CollisionRequest;
+using CollisionObjectPtr = hpp::fcl::CollisionObjectPtr;
 
 void build_pyplanning_world(py::module &pymp) {
   auto PyPlanningWorld = py::class_<PlanningWorld, std::shared_ptr<PlanningWorld>>(
