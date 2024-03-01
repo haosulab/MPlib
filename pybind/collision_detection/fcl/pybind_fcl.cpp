@@ -210,24 +210,25 @@ void build_pyfcl(py::module &m) {
 //            DOC(fcl, OcTree, OcTree, 2));
 
   // Collision Object = Geometry + Transformation
-//   auto PyCollisionObject =
-//       py::class_<CollisionObject, std::shared_ptr<CollisionObject>>(
-//           m, "CollisionObject", DOC(fcl, CollisionObject));
-//   PyCollisionObject
-//       .def(py::init([](const std::shared_ptr<CollisionGeometry> &cgeom,
-//                        const Vector3<S> &p, const Vector4<S> &q) {
-//              auto rot_mat = Quaternion<S> {q(0), q(1), q(2), q(3)}.matrix();
-//              return CollisionObject(cgeom, rot_mat, p);
-//            }),
-//            py::arg("collision_geometry"), py::arg("position") = Vector3<S> {0, 0, 0},
-//            py::arg("quaternion") = Vector4<S> {1, 0, 0, 0},
-//            DOC(fcl, CollisionObject, CollisionObject))
-//       .def("get_collision_geometry", &CollisionObject::collisionGeometry)
-//       .def("get_translation", &CollisionObject::getTranslation)
-//       .def("get_rotation", &CollisionObject::getRotation)
-//       .def("set_transformation", [](CollisionObject &a, const Vector7<S> &pose) {
-//         a.setTransform(toIsometry<S>(pose));
-//       });
+  auto PyCollisionObject =
+      py::class_<CollisionObject, std::shared_ptr<CollisionObject>>(
+          m, "CollisionObject", DOC(fcl, CollisionObject));
+  PyCollisionObject
+      .def(py::init([](const std::shared_ptr<CollisionGeometry> &cgeom,
+                       const Vector3<S> &p, const Vector4<S> &q) {
+             auto rot_mat = Quaternion<S> {q(0), q(1), q(2), q(3)}.matrix();
+             return CollisionObject(cgeom, rot_mat, p);
+           }),
+           py::arg("collision_geometry"), py::arg("position") = Vector3<S> {0, 0, 0},
+           py::arg("quaternion") = Vector4<S> {1, 0, 0, 0},
+           DOC(fcl, CollisionObject, CollisionObject))
+      .def("get_collision_geometry", [](CollisionObject &a) { return a.collisionGeometry(); })
+      .def("get_translation", &CollisionObject::getTranslation)
+      .def("get_rotation", &CollisionObject::getRotation)
+      .def("set_transformation", [](CollisionObject &a, const Vector7<S> &pose) {
+        auto isometry = toIsometry<S>(pose);
+        a.setTransform(isometry.linear(), isometry.translation());
+      });
 
 //   /**********    narrowphase    *******/
 //   auto PyGJKSolverType = py::enum_<GJKSolverType>(m, "GJKSolverType");
