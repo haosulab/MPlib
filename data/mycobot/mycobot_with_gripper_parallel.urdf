@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="mycobot_280pi" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:property name="width" value=".2"/>
+  <link name="base_mount">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/arm/base_mount.dae"/>
+      </geometry>
+      <origin rpy="0 0 1.5708" xyz="0.0 0 -0.03"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/arm/base_mount.dae"/>
+      </geometry>
+      <origin rpy="0 0 1.5708" xyz="0.0 0 -0.03"/>
+    </collision>
+  </link>
+  <link name="link_base">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/arm/link_base.dae"/>
+      </geometry>
+      <origin rpy="0 0 -1.5708" xyz="0.0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/arm/link_base.dae"/>
+      </geometry>
+      <origin rpy="0 0 -1.5708" xyz="0.0 0 0"/>
+    </collision>
+  </link>
+  <link name="link1">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/arm/link1.dae"/>
+      </geometry>
+      <origin rpy="0 0 -1.5708" xyz="0.0 0 -0.06096"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/arm/link1.dae"/>
+      </geometry>
+      <origin rpy="0 0 -1.5708" xyz="0.0 0 -0.06096"/>
+    </collision>
+  </link>
+  <link name="link2">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/arm/link2.dae"/>
+      </geometry>
+      <origin rpy="0 -1.5708 0" xyz="0.0 0 0.03256"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/arm/link2.dae"/>
+      </geometry>
+      <origin rpy="0 -1.5708 0" xyz="0.0 0 0.03256"/>
+    </collision>
+  </link>
+  <link name="link3">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/arm/link3.dae"/>
+      </geometry>
+      <origin rpy="0 -1.5708 0" xyz="0.0 0 0.03056"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/arm/link3.dae"/>
+      </geometry>
+      <origin rpy="0 -1.5708 0" xyz="0.0 0 0.03056"/>
+    </collision>
+  </link>
+  <link name="link4">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/arm/link4.dae"/>
+      </geometry>
+      <origin rpy="-1.5708 0 0" xyz="0.0 0 -0.03356"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/arm/link4.dae"/>
+      </geometry>
+      <origin rpy="-1.5708 0 0" xyz="0.0 0 -0.03356"/>
+    </collision>
+  </link>
+  <link name="link5">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/arm/link5.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0.00 -0.038"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/arm/link5.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0.00 -0.038"/>
+    </collision>
+  </link>
+  <link name="link6">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/arm/link6.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0.0 0 -0.012"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/arm/link6.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0.0 0 -0.012"/>
+    </collision>
+  </link>
+  <link name="link_eef"/>
+  <joint name="joint_eef" type="fixed">
+    <!-- link6.dae has z side_length 0.0137 -->
+    <origin rpy="0 0 1.5708" xyz="0 0 0.0017"/>
+    <parent link="link6"/>
+    <child link="link_eef"/>
+  </joint>
+  <link name="gripper_base">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/gripper/gripper_base.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/gripper/gripper_base.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 0 0"/>
+    </collision>
+  </link>
+  <link name="left_finger">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/gripper/left_finger.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 -0.039 -0.0133"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/gripper/left_finger.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 -0.039 -0.0133"/>
+    </collision>
+  </link>
+  <link name="left_inner_knuckle">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/gripper/left_inner_knuckle.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 -0.005 -0.0195"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/gripper/left_inner_knuckle.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 -0.005 -0.0195"/>
+    </collision>
+  </link>
+  <link name="left_outer_knuckle">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/gripper/left_outer_knuckle.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 -0.012 0.0025"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/gripper/left_outer_knuckle.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 -0.012 0.0025"/>
+    </collision>
+  </link>
+  <link name="right_finger">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/gripper/right_finger.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 0.039 -0.0133"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/gripper/right_finger.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 0.039 -0.0133"/>
+    </collision>
+  </link>
+  <link name="right_inner_knuckle">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/gripper/right_inner_knuckle.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 0.005 -0.0195"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/gripper/right_inner_knuckle.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 0.005 -0.0195"/>
+    </collision>
+  </link>
+  <link name="right_outer_knuckle">
+    <visual>
+      <geometry>
+        <mesh filename="package://meshes/gripper/right_outer_knuckle.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 0.012 0.0025"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://meshes/gripper/right_outer_knuckle.dae"/>
+      </geometry>
+      <origin rpy="1.5708 0 -1.5708" xyz="0.012 0.012 0.0025"/>
+    </collision>
+  </link>
+  <link name="link_tcp"/>
+  <joint name="joint_tcp" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.08785025"/>
+    <parent link="gripper_base"/>
+    <child link="link_tcp"/>
+  </joint>
+  <joint name="base_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base_mount"/>
+    <child link="link_base"/>
+  </joint>
+  <joint name="joint1" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0 0.13156"/>
+    <parent link="link_base"/>
+    <child link="link1"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000.0" lower="-2.879793" upper="2.879793" velocity="0"/>
+  </joint>
+  <joint name="joint2" type="revolute">
+    <origin rpy="0 1.5708 -1.5708" xyz="0 0 0"/>
+    <parent link="link1"/>
+    <child link="link2"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000.0" lower="-2.879793" upper="2.879793" velocity="0"/>
+  </joint>
+  <joint name="joint3" type="revolute">
+    <axis xyz=" 0 0 1"/>
+    <limit effort="1000.0" lower="-2.879793" upper="2.879793" velocity="0"/>
+    <parent link="link2"/>
+    <child link="link3"/>
+    <origin rpy="0 0 0" xyz="-0.1104 0 0"/>
+  </joint>
+  <joint name="joint4" type="revolute">
+    <origin rpy="0 0 -1.5708" xyz="-0.096 0 0.06462"/>
+    <parent link="link3"/>
+    <child link="link4"/>
+    <axis xyz=" 0 0 1"/>
+    <limit effort="1000.0" lower="-2.879793" upper="2.879793" velocity="0"/>
+  </joint>
+  <joint name="joint5" type="revolute">
+    <origin rpy="1.5708 -1.5708 0" xyz="0 -0.07318 0"/>
+    <parent link="link4"/>
+    <child link="link5"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000.0" lower="-2.879793" upper="2.879793" velocity="0"/>
+  </joint>
+  <joint name="joint6" type="revolute">
+    <origin rpy="-1.5708 -0.785398 0" xyz="0 0.0456 0"/>
+    <parent link="link5"/>
+    <child link="link6"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000.0" lower="-2.897247" upper="3.054326" velocity="0"/>
+  </joint>
+  <joint name="gripper_fix" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.0323"/>
+    <parent link="link_eef"/>
+    <child link="gripper_base"/>
+  </joint>
+  <joint name="gripper_controller" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0.012 0.005"/>
+    <parent link="gripper_base"/>
+    <child link="left_outer_knuckle"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="1000.0" lower="-0.7" upper="0.15" velocity="0"/>
+  </joint>
+  <joint name="left_inner_knuckle_joint" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0.005 0.027"/>
+    <parent link="gripper_base"/>
+    <child link="left_inner_knuckle"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="1000.0" lower="-0.7" upper="0.15" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="1.0" offset="0"/>
+  </joint>
+  <joint name="left_finger_joint" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0.027 0.016"/>
+    <parent link="left_outer_knuckle"/>
+    <child link="left_finger"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-0.7" upper="0.15" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="1.0" offset="0"/>
+  </joint>
+  <joint name="right_outer_knuckle_joint" type="revolute">
+    <origin rpy="0 0 0" xyz="0 -0.012 0.005"/>
+    <parent link="gripper_base"/>
+    <child link="right_outer_knuckle"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-0.7" upper="0.15" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="1.0" offset="0"/>
+  </joint>
+  <joint name="right_inner_knuckle_joint" type="revolute">
+    <origin rpy="0 0 0" xyz="0 -0.005 0.027"/>
+    <parent link="gripper_base"/>
+    <child link="right_inner_knuckle"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-0.7" upper="0.15" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="1.0" offset="0"/>
+  </joint>
+  <joint name="right_finger_joint" type="revolute">
+    <origin rpy="0 0 0" xyz="0 -0.027 0.016"/>
+    <parent link="right_outer_knuckle"/>
+    <child link="right_finger"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="1000.0" lower="-0.7" upper="0.15" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="1.0" offset="0"/>
+  </joint>
+</robot>

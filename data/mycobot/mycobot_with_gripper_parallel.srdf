@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+
+<robot name="mycobot_with_gripper_parallel_local">
+  <group name="arm">
+    <chain base_link="base_mount" tip_link="link6"/>
+  </group>
+  <group name="gripper">
+    <chain base_link="gripper_base" tip_link="right_finger"/>
+    <chain base_link="gripper_base" tip_link="left_finger"/>
+  </group>
+  <group name="mycobot">
+    <group name="arm"/>
+    <group name="gripper"/>
+  </group>
+  <disable_collisions link1="link_base" link2="link1" reason="Adjacent"/>
+  <disable_collisions link1="link1" link2="link2" reason="Adjacent"/>
+  <disable_collisions link1="link2" link2="link3" reason="Adjacent"/>
+  <disable_collisions link1="link3" link2="link4" reason="Adjacent"/>
+  <disable_collisions link1="link4" link2="link5" reason="Adjacent"/>
+  <disable_collisions link1="link5" link2="link6" reason="Adjacent"/>
+  <disable_collisions link1="link6" link2="link_eef" reason="Adjacent"/>
+  <disable_collisions link1="link6" link2="gripper_base" reason="Adjacent"/>
+  <disable_collisions link1="link_eef" link2="gripper_base" reason="Adjacent"/>
+  <disable_collisions link1="gripper_base" link2="left_outer_knuckle" reason="Adjacent"/>
+  <disable_collisions link1="left_outer_knuckle" link2="left_finger" reason="Adjacent"/>
+  <disable_collisions link1="left_inner_knuckle" link2="left_finger" reason="Adjacent"/>
+  <disable_collisions link1="gripper_base" link2="right_outer_knuckle" reason="Adjacent"/>
+  <disable_collisions link1="right_outer_knuckle" link2="right_finger" reason="Adjacent"/>
+  <disable_collisions link1="right_inner_knuckle" link2="right_finger" reason="Adjacent"/>
+</robot>

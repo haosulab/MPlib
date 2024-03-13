@@ -61,7 +61,7 @@ class Planner:
             print(f"No SRDF file provided but found {self.srdf}")
 
         # replace package:// keyword if exists
-        urdf = self.replace_package_keyword(package_keyword_replacement)
+        self.urdf = self.replace_package_keyword(package_keyword_replacement)
 
         self.robot = ArticulatedModel(
             self.urdf,
