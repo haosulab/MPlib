@@ -63,8 +63,8 @@ class Planner:
         urdf = self.replace_package_keyword(package_keyword_replacement)
 
         self.robot = ArticulatedModel(
-            urdf,
-            srdf,
+            self.urdf,
+            self.srdf,
             [0, 0, -9.81],
             user_link_names,
             user_joint_names,
@@ -674,6 +674,8 @@ class Planner:
                 if current_qpos[i] > self.joint_limits[i][1]:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
+        current_qpos = self.pad_qpos(current_qpos)
+        
         if wrt_world:
             goal_pose = self.transform_goal_to_wrt_base(goal_pose)
 
