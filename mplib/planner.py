@@ -55,7 +55,8 @@ class Planner:
         if joint_acc_limits is None:
             joint_acc_limits = []
         self.urdf = urdf
-        if srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
+        self.srdf = srdf
+        if self.srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
             self.srdf = urdf.replace(".urdf", ".srdf")
             print(f"No SRDF file provided but found {self.srdf}")
 
@@ -63,12 +64,12 @@ class Planner:
         urdf = self.replace_package_keyword(package_keyword_replacement)
 
         self.robot = ArticulatedModel(
-            urdf,
-            srdf,
+            self.urdf,
+            self.srdf,
             [0, 0, -9.81],
             user_link_names,
             user_joint_names,
-            convex=True,
+            convex=kwargs.get("convex", False),
             verbose=False,
         )
         self.pinocchio_model = self.robot.get_pinocchio_model()
@@ -82,10 +83,6 @@ class Planner:
             kwargs.get("normal_object_names", []),
         )
 
-        if srdf == "":
-            self.generate_collision_pair()
-            self.robot.update_SRDF(self.srdf)
-
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
             self.joint_name_2_idx[joint] = i
@@ -93,6 +90,10 @@ class Planner:
         for i, link in enumerate(self.user_link_names):
             self.link_name_2_idx[link] = i
 
+        if self.srdf == "":
+            self.generate_collision_pair()
+            self.robot.update_SRDF(self.srdf)
+        
         assert (
             move_group in self.user_link_names
         ), f"end-effector not found as one of the links in {self.user_link_names}"
@@ -674,6 +675,8 @@ class Planner:
                 if current_qpos[i] > self.joint_limits[i][1]:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
+        current_qpos = self.pad_qpos(current_qpos)
+        
         if wrt_world:
             goal_pose = self.transform_goal_to_wrt_base(goal_pose)
 
