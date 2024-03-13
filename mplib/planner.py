@@ -55,7 +55,8 @@ class Planner:
         if joint_acc_limits is None:
             joint_acc_limits = []
         self.urdf = urdf
-        if srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
+        self.srdf = srdf
+        if self.srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
             self.srdf = urdf.replace(".urdf", ".srdf")
             print(f"No SRDF file provided but found {self.srdf}")
 
@@ -89,7 +90,7 @@ class Planner:
         for i, link in enumerate(self.user_link_names):
             self.link_name_2_idx[link] = i
 
-        if srdf == "":
+        if self.srdf == "":
             self.generate_collision_pair()
             self.robot.update_SRDF(self.srdf)
         
