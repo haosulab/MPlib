@@ -10,6 +10,7 @@ import toppra.constraint as constraint
 from transforms3d.quaternions import mat2quat, quat2mat
 
 from mplib.pymp import ArticulatedModel, PlanningWorld
+from mplib.pymp.collision_detection import WorldCollisionResult
 from mplib.pymp.planning import ompl
 
 
@@ -291,6 +292,16 @@ class Planner:
         articulation.set_qpos(old_qpos, True)
         return collisions
 
+    def collision_result_to_string(self, collisions: list[WorldCollisionResult]) -> str:
+        """helper function to convert collision results to string"""
+        result = ""
+        for collision in collisions:
+            result += (
+                f"{collision.object_name1}.{collision.link_name1} and "
+                f"{collision.object_name2}.{collision.link_name2} collide!\n"
+            )
+        return result
+
     def check_for_self_collision(
         self,
         articulation: Optional[ArticulatedModel] = None,
@@ -364,6 +375,7 @@ class Planner:
         qpos0 = np.copy(start_qpos)
         results = []
         self.robot.set_qpos(start_qpos, True)
+        num_collision = 0
         for _ in range(n_init_qpos):
             ik_results = self.pinocchio_model.compute_IK_CLIK(
                 index, goal_pose, start_qpos, mask
@@ -373,6 +385,7 @@ class Planner:
             # check collision
             self.planning_world.set_qpos_all(ik_results[0][idx])
             if len(self.planning_world.collide_full()) != 0:
+                num_collision += 1
                 flag = False
 
             if flag:
@@ -405,7 +418,7 @@ class Planner:
                 threshold,
             )
         else:
-            status = "IK Failed! Cannot find valid solution."
+            status = f"IK Failed! Cannot find valid solution. {num_collision} out of {n_init_qpos} ik solutions collide with the environment."
         return status, results
 
     def TOPP(self, path, step=0.1, verbose=False):
@@ -682,18 +695,6 @@ class Planner:
 
         # we need to take only the move_group joints when planning
         # idx = self.move_group_joint_indices
-
-        ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
-        if ik_status != "Success":
-            return {"status": ik_status}
-
-        if verbose:
-            print("IK results:")
-            for i in range(len(goal_qpos)):
-                print(goal_qpos[i])
-
-        # goal_qpos_ = [goal_qpos[i][idx] for i in range(len(goal_qpos))]
-        self.robot.set_qpos(current_qpos, True)
 
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
