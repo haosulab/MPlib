@@ -68,7 +68,7 @@ class Planner:
             [0, 0, -9.81],
             user_link_names,
             user_joint_names,
-            convex=True,
+            convex=kwargs.get("convex", False),
             verbose=False,
         )
         self.pinocchio_model = self.robot.get_pinocchio_model()
@@ -82,10 +82,6 @@ class Planner:
             kwargs.get("normal_object_names", []),
         )
 
-        if srdf == "":
-            self.generate_collision_pair()
-            self.robot.update_SRDF(self.srdf)
-
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
             self.joint_name_2_idx[joint] = i
@@ -93,6 +89,10 @@ class Planner:
         for i, link in enumerate(self.user_link_names):
             self.link_name_2_idx[link] = i
 
+        if srdf == "":
+            self.generate_collision_pair()
+            self.robot.update_SRDF(self.srdf)
+        
         assert (
             move_group in self.user_link_names
         ), f"end-effector not found as one of the links in {self.user_link_names}"
