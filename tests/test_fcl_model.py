@@ -2,7 +2,7 @@ import os
 import unittest
 import numpy as np
 from transforms3d.quaternions import mat2quat
-from mplib.pymp.collision_detection.fcl import FCLModel
+from mplib.pymp.collision_detection.fcl import FCLModel, Box, CollisionObject, Plane, distance, DistanceRequest
 from mplib.pymp.kinematics.pinocchio import PinocchioModel
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +64,11 @@ class TestFCLModel(unittest.TestCase):
     collisions = self.model.collide_full()
     is_collision = [collision.is_collision() for collision in collisions]
     self.assertFalse(any(is_collision))
+
+  def test_distance(self):
+    ground_obj = CollisionObject(Plane([0, 0, 1], 0), [0, 0, 0], [1, 0, 0, 0])
+    box_obj = CollisionObject(Box(1,1,1), [0, 0, 5.5], [1, 0, 0, 0])
+    self.assertEqual(distance(ground_obj, box_obj, DistanceRequest()).min_distance, 5)
 
 if __name__ == "__main__":
   unittest.main()

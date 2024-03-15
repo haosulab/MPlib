@@ -230,7 +230,7 @@ void build_pyfcl(py::module &m) {
 
   /**********    narrowphase    *******/
   auto PyGJKSolverType = py::enum_<GJKSolverType>(m, "GJKSolverType");
-  PyGJKSolverType.value("GST_LIBCCD", GJKSolverType::GST_LIBCCD)
+  PyGJKSolverType.value("GST_LIBCCD", GJKSolverType::GST_INDEP)
       .value("GST_INDEP", GJKSolverType::GST_INDEP)
       .export_values();
 
@@ -243,7 +243,7 @@ void build_pyfcl(py::module &m) {
            py::arg("num_max_contacts") = 1, py::arg("enable_contact") = false,
            py::arg("num_max_cost_sources") = 1, py::arg("enable_cost") = false,
            py::arg("use_approximate_cost") = true,
-           py::arg("gjk_solver_type") = GJKSolverType::GST_LIBCCD,
+           py::arg("gjk_solver_type") = GJKSolverType::GST_INDEP,
            py::arg("gjk_tolerance") = 1e-6)
       .def("isSatisfied", &CollisionRequest::isSatisfied, py::arg("result"));
 
@@ -282,7 +282,7 @@ void build_pyfcl(py::module &m) {
            py::arg("enable_nearest_points") = false,
            py::arg("enable_signed_distance") = false, py::arg("rel_err") = 0.0,
            py::arg("abs_err") = 0.0, py::arg("distance_tolerance") = 1e-6,
-           py::arg("gjk_solver_type") = GJKSolverType::GST_LIBCCD)
+           py::arg("gjk_solver_type") = GJKSolverType::GST_INDEP)
       .def("isSatisfied", &DistanceRequest::isSatisfied, py::arg("result"));
 
   // DistanceResult
