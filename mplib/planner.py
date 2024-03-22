@@ -149,7 +149,7 @@ class Planner:
                         out_f.write(content)
         return rtn_urdf
 
-    def generate_collision_pair(self, sample_time=1000000, echo_freq=100000):
+    def generate_collision_pair(self):
         """
         We read the srdf file to get the link pairs that should not collide.
         If not provided, we need to randomly sample configurations
@@ -159,18 +159,6 @@ class Planner:
             "Since no SRDF file is provided. We will first detect link pairs that will"
             " always collide. This may take several minutes."
         )
-        n_link = len(self.user_link_names)
-        cnt = np.zeros((n_link, n_link), dtype=np.int32)
-        for i in range(sample_time):
-            qpos = self.pinocchio_model.get_random_configuration()
-            self.robot.set_qpos(qpos, True)
-            collisions = self.planning_world.collide_full()
-            for collision in collisions:
-                u = self.link_name_2_idx[collision.link_name1]
-                v = self.link_name_2_idx[collision.link_name2]
-                cnt[u][v] += 1
-            if i % echo_freq == 0:
-                print("Finish %.1f%%!" % (i * 100 / sample_time))
 
         import xml.etree.ElementTree as ET
         from xml.dom import minidom
@@ -180,19 +168,30 @@ class Planner:
         root.set("name", robot_name)
         self.srdf = self.urdf.replace(".urdf", ".srdf")
 
-        for i in range(n_link):
-            for j in range(n_link):
-                if cnt[i][j] == sample_time:
-                    link1 = self.user_link_names[i]
-                    link2 = self.user_link_names[j]
-                    print(
-                        f"Ignore collision pair: ({link1}, {link2}), "
-                        "reason: always collide"
-                    )
-                    collision = ET.SubElement(root, "disable_collisions")
-                    collision.set("link1", link1)
-                    collision.set("link2", link2)
-                    collision.set("reason", "Default")
+        for link1, link2 in self.pinocchio_model.get_adjacent_links():
+            print(
+                f"Ignore collision pair: ({link1}, {link2}), "
+                "reason: adjacent"
+            )
+            collision = ET.SubElement(root, "disable_collisions")
+            collision.set("link1", link1)
+            collision.set("link2", link2)
+            collision.set("reason", "adjacent")
+
+        leaf_links = self.pinocchio_model.get_leaf_links()
+        for i in range(len(leaf_links)-1):
+            j = i + 1
+            link1 = leaf_links[i]
+            link2 = leaf_links[j]
+            print(
+                f"Ignore collision pair: ({link1}, {link2}), "
+                "reason: leaf links, so highly likely to be gripper parts"
+            )
+            collision = ET.SubElement(root, "disable_collisions")
+            collision.set("link1", link1)
+            collision.set("link2", link2)
+            collision.set("reason", "leaf")
+
         with open(self.srdf, "w") as srdf_file:
             srdf_file.write(
                 minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
@@ -342,7 +341,7 @@ class Planner:
         self.planning_world.set_use_attach(prev_use_attach)
         return results
 
-    def IK(self, goal_pose, start_qpos, mask=None, n_init_qpos=20, threshold=1e-3):
+    def IK(self, goal_pose, start_qpos, mask=None, n_init_qpos=20, threshold=1e-3, verbose=False):
         """
         Inverse kinematics
 
@@ -374,6 +373,13 @@ class Planner:
             self.planning_world.set_qpos_all(ik_results[0][idx])
             if len(self.planning_world.collide_full()) != 0:
                 flag = False
+                if (verbose):
+                    print(f"when joint qpos is set to {ik_results[0][idx]}, we have the following collisions:")
+                    for collision in self.check_for_self_collision():
+                        print(
+                            f"{collision.link_name1} of entity {collision.object_name1} collides"
+                            f" with {collision.link_name2} of entity {collision.object_name2}"
+                        )
 
             if flag:
                 self.pinocchio_model.compute_forward_kinematics(ik_results[0])
