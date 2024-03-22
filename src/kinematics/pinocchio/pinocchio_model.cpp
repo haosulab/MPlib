@@ -435,6 +435,32 @@ std::vector<std::size_t> PinocchioModelTpl<S>::getChainJointIndex(
 }
 
 template <typename S>
+std::set<std::pair<std::string, std::string>>
+PinocchioModelTpl<S>::getAdjacentLinks() const {
+  auto leaf_links = getLeafLinks();
+  std::set<std::pair<std::string, std::string>> ret;
+  std::string root_name = urdf_model_->getRoot()->name;
+  for (auto &leaf_link : leaf_links) {
+    std::string link_name = leaf_link;
+    while (link_name != root_name) {
+      std::string parent_name = urdf_model_->getLink(link_name)->getParent()->name;
+      ret.insert({parent_name, link_name});
+      // if the parent has a fixed link to its parent, also disable collision
+      if (parent_name != root_name) {
+        auto parent_joint = urdf_model_->getLink(parent_name)->parent_joint;
+        if (parent_joint->type == urdf::Joint::FIXED) {
+          std::string grand_parent_name =
+              urdf_model_->getLink(parent_name)->getParent()->name;
+          ret.insert({grand_parent_name, link_name});
+        }
+      }
+      link_name = parent_name;
+    }
+  }
+  return ret;
+}
+
+template <typename S>
 VectorX<S> PinocchioModelTpl<S>::qposUser2Pinocchio(const VectorX<S> &q_user) const {
   VectorX<S> q_pinocchio(model_.nq);
   size_t count = 0;

@@ -86,6 +86,7 @@ void build_pypinocchio_model(py::module &m) {
       .def("get_chain_joint_index", &PinocchioModel::getChainJointIndex,
            py::arg("end_effector"),
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getChainJointIndex))
+      .def("get_adjacent_links", &PinocchioModel::getAdjacentLinks)
 
       .def("get_random_configuration", &PinocchioModel::getRandomConfiguration,
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getRandomConfiguration))
