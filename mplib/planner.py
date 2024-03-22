@@ -155,7 +155,7 @@ class Planner:
                         out_f.write(content)
         return rtn_urdf
 
-    def generate_collision_pair(self, sample_time=1000000, echo_freq=10):
+    def generate_collision_pair(self):
         """
         We read the srdf file to get the link pairs that should not collide.
         If not provided, we need to randomly sample configurations
