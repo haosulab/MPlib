@@ -161,6 +161,12 @@ class PinocchioModel:
             frame of the link
         :return: 6 x n jacobian of the link
         """
+    def get_adjacent_links(self) -> set[tuple[str, str]]:
+        """
+        Get the all adjacent link names.
+
+        :return: adjacent link names as a set of pairs of strings
+        """
     def get_chain_joint_index(self, end_effector: str) -> list[int]:
         """
         Get the joint indices of the joints in the chain from the root to the given

@@ -118,6 +118,12 @@ Constructs a PinocchioModel from URDF string
 :param verbose: print debug information. Default: ``False``.
 :return: a unique_ptr to PinocchioModel)doc";
 
+static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_getAdjacentLinks =
+R"doc(
+Get the all adjacent link names.
+
+:return: adjacent link names as a set of pairs of strings)doc";
+
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_getChainJointIndex =
 R"doc(
 Get the joint indices of the joints in the chain from the root to the given
