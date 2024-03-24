@@ -13,6 +13,7 @@ class DetectCollisionDemo(DemoSetup):
         """Only the planner is needed this time. No simulation env required"""
         super().__init__()
         self.setup_planner()
+
     # print_collision ankor
     def print_collisions(self, collisions):
         """Helper function to abstract away the printing of collisions"""
@@ -24,6 +25,7 @@ class DetectCollisionDemo(DemoSetup):
                 f"{collision.link_name1} of entity {collision.object_name1} collides"
                 f" with {collision.link_name2} of entity {collision.object_name2}"
             )
+
     # print_collision ankor end
     def demo(self):
         """
@@ -77,7 +79,7 @@ class DetectCollisionDemo(DemoSetup):
 
         print("\n----- env-collision qpos -----")
         # this qpos causes several joints to dip below the floor
-        env_collision_qpos = [0,1.5,0,-1.5,0,0,0]
+        env_collision_qpos = [0, 1.5, 0, -1.5, 0, 0, 0]
         self.print_collisions(
             self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos)
         )

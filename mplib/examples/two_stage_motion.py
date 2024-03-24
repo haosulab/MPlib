@@ -123,6 +123,7 @@ class PlanningDemo(DemoSetup):
             fixed_joint_indices=range(2),
         )
         return result
+
     # move_in_two_stage ankor
     def move_in_two_stage(self, pose, has_attach=False):
         """
@@ -148,6 +149,7 @@ class PlanningDemo(DemoSetup):
         result = self.plan_without_base(pose, has_attach)
         # execute the planned path
         self.follow_path(result)
+
     # move_in_two_stage ankor end
     def demo(self):
         """

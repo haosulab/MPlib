@@ -57,6 +57,7 @@ class PlanningDemo(DemoSetup):
     def add_point_cloud(self):
         """We tell the planner about the obstacle through a point cloud"""
         import trimesh
+
         # add_point_cloud ankor
         box = trimesh.creation.box([0.1, 0.4, 0.2])
         points, _ = trimesh.sample.sample_surface(box, 1000)

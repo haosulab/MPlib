@@ -1,9 +1,9 @@
 #include "mplib/kinematics/pinocchio/pinocchio_model.h"
 
+#include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/jacobian.hpp>
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
-#include <pinocchio/algorithm/frames.hpp>
 #include <urdf_parser/urdf_parser.h>
 
 #include "mplib/macros/assert.h"
@@ -559,8 +559,8 @@ Matrix6X<S> PinocchioModelTpl<S>::computeSingleLinkJacobian(const VectorX<S> &qp
   Matrix6X<S> J(6, model_.nv);
   J.fill(0);
   auto rf = local ? pinocchio::LOCAL : pinocchio::WORLD;
-  pinocchio::computeFrameJacobian(model_, data_, qposUser2Pinocchio(qpos), frameId,
-                                  rf, J);
+  pinocchio::computeFrameJacobian(model_, data_, qposUser2Pinocchio(qpos), frameId, rf,
+                                  J);
   return J * v_map_user2pinocchio_;
 }
 

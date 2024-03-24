@@ -263,7 +263,8 @@ class PinocchioModelTpl {
   void computeFullJacobian(const VectorX<S> &qpos);
 
   /**
-   * Get the jacobian of the given link. You must call ``compute_full_jacobian()`` first.
+   * Get the jacobian of the given link. You must call ``compute_full_jacobian()``
+   * first.
    *
    * @param index: index of the link (in the order you passed to the constructor or the
    *    default order)
@@ -276,7 +277,7 @@ class PinocchioModelTpl {
   /**
    * Compute the jacobian of the given link.
    * Note you need to call computeForwardKinematics() first.
-   * 
+   *
    * @param qpos: joint configuration. Needs to be full configuration, not just the
    *    movegroup joints.
    * @param index: index of the link (in the order you passed to the constructor or the

@@ -86,6 +86,7 @@ class PlanningDemo(DemoSetup):
             self.move_to_pose(pose)
         # execute motion ankor end
 
+
 if __name__ == "__main__":
     demo = PlanningDemo()
     demo.demo()

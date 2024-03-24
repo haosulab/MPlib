@@ -93,7 +93,7 @@ class Planner:
         if self.srdf == "":
             self.generate_collision_pair()
             self.robot.update_SRDF(self.srdf)
-        
+
         assert (
             move_group in self.user_link_names
         ), f"end-effector not found as one of the links in {self.user_link_names}"
@@ -676,7 +676,7 @@ class Planner:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
         current_qpos = self.pad_qpos(current_qpos)
-        
+
         if wrt_world:
             goal_pose = self.transform_goal_to_wrt_base(goal_pose)
 
