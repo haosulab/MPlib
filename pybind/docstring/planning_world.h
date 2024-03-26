@@ -24,190 +24,273 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_mplib_PlanningWorldTpl = R"doc(Planning world for collision checking)doc";
+static const char *__doc_mplib_PlanningWorldTpl =
+R"doc(Planning world for collision checking
+
+Mimicking MoveIt2's ``planning_scene::PlanningScene``,
+``collision_detection::World``, ``moveit::core::RobotState``
+
+https://moveit.picknik.ai/main/api/html/classplanning__scene_1_1PlanningScene.html
+https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1World.html
+https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1RobotState.html)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_PlanningWorldTpl =
 R"doc(
-Constructs a PlanningWorld with given articulations and normal objects
+Constructs a PlanningWorld with given (planned) articulations and normal objects
 
-:param articulations: list of articulated models
+:param articulations: list of planned articulated models
 :param articulation_names: name of the articulated models
 :param normal_objects: list of collision objects that are not articulated
-:param normal_object_names: name of the normal objects
-:param plan_articulation_id: id of the articulated model that is used for
-    planning)doc";
+:param normal_object_names: name of the normal objects)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_addArticulation =
 R"doc(
-Add an articulated model to the planning world.
+Adds an articulation (ArticulatedModelPtr) with given name to world
 
+:param name: name of the articulated model
 :param model: articulated model to be added
-:param name: name of the articulated model)doc";
+:param planned: whether the articulation is being planned)doc";
 
-static const char *__doc_mplib_PlanningWorldTpl_addArticulations =
+static const char *__doc_mplib_PlanningWorldTpl_addNormalObject =
 R"doc(
-Add a list of articulated models to the planning world.
+Adds a normal object (CollisionObjectPtr) with given name to world
 
-:param models: list of articulated models to be added
-:param names: list of names of the articulated models)doc";
+:param name: name of the collision object
+:param collision_object: collision object to be added)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_addPointCloud =
+R"doc(
+Adds a point cloud as a collision object with given name to world
+
+:param name: name of the point cloud collision object
+:param vertices: point cloud vertices matrix
+:param resolution: resolution of the point OcTree)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_attachBox =
+R"doc(
+Attaches given box to specified link of articulation (auto touch_links)
+
+:param size: box side length
+:param art_name: name of the planned articulation to attach to
+:param link_id: index of the link of the planned articulation to attach to
+:param pose: attached pose (relative pose from attached link to object))doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_attachMesh =
+R"doc(
+Attaches given mesh to specified link of articulation (auto touch_links)
+
+:param mesh_path: path to a mesh file
+:param art_name: name of the planned articulation to attach to
+:param link_id: index of the link of the planned articulation to attach to
+:param pose: attached pose (relative pose from attached link to object))doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_attachObject =
+R"doc(
+Attaches existing normal object to specified link of articulation. If the object
+is currently attached, disallow collision between the object and previous
+touch_links. Updates acm_ to allow collisions between attached object and
+touch_links.
+
+:param name: normal object name to attach
+:param art_name: name of the planned articulation to attach to
+:param link_id: index of the link of the planned articulation to attach to
+:param pose: attached pose (relative pose from attached link to object)
+:param touch_links: link names that the attached object touches
+:raises ValueError: if normal object with given name does not exist or if
+    planned articulation with given name does not exist)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_attachObject_2 =
+R"doc(
+Attaches existing normal object to specified link of articulation. If the object
+is not currently attached, automatically sets touch_links as the name of self
+links that collide with the object in the current state. Updates acm_ to allow
+collisions between attached object and touch_links. If the object is already
+attached, the touch_links of the attached object is preserved and acm_ remains
+unchanged.
+
+:param name: normal object name to attach
+:param art_name: name of the planned articulation to attach to
+:param link_id: index of the link of the planned articulation to attach to
+:param pose: attached pose (relative pose from attached link to object)
+:raises ValueError: if normal object with given name does not exist or if
+    planned articulation with given name does not exist)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_attachObject_3 =
+R"doc(
+Attaches given object (w/ p_geom) to specified link of articulation. This is
+done by removing normal object and then adding and attaching object. As a
+result, all previous acm_ entries with the object are removed
+
+:param name: normal object name to attach
+:param p_geom: pointer to a CollisionGeometry object
+:param art_name: name of the planned articulation to attach to
+:param link_id: index of the link of the planned articulation to attach to
+:param pose: attached pose (relative pose from attached link to object)
+:param touch_links: link names that the attached object touches)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_attachObject_4 =
+R"doc(
+Attaches given object (w/ p_geom) to specified link of articulation. This is
+done by removing normal object and then adding and attaching object. As a
+result, all previous acm_ entries with the object are removed. Automatically
+sets touch_links as the name of self links that collide with the object in the
+current state (auto touch_links).
+
+:param name: normal object name to attach
+:param p_geom: pointer to a CollisionGeometry object
+:param art_name: name of the planned articulation to attach to
+:param link_id: index of the link of the planned articulation to attach to
+:param pose: attached pose (relative pose from attached link to object))doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_attachSphere =
+R"doc(
+Attaches given sphere to specified link of articulation (auto touch_links)
+
+:param radius: sphere radius
+:param art_name: name of the planned articulation to attach to
+:param link_id: index of the link of the planned articulation to attach to
+:param pose: attached pose (relative pose from attached link to object))doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_collide =
 R"doc(
-Check collision in the planning world.
+Check full collision and return only a boolean indicating collision
 
-:param request: collision request params. Can leave empty for default value
+:param request: collision request params.
 :return: ``True`` if collision exists)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_collideFull =
 R"doc(
-Check collision between the articulated model and all objects.
+Check full collision (calls selfCollide() and collideWithOthers())
 
-:param index: index of the articulated model
-:param request: collision request params. Can leave empty for default value
+:param request: collision request params.
 :return: List of WorldCollisionResult objects)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_collideWithOthers =
 R"doc(
-Check collision between the articulated model and other objects.
+Check collision with other scene bodies (planned articulations with attached
+objects collide against unplanned articulations and scene objects)
 
-:param index: index of the articulated model
-:param request: collision request params. Can leave empty for default value
+:param request: collision request params.
 :return: List of WorldCollisionResult objects)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_detachObject =
+R"doc(
+Detaches object with given name. Updates acm_ to disallow collision between the
+object and touch_links.
+
+:param name: normal object name to detach
+:param also_remove: whether to also remove object from world
+:return: ``True`` if success, ``False`` if the object with given name is not
+    attached)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_getArticulation =
+R"doc(
+Gets the articulation (ArticulatedModelPtr) with given name
+
+:param name: name of the articulated model
+:return: the articulated model with given name or ``None`` if not found.)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_getArticulationNames =
 R"doc(
-Get the names of articulated models.
+Gets names of all articulations in world (unordered))doc";
 
-:return: list of names of articulated models)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_getArticulations =
+static const char *__doc_mplib_PlanningWorldTpl_getAttachedObject =
 R"doc(
-Get the list of articulated models.
+Gets the attached body (AttachedBodyPtr) with given name
 
-:return: list of articulated models)doc";
+:param name: name of the attached body
+:return: the attached body with given name or ``None`` if not found.)doc";
 
-static const char *__doc_mplib_PlanningWorldTpl_getMoveArticulationId =
+static const char *__doc_mplib_PlanningWorldTpl_getNormalObject =
 R"doc(
-)doc";
+Gets the normal object (CollisionObjectPtr) with given name
+
+:param name: name of the normal object
+:return: the normal object with given name or ``None`` if not found.)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_getNormalObjectNames =
 R"doc(
-Get the names of non-articulated collision objects.
+Gets names of all normal objects in world (unordered))doc";
 
-:return: list of names of non-articulated collision objects)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_getNormalObjects =
+static const char *__doc_mplib_PlanningWorldTpl_getPlannedArticulations =
 R"doc(
-Get the list of non-articulated collision objects.
+Gets all planned articulations (ArticulatedModelPtr))doc";
 
-:return: list of non-articulated collision objects)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_printAttachedToolPose =
+static const char *__doc_mplib_PlanningWorldTpl_hasArticulation =
 R"doc(
-Print the pose of the attached tool.)doc";
+Check whether the articulation with given name exists
 
-static const char *__doc_mplib_PlanningWorldTpl_removeAttach =
+:param name: name of the articulated model
+:return: ``True`` if exists, ``False`` otherwise.)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_hasNormalObject =
 R"doc(
-Remove attach object so there won't be anything on the end effector when
-``use_attach`` is set to ``True`` again)doc";
+Check whether the normal object with given name exists
+
+:param name: name of the normal object
+:return: ``True`` if exists, ``False`` otherwise.)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_isArticulationPlanned =
+R"doc(
+Check whether the articulation with given name is being planned
+
+:param name: name of the articulated model
+:return: ``True`` if exists, ``False`` otherwise.)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_isNormalObjectAttached =
+R"doc(
+Check whether normal object with given name is attached
+
+:param name: name of the normal object
+:return: ``True`` if it is attached, ``False`` otherwise.)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_printAttachedBodyPose =
+R"doc(
+Prints global pose of all attached bodies)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_removeArticulation =
+R"doc(
+Removes the articulation with given name if exists. Updates acm_
+
+:param name: name of the articulated model
+:return: ``True`` if success, ``False`` if articulation with given name does not
+    exist)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_removeNormalObject =
 R"doc(
-Remove am non-articulated object
+Removes (and detaches) the collision object with given name if exists. Updates
+acm_
 
 :param name: name of the non-articulated collision object
-:return: ``True`` if the item exists and ``False`` otherwise)doc";
+:return: ``True`` if success, ``False`` if normal object with given name does
+    not exist)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_selfCollide =
 R"doc(
-Check collision between the articulated model and itself.
+Check self collision (including planned articulation self-collision, planned
+articulation-attach collision, attach-attach collision)
 
-:param index: index of the articulated model
-:param request: collision request params. Can leave empty for default value
+:param request: collision request params.
 :return: List of WorldCollisionResult objects)doc";
 
-static const char *__doc_mplib_PlanningWorldTpl_setMoveArticulationId =
+static const char *__doc_mplib_PlanningWorldTpl_setArticulationPlanned =
 R"doc(
-)doc";
+Sets articulation with given name as being planned
 
-static const char *__doc_mplib_PlanningWorldTpl_setNormalObject =
-R"doc(
-Add a non-articulated collision object to the planning world.
-
-:param name: name of the non-articulated collision object
-:param collision_object: the non-articulated collision object to be added)doc";
+:param name: name of the articulated model
+:param planned: whether the articulation is being planned
+:raises ValueError: if the articulation with given name does not exist)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_setQpos =
 R"doc(
-Set the joint qpos of the articulated model.
+Set qpos of articulation with given name
 
-:param index: index of the articulated model
-:param qpos: joint angles of the *movegroup only*)doc";
+:param name: name of the articulated model
+:param qpos: joint angles of the *movegroup only* // FIXME: double check)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_setQposAll =
 R"doc(
-Set the joint qpos of all articulated models.
-
-:param qpos: joint angles of all the models (*movegroup only*))doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_setUseAttach =
-R"doc(
-Set whether to use attached tool for collision checking.
-
-:param use: whether to use attached tool)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_setUsePointCloud =
-R"doc(
-Set whether to use point cloud for collision checking.
-
-:param use: whether to use point cloud)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_updateAttachedBox =
-R"doc(
-Add a box as the attached tool.
-
-:param size: size of the box, [size_x, size_y, size_z]
-:param link_id: link id of the attached box
-:param pose: pose of the attached box w.r.t. the link it's attached to. [x, y,
-    z, qw, qx, qy, qz])doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_updateAttachedMesh =
-R"doc(
-Add a mesh as the attached tool.
-
-:param mesh_path: path to the mesh file
-:param link_id: link id of the attached mesh
-:param pose: pose of the attached mesh w.r.t. the link it's attached to. [x, y,
-    z, qw, qx, qy, qz])doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_updateAttachedSphere =
-R"doc(
-Add a sphere as the attached tool.
-
-:param radius: radius of the sphere
-:param link_id: link id of the attached sphere
-:param pose: pose of the attached sphere w.r.t. the link it's attached to. [x,
-    y, z, qw, qx, qy, qz])doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_updateAttachedTool =
-R"doc(
-Attach or update the attached object
-
-:param p_geom: fcl collision geometry of the attached tool
-:param link_id: id of the link to which the object is attached
-:param pose: pose of the attached object w.r.t. the link it's attached to. [x,
-    y, z, qw, qx, qy, qz])doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_updatePointCloud =
-R"doc(
-Update the point cloud for collision checking.
-
-:param vertices: vertices of the point cloud
-:param radius: radius of each point in the point cloud)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_use_attach = R"doc()doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_use_point_cloud = R"doc()doc";
+Set qpos of all planned articulations)doc";
 
 /* ----- Begin of custom docstring section ----- */
 

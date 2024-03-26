@@ -35,9 +35,9 @@ void OMPLPlannerTpl<S>::buildConstrainedAmbientStateSpace() {
   upper_joint_limits_.clear();
   is_revolute_.clear();
 
-  ASSERT(world_->getArticulations().size() == 1,
+  ASSERT(world_->getPlannedArticulations().size() == 1,
          "only support one robot for constrained planning");
-  const auto robot = world_->getArticulations()[0];
+  const auto robot = world_->getPlannedArticulations()[0];
 
   // we assume each joint has only one DoF
   dim_ = robot->getQposDim();  // this getQposDim() is really getMoveGroupQposDim()
@@ -76,7 +76,7 @@ void OMPLPlannerTpl<S>::buildCompoundStateSpace(const FixedJointsTpl<S> &fixed_j
   upper_joint_limits_.clear();
   is_revolute_.clear();
 
-  const auto robots = world_->getArticulations();
+  const auto robots = world_->getPlannedArticulations();
   for (size_t robot_idx = 0; robot_idx < robots.size(); ++robot_idx) {
     const auto robot = robots[robot_idx];
     const size_t dof = robot->getQposDim();  // TODO: only construct move group joints

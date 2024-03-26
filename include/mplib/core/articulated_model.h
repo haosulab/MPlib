@@ -40,6 +40,20 @@ class ArticulatedModelTpl {
                       bool convex = false, bool verbose = false);
 
   /**
+   * Get name of the articulated model.
+   *
+   * @return: name of the articulated model
+   */
+  const std::string &getName() const { return name_; }
+
+  /**
+   * Set name of the articulated model.
+   *
+   * @param: name of the articulated model
+   */
+  void setName(const std::string &name) { name_ = name; }
+
+  /**
    * Get the underlying Pinocchio model.
    *
    * @return: Pinocchio model used for kinematics and dynamics computations
@@ -160,6 +174,8 @@ class ArticulatedModelTpl {
   }
 
  private:
+  std::string name_;
+
   kinematics::PinocchioModelTplPtr<S> pinocchio_model_;
   collision_detection::FCLModelTplPtr<S> fcl_model_;
 

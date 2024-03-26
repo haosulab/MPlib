@@ -72,6 +72,12 @@ Get the joint names of the move group.
 
 :return: list of joint names of the move group)doc";
 
+static const char *__doc_mplib_ArticulatedModelTpl_getName =
+R"doc(
+Get name of the articulated model.
+
+:return: name of the articulated model)doc";
+
 static const char *__doc_mplib_ArticulatedModelTpl_getPinocchioModel =
 R"doc(
 Get the underlying Pinocchio model.
@@ -113,14 +119,20 @@ R"doc(
 Set the move group, i.e. the chain ending in end effector for which to compute
 the forward kinematics for all subsequent queries.
 
-:param chain: list of links extending to the end effector)doc";
+:param end_effector: name of the end effector link)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_setMoveGroup_2 =
 R"doc(
 Set the move group but we have multiple end effectors in a chain. I.e., Base -->
 EE1 --> EE2 --> ... --> EEn
 
-:param end_effectors: names of the end effector link)doc";
+:param end_effectors: list of links extending to the end effector)doc";
+
+static const char *__doc_mplib_ArticulatedModelTpl_setName =
+R"doc(
+Set name of the articulated model.
+
+@param: name of the articulated model)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_setQpos =
 R"doc(

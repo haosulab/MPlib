@@ -31,6 +31,11 @@ void build_pyarticulated_model(py::module &pymp) {
            py::arg("verbose") = false,
            DOC(mplib, ArticulatedModelTpl, ArticulatedModelTpl))
 
+      .def("get_name", &ArticulatedModel::getName,
+           DOC(mplib, ArticulatedModelTpl, getName))
+      .def("set_name", &ArticulatedModel::setName, py::arg("name"),
+           DOC(mplib, ArticulatedModelTpl, setName))
+
       .def("get_pinocchio_model", &ArticulatedModel::getPinocchioModel,
            DOC(mplib, ArticulatedModelTpl, getPinocchioModel))
       .def("get_fcl_model", &ArticulatedModel::getFCLModel,

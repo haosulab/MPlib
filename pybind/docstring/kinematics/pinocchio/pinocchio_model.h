@@ -56,9 +56,9 @@ If you want the result you need to call ``get_link_pose()``
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_computeFullJacobian =
 R"doc(
-Compute the full jacobian for the given joint configuration.
-
-If you want the result you need to call ``get_link_jacobian()``
+Compute the full jacobian for the given joint configuration. Note you need to
+call computeForwardKinematics() first. If you want the result you need to call
+``get_link_jacobian()``
 
 :param qpos: joint configuration. Needs to be full configuration, not just the
     movegroup joints.)doc";
@@ -98,7 +98,8 @@ the given limits.
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_computeSingleLinkJacobian =
 R"doc(
-Compute the jacobian of the given link.
+Compute the jacobian of the given link. Note you need to call
+computeForwardKinematics() first.
 
 :param qpos: joint configuration. Needs to be full configuration, not just the
     movegroup joints.
@@ -240,7 +241,8 @@ Get the leaf links (links without child) of the kinematic tree.
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_getLinkJacobian =
 R"doc(
-Get the jacobian of the given link.
+Get the jacobian of the given link. You must call ``compute_full_jacobian()``
+first.
 
 :param index: index of the link (in the order you passed to the constructor or
     the default order)
