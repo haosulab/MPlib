@@ -100,7 +100,7 @@ class ArticulatedModelTpl {
    * Set the move group, i.e. the chain ending in end effector for which to compute the
    * forward kinematics for all subsequent queries.
    *
-   * @param chain: list of links extending to the end effector
+   * @param end_effector: name of the end effector link
    */
   void setMoveGroup(const std::string &end_effector);
 
@@ -108,7 +108,7 @@ class ArticulatedModelTpl {
    * Set the move group but we have multiple end effectors in a chain.
    * I.e., Base --> EE1 --> EE2 --> ... --> EEn
    *
-   * @param end_effectors: names of the end effector link
+   * @param end_effectors: list of links extending to the end effector
    */
   void setMoveGroup(const std::vector<std::string> &end_effectors);
 
