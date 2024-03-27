@@ -89,7 +89,7 @@ where the `clang-version` should match your local LLVM installation
 
 ## Stubs & Documentation Generation
 
-To generate stubs and documentations, run [`./dev/generate_stub_and_doc.sh`](./generate_stub_and_doc.sh).
+To generate stubs and documentations, run [`./dev/generate_stubs.sh`](./generate_stubs.sh).
 By default it uses `python3.10` in docker image [`kolinguo/mplib-build`](https://hub.docker.com/r/kolinguo/mplib-build).
 
 The script does the following:

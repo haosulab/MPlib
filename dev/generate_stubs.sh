@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Python version to build wheels and generate stubs / docs
+# Python version to build wheels and generate stubs
 PY_VERSION=310
-# Docker image name to install wheel and generate stubs / docs
+# Docker image name to install wheel and generate stubs
 IMGNAME="kolinguo/mplib-build:latest"
 
 ############################################################
