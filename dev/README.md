@@ -13,6 +13,8 @@ and use it to build wheel for the specified python version.
 The wheel will be generated in the `wheelhouse/` and the generated pybind11 docstring
 will be in [`./pybind/docstring/`](../pybind/docstring/).
 
+If you want to start the documentation webserver, run `./dev/start_doc_webserver.sh`
+
 If you want to start a docker container for debugging, run `./dev/docker_setup.sh`
 
 ### Versioning & Release Process
