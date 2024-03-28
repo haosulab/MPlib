@@ -221,6 +221,8 @@ def process_comment(comment: str) -> str:
 
     s = s.replace("``true``", "``True``")
     s = s.replace("``false``", "``False``")
+    s = s.replace("``nullptr``", "``None``")  # nullptr is None in Python
+    s = s.replace("``std::nullopt``", "``None``")  # std::nullopt is None in Python
 
     # Exceptions
     s = replace_exceptions(s)
