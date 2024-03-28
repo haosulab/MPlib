@@ -100,7 +100,7 @@ void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
 template <typename S>
 void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
                                   const std::string &parent_link_name) {
-  if (link->collision)
+  if (link->collision) {
     for (const auto &geom : link->collision_array) {
       auto geom_model = geom->geometry;
       fcl::CollisionGeometryPtr<S> collision_geometry;
@@ -156,6 +156,7 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
       collision_link_names_.push_back(link->name);
       parent_link_names_.push_back(parent_link_name);
     }
+  }
   for (const auto &child : link->child_links) dfsParseTree(child, link->name);
 }
 
@@ -224,8 +225,6 @@ void FCLModelTpl<S>::removeCollisionPairsFromSRDFString(
 template <typename S>
 void FCLModelTpl<S>::updateCollisionObjects(
     const std::vector<Isometry3<S>> &link_pose) const {
-  ASSERT(link_pose.size() == collision_objects_.size(),
-         "The size of link poses does not match the size of collision objects.");
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
     auto link_wrt_world = link_pose[link_i];

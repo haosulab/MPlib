@@ -68,11 +68,13 @@ void collideFCLObjects(const fcl::FCLObject<S> &o1, const fcl::FCLObject<S> &o2,
     for (const auto &co_obj2 : o2.collision_objects_) {
       fcl::CollisionResult<S> partial_result;
       auto cost_sources = std::vector<fcl::CostSource<S>>();
-      partial_result.getCostSources(cost_sources);
       fcl::collide(co_obj1.get(), co_obj2.get(), request, partial_result);
       for (size_t i = 0; i < partial_result.numContacts(); i++) {
         result.addContact(partial_result.getContact(i));
-        result.addCostSource(cost_sources[i], request.num_max_cost_sources);
+      }
+      partial_result.getCostSources(cost_sources);
+      for (auto &cost_source : cost_sources) {
+        result.addCostSource(cost_source, request.num_max_cost_sources);
       }
     }
   }

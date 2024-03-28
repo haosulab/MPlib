@@ -40,7 +40,9 @@ class TestFCLModel(unittest.TestCase):
         for i, link_name in enumerate(self.collision_link_names):
             link_idx = self.pinocchio_model.get_link_names().index(link_name)
             link_pose = self.pinocchio_model.get_link_pose(link_idx)
-            self.model.get_collision_objects()[i].set_transformation(link_pose)
+            self.model.get_collision_objects()[i].collision_objects[
+                0
+            ].set_transformation(link_pose)
 
     def test_get_collision_objects(self):
         self.assertEqual(
@@ -48,8 +50,16 @@ class TestFCLModel(unittest.TestCase):
         )
         for i, link_name in enumerate(self.collision_link_names):
             pinocchio_idx = self.pinocchio_model.get_link_names().index(link_name)
-            pos = self.model.get_collision_objects()[i].get_translation()
-            quat = mat2quat(self.model.get_collision_objects()[i].get_rotation())
+            pos = (
+                self.model.get_collision_objects()[i]
+                .collision_objects[0]
+                .get_translation()
+            )
+            quat = mat2quat(
+                self.model.get_collision_objects()[i]
+                .collision_objects[0]
+                .get_rotation()
+            )
             pinocchio_pose = self.pinocchio_model.get_link_pose(pinocchio_idx)
             self.assertTrue(np.allclose(pos, pinocchio_pose[:3]))
             self.assertAlmostEqual(abs(quat.dot(pinocchio_pose[3:])), 1)

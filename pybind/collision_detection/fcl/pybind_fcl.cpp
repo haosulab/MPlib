@@ -9,6 +9,7 @@
 #include <pybind11/stl.h>
 
 #include "docstring/collision_detection/fcl/fcl.h"
+#include "mplib/collision_detection/fcl/types.h"
 #include "mplib/types.h"
 #include "mplib/utils/conversion.h"
 #include "pybind_macros.hpp"
@@ -44,6 +45,7 @@ using DistanceResult = fcl::DistanceResult<S>;
 using Contact = fcl::Contact<S>;
 using ContactPoint = fcl::ContactPoint<S>;
 using CostSource = fcl::CostSource<S>;
+using FCLObject = fcl::FCLObject<S>;
 
 void build_pyfcl(py::module &m) {
   // Data type
@@ -366,6 +368,12 @@ void build_pyfcl(py::module &m) {
       .def_readonly("aabb_max", &CostSource::aabb_max)
       .def_readonly("cost_density", &CostSource::cost_density)
       .def_readonly("total_cost", &CostSource::total_cost);
+
+  // FCLObject
+  auto PyFCLObject = py::class_<FCLObject, std::shared_ptr<FCLObject>>(m, "FCLObject");
+  PyFCLObject.def(py::init<>())
+      .def_readwrite("collision_objects", &FCLObject::collision_objects_)
+      .def_readwrite("tfs", &FCLObject::tfs_);
 
   // collide / distance functions
   m.def("collide",
