@@ -111,12 +111,12 @@ class TestPlanner(unittest.TestCase):
                 f"{'in' if in_limit else 'out of'} limit",
             )
 
-    def test_pad_qpos(self):
+    def test_pad_move_group_qpos(self):
         for _ in range(100):
             full_qpos = self.sample_qpos()
             non_full_qpos = self.sample_qpos()[:7]
             self.planner.robot.set_qpos(full_qpos, full=True)
-            padded_qpos = self.planner.pad_qpos(non_full_qpos)
+            padded_qpos = self.planner.pad_move_group_qpos(non_full_qpos)
             self.planner.robot.set_qpos(non_full_qpos, full=False)
             self.assertTrue(
                 np.allclose(padded_qpos, self.planner.robot.get_qpos(), atol=1e-3)
@@ -308,7 +308,7 @@ class TestPlanner(unittest.TestCase):
 
     def make_j(self):
         def j(x, out):
-            full_qpos = self.planner.pad_qpos(x)
+            full_qpos = self.planner.pad_move_group_qpos(x)
             jac = self.planner.robot.get_pinocchio_model().compute_single_link_jacobian(
                 full_qpos, len(self.planner.move_group_joint_indices) - 1
             )

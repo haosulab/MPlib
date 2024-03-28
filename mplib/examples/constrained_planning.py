@@ -68,7 +68,7 @@ class ConstrainedPlanningDemo(DemoSetup):
 
         # constraint jacobian ankor
         def j(x, out):
-            full_qpos = self.planner.pad_qpos(x)
+            full_qpos = self.planner.pad_move_group_qpos(x)
             jac = self.planner.robot.get_pinocchio_model().compute_single_link_jacobian(
                 full_qpos, len(self.planner.move_group_joint_indices) - 1
             )

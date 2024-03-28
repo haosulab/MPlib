@@ -244,25 +244,28 @@ class Planner:
                     flag = False
         return flag
 
-    def pad_qpos(self, qpos, articulation=None):
+    def pad_move_group_qpos(self, qpos, articulation=None):
         """
-        if the user does not provide the full qpos but only the move_group joints,
-        pad the qpos with the rest of the joints
+        If qpos contains only the move_group joints, return qpos padded with
+        current values of the remaining joints of articulation.
+        Otherwise, verify number of joints and return.
+
+        :param qpos: joint positions
+        :param articulation: the articulation to get qpos from. If None, use self.robot
+        :return: joint positions with full dof
         """
-        if len(qpos) == len(self.move_group_joint_indices):
-            tmp = (
-                articulation.get_qpos()
-                if articulation is not None
-                else self.robot.get_qpos()
-            )
-            tmp[: len(qpos)] = qpos
+        if articulation is None:
+            articulation = self.robot
+
+        if (ndim := len(qpos)) == articulation.get_move_group_qpos_dim():
+            tmp = articulation.get_qpos().copy()
+            tmp[:ndim] = qpos
             qpos = tmp
 
         assert len(qpos) == len(self.joint_limits), (
-            f"length of qpos ({len(qpos)}) =/= "
+            f"length of qpos ({len(qpos)}) != "
             f"number of total joints ({len(self.joint_limits)})"
         )
-
         return qpos
 
     def check_for_collision(
@@ -564,7 +567,7 @@ class Planner:
                 if current_qpos[i] > self.joint_limits[i][1]:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
-        current_qpos = self.pad_qpos(current_qpos)
+        current_qpos = self.pad_move_group_qpos(current_qpos)
 
         self.robot.set_qpos(current_qpos, True)
         collisions = self.planning_world.collide_full()
@@ -675,7 +678,7 @@ class Planner:
                 if current_qpos[i] > self.joint_limits[i][1]:
                     current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
-        current_qpos = self.pad_qpos(current_qpos)
+        current_qpos = self.pad_move_group_qpos(current_qpos)
 
         if wrt_world:
             goal_pose = self.transform_goal_to_wrt_base(goal_pose)
@@ -751,7 +754,7 @@ class Planner:
         """
         self.planning_world.set_use_point_cloud(use_point_cloud)
         self.planning_world.set_use_attach(use_attach)
-        qpos = self.pad_qpos(qpos.copy())
+        qpos = self.pad_move_group_qpos(qpos.copy())
         self.robot.set_qpos(qpos, True)
 
         if wrt_world:
