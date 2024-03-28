@@ -41,6 +41,7 @@ class PlanningWorldTpl {
   using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
   using AllowedCollisionMatrix = collision_detection::AllowedCollisionMatrix;
   using AllowedCollisionMatrixPtr = collision_detection::AllowedCollisionMatrixPtr;
+  using FCLObject = fcl::FCLObject<S>;
   // using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
   using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
 

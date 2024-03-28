@@ -436,7 +436,8 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
     for (const auto &[name, obj] : scene_objects)
       for (size_t i = 0; i < col_objs.size(); i++) {
         result.clear();
-        ::fcl::collide(col_objs[i].get(), obj.get(), request, result);
+        collision_detection::fcl::collideFCLObjects(
+            CollisionObjects[j], CollisionObjects_other[k], request, result);
         if (result.isCollision()) {
           WorldCollisionResult tmp;
           tmp.res = result;

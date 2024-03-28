@@ -147,12 +147,14 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
 
       if (!collision_geometry)
         throw std::invalid_argument("The polyhedron retrived is empty");
+      fcl::FCLObject<S> fcl_obj;
       auto obj {std::make_shared<fcl::CollisionObject<S>>(collision_geometry, pose)};
+      fcl_obj.collision_objects_.push_back(obj);
+      fcl_obj.tfs_.push_back(toIsometry<S>(geom->origin));
 
-      collision_objects_.push_back(obj);
+      collision_objects_.push_back(fcl_obj);
       collision_link_names_.push_back(link->name);
       parent_link_names_.push_back(parent_link_name);
-      collision_origin2link_poses_.push_back(toIsometry<S>(geom->origin));
     }
   for (const auto &child : link->child_links) dfsParseTree(child, link->name);
 }
@@ -221,30 +223,35 @@ void FCLModelTpl<S>::removeCollisionPairsFromSRDFString(
 
 template <typename S>
 void FCLModelTpl<S>::updateCollisionObjects(
-    const std::vector<Vector7<S>> &link_pose) const {
+    const std::vector<Isometry3<S>> &link_pose) const {
+  ASSERT(link_pose.size() == collision_objects_.size(),
+         "The size of link poses does not match the size of collision objects.");
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
-    collision_objects_[i]->setTransform(toIsometry<S>(link_pose[link_i]) *
-                                        collision_origin2link_poses_[i]);
+    auto link_wrt_world = link_pose[link_i];
+    const fcl::FCLObject<S> &fcl_obj = collision_objects_[i];
+    for (size_t j = 0; j < fcl_obj.collision_objects_.size(); j++) {
+      auto geom_wrt_world = link_wrt_world * fcl_obj.tfs_[j];
+      fcl_obj.collision_objects_[j]->setTransform(geom_wrt_world);
+    }
   }
 }
 
 template <typename S>
 void FCLModelTpl<S>::updateCollisionObjects(
-    const std::vector<Isometry3<S>> &link_pose) const {
-  for (size_t i = 0; i < collision_objects_.size(); i++) {
-    auto link_i = collision_link_user_indices_[i];
-    collision_objects_[i]->setTransform(link_pose[link_i] *
-                                        collision_origin2link_poses_[i]);
-  }
+    const std::vector<Vector7<S>> &link_pose) const {
+  std::vector<Isometry3<S>> link_tfs;
+  link_tfs.reserve(link_pose.size());
+  for (const auto &pose : link_pose) link_tfs.push_back(toIsometry<S>(pose));
+  updateCollisionObjects(link_tfs);
 }
 
 template <typename S>
 bool FCLModelTpl<S>::collide(const fcl::CollisionRequest<S> &request) const {
   fcl::CollisionResult<S> result;
   for (const auto &col_pair : collision_pairs_) {
-    fcl::collide(collision_objects_[col_pair.first].get(),
-                 collision_objects_[col_pair.second].get(), request, result);
+    collideFCLObjects(collision_objects_[col_pair.first],
+                      collision_objects_[col_pair.second], request, result);
     if (result.isCollision()) return true;
   }
   return false;
@@ -257,8 +264,8 @@ std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::collideFull(
   std::vector<fcl::CollisionResult<S>> ret;
   for (const auto &col_pair : collision_pairs_) {
     fcl::CollisionResult<S> result;
-    fcl::collide(collision_objects_[col_pair.first].get(),
-                 collision_objects_[col_pair.second].get(), request, result);
+    collideFCLObjects(collision_objects_[col_pair.first],
+                      collision_objects_[col_pair.second], request, result);
     ret.push_back(result);
   }
   return ret;

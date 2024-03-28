@@ -71,7 +71,7 @@ class FCLModelTpl {
    *
    * @return: all collision objects of the FCL model
    */
-  const std::vector<fcl::CollisionObjectPtr<S>> &getCollisionObjects() const {
+  const std::vector<fcl::FCLObject<S>> &getCollisionObjects() const {
     return collision_objects_;
   }
 
@@ -160,10 +160,9 @@ class FCLModelTpl {
   std::string package_dir_;
   bool use_convex_ {};
 
-  std::vector<fcl::CollisionObjectPtr<S>> collision_objects_;
+  std::vector<fcl::FCLObject<S>> collision_objects_;
   std::vector<std::string> collision_link_names_;
   std::vector<std::string> parent_link_names_;
-  std::vector<Isometry3<S>> collision_origin2link_poses_;
   std::vector<std::pair<size_t, size_t>> collision_pairs_;
 
   std::vector<std::string> user_link_names_;
