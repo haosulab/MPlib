@@ -10,6 +10,7 @@ import toppra.constraint as constraint
 from transforms3d.quaternions import mat2quat, quat2mat
 
 from mplib.pymp import ArticulatedModel, PlanningWorld
+from mplib.pymp.collision_detection import WorldCollisionResult
 from mplib.pymp.planning import ompl
 
 
@@ -270,79 +271,56 @@ class Planner:
     def check_for_collision(
         self,
         collision_function,
-        articulation: Optional[ArticulatedModel] = None,
-        qpos: Optional[np.ndarray] = None,
-    ) -> list:
-        """helper function to check for collision"""
-        # handle no user input
-        if articulation is None:
-            articulation = self.robot
-        if qpos is None:
-            qpos = articulation.get_qpos()
-        qpos = self.pad_qpos(qpos, articulation)
+        state: Optional[np.ndarray] = None,
+    ) -> list[WorldCollisionResult]:
+        """
+        Helper function to check for collision
+
+        :param state: all planned articulations qpos state. If None, use current qpos.
+        :return: A list of collisions.
+        """
+        planned_articulations = self.planning_world.get_planned_articulations()
+        if len(planned_articulations) > 1:
+            raise NotImplementedError("Only support 1 planned articulation now")
+        articulation = planned_articulations[0]
 
         # first save the current qpos
         old_qpos = articulation.get_qpos()
+        # Ensure state contains full dof
+        state = self.pad_move_group_qpos(
+            old_qpos if state is None else state, articulation
+        )
         # set robot to new qpos
-        articulation.set_qpos(qpos, True)
-        # find the index of the articulation inside the array
-        idx = self.planning_world.get_articulations().index(articulation)
-        # check for self-collision
-        collisions = collision_function(idx)
+        articulation.set_qpos(state, True)
+        # check for collision
+        collisions = collision_function()
         # reset qpos
         articulation.set_qpos(old_qpos, True)
         return collisions
 
     def check_for_self_collision(
         self,
-        articulation: Optional[ArticulatedModel] = None,
-        qpos: Optional[np.ndarray] = None,
-    ) -> list:
-        """Check if the robot is in self-collision.
-
-        Args:
-            articulation: robot model. if none will be self.robot
-            qpos: robot configuration. if none will be the current pose
-
-        Returns:
-            A list of collisions.
+        state: Optional[np.ndarray] = None,
+    ) -> list[WorldCollisionResult]:
         """
-        return self.check_for_collision(
-            self.planning_world.self_collide, articulation, qpos
-        )
+        Check if the robot is in self-collision.
+
+        :param state: all planned articulations qpos state. If None, use current qpos.
+        :return: A list of collisions.
+        """
+        return self.check_for_collision(self.planning_world.self_collide, state)
 
     def check_for_env_collision(
         self,
-        articulation: Optional[ArticulatedModel] = None,
-        qpos: Optional[np.ndarray] = None,
-        with_point_cloud=False,
-        use_attach=False,
-    ) -> list:
-        """Check if the robot is in collision with the environment
-
-        Args:
-            articulation: robot model. if none will be self.robot
-            qpos: robot configuration. if none will be the current pose
-            with_point_cloud: whether to check collision against point cloud
-            use_attach: whether to include the object attached to the end effector
-                in collision checking
-        Returns:
-            A list of collisions.
+        state: Optional[np.ndarray] = None,
+    ) -> list[WorldCollisionResult]:
         """
-        # store previous results
-        prev_use_point_cloud = self.planning_world.use_point_cloud
-        prev_use_attach = self.planning_world.use_attach
-        self.planning_world.set_use_point_cloud(with_point_cloud)
-        self.planning_world.set_use_attach(use_attach)
+        Check if the robot is in collision with the environment
 
-        results = self.check_for_collision(
-            self.planning_world.collide_with_others, articulation, qpos
-        )
-
-        # restore
-        self.planning_world.set_use_point_cloud(prev_use_point_cloud)
-        self.planning_world.set_use_attach(prev_use_attach)
-        return results
+        :param state: all planned articulations qpos state. If None, use current qpos.
+        :return: A list of collisions.
+        """
+        return self.check_for_collision(self.planning_world.collide_with_others, state)
 
     def IK(self, goal_pose, start_qpos, mask=None, n_init_qpos=20, threshold=1e-3):
         """
@@ -440,59 +418,124 @@ class Planner:
         qdds_sample = jnt_traj(ts_sample, 2)
         return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration
 
-    def update_point_cloud(self, pc, radius=1e-3):
+    # TODO: change method name to align with PlanningWorld API?
+    def update_point_cloud(self, points, resolution=1e-3, name="scene_pcd"):
         """
-        Args:
-            pc: numpy array of shape (n, 3)
-            radius: radius of each point. This gives a buffer around each point
-                that planner will avoid
+        Adds a point cloud as a collision object with given name to world.
+        If the ``name`` is the same, the point cloud is simply updated.
+
+        :param points: points, numpy array of shape (n, 3)
+        :param resolution: resolution of the point OcTree
+        :param name: name of the point cloud collision object
         """
-        self.planning_world.update_point_cloud(pc, radius)
+        self.planning_world.add_point_cloud(name, points, resolution)
 
-    def update_attached_tool(self, fcl_collision_geometry, pose, link_id=-1):
-        """helper function to update the attached tool"""
-        if link_id == -1:
-            link_id = self.move_group_link_id
-        self.planning_world.update_attached_tool(fcl_collision_geometry, link_id, pose)
-
-    def update_attached_sphere(self, radius, pose, link_id=-1):
+    def remove_point_cloud(self, name="scene_pcd") -> bool:
         """
-        attach a sphere to some link
+        Removes the point cloud collision object with given name
 
-        Args:
-            radius: radius of the sphere
-            pose: [x,y,z,qw,qx,qy,qz] pose of the sphere
-            link_id: if not provided, the end effector will be the target.
+        :param name: name of the point cloud collision object
+        :return: ``True`` if success, ``False`` if normal object with given name doesn't
+            exist
         """
-        if link_id == -1:
-            link_id = self.move_group_link_id
-        self.planning_world.update_attached_sphere(radius, link_id, pose)
+        return self.planning_world.remove_normal_object(name)
 
-    def update_attached_box(self, size, pose, link_id=-1):
+    def update_attached_object(
+        self,
+        collision_geometry,
+        pose,
+        name="attached_geom",
+        art_name=None,
+        link_id=-1,
+    ):
         """
-        attach a box to some link
+        Attach given object (w/ collision geometry) to specified link of articulation
 
-        Args:
-            size: [x,y,z] size of the box
-            pose: [x,y,z,qw,qx,qy,qz] pose of the box
-            link_id: if not provided, the end effector will be the target.
-        """
-        if link_id == -1:
-            link_id = self.move_group_link_id
-        self.planning_world.update_attached_box(size, link_id, pose)
-
-    def update_attached_mesh(self, mesh_path, pose, link_id=-1):
-        """
-        attach a mesh to some link
-
-        Args:
-            mesh_path: path to the mesh
-            pose: [x,y,z,qw,qx,qy,qz] pose of the mesh
-            link_id: if not provided, the end effector will be the target.
+        :param collision_geometry: FCL collision geometry
+        :param pose: attaching pose (relative pose from attached link to object),
+                     [x,y,z,qw,qx,qy,qz]
+        :param name: name of the attached geometry.
+        :param art_name: name of the articulated object to attach to.
+                         If None, attach to self.robot.
+        :param link_id: if not provided, the end effector will be the target.
         """
         if link_id == -1:
             link_id = self.move_group_link_id
-        self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
+        self.planning_world.attach_object(
+            name,
+            collision_geometry,
+            self.robot.get_name() if art_name is None else art_name,
+            link_id,
+            pose,
+        )
+
+    def update_attached_sphere(self, radius, pose, art_name=None, link_id=-1):
+        """
+        Attach a sphere to some link
+
+        :param radius: radius of the sphere
+        :param pose: attaching pose (relative pose from attached link to object),
+                     [x,y,z,qw,qx,qy,qz]
+        :param art_name: name of the articulated object to attach to.
+                         If None, attach to self.robot.
+        :param link_id: if not provided, the end effector will be the target.
+        """
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.attach_sphere(
+            radius,
+            self.robot.get_name() if art_name is None else art_name,
+            link_id,
+            pose,
+        )
+
+    def update_attached_box(self, size, pose, art_name=None, link_id=-1):
+        """
+        Attach a box to some link
+
+        :param size: box side length
+        :param pose: attaching pose (relative pose from attached link to object),
+                     [x,y,z,qw,qx,qy,qz]
+        :param art_name: name of the articulated object to attach to.
+                         If None, attach to self.robot.
+        :param link_id: if not provided, the end effector will be the target.
+        """
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.attach_box(
+            size, self.robot.get_name() if art_name is None else art_name, link_id, pose
+        )
+
+    def update_attached_mesh(self, mesh_path, pose, art_name=None, link_id=-1):
+        """
+        Attach a mesh to some link
+
+        :param mesh_path: path to a mesh file
+        :param pose: attaching pose (relative pose from attached link to object),
+                     [x,y,z,qw,qx,qy,qz]
+        :param art_name: name of the articulated object to attach to.
+                         If None, attach to self.robot.
+        :param link_id: if not provided, the end effector will be the target.
+        """
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.attach_mesh(
+            mesh_path,
+            self.robot.get_name() if art_name is None else art_name,
+            link_id,
+            pose,
+        )
+
+    def detach_object(self, name="attached_geom", also_remove=False) -> bool:
+        """
+        Detact the attached object with given name
+
+        :param name: object name to detach
+        :param also_remove: whether to also remove object from world
+        :return: ``True`` if success, ``False`` if the object with given name is not
+            attached
+        """
+        return self.planning_world.detach_object(name, also_remove)
 
     def set_base_pose(self, pose):
         """
@@ -503,11 +546,7 @@ class Planner:
         """
         self.robot.set_base_pose(pose)
 
-    def set_normal_object(self, name, collision_object):
-        """adds or updates a non-articulated collision object in the scene"""
-        self.planning_world.set_normal_object(name, collision_object)
-
-    def remove_normal_object(self, name):
+    def remove_normal_object(self, name) -> bool:
         """returns true if the object was removed, false if it was not found"""
         return self.planning_world.remove_normal_object(name)
 
@@ -519,8 +558,6 @@ class Planner:
         rrt_range=0.1,
         planning_time=1,
         fix_joint_limits=True,
-        use_point_cloud=False,
-        use_attach=False,
         planner_name="RRTConnect",
         no_simplification=False,
         constraint_function=None,
@@ -542,8 +579,6 @@ class Planner:
             planning_time: time limit for RRT
             fix_joint_limits: if True, will clip the joint configuration to be within
                 the joint limits
-            use_point_cloud: if True, will use the point cloud to avoid collision
-            use_attach: if True, will consider the attached tool collision when planning
             planner_name: planner name pick from {"RRTConnect", "RRTstar"}
             no_simplification: if true, will not simplify the path. constraint planning
                 does not support simplification
@@ -556,8 +591,6 @@ class Planner:
         """
         if fixed_joint_indices is None:
             fixed_joint_indices = []
-        self.planning_world.set_use_point_cloud(use_point_cloud)
-        self.planning_world.set_use_attach(use_attach)
         n = current_qpos.shape[0]
         if fix_joint_limits:
             for i in range(n):
@@ -638,8 +671,6 @@ class Planner:
         rrt_range=0.1,
         planning_time=1,
         fix_joint_limits=True,
-        use_point_cloud=False,
-        use_attach=False,
         wrt_world=True,
         planner_name="RRTConnect",
         no_simplification=False,
@@ -661,8 +692,6 @@ class Planner:
             planning_time: time limit for RRT
             fix_joint_limits: if True, will clip the joint configuration to be within
                 the joint limits
-            use_point_cloud: if True, will use the point cloud to avoid collision
-            use_attach: if True, will consider the attached tool collision when planning
             wrt_world: if true, interpret the target pose with respect to
                 the world frame instead of the base frame
             verbose: if True, will print the log of OMPL and TOPPRA
@@ -713,8 +742,6 @@ class Planner:
             rrt_range,
             planning_time,
             fix_joint_limits,
-            use_point_cloud,
-            use_attach,
             planner_name,
             no_simplification,
             constraint_function,
@@ -730,8 +757,6 @@ class Planner:
         qpos,
         qpos_step=0.1,
         time_step=0.1,
-        use_point_cloud=False,
-        use_attach=False,
         wrt_world=True,
         verbose=False,
     ):
@@ -745,14 +770,10 @@ class Planner:
             qpos: current joint configuration (either full or move_group joints)
             qpos_step: size of the random step for RRT
             time_step: time step for the discretization
-            use_point_cloud: if True, will use the point cloud to avoid collision
-            use_attach: if True, will use the attached tool to avoid collision
             wrt_world: if True, interpret the target pose with respect to the
                 world frame instead of the base frame
             verbose: if True, will print the log of TOPPRA
         """
-        self.planning_world.set_use_point_cloud(use_point_cloud)
-        self.planning_world.set_use_attach(use_attach)
         qpos = self.pad_move_group_qpos(qpos.copy())
         self.robot.set_qpos(qpos, True)
 

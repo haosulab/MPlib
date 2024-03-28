@@ -250,7 +250,7 @@ class TestPlanner(unittest.TestCase):
         box = trimesh.creation.box([0.1, 0.4, 0.2])
         points, _ = trimesh.sample.sample_surface(box, 1000)
         points += [0.55, 0, 0.1]
-        self.planner.update_point_cloud(points, radius=0.02)
+        self.planner.update_point_cloud(points, resolution=0.02)
 
     def test_update_point_cloud(self):
         # use screw based planning. first succeeds but after point cloud obstacle fails

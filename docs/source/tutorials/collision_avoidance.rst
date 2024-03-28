@@ -32,7 +32,7 @@ One way to model the environment and avoid collision is through point clouds. Th
    :end-before: # add_point_cloud ankor end
    :emphasize-lines: 4
 
-``planner.update_point_cloud()`` takes two arguments. The first one is a NumPy array of shape :math:`(n \times 3)`, which describes the coordinates of the points. **The coordinates should be represented in the world frame**. The second (optional) argument is ``radius``, which describes the radius of each point. This can be used to create a buffer around the collision object.
+``planner.update_point_cloud()`` takes two arguments. The first one is a NumPy array of shape :math:`(n \times 3)`, which describes the coordinates of the points. **The coordinates should be represented in the world frame**. The second (optional) argument is ``resolution``, which describes the resolution of each point. This can be used to create a buffer around the collision object.
 
 After adding the point cloud, we can avoid collisions between the robot and the point cloud by setting ``use_point_cloud`` to be True. Both ``planner.plan_qpos_to_pose()`` and ``planner.plan_screw()`` support this flag:
 

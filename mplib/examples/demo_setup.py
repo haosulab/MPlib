@@ -160,18 +160,12 @@ class DemoSetup:
     def close_gripper(self):
         self.set_gripper(0)
 
-    def move_to_pose_with_RRTConnect(
-        self, pose, use_point_cloud=False, use_attach=False
-    ):
+    def move_to_pose_with_RRTConnect(self, pose):
         """
         Plan and follow a path to a pose using RRTConnect
 
         Args:
             pose: [x, y, z, qx, qy, qz, qw]
-            use_point_cloud (optional): if to take the point cloud into consideration
-                for collision checking.
-            use_attach (optional): if to take the attach into consideration
-                for collision checking.
         """
         # result is a dictionary with keys 'status', 'time', 'position', 'velocity',
         # 'acceleration', 'duration'
@@ -180,8 +174,6 @@ class DemoSetup:
             pose,
             self.robot.get_qpos(),
             time_step=1 / 250,
-            use_point_cloud=use_point_cloud,
-            use_attach=use_attach,
             planner_name="RRTConnect",
         )
         # plan_qpos_to_pose ankor end
@@ -192,7 +184,7 @@ class DemoSetup:
         self.follow_path(result)
         return 0
 
-    def move_to_pose_with_screw(self, pose, use_point_cloud=False, use_attach=False):
+    def move_to_pose_with_screw(self, pose):
         """
         Interpolative planning with screw motion.
         Will not avoid collision and will fail if the path contains collision.
@@ -201,21 +193,17 @@ class DemoSetup:
             pose,
             self.robot.get_qpos(),
             time_step=1 / 250,
-            use_point_cloud=use_point_cloud,
-            use_attach=use_attach,
         )
         if result["status"] == "Success":
             self.follow_path(result)
             return 0
         else:
             # fall back to RRTConnect if the screw motion fails (say contains collision)
-            return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach)
+            return self.move_to_pose_with_RRTConnect(pose)
 
-    def move_to_pose(
-        self, pose, with_screw=True, use_point_cloud=False, use_attach=False
-    ):
+    def move_to_pose(self, pose, with_screw=True):
         """API to multiplex between the two planning methods"""
         if with_screw:
-            return self.move_to_pose_with_screw(pose, use_point_cloud, use_attach)
+            return self.move_to_pose_with_screw(pose)
         else:
-            return self.move_to_pose_with_RRTConnect(pose, use_point_cloud, use_attach)
+            return self.move_to_pose_with_RRTConnect(pose)

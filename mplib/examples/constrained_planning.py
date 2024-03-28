@@ -29,7 +29,7 @@ class ConstrainedPlanningDemo(DemoSetup):
         all_pts = np.concatenate(
             [points + [-0.65, -0.1, 0.4], points + [0.55, 0, 0.1]], axis=0
         )
-        self.planner.update_point_cloud(all_pts, radius=0.02)
+        self.planner.update_point_cloud(all_pts, resolution=0.02)
         return
 
     def get_eef_z(self):
@@ -112,8 +112,6 @@ class ConstrainedPlanningDemo(DemoSetup):
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,
-                use_point_cloud=True,
-                use_attach=False,
                 planner_name="RRTConnect",
                 constraint_function=self.make_f(),
                 constraint_jacobian=self.make_j(),
@@ -134,8 +132,6 @@ class ConstrainedPlanningDemo(DemoSetup):
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,
-                use_point_cloud=True,
-                use_attach=False,
                 planner_name="RRTConnect",
                 no_simplification=True,
             )
