@@ -33,7 +33,7 @@ PlanningWorldTpl<S>::PlanningWorldTpl(
     planned_articulation_map_[articulation_names[i]] = articulations[i];
   }
   for (size_t i = 0; i < normal_objects.size(); i++) {
-    normal_object_map_[normal_object_names[i]] = normal_objects[i];
+    setNormalObject(normal_object_names[i], normal_objects[i]);
   }
 }
 

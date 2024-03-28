@@ -163,7 +163,10 @@ class PlanningWorldTpl {
    */
   void addNormalObject(const std::string &name,
                        const CollisionObjectPtr &collision_object) {
-    normal_object_map_[name] = collision_object;
+    FCLObject fcl_obj;
+    fcl_obj.collision_objects_.push_back(collision_object);
+    fcl_obj.tfs_.push_back(Isometry3<S>::Identity());
+    normal_object_map_[name] = fcl_obj;
   }
 
   /**
