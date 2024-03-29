@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from typing import Optional, Sequence
 
 import numpy as np
@@ -83,6 +84,7 @@ class Planner:
             kwargs.get("normal_objects", []),
             kwargs.get("normal_object_names", []),
         )
+        self.acm = self.planning_world.get_allowed_collision_matrix()
 
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
@@ -127,6 +129,11 @@ class Planner:
             f"length of joint_vel_limits ({len(self.joint_vel_limits)}) > "
             f"number of total joints ({len(self.joint_limits)})"
         )
+
+        # Mask for joints that have equivalent values (revolute joints with range > 2pi)
+        self.equiv_joint_mask = [
+            t.startswith("JointModelR") for t in self.joint_types
+        ] & (self.joint_limits[:, 1] - self.joint_limits[:, 0] > 2 * np.pi)
 
         self.planner = ompl.OMPLPlanner(world=self.planning_world)
 
@@ -214,35 +221,29 @@ class Planner:
             np.linalg.norm(q1 - q2), np.linalg.norm(q1 + q2)
         )
 
-    def wrap_joint_limit(self, q) -> bool:
+    def wrap_joint_limit(self, qpos: np.ndarray) -> bool:
         """
-        Checks if the joint configuration is within the joint limits.
+        Checks if the joint configuration can be wrapped to be within the joint limits.
         For revolute joints, the joint angle is wrapped to be within [q_min, q_min+2*pi)
 
-        Args:
-            q: joint configuration, angles of revolute joints might be modified
-
-        Returns:
-            True if q can be wrapped to be within the joint limits
+        :param qpos: joint positions, angles of revolute joints might be modified.
+            If not within_limits (returns False), qpos might not be fully wrapped.
+        :return: whether qpos can be wrapped to be within the joint limits.
         """
-        n = len(q)
-        flag = True
-        for i in range(n):
-            if self.joint_types[i].startswith("JointModelR"):
-                if -1e-3 <= q[i] - self.joint_limits[i][0] < 0:
+        for i, (q, joint_type, qlimit) in enumerate(
+            zip(qpos, self.joint_types, self.joint_limits)
+        ):
+            if joint_type.startswith("JointModelR"):  # revolute joint
+                if -1e-3 <= q - qlimit[0] < 0:
                     continue
-                q[i] -= (
-                    2 * np.pi * np.floor((q[i] - self.joint_limits[i][0]) / (2 * np.pi))
-                )
-                if q[i] > self.joint_limits[i][1] + 1e-3:
-                    flag = False
+                q -= 2 * np.pi * np.floor((q - qlimit[0]) / (2 * np.pi))
+                qpos[i] = q  # clip qpos
+                if q > qlimit[1] + 1e-3:
+                    return False
             else:
-                if (
-                    q[i] < self.joint_limits[i][0] - 1e-3
-                    or q[i] > self.joint_limits[i][1] + 1e-3
-                ):
-                    flag = False
-        return flag
+                if q < qlimit[0] - 1e-3 or q > qlimit[1] + 1e-3:
+                    return False
+        return True
 
     def pad_move_group_qpos(self, qpos, articulation=None):
         """
@@ -322,71 +323,109 @@ class Planner:
         """
         return self.check_for_collision(self.planning_world.collide_with_others, state)
 
-    def IK(self, goal_pose, start_qpos, mask=None, n_init_qpos=20, threshold=1e-3):
+    def IK(
+        self,
+        goal_pose: np.ndarray,
+        start_qpos: np.ndarray,
+        mask: Optional[list[bool] | np.ndarray] = None,
+        *,
+        n_init_qpos: int = 20,
+        threshold: float = 1e-3,
+        return_closest: bool = False,
+        verbose: bool = False,
+    ) -> tuple[str, list[np.ndarray] | np.ndarray | None]:
         """
-        Inverse kinematics
+        Compute inverse kinematics
 
-        Args:
-            goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
-            start_qpos: initial configuration
-            mask: if the value at a given index is True,
-                the joint is *not* used in the IK
-            n_init_qpos: number of random initial configurations
-            threshold: threshold for the distance between the goal pose and
-                the result pose
+        :param goal_pose: goal pose (xyz, wxyz), (7,) np.floating np.ndarray.
+        :param start_qpos: initial configuration, (ndof,) np.floating np.ndarray.
+        :param mask: qpos mask to disable IK sampling, (ndof,) bool np.ndarray.
+        :param n_init_qpos: number of random initial configurations to sample.
+        :param threshold: distance_6D threshold for marking sampled IK as success.
+                          distance_6D is position error norm + quaternion error norm.
+        :param return_closest: whether to return the qpos that is closest to start_qpos,
+                               considering equivalent joint values.
+        :param verbose: whether to print collision info if any collision exists.
+        :return: (status, q_goals)
+            status: IK status, "Success" if succeeded.
+            q_goals: list of sampled IK qpos, (ndof,) np.floating np.ndarray.
+                IK is successful if q_goals is not None.
+                If return_closest, q_goals is np.ndarray if successful
+                and None if not successful.
         """
-
+        # TODO: verbose: print collision info
         if mask is None:
             mask = []
-        index = self.link_name_2_idx[self.move_group]
-        min_dis = 1e9
-        idx = self.move_group_joint_indices
-        qpos0 = np.copy(start_qpos)
-        results = []
+
+        move_link_idx = self.link_name_2_idx[self.move_group]
+        move_joint_idx = self.move_group_joint_indices
         self.robot.set_qpos(start_qpos, True)
+
+        min_dis = 1e9
+        q_goals = []
+        qpos = start_qpos
         for _ in range(n_init_qpos):
-            ik_results = self.pinocchio_model.compute_IK_CLIK(
-                index, goal_pose, start_qpos, mask
+            ik_qpos, ik_success, ik_error = self.pinocchio_model.compute_IK_CLIK(
+                move_link_idx, goal_pose, qpos, mask
             )
-            flag = self.wrap_joint_limit(ik_results[0])  # will wrap revolute joints
+            success = ik_success and self.wrap_joint_limit(ik_qpos)
 
-            # check collision
-            self.planning_world.set_qpos_all(ik_results[0][idx])
-            if len(self.planning_world.collide_full()) != 0:
-                flag = False
+            if success:
+                # check collision
+                self.planning_world.set_qpos_all(ik_qpos[move_joint_idx])
+                if len(self.planning_world.collide_full()) > 0:
+                    success = False
 
-            if flag:
-                self.pinocchio_model.compute_forward_kinematics(ik_results[0])
-                new_pose = self.pinocchio_model.get_link_pose(index)
+            if success:
+                self.pinocchio_model.compute_forward_kinematics(ik_qpos)
+                new_pose = self.pinocchio_model.get_link_pose(move_link_idx)
                 tmp_dis = self.distance_6D(
                     goal_pose[:3], goal_pose[3:], new_pose[:3], new_pose[3:]
                 )
                 if tmp_dis < min_dis:
                     min_dis = tmp_dis
                 if tmp_dis < threshold:
-                    result = ik_results[0]
-                    unique = True
-                    for j in range(len(results)):
-                        if np.linalg.norm(results[j][idx] - result[idx]) < 0.1:
-                            unique = False
-                    if unique:
-                        results.append(result)
-            start_qpos = self.pinocchio_model.get_random_configuration()
-            mask_len = len(mask)
-            if mask_len > 0:
-                for j in range(mask_len):
-                    if mask[j]:
-                        start_qpos[j] = qpos0[j]
-        if len(results) != 0:
+                    for q_goal in q_goals:
+                        if (
+                            np.linalg.norm(
+                                q_goal[move_joint_idx] - ik_qpos[move_joint_idx]
+                            )
+                            < 0.1
+                        ):
+                            break  # not unique ik_qpos
+                    else:
+                        q_goals.append(ik_qpos)
+
+            qpos = self.pinocchio_model.get_random_configuration()
+            qpos[mask] = start_qpos[mask]  # use start_qpos for disabled joints
+
+        if len(q_goals) != 0:
             status = "Success"
         elif min_dis != 1e9:
-            status = "IK Failed! Distance {:f} is greater than threshold {:f}.".format(
-                min_dis,
-                threshold,
-            )
+            status = f"IK Failed! Distance {min_dis} is greater than {threshold=}."
+            return status, None
         else:
             status = "IK Failed! Cannot find valid solution."
-        return status, results
+            return status, None
+
+        if return_closest:
+            q_goals = np.asarray(q_goals)  # [N, ndof]
+            start_qpos = np.asarray(start_qpos)[None]  # [1, ndof]
+
+            # Consider equivalent joint values
+            q1 = q_goals[:, self.equiv_joint_mask]  # [N, n_equiv_joint]
+            q2 = q1 + 2 * np.pi  # equivalent joints
+            start_q = start_qpos[:, self.equiv_joint_mask]  # [1, n_equiv_joint]
+
+            # Mask where q2 is valid and closer to start_q
+            q2_closer_mask = (
+                q2 < self.joint_limits[:, 1][None, self.equiv_joint_mask]
+            ) & (np.abs(q1 - start_q) > np.abs(q2 - start_q))  # [N, n_equiv_joint]
+            # Convert q_goals to equivalent joint values closest to start_qpos
+            q_goals[:, self.equiv_joint_mask] = np.where(q2_closer_mask, q2, q1)
+
+            q_goals = q_goals[np.linalg.norm(q_goals - start_qpos, axis=1).argmin()]
+        return status, q_goals
 
     def TOPP(self, path, step=0.1, verbose=False):
         """
@@ -552,25 +591,26 @@ class Planner:
 
     def plan_qpos_to_qpos(
         self,
-        goal_qposes: list,
-        current_qpos,
-        time_step=0.1,
-        rrt_range=0.1,
-        planning_time=1,
-        fix_joint_limits=True,
-        planner_name="RRTConnect",
-        no_simplification=False,
-        constraint_function=None,
-        constraint_jacobian=None,
-        constraint_tolerance=1e-3,
-        fixed_joint_indices=None,
-        verbose=False,
-    ):
+        goal_qposes: list[np.ndarray],
+        current_qpos: np.ndarray,
+        *,
+        planner_name: str = "RRTConnect",
+        time_step: float = 0.1,
+        rrt_range: float = 0.1,
+        planning_time: float = 1,
+        fix_joint_limits: bool = True,
+        fixed_joint_indices: Optional[list[int]] = None,
+        no_simplification: bool = False,
+        constraint_function: Optional[Callable] = None,
+        constraint_jacobian: Optional[Callable] = None,
+        constraint_tolerance: float = 1e-3,
+        verbose: bool = False,
+    ) -> dict[str, str | np.ndarray | np.float64]:
         """
-        plan a path from a specified joint position to a goal pose
+        Plan a path from a specified joint position to a goal pose
 
         Args:
-            goal_pose: 7D pose of the end-effector [x,y,z,qw,qx,qy,qz]
+            goal_qposes: list of target joint configurations, [(ndof,)]
             current_qpos: current joint configuration (either full or move_group joints)
             mask: mask for IK. When set, the IK will leave certain joints out of
                 planning
@@ -591,39 +631,36 @@ class Planner:
         """
         if fixed_joint_indices is None:
             fixed_joint_indices = []
-        n = current_qpos.shape[0]
-        if fix_joint_limits:
-            for i in range(n):
-                if current_qpos[i] < self.joint_limits[i][0]:
-                    current_qpos[i] = self.joint_limits[i][0] + 1e-3
-                if current_qpos[i] > self.joint_limits[i][1]:
-                    current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
+        if fix_joint_limits:
+            current_qpos = np.clip(
+                current_qpos, self.joint_limits[:, 0], self.joint_limits[:, 1]
+            )
         current_qpos = self.pad_move_group_qpos(current_qpos)
 
         self.robot.set_qpos(current_qpos, True)
         collisions = self.planning_world.collide_full()
-        if len(collisions) != 0:
+        if len(collisions) > 0:
             print("Invalid start state!")
             for collision in collisions:
                 print(f"{collision.link_name1} and {collision.link_name2} collide!")
 
-        idx = self.move_group_joint_indices
+        move_joint_idx = self.move_group_joint_indices
 
-        goal_qpos_ = [goal_qposes[i][idx] for i in range(len(goal_qposes))]
+        goal_qpos_ = [goal_qposes[i][move_joint_idx] for i in range(len(goal_qposes))]
 
         fixed_joints = set()
         for joint_idx in fixed_joint_indices:
             fixed_joints.add(ompl.FixedJoint(0, joint_idx, current_qpos[joint_idx]))
 
-        assert len(current_qpos[idx]) == len(goal_qpos_[0])
+        assert len(current_qpos[move_joint_idx]) == len(goal_qpos_[0])
         status, path = self.planner.plan(
-            current_qpos[idx],
+            current_qpos[move_joint_idx],
             goal_qpos_,
-            range=rrt_range,
-            time=planning_time,
-            fixed_joints=fixed_joints,
             planner_name=planner_name,
+            time=planning_time,
+            range=rrt_range,
+            fixed_joints=fixed_joints,
             no_simplification=no_simplification,
             constraint_function=constraint_function,
             constraint_jacobian=constraint_jacobian,
@@ -646,7 +683,7 @@ class Planner:
                 "duration": duration,
             }
         else:
-            return {"status": "RRT Failed. %s" % status}
+            return {"status": f"RRT Failed. {status}"}
 
     def transform_goal_to_wrt_base(self, goal_pose):
         base_pose = self.robot.get_base_pose()
@@ -664,21 +701,22 @@ class Planner:
 
     def plan_qpos_to_pose(
         self,
-        goal_pose,
-        current_qpos,
-        mask=None,
-        time_step=0.1,
-        rrt_range=0.1,
-        planning_time=1,
-        fix_joint_limits=True,
-        wrt_world=True,
-        planner_name="RRTConnect",
-        no_simplification=False,
-        constraint_function=None,
-        constraint_jacobian=None,
-        constraint_tolerance=1e-3,
-        verbose=False,
-    ):
+        goal_pose: np.ndarray,
+        current_qpos: np.ndarray,
+        mask: Optional[list[bool] | np.ndarray] = None,
+        *,
+        planner_name: str = "RRTConnect",
+        time_step: float = 0.1,
+        rrt_range: float = 0.1,
+        planning_time: float = 1,
+        fix_joint_limits: bool = True,
+        wrt_world: bool = True,
+        no_simplification: bool = False,
+        constraint_function: Optional[Callable] = None,
+        constraint_jacobian: Optional[Callable] = None,
+        constraint_tolerance: float = 1e-3,
+        verbose: bool = False,
+    ) -> dict[str, str | np.ndarray | np.float64]:
         """
         plan from a start configuration to a goal pose of the end-effector
 
@@ -698,14 +736,11 @@ class Planner:
         """
         if mask is None:
             mask = []
-        n = current_qpos.shape[0]
-        if fix_joint_limits:
-            for i in range(n):
-                if current_qpos[i] < self.joint_limits[i][0]:
-                    current_qpos[i] = self.joint_limits[i][0] + 1e-3
-                if current_qpos[i] > self.joint_limits[i][1]:
-                    current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
+        if fix_joint_limits:
+            current_qpos = np.clip(
+                current_qpos, self.joint_limits[:, 0], self.joint_limits[:, 1]
+            )
         current_qpos = self.pad_move_group_qpos(current_qpos)
 
         if wrt_world:
@@ -723,7 +758,7 @@ class Planner:
             for i in range(len(goal_qpos)):
                 print(goal_qpos[i])
 
-        # goal_qpos_ = [goal_qpos[i][idx] for i in range(len(goal_qpos))]
+        # goal_qpos_ = [goal_qpos[i][move_joint_idx] for i in range(len(goal_qpos))]
         self.robot.set_qpos(current_qpos, True)
 
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
@@ -738,47 +773,47 @@ class Planner:
         return self.plan_qpos_to_qpos(
             goal_qpos,
             current_qpos,
-            time_step,
-            rrt_range,
-            planning_time,
-            fix_joint_limits,
-            planner_name,
-            no_simplification,
-            constraint_function,
-            constraint_jacobian,
-            constraint_tolerance,
+            time_step=time_step,
+            rrt_range=rrt_range,
+            planning_time=planning_time,
+            fix_joint_limits=fix_joint_limits,
+            simplify=simplify,
+            constraint_function=constraint_function,
+            constraint_jacobian=constraint_jacobian,
+            constraint_tolerance=constraint_tolerance,
             verbose=verbose,
         )
 
     # plan_screw ankor
     def plan_screw(
         self,
-        target_pose,
-        qpos,
-        qpos_step=0.1,
-        time_step=0.1,
-        wrt_world=True,
-        verbose=False,
-    ):
+        goal_pose: np.ndarray,
+        current_qpos: np.ndarray,
+        *,
+        qpos_step: float = 0.1,
+        time_step: float = 0.1,
+        wrt_world: bool = True,
+        verbose: bool = False,
+    ) -> dict[str, str | np.ndarray | np.float64]:
         # plan_screw ankor end
         """
         Plan from a start configuration to a goal pose of the end-effector using
         screw motion
 
         Args:
-            target_pose: [x, y, z, qw, qx, qy, qz] pose of the goal
-            qpos: current joint configuration (either full or move_group joints)
+            goal_pose: [x, y, z, qw, qx, qy, qz] pose of the goal
+            current_qpos: current joint configuration (either full or move_group joints)
             qpos_step: size of the random step for RRT
             time_step: time step for the discretization
             wrt_world: if True, interpret the target pose with respect to the
                 world frame instead of the base frame
             verbose: if True, will print the log of TOPPRA
         """
-        qpos = self.pad_move_group_qpos(qpos.copy())
-        self.robot.set_qpos(qpos, True)
+        current_qpos = self.pad_move_group_qpos(current_qpos.copy())
+        self.robot.set_qpos(current_qpos, True)
 
         if wrt_world:
-            target_pose = self.transform_goal_to_wrt_base(target_pose)
+            goal_pose = self.transform_goal_to_wrt_base(goal_pose)
 
         def pose7D2mat(pose):
             mat = np.eye(4)
@@ -825,10 +860,10 @@ class Planner:
             v = inv_left_jacobian @ pose[:3, 3]
             return np.concatenate([v, omega]), theta
 
-        self.pinocchio_model.compute_forward_kinematics(qpos)
+        self.pinocchio_model.compute_forward_kinematics(current_qpos)
         ee_index = self.link_name_2_idx[self.move_group]
         current_p = pose7D2mat(self.pinocchio_model.get_link_pose(ee_index))
-        target_p = pose7D2mat(target_pose)
+        target_p = pose7D2mat(goal_pose)
         relative_transform = target_p @ np.linalg.inv(current_p)
 
         omega, theta = pose2exp_coordinate(relative_transform)
@@ -837,11 +872,11 @@ class Planner:
             return {"status": "screw plan failed."}
         omega = omega.reshape((-1, 1)) * theta
 
-        index = self.move_group_joint_indices
-        path = [np.copy(qpos[index])]
+        move_joint_idx = self.move_group_joint_indices
+        path = [np.copy(current_qpos[move_joint_idx])]
 
         while True:
-            self.pinocchio_model.compute_full_jacobian(qpos)
+            self.pinocchio_model.compute_full_jacobian(current_qpos)
             J = self.pinocchio_model.get_link_jacobian(ee_index, local=False)
             delta_q = np.linalg.pinv(J) @ omega
             delta_q *= qpos_step / (np.linalg.norm(delta_q))
@@ -854,7 +889,7 @@ class Planner:
                 delta_twist = delta_twist * ratio
                 flag = True
 
-            qpos += delta_q.reshape(-1)
+            current_qpos += delta_q.reshape(-1)
             omega -= delta_twist
 
             def check_joint_limit(q):
@@ -867,14 +902,14 @@ class Planner:
                         return False
                 return True
 
-            within_joint_limit = check_joint_limit(qpos)
-            self.planning_world.set_qpos_all(qpos[index])
+            within_joint_limit = check_joint_limit(current_qpos)
+            self.planning_world.set_qpos_all(current_qpos[move_joint_idx])
             collide = self.planning_world.collide()
 
             if np.linalg.norm(delta_twist) < 1e-4 or collide or not within_joint_limit:
                 return {"status": "screw plan failed"}
 
-            path.append(np.copy(qpos[index]))
+            path.append(np.copy(current_qpos[move_joint_idx]))
 
             if flag:
                 if verbose:
