@@ -127,7 +127,6 @@ class Planner:
             f"number of total joints ({len(self.joint_limits)})"
         )
 
-        self.planning_world = PlanningWorld([self.robot], ["robot"], [], [])
         self.planner = ompl.OMPLPlanner(world=self.planning_world)
 
     def replace_package_keyword(self, package_keyword_replacement):
