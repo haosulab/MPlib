@@ -117,6 +117,9 @@ void build_pyplanning_world(py::module &pymp) {
       .def("set_qpos_all", &PlanningWorld::setQposAll, py::arg("state"),
            DOC(mplib, PlanningWorldTpl, setQposAll))
 
+      .def("get_allowed_collision_matrix", &PlanningWorld::getAllowedCollisionMatrix,
+           DOC(mplib, PlanningWorldTpl, getAllowedCollisionMatrix))
+
       .def("collide", &PlanningWorld::collide, py::arg("request") = CollisionRequest(),
            DOC(mplib, PlanningWorldTpl, collide))
       .def("self_collide", &PlanningWorld::selfCollide,

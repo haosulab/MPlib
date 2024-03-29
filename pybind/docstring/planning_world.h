@@ -183,6 +183,10 @@ object and touch_links.
 :return: ``True`` if success, ``False`` if the object with given name is not
     attached)doc";
 
+static const char *__doc_mplib_PlanningWorldTpl_getAllowedCollisionMatrix =
+R"doc(
+Get the current allowed collision matrix)doc";
+
 static const char *__doc_mplib_PlanningWorldTpl_getArticulation =
 R"doc(
 Gets the articulation (ArticulatedModelPtr) with given name

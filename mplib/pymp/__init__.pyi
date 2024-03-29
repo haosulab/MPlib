@@ -418,6 +418,12 @@ class PlanningWorld:
         :return: ``True`` if success, ``False`` if the object with given name is not
             attached
         """
+    def get_allowed_collision_matrix(
+        self,
+    ) -> collision_detection.AllowedCollisionMatrix:
+        """
+        Get the current allowed collision matrix
+        """
     def get_articulation(self, name: str) -> ArticulatedModel:
         """
         Gets the articulation (ArticulatedModelPtr) with given name

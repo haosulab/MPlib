@@ -718,13 +718,29 @@ def load_mesh_as_BVH(
     scale: numpy.ndarray[
         tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
     ],
-) -> BVHModel: ...
+) -> BVHModel:
+    """
+    Load a triangle mesh from mesh_path as a non-convex collision object.
+
+    :param mesh_path: path to the mesh
+    :param scale: mesh scale factor
+    :return: a shared_ptr to an fcl::BVHModel_OBBRSS<S> collision object
+    """
+
 def load_mesh_as_Convex(
     mesh_path: str,
     scale: numpy.ndarray[
         tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
     ],
-) -> Convex: ...
+) -> Convex:
+    """
+    Load a convex mesh from mesh_path.
+
+    :param mesh_path: path to the mesh
+    :param scale: mesh scale factor
+    :return: a shared_ptr to an fcl::Convex<S> collision object
+    :raises RuntimeError: if the mesh is not convex.
+    """
 
 GST_INDEP: GJKSolverType  # value = <GJKSolverType.GST_INDEP: 1>
 GST_LIBCCD: GJKSolverType  # value = <GJKSolverType.GST_LIBCCD: 0>

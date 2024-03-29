@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "mplib/collision_detection/collision_matrix.h"
 #include "mplib/collision_detection/fcl/fcl_utils.h"
 #include "mplib/macros/assert.h"
 #include "mplib/utils/conversion.h"
@@ -19,7 +20,8 @@ PlanningWorldTpl<S>::PlanningWorldTpl(
     const std::vector<ArticulatedModelPtr> &articulations,
     const std::vector<std::string> &articulation_names,
     const std::vector<CollisionObjectPtr> &normal_objects,
-    const std::vector<std::string> &normal_object_names) {
+    const std::vector<std::string> &normal_object_names)
+    : acm_(std::make_shared<AllowedCollisionMatrix>()) {
   ASSERT(articulations.size() == articulation_names.size(),
          "articulations and articulation_names should have the same size");
   ASSERT(normal_objects.size() == normal_object_names.size(),
@@ -241,6 +243,18 @@ void PlanningWorldTpl<S>::setQposAll(const VectorX<S> &state) const {
 }
 
 template <typename S>
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::filterCollisions(
+    const std::vector<WorldCollisionResultTpl<S>> &collisions) const {
+  std::vector<WorldCollisionResult> ret;
+  for (const auto &collision : collisions)
+    if (auto type =
+            acm_->getAllowedCollision(collision.link_name1, collision.link_name2);
+        !type || type == collision_detection::AllowedCollision::NEVER)
+      ret.push_back(collision);
+  return ret;
+}
+
+template <typename S>
 std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
     const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret;
@@ -332,7 +346,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
         ret.push_back(tmp);
       }
     }
-  return ret;
+  return filterCollisions(ret);
 }
 
 template <typename S>
@@ -444,7 +458,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
       }
     }
   }
-  return ret;
+  return filterCollisions(ret);
 }
 
 template <typename S>

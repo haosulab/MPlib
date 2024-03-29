@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "mplib/collision_detection/collision_matrix.h"
 #include "mplib/collision_detection/types.h"
 #include "mplib/core/articulated_model.h"
 #include "mplib/core/attached_body.h"
@@ -36,6 +37,8 @@ class PlanningWorldTpl {
   using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
   using CollisionObject = fcl::CollisionObject<S>;
   using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
+  using AllowedCollisionMatrix = collision_detection::AllowedCollisionMatrix;
+  using AllowedCollisionMatrixPtr = collision_detection::AllowedCollisionMatrixPtr;
   // using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
   using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
 
@@ -326,6 +329,9 @@ class PlanningWorldTpl {
   /// @brief Set qpos of all planned articulations
   void setQposAll(const VectorX<S> &state) const;
 
+  /// @brief Get the current allowed collision matrix
+  AllowedCollisionMatrixPtr getAllowedCollisionMatrix() const { return acm_; }
+
   // TODO(merge): rename collision/distance function name to align with MoveIt2
   /**
    * Check full collision and return only a boolean indicating collision
@@ -374,6 +380,8 @@ class PlanningWorldTpl {
   std::map<std::string, ArticulatedModelPtr> planned_articulation_map_;
   std::unordered_map<std::string, AttachedBodyPtr> attached_body_map_;
 
+  AllowedCollisionMatrixPtr acm_;
+
   // TODO: Switch to BroadPhaseCollision
   // BroadPhaseCollisionManagerPtr normal_manager;
 
@@ -382,6 +390,10 @@ class PlanningWorldTpl {
     for (const auto &[name, attached_body] : attached_body_map_)
       attached_body->updatePose();
   }
+
+  /// @brief Filter collisions using acm_
+  std::vector<WorldCollisionResult> filterCollisions(
+      const std::vector<WorldCollisionResult> &collisions) const;
 };
 
 // Common Type Alias ===================================================================
