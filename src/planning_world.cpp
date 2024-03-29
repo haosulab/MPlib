@@ -66,6 +66,10 @@ bool PlanningWorldTpl<S>::removeArticulation(const std::string &name) {
   auto nh = articulation_map_.extract(name);
   if (nh.empty()) return false;
   planned_articulation_map_.erase(name);
+  // Update acm_
+  auto art_link_names = nh.mapped()->getUserLinkNames();
+  acm_->removeEntry(art_link_names);
+  acm_->removeDefaultEntry(art_link_names);
   return true;
 }
 
@@ -103,6 +107,9 @@ bool PlanningWorldTpl<S>::removeNormalObject(const std::string &name) {
   auto nh = normal_object_map_.extract(name);
   if (nh.empty()) return false;
   attached_body_map_.erase(name);
+  // Update acm_
+  acm_->removeEntry(name);
+  acm_->removeDefaultEntry(name);
   return true;
 }
 
@@ -118,13 +125,13 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                      link_id, toIsometry(pose), touch_links);
   if (!nh.empty()) {
     // Update acm_ to disallow collision between name and previous touch_links
-    // acm_->removeEntry(name, nh.mapped()->getTouchLinks());
+    acm_->removeEntry(name, nh.mapped()->getTouchLinks());
     nh.mapped() = body;
     attached_body_map_.insert(std::move(nh));
   } else
     attached_body_map_[name] = body;
   // Update acm_ to allow collision between name and touch_links
-  // acm_->setEntry(name, touch_links, true);
+  acm_->setEntry(name, touch_links, true);
 }
 
 template <typename S>
@@ -151,7 +158,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
         touch_links.push_back(collision.link_name1);
     body->setTouchLinks(touch_links);
     // Update acm_ to allow collision between name and touch_links
-    // acm_->setEntry(name, touch_links, true);
+    acm_->setEntry(name, touch_links, true);
   }
 }
 
@@ -207,10 +214,15 @@ template <typename S>
 bool PlanningWorldTpl<S>::detachObject(const std::string &name, bool also_remove) {
   if (also_remove) {
     normal_object_map_.erase(name);
+    // Update acm_
+    acm_->removeEntry(name);
+    acm_->removeDefaultEntry(name);
   }
 
   auto nh = attached_body_map_.extract(name);
   if (nh.empty()) return false;
+  // Update acm_ to disallow collision between name and touch_links
+  acm_->removeEntry(name, nh.mapped()->getTouchLinks());
   return true;
 }
 
