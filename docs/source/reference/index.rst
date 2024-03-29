@@ -7,6 +7,7 @@ API Reference
    Planner
    ArticulatedModel
    PlanningWorld
+   utils/random
 
 .. toctree::
    :maxdepth: 3

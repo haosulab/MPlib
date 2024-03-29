@@ -14,6 +14,7 @@ __all__ = [
     "collision_detection",
     "kinematics",
     "planning",
+    "set_global_seed",
 ]
 
 class ArticulatedModel:
@@ -542,3 +543,10 @@ class PlanningWorld:
         """
         Set qpos of all planned articulations
         """
+
+def set_global_seed(seed: int) -> None:
+    """
+    Sets the global seed for MPlib (``std::srand()``, OMPL's RNG, and FCL's RNG).
+
+    :param seed: the random seed value
+    """

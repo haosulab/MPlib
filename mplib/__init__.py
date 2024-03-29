@@ -7,8 +7,7 @@ from mplib.pymp import (
     collision_detection,
     kinematics,
     planning,
+    set_global_seed,
 )
-
-# from .pymp import set_global_seed
 
 __version__ = version("mplib")
