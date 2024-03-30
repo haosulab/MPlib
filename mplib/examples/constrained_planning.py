@@ -131,7 +131,7 @@ class ConstrainedPlanningDemo(DemoSetup):
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,
-                no_simplification=True,
+                simplify=False,
             )
             if result["status"] != "Success":
                 print(result["status"])

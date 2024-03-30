@@ -599,7 +599,7 @@ class Planner:
         planning_time: float = 1,
         fix_joint_limits: bool = True,
         fixed_joint_indices: Optional[list[int]] = None,
-        no_simplification: bool = False,
+        simplify: bool = True,
         constraint_function: Optional[Callable] = None,
         constraint_jacobian: Optional[Callable] = None,
         constraint_tolerance: float = 1e-3,
@@ -618,8 +618,8 @@ class Planner:
             planning_time: time limit for RRT
             fix_joint_limits: if True, will clip the joint configuration to be within
                 the joint limits
-            no_simplification: if true, will not simplify the path. constraint planning
-                does not support simplification
+            simplify: whether the planned path will be simplified.
+                (constained planning does not support simplification)
             constraint_function: evals to 0 when constraint is satisfied
             constraint_jacobian: jacobian of constraint_function
             constraint_tolerance: tolerance for constraint_function
@@ -658,7 +658,7 @@ class Planner:
             time=planning_time,
             range=rrt_range,
             fixed_joints=fixed_joints,
-            no_simplification=no_simplification,
+            simplify=simplify,
             constraint_function=constraint_function,
             constraint_jacobian=constraint_jacobian,
             constraint_tolerance=constraint_tolerance,
@@ -707,7 +707,7 @@ class Planner:
         planning_time: float = 1,
         fix_joint_limits: bool = True,
         wrt_world: bool = True,
-        no_simplification: bool = False,
+        simplify: bool = True,
         constraint_function: Optional[Callable] = None,
         constraint_jacobian: Optional[Callable] = None,
         constraint_tolerance: float = 1e-3,

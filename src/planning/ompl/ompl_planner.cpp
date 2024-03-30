@@ -216,8 +216,7 @@ ob::GoalStatesPtr OMPLPlannerTpl<S>::makeGoalStates(
 template <typename S>
 std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
     const VectorX<S> &start_state, const std::vector<VectorX<S>> &goal_states,
-    double time, double range, const FixedJointsTpl<S> &fixed_joints,
-    bool no_simplification,
+    double time, double range, const FixedJointsTpl<S> &fixed_joints, bool simplify,
     const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
         &constraint_function,
     const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
@@ -288,7 +287,7 @@ std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
     auto path = ss_->getSolutionPath();
 
     // simplify the path if not planning in constrained space
-    if (!no_simplification && state_space_ != constrained_space_) _simplifyPath(path);
+    if (simplify && state_space_ != constrained_space_) _simplifyPath(path);
 
     size_t len = path.getStateCount();
     MatrixX<S> ret(len + invalid_start, start_state.rows());

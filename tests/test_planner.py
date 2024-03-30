@@ -362,7 +362,7 @@ class TestPlanner(unittest.TestCase):
                 constraint_tolerance=0.001,
                 rrt_range=0.01,
                 time_step=1 / 250,
-                no_simplification=True,
+                simplify=False,
             )
             if result["status"] != "Success":
                 continue
