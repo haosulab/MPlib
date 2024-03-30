@@ -19,6 +19,7 @@ using PlanningWorld = PlanningWorldTpl<S>;
 
 using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 using CollisionRequest = fcl::CollisionRequest<S>;
+using DistanceRequest = fcl::DistanceRequest<S>;
 using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
 using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
 
@@ -130,7 +131,19 @@ void build_pyplanning_world(py::module &pymp) {
            DOC(mplib, PlanningWorldTpl, collideWithOthers))
       .def("collide_full", &PlanningWorld::collideFull,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, collideFull));
+           DOC(mplib, PlanningWorldTpl, collideFull))
+
+      .def("distance", &PlanningWorld::distance, py::arg("request") = DistanceRequest(),
+           DOC(mplib, PlanningWorldTpl, distance))
+      .def("self_distance", &PlanningWorld::distanceSelf,
+           py::arg("request") = DistanceRequest(),
+           DOC(mplib, PlanningWorldTpl, distanceSelf))
+      .def("distance_with_others", &PlanningWorld::distanceOthers,
+           py::arg("request") = DistanceRequest(),
+           DOC(mplib, PlanningWorldTpl, distanceOthers))
+      .def("distance_full", &PlanningWorld::distanceFull,
+           py::arg("request") = DistanceRequest(),
+           DOC(mplib, PlanningWorldTpl, distanceFull));
 }
 
 }  // namespace mplib

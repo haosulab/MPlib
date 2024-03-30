@@ -6,7 +6,13 @@ import typing
 
 from . import fcl
 
-__all__ = ["AllowedCollision", "AllowedCollisionMatrix", "WorldCollisionResult", "fcl"]
+__all__ = [
+    "AllowedCollision",
+    "AllowedCollisionMatrix",
+    "WorldCollisionResult",
+    "WorldDistanceResult",
+    "fcl",
+]
 
 class AllowedCollision:
     """
@@ -228,4 +234,44 @@ class WorldCollisionResult:
     def res(self) -> ...:
         """
         the fcl CollisionResult
+        """
+
+class WorldDistanceResult:
+    """
+    Result of minimum distance-to-collision query.
+    """
+    @property
+    def distance_type(self) -> str:
+        """
+        type of the distance result
+        """
+    @property
+    def link_name1(self) -> str:
+        """
+        link name of the first object
+        """
+    @property
+    def link_name2(self) -> str:
+        """
+        link name of the second object
+        """
+    @property
+    def min_distance(self) -> float:
+        """
+        minimum distance between the two objects
+        """
+    @property
+    def object_name1(self) -> str:
+        """
+        name of the first object
+        """
+    @property
+    def object_name2(self) -> str:
+        """
+        name of the second object
+        """
+    @property
+    def res(self) -> ...:
+        """
+        the fcl DistanceResult
         """

@@ -183,6 +183,35 @@ object and touch_links.
 :return: ``True`` if success, ``False`` if the object with given name is not
     attached)doc";
 
+static const char *__doc_mplib_PlanningWorldTpl_distance =
+R"doc(
+Returns the minimum distance-to-collision in current state
+
+:param request: distance request params.
+:return: minimum distance-to-collision)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_distanceFull =
+R"doc(
+Compute the min distance to collision (calls distanceSelf() and
+distanceOthers())
+
+:param request: distance request params.
+:return: a WorldDistanceResult object)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_distanceOthers =
+R"doc(
+Compute the min distance between a robot and the world
+
+:param request: distance request params.
+:return: a WorldDistanceResult object)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_distanceSelf =
+R"doc(
+Get the min distance to self-collision given the robot in current state
+
+:param request: distance request params.
+:return: a WorldDistanceResult object)doc";
+
 static const char *__doc_mplib_PlanningWorldTpl_getAllowedCollisionMatrix =
 R"doc(
 Get the current allowed collision matrix)doc";

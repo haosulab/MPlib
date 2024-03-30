@@ -482,4 +482,234 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideFull(
   return ret1;
 }
 
+template <typename S>
+WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
+    const DistanceRequest &request) const {
+  WorldDistanceResult ret;
+  DistanceResult result;
+
+  updateAttachedBodiesPose();
+
+  // Minimum distance involving planned articulation
+  for (const auto &[art_name, art] : planned_articulation_map_) {
+    auto fcl_model = art->getFCLModel();
+    auto col_objs = fcl_model->getCollisionObjects();
+    auto col_link_names = fcl_model->getCollisionLinkNames();
+    auto col_pairs = fcl_model->getCollisionPairs();
+
+    // Articulation minimum distance to self-collision
+    for (const auto &[x, y] : col_pairs)
+      if (auto type = acm_->getAllowedCollision(col_link_names[x], col_link_names[y]);
+          !type || type == collision_detection::AllowedCollision::NEVER) {
+        result.clear();
+        ::fcl::distance(col_objs[x].get(), col_objs[y].get(), request, result);
+        if (result.min_distance < ret.min_distance) {
+          ret.res = result;
+          ret.min_distance = result.min_distance;
+          ret.distance_type = "self";
+          ret.object_name1 = art_name;
+          ret.object_name2 = art_name;
+          ret.link_name1 = col_link_names[x];
+          ret.link_name2 = col_link_names[y];
+        }
+      }
+
+    // Minimum distance among planned_articulations_
+    for (const auto &[art_name2, art2] : planned_articulation_map_) {
+      if (art_name == art_name2) break;
+      auto fcl_model2 = art2->getFCLModel();
+      auto col_objs2 = fcl_model2->getCollisionObjects();
+      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
+
+      for (size_t i = 0; i < col_objs.size(); i++)
+        for (size_t j = 0; j < col_objs2.size(); j++)
+          if (auto type =
+                  acm_->getAllowedCollision(col_link_names[i], col_link_names2[j]);
+              !type || type == collision_detection::AllowedCollision::NEVER) {
+            result.clear();
+            ::fcl::distance(col_objs[i].get(), col_objs2[j].get(), request, result);
+            if (result.min_distance < ret.min_distance) {
+              ret.res = result;
+              ret.min_distance = result.min_distance;
+              ret.distance_type = "self_articulation";
+              ret.object_name1 = art_name;
+              ret.object_name2 = art_name2;
+              ret.link_name1 = col_link_names[i];
+              ret.link_name2 = col_link_names2[j];
+            }
+          }
+    }
+
+    // Articulation minimum distance to attached_body_map_
+    for (const auto &[attached_body_name, attached_body] : attached_body_map_) {
+      auto attached_obj = attached_body->getObject();
+      for (size_t i = 0; i < col_objs.size(); i++) {
+        if (auto type =
+                acm_->getAllowedCollision(col_link_names[i], attached_body_name);
+            !type || type == collision_detection::AllowedCollision::NEVER) {
+          result.clear();
+          ::fcl::distance(attached_obj.get(), col_objs[i].get(), request, result);
+          if (result.min_distance < ret.min_distance) {
+            ret.res = result;
+            ret.min_distance = result.min_distance;
+            ret.distance_type = "self_attach";
+            ret.object_name1 = art_name;
+            ret.object_name2 = attached_body_name;
+            ret.link_name1 = col_link_names[i];
+            ret.link_name2 = attached_body_name;
+          }
+        }
+      }
+    }
+  }
+
+  // Minimum distance among attached_body_map_
+  for (auto it = attached_body_map_.begin(); it != attached_body_map_.end(); ++it)
+    for (auto it2 = attached_body_map_.begin(); it2 != it; ++it2) {
+      auto name1 = it->first, name2 = it2->first;
+      if (auto type = acm_->getAllowedCollision(name1, name2);
+          !type || type == collision_detection::AllowedCollision::NEVER) {
+        result.clear();
+        ::fcl::distance(it->second->getObject().get(), it2->second->getObject().get(),
+                        request, result);
+        if (result.min_distance < ret.min_distance) {
+          ret.res = result;
+          ret.min_distance = result.min_distance;
+          ret.distance_type = "attach_attach";
+          ret.object_name1 = name1;
+          ret.object_name2 = name2;
+          ret.link_name1 = name1;
+          ret.link_name2 = name2;
+        }
+      }
+    }
+  return ret;
+}
+
+template <typename S>
+WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceOthers(
+    const DistanceRequest &request) const {
+  WorldDistanceResult ret;
+  DistanceResult result;
+
+  updateAttachedBodiesPose();
+
+  // Collect unplanned articulations, not attached scene objects
+  std::vector<ArticulatedModelPtr> unplanned_articulations;
+  std::unordered_map<std::string, CollisionObjectPtr> scene_objects;
+  for (const auto &[name, art] : articulation_map_)
+    if (planned_articulation_map_.find(name) == planned_articulation_map_.end())
+      unplanned_articulations.push_back(art);
+  for (const auto &[name, obj] : normal_object_map_)
+    if (attached_body_map_.find(name) == attached_body_map_.end())
+      scene_objects[name] = obj;
+
+  // Minimum distance involving planned articulation
+  for (const auto &[art_name, art] : planned_articulation_map_) {
+    auto fcl_model = art->getFCLModel();
+    auto col_objs = fcl_model->getCollisionObjects();
+    auto col_link_names = fcl_model->getCollisionLinkNames();
+
+    // Minimum distance to unplanned articulation
+    for (const auto &art2 : unplanned_articulations) {
+      auto art_name2 = art2->getName();
+      auto fcl_model2 = art2->getFCLModel();
+      auto col_objs2 = fcl_model2->getCollisionObjects();
+      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
+
+      for (size_t i = 0; i < col_objs.size(); i++)
+        for (size_t j = 0; j < col_objs2.size(); j++)
+          if (auto type =
+                  acm_->getAllowedCollision(col_link_names[i], col_link_names2[j]);
+              !type || type == collision_detection::AllowedCollision::NEVER) {
+            result.clear();
+            ::fcl::distance(col_objs[i].get(), col_objs2[j].get(), request, result);
+            if (result.min_distance < ret.min_distance) {
+              ret.res = result;
+              ret.min_distance = result.min_distance;
+              ret.distance_type = "articulation_articulation";
+              ret.object_name1 = art_name;
+              ret.object_name2 = art_name2;
+              ret.link_name1 = col_link_names[i];
+              ret.link_name2 = col_link_names2[j];
+            }
+          }
+    }
+
+    // Minimum distance to scene objects
+    for (const auto &[name, obj] : scene_objects)
+      for (size_t i = 0; i < col_objs.size(); i++)
+        if (auto type = acm_->getAllowedCollision(col_link_names[i], name);
+            !type || type == collision_detection::AllowedCollision::NEVER) {
+          result.clear();
+          ::fcl::distance(col_objs[i].get(), obj.get(), request, result);
+          if (result.min_distance < ret.min_distance) {
+            ret.res = result;
+            ret.min_distance = result.min_distance;
+            ret.distance_type = "articulation_sceneobject";
+            ret.object_name1 = art_name;
+            ret.object_name2 = name;
+            ret.link_name1 = col_link_names[i];
+            ret.link_name2 = name;
+          }
+        }
+  }
+
+  // Minimum distance involving attached_body_map_
+  for (const auto &[attached_body_name, attached_body] : attached_body_map_) {
+    auto attached_obj = attached_body->getObject();
+
+    // Minimum distance to unplanned articulation
+    for (const auto &art2 : unplanned_articulations) {
+      auto art_name2 = art2->getName();
+      auto fcl_model2 = art2->getFCLModel();
+      auto col_objs2 = fcl_model2->getCollisionObjects();
+      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
+
+      for (size_t i = 0; i < col_objs2.size(); i++)
+        if (auto type =
+                acm_->getAllowedCollision(attached_body_name, col_link_names2[i]);
+            !type || type == collision_detection::AllowedCollision::NEVER) {
+          result.clear();
+          ::fcl::distance(attached_obj.get(), col_objs2[i].get(), request, result);
+          if (result.min_distance < ret.min_distance) {
+            ret.res = result;
+            ret.min_distance = result.min_distance;
+            ret.distance_type = "attach_articulation";
+            ret.object_name1 = attached_body_name;
+            ret.object_name2 = art_name2;
+            ret.link_name1 = attached_body_name;
+            ret.link_name2 = col_link_names2[i];
+          }
+        }
+    }
+
+    // Minimum distance to scene objects
+    for (const auto &[name, obj] : scene_objects)
+      if (auto type = acm_->getAllowedCollision(attached_body_name, name);
+          !type || type == collision_detection::AllowedCollision::NEVER) {
+        result.clear();
+        ::fcl::distance(attached_obj.get(), obj.get(), request, result);
+        if (result.min_distance < ret.min_distance) {
+          ret.res = result;
+          ret.min_distance = result.min_distance;
+          ret.distance_type = "attach_sceneobject";
+          ret.object_name1 = attached_body_name;
+          ret.object_name2 = name;
+          ret.link_name1 = attached_body_name;
+          ret.link_name2 = name;
+        }
+      }
+  }
+  return ret;
+}
+
+template <typename S>
+WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceFull(
+    const DistanceRequest &request) const {
+  auto ret1 = distanceSelf(request);
+  auto ret2 = distanceOthers(request);
+  return ret1.min_distance < ret2.min_distance ? ret1 : ret2;
+}
+
 }  // namespace mplib

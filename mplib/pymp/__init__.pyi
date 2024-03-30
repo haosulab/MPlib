@@ -419,6 +419,32 @@ class PlanningWorld:
         :return: ``True`` if success, ``False`` if the object with given name is not
             attached
         """
+    def distance(self, request: collision_detection.fcl.DistanceRequest = ...) -> float:
+        """
+        Returns the minimum distance-to-collision in current state
+
+        :param request: distance request params.
+        :return: minimum distance-to-collision
+        """
+    def distance_full(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
+        """
+        Compute the min distance to collision (calls distanceSelf() and
+        distanceOthers())
+
+        :param request: distance request params.
+        :return: a WorldDistanceResult object
+        """
+    def distance_with_others(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
+        """
+        Compute the min distance between a robot and the world
+
+        :param request: distance request params.
+        :return: a WorldDistanceResult object
+        """
     def get_allowed_collision_matrix(
         self,
     ) -> collision_detection.AllowedCollisionMatrix:
@@ -516,6 +542,15 @@ class PlanningWorld:
 
         :param request: collision request params.
         :return: List of WorldCollisionResult objects
+        """
+    def self_distance(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
+        """
+        Get the min distance to self-collision given the robot in current state
+
+        :param request: distance request params.
+        :return: a WorldDistanceResult object
         """
     def set_articulation_planned(self, name: str, planned: bool) -> None:
         """

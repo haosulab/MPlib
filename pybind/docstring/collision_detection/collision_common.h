@@ -38,6 +38,22 @@ static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_objec
 
 static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_res = R"doc(the fcl CollisionResult)doc";
 
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl = R"doc(Result of minimum distance-to-collision query.)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_distance_type = R"doc(type of the distance result)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_link_name1 = R"doc(link name of the first object)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_link_name2 = R"doc(link name of the second object)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_min_distance = R"doc(minimum distance between the two objects)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_object_name1 = R"doc(name of the first object)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_object_name2 = R"doc(name of the second object)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_res = R"doc(the fcl DistanceResult)doc";
+
 /* ----- Begin of custom docstring section ----- */
 
 /* ----- End of custom docstring section ----- */

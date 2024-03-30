@@ -34,6 +34,8 @@ class PlanningWorldTpl {
   // Common type alias
   using CollisionRequest = fcl::CollisionRequest<S>;
   using CollisionResult = fcl::CollisionResult<S>;
+  using DistanceRequest = fcl::DistanceRequest<S>;
+  using DistanceResult = fcl::DistanceResult<S>;
   using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
   using CollisionObject = fcl::CollisionObject<S>;
   using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
@@ -43,6 +45,7 @@ class PlanningWorldTpl {
   using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
 
   using WorldCollisionResult = WorldCollisionResultTpl<S>;
+  using WorldDistanceResult = WorldDistanceResultTpl<S>;
   using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
   using AttachedBody = AttachedBodyTpl<S>;
   using AttachedBodyPtr = AttachedBodyTplPtr<S>;
@@ -370,6 +373,43 @@ class PlanningWorldTpl {
    */
   std::vector<WorldCollisionResult> collideFull(
       const CollisionRequest &request = CollisionRequest()) const;
+
+  /**
+   * Returns the minimum distance-to-collision in current state
+   *
+   * @param request: distance request params.
+   * @return: minimum distance-to-collision
+   */
+  S distance(const DistanceRequest &request = DistanceRequest()) const {
+    return distanceFull().min_distance;
+  }
+
+  /**
+   * Get the min distance to self-collision given the robot in current state
+   *
+   * @param request: distance request params.
+   * @return: a WorldDistanceResult object
+   */
+  WorldDistanceResult distanceSelf(
+      const DistanceRequest &request = DistanceRequest()) const;
+
+  /**
+   * Compute the min distance between a robot and the world
+   *
+   * @param request: distance request params.
+   * @return: a WorldDistanceResult object
+   */
+  WorldDistanceResult distanceOthers(
+      const DistanceRequest &request = DistanceRequest()) const;
+
+  /**
+   * Compute the min distance to collision (calls distanceSelf() and distanceOthers())
+   *
+   * @param request: distance request params.
+   * @return: a WorldDistanceResult object
+   */
+  WorldDistanceResult distanceFull(
+      const DistanceRequest &request = DistanceRequest()) const;
 
  private:
   std::unordered_map<std::string, ArticulatedModelPtr> articulation_map_;
