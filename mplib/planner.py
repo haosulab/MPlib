@@ -594,7 +594,6 @@ class Planner:
         goal_qposes: list[np.ndarray],
         current_qpos: np.ndarray,
         *,
-        planner_name: str = "RRTConnect",
         time_step: float = 0.1,
         rrt_range: float = 0.1,
         planning_time: float = 1,
@@ -619,7 +618,6 @@ class Planner:
             planning_time: time limit for RRT
             fix_joint_limits: if True, will clip the joint configuration to be within
                 the joint limits
-            planner_name: planner name pick from {"RRTConnect", "RRTstar"}
             no_simplification: if true, will not simplify the path. constraint planning
                 does not support simplification
             constraint_function: evals to 0 when constraint is satisfied
@@ -657,7 +655,6 @@ class Planner:
         status, path = self.planner.plan(
             current_qpos[move_joint_idx],
             goal_qpos_,
-            planner_name=planner_name,
             time=planning_time,
             range=rrt_range,
             fixed_joints=fixed_joints,
@@ -683,7 +680,7 @@ class Planner:
                 "duration": duration,
             }
         else:
-            return {"status": f"RRT Failed. {status}"}
+            return {"status": f"RRTConnect Failed. {status}"}
 
     def transform_goal_to_wrt_base(self, goal_pose):
         base_pose = self.robot.get_base_pose()
@@ -705,7 +702,6 @@ class Planner:
         current_qpos: np.ndarray,
         mask: Optional[list[bool] | np.ndarray] = None,
         *,
-        planner_name: str = "RRTConnect",
         time_step: float = 0.1,
         rrt_range: float = 0.1,
         planning_time: float = 1,

@@ -26,8 +26,8 @@ void build_pyompl_planner(py::module &m) {
            DOC(mplib, planning, ompl, OMPLPlannerTpl, OMPLPlannerTpl))
 
       .def("plan", &OMPLPlanner::plan, py::arg("start_state"), py::arg("goal_states"),
-           py::arg("planner_name") = "RRTConnect", py::arg("time") = 1.0,
-           py::arg("range") = 0.0, py::arg("fixed_joints") = FixedJoints(),
+           py::arg("time") = 1.0, py::arg("range") = 0.0,
+           py::arg("fixed_joints") = FixedJoints(),
            py::arg("no_simplification") = false,
            py::arg("constraint_function") = nullptr,
            py::arg("constraint_jacobian") = nullptr,

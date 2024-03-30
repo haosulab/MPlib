@@ -41,7 +41,6 @@ class OMPLPlanner:
         goal_states: list[
             numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]]
         ],
-        planner_name: str = "RRTConnect",
         time: float = 1.0,
         range: float = 0.0,
         fixed_joints: set[...] = set(),
@@ -69,7 +68,6 @@ class OMPLPlanner:
         :param start_state: start state of the movegroup joints
         :param goal_states: list of goal states. Planner will stop when one of them is
             reached
-        :param planner_name: name of the planner pick between {RRTConnect, RRTstar}
         :param time: planning time limit
         :param range: planning range (for RRT family of planners and represents the
             maximum step size)

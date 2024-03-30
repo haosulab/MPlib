@@ -5,7 +5,6 @@
 #include <ompl/base/ConstrainedSpaceInformation.h>
 #include <ompl/base/spaces/SO2StateSpace.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
-#include <ompl/geometric/planners/rrt/RRTstar.h>
 
 #include "mplib/macros/assert.h"
 #include "mplib/planning/ompl/general_constraint.h"
@@ -217,8 +216,8 @@ ob::GoalStatesPtr OMPLPlannerTpl<S>::makeGoalStates(
 template <typename S>
 std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
     const VectorX<S> &start_state, const std::vector<VectorX<S>> &goal_states,
-    const std::string &planner_name, double time, double range,
-    const FixedJointsTpl<S> &fixed_joints, bool no_simplification,
+    double time, double range, const FixedJointsTpl<S> &fixed_joints,
+    bool no_simplification,
     const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
         &constraint_function,
     const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
@@ -274,18 +273,10 @@ std::pair<std::string, MatrixX<S>> OMPLPlannerTpl<S>::plan(
   ss_->setGoal(goals);
 
   ob::PlannerPtr planner;
-  if (planner_name == "RRTConnect") {
-    auto rrt_connect = std::make_shared<og::RRTConnect>(si_);
-    if (range > 1E-6) rrt_connect->setRange(range);
-    planner = rrt_connect;
-  } else if (planner_name == "RRTstar") {
-    auto rrt_star = std::make_shared<og::RRTstar>(si_);
-    if (range > 1E-6) rrt_star->setRange(range);
-    planner = rrt_star;
-  } else {
-    throw std::runtime_error(
-        "Planner Not implemented, please choose from {RRTConnect, RRTstar}");
-  }
+  // RRTConnect
+  auto rrt_connect = std::make_shared<og::RRTConnect>(si_);
+  if (range > 1E-6) rrt_connect->setRange(range);
+  planner = rrt_connect;
 
   ss_->setPlanner(planner);
   ss_->setup();

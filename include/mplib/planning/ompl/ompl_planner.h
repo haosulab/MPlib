@@ -36,7 +36,6 @@ class OMPLPlannerTpl {
    * @param start_state: start state of the movegroup joints
    * @param goal_states: list of goal states. Planner will stop when one of them is
    *                     reached
-   * @param planner_name: name of the planner pick between {RRTConnect, RRTstar}
    * @param time: planning time limit
    * @param range: planning range (for RRT family of planners and represents the maximum
    *               step size)
@@ -56,8 +55,8 @@ class OMPLPlannerTpl {
    */
   std::pair<std::string, MatrixX<S>> plan(
       const VectorX<S> &start_state, const std::vector<VectorX<S>> &goal_states,
-      const std::string &planner_name = "RRTConnect", double time = 1.0,
-      double range = 0.0, const FixedJointsTpl<S> &fixed_joints = FixedJointsTpl<S>(),
+      double time = 1.0, double range = 0.0,
+      const FixedJointsTpl<S> &fixed_joints = FixedJointsTpl<S>(),
       bool no_simplification = false,
       const std::function<void(const VectorXd &, Eigen::Ref<VectorXd>)>
           &constraint_function = nullptr,

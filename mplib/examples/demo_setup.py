@@ -174,7 +174,6 @@ class DemoSetup:
             pose,
             self.robot.get_qpos(),
             time_step=1 / 250,
-            planner_name="RRTConnect",
         )
         # plan_qpos_to_pose ankor end
         if result["status"] != "Success":

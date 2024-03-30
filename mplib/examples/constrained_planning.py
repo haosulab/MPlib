@@ -112,7 +112,6 @@ class ConstrainedPlanningDemo(DemoSetup):
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,
-                planner_name="RRTConnect",
                 constraint_function=self.make_f(),
                 constraint_jacobian=self.make_j(),
                 constraint_tolerance=0.05,
@@ -132,7 +131,6 @@ class ConstrainedPlanningDemo(DemoSetup):
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,
-                planner_name="RRTConnect",
                 no_simplification=True,
             )
             if result["status"] != "Success":
