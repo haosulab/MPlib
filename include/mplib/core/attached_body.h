@@ -4,16 +4,24 @@
 #include <vector>
 
 #include "mplib/core/articulated_model.h"
-#include "mplib/macros/class_forward.h"
-#include "mplib/utils/conversion.h"
 #include "mplib/kinematics/types.h"
+#include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
+#include "mplib/utils/conversion.h"
 
 namespace mplib {
 
 // AttachedBodyTplPtr
 MPLIB_CLASS_TEMPLATE_FORWARD(AttachedBodyTpl);
 
+/**
+ * Object defining bodies that can be attached to robot links.
+ * This is useful when handling objects picked up by the robot.
+ *
+ * Mimicking MoveIt2's ``moveit::core::AttachedBody``
+ *
+ * https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1AttachedBody.html
+ */
 template <typename S>
 class AttachedBodyTpl {
  public:
@@ -21,6 +29,17 @@ class AttachedBodyTpl {
   using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
   using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 
+  // TODO(merge): Support multi collision geometry
+  /**
+   * Construct an attached body for a specified link.
+   *
+   * @param name: name of the attached body
+   * @param object: collision object of the attached body
+   * @param attached_articulation: robot articulated model to attach to
+   * @param attached_link_id: id of the articulation link to attach to
+   * @param pose: attached pose (relative pose from attached link to object)
+   * @param touch_links: the link names that the attached body touches
+   */
   AttachedBodyTpl(const std::string &name, const CollisionObjectPtr &object,
                   const ArticulatedModelPtr &attached_articulation,
                   int attached_link_id, const Isometry3<S> &pose,
@@ -46,8 +65,7 @@ class AttachedBodyTpl {
 
   /// @brief Gets the global pose of the attached object
   Isometry3<S> getGlobalPose() const {
-    return toIsometry(pinocchio_model_->getLinkPose(attached_link_id_)) *
-           pose_;
+    return toIsometry(pinocchio_model_->getLinkPose(attached_link_id_)) * pose_;
   }
 
   /// @brief Updates the global pose of the attached object using current state

@@ -10,6 +10,7 @@ from . import collision_detection, kinematics, planning
 
 __all__ = [
     "ArticulatedModel",
+    "AttachedBody",
     "PlanningWorld",
     "collision_detection",
     "kinematics",
@@ -170,6 +171,82 @@ class ArticulatedModel:
         Update the SRDF file to disable self-collisions.
 
         :param srdf: path to SRDF file, can be relative to the current working directory
+        """
+
+class AttachedBody:
+    """
+    Object defining bodies that can be attached to robot links. This is useful when
+    handling objects picked up by the robot.
+
+    Mimicking MoveIt2's ``moveit::core::AttachedBody``
+
+    https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1AttachedBody.html
+    """
+    def __init__(
+        self,
+        name: str,
+        object: collision_detection.fcl.CollisionObject,
+        attached_articulation: ArticulatedModel,
+        attached_link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        touch_links: list[str] = [],
+    ) -> None:
+        """
+        Construct an attached body for a specified link.
+
+        :param name: name of the attached body
+        :param object: collision object of the attached body
+        :param attached_articulation: robot articulated model to attach to
+        :param attached_link_id: id of the articulation link to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+        :param touch_links: the link names that the attached body touches
+        """
+    def get_attached_articulation(self) -> ArticulatedModel:
+        """
+        Gets the articulation this body attached to
+        """
+    def get_attached_link_id(self) -> int:
+        """
+        Gets the articulation this body attached to
+        """
+    def get_global_pose(self) -> ...:
+        """
+        Gets the global pose of the attached object
+        """
+    def get_name(self) -> str:
+        """
+        Gets the attached object name
+        """
+    def get_object(self) -> collision_detection.fcl.CollisionObject:
+        """
+        Gets the attached object (CollisionObjectPtr)
+        """
+    def get_pose(self) -> ...:
+        """
+        Gets the attached pose (relative pose from attached link to object)
+        """
+    def get_touch_links(self) -> list[str]:
+        """
+        Gets the link names that the attached body touches
+        """
+    def set_pose(
+        self,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Sets the attached pose (relative pose from attached link to object)
+        """
+    def set_touch_links(self, touch_links: list[str]) -> None:
+        """
+        Sets the link names that the attached body touches
+        """
+    def update_pose(self) -> None:
+        """
+        Updates the global pose of the attached object using current state
         """
 
 class PlanningWorld:
@@ -462,7 +539,7 @@ class PlanningWorld:
         """
         Gets names of all articulations in world (unordered)
         """
-    def get_attached_object(self, name: str) -> ...:
+    def get_attached_object(self, name: str) -> AttachedBody:
         """
         Gets the attached body (AttachedBodyPtr) with given name
 
