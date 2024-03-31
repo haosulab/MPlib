@@ -354,7 +354,7 @@ class PinocchioModelTpl {
   VectorXi joint_index_user2pinocchio_, joint_index_pinocchio2user_;
   PermutationMatrixX v_map_user2pinocchio_;  // map between user and pinocchio
 
-  bool verbose_;
+  bool verbose_ {};
 };
 
 // Common Type Alias ===================================================================

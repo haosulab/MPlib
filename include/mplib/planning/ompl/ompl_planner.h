@@ -97,7 +97,7 @@ class OMPLPlannerTpl {
   ob::StateSpacePtr state_space_;
   std::vector<S> lower_joint_limits_, upper_joint_limits_;
   std::vector<bool> is_revolute_;
-  size_t dim_;
+  size_t dim_ {};
   ob::SpaceInformationPtr si_;
   ob::SpaceInformationPtr compound_si_;
   ValidityCheckerTplPtr<S> valid_checker_;

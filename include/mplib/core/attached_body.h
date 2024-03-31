@@ -84,7 +84,7 @@ class AttachedBodyTpl {
   CollisionObjectPtr object_;
   ArticulatedModelPtr attached_articulation_;
   kinematics::PinocchioModelTplPtr<S> pinocchio_model_;
-  int attached_link_id_;
+  int attached_link_id_ {};
   Isometry3<S> pose_;
   std::vector<std::string> touch_links_;
 };

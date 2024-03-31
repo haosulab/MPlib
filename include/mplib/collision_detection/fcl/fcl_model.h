@@ -134,7 +134,7 @@ class FCLModelTpl {
 
   urdf::ModelInterfaceSharedPtr urdf_model_;
   std::string package_dir_;
-  bool use_convex_;
+  bool use_convex_ {};
 
   std::vector<fcl::CollisionObjectPtr<S>> collision_objects_;
   std::vector<std::string> collision_link_names_;
@@ -145,7 +145,7 @@ class FCLModelTpl {
   std::vector<std::string> user_link_names_;
   std::vector<size_t> collision_link_user_indices_;
 
-  bool verbose_;
+  bool verbose_ {};
 };
 
 // Common Type Alias ===================================================================

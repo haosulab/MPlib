@@ -34,7 +34,7 @@ class ValidityCheckerTpl : public ob::StateValidityChecker {
 
  private:
   PlanningWorldTplPtr<S> world_;
-  bool is_rvss_;
+  bool is_rvss_ {};
   FixedJointsTpl<S> fixed_joints_;
 };
 

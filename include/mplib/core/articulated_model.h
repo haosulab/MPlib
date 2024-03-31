@@ -186,13 +186,13 @@ class ArticulatedModelTpl {
   // The planning world only update the state in planning group.
   std::vector<std::string> move_group_end_effectors_;
   std::vector<size_t> move_group_user_joints_;
-  size_t move_group_qpos_dim_;
+  size_t move_group_qpos_dim_ {};
   VectorX<S> current_qpos_;
 
   // the base pose of the robot
   Isometry3<S> base_pose_;
 
-  bool verbose_;
+  bool verbose_ {};
 };
 
 // Common Type Alias ===================================================================

@@ -20,10 +20,10 @@ struct FixedJointTpl {
            (articulation_idx == other.articulation_idx && joint_idx < other.joint_idx);
   }
 
-  size_t articulation_idx;  // which robot in the planning world does the fixed joint
-                            // belong to?
-  size_t joint_idx;         // what is the index of the joint you want it fixed?
-  S value;                  // what is the value of the fixed joint?
+  /// index of the articulated model in the PlanningWorld that the fixed joint belong to
+  size_t articulation_idx {};
+  size_t joint_idx {};  ///< the index of the fixed joint
+  S value {};           ///< the value of the fixed joint
 };
 
 template <typename S>
