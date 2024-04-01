@@ -19,6 +19,7 @@ class PinocchioModel:
     @staticmethod
     def create_from_urdf_string(
         urdf_string: str,
+        *,
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
         ] = ...,
@@ -35,6 +36,7 @@ class PinocchioModel:
     def __init__(
         self,
         urdf_filename: str,
+        *,
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
         ] = ...,

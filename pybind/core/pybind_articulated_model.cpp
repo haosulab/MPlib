@@ -28,7 +28,7 @@ void build_pyarticulated_model(py::module &pymp) {
       .def(py::init<const std::string &, const std::string &, const Vector3<S> &,
                     const std::vector<std::string> &, const std::vector<std::string> &,
                     bool, bool>(),
-           py::arg("urdf_filename"), py::arg("srdf_filename"),
+           py::arg("urdf_filename"), py::arg("srdf_filename"), py::kw_only(),
            py::arg("gravity") = Vector3<S> {0, 0, -9.81},
            py::arg("link_names") = std::vector<std::string>(),
            py::arg("joint_names") = std::vector<std::string>(),
@@ -49,7 +49,7 @@ void build_pyarticulated_model(py::module &pymp) {
             return articulation;
           },
           py::arg("urdf_string"), py::arg("srdf_string"), py::arg("collision_links"),
-          py::arg("gravity") = Vector3<S> {0, 0, -9.81},
+          py::kw_only(), py::arg("gravity") = Vector3<S> {0, 0, -9.81},
           py::arg("link_names") = std::vector<std::string>(),
           py::arg("joint_names") = std::vector<std::string>(),
           py::arg("verbose") = false,

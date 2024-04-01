@@ -34,14 +34,15 @@ class ArticulatedModelTpl {
    * @param urdf_filename: path to URDF file, can be relative to the current working
    *  directory
    * @param srdf_filename: path to SRDF file, we use it to disable self-collisions
-   * @param gravity: gravity vector
+   * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
    * @param link_names: list of links that are considered for planning
    * @param joint_names: list of joints that are considered for planning
    * @param convex: use convex decomposition for collision objects. Default: ``false``.
    * @param verbose: print debug information. Default: ``false``.
    */
   ArticulatedModelTpl(const std::string &urdf_filename,
-                      const std::string &srdf_filename, const Vector3<S> &gravity,
+                      const std::string &srdf_filename,
+                      const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
                       const std::vector<std::string> &link_names = {},
                       const std::vector<std::string> &joint_names = {},
                       bool convex = false, bool verbose = false);
@@ -60,18 +61,19 @@ class ArticulatedModelTpl {
    * @param collision_links: Collision link names and the vector of CollisionObjectPtr.
    *    Format is: ``[(link_name, [CollisionObjectPtr, ...]), ...]``.
    *    The collision objects are at the shape's local_pose.
-   * @param gravity: gravity vector
+   * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
    * @param link_names: list of links that are considered for planning
    * @param joint_names: list of joints that are considered for planning
    * @param verbose: print debug information. Default: ``false``.
-   * @returns a unique_ptr to ArticulatedModel
+   * @return: a unique_ptr to ArticulatedModel
    */
   static std::unique_ptr<ArticulatedModelTpl<S>> createFromURDFString(
       const std::string &urdf_string, const std::string &srdf_string,
       const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
           &collision_links,
-      const Vector3<S> &gravity, const std::vector<std::string> &joint_names = {},
-      const std::vector<std::string> &link_names = {}, bool verbose = false);
+      const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
+      const std::vector<std::string> &link_names = {},
+      const std::vector<std::string> &joint_names = {}, bool verbose = false);
 
   /**
    * Get name of the articulated model.

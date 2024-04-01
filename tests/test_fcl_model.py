@@ -20,9 +20,7 @@ class TestFCLModel(unittest.TestCase):
     def setUp(self):
         # Create a FCLModel instance for testing
         self.model = FCLModel(PANDA_SPEC["urdf"], verbose=False)
-        self.pinocchio_model = PinocchioModel(
-            PANDA_SPEC["urdf"], [0, 0, -9.81], verbose=False
-        )
+        self.pinocchio_model = PinocchioModel(PANDA_SPEC["urdf"], verbose=False)
         self.collision_link_names = [
             "panda_link0",
             "panda_link1",

@@ -523,6 +523,7 @@ class FCLModel:
     def create_from_urdf_string(
         urdf_string: str,
         collision_links: list[tuple[str, list[CollisionObject]]],
+        *,
         verbose: bool = False,
     ) -> FCLModel:
         """
@@ -536,7 +537,7 @@ class FCLModel:
         :return: a unique_ptr to FCLModel
         """
     def __init__(
-        self, urdf_filename: str, convex: bool = False, verbose: bool = False
+        self, urdf_filename: str, *, convex: bool = False, verbose: bool = False
     ) -> None:
         """
         Construct an FCL model from URDF and SRDF files.

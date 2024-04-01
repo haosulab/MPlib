@@ -41,6 +41,7 @@ class OMPLPlanner:
         goal_states: list[
             numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]]
         ],
+        *,
         time: float = 1.0,
         range: float = 0.0,
         fixed_joints: set[...] = set(),

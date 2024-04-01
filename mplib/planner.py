@@ -68,9 +68,8 @@ class Planner:
         self.robot = ArticulatedModel(
             self.urdf,
             self.srdf,
-            [0, 0, -9.81],
-            user_link_names,
-            user_joint_names,
+            link_names=user_link_names,
+            joint_names=user_joint_names,
             convex=kwargs.get("convex", False),
             verbose=False,
         )

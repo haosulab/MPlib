@@ -25,7 +25,7 @@ void build_pykdl_model(py::module &m) {
       .def(py::init<const std::string &, const std::vector<std::string> &,
                     const std::vector<std::string> &, bool>(),
            py::arg("urdf_filename"), py::arg("link_names"), py::arg("joint_names"),
-           py::arg("verbose") = false,
+           py::kw_only(), py::arg("verbose") = false,
            DOC(mplib, kinematics, kdl, KDLModelTpl, KDLModelTpl))
 
       .def("get_tree_root_name", &KDLModel::getTreeRootName,

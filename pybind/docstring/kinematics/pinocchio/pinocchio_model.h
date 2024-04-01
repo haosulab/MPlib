@@ -34,7 +34,7 @@ R"doc(
 Construct a Pinocchio model from the given URDF file.
 
 :param urdf_filename: path to the URDF file
-:param gravity: gravity vector
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_PinocchioModelTpl_2 =
@@ -42,7 +42,7 @@ R"doc(
 Construct a Pinocchio model from the given URDF file.
 
 :param urdf_model: a urdf tree as urdf::ModelInterfaceSharedPtr
-:param gravity: gravity vector
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_computeForwardKinematics =

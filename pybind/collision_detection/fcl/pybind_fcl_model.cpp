@@ -1,5 +1,6 @@
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <pybind11/eigen.h>
@@ -26,7 +27,7 @@ void build_pyfcl_model(py::module &m) {
       m, "FCLModel", DOC(mplib, collision_detection, fcl, FCLModelTpl));
   PyFCLModel
       .def(py::init<const std::string &, bool, bool>(), py::arg("urdf_filename"),
-           py::arg("convex") = false, py::arg("verbose") = false,
+           py::kw_only(), py::arg("convex") = false, py::arg("verbose") = false,
            DOC(mplib, collision_detection, fcl, FCLModelTpl, FCLModelTpl))
 
       .def_static(
@@ -39,7 +40,7 @@ void build_pyfcl_model(py::module &m) {
                 FCLModel::createFromURDFString(urdf_string, collision_links, verbose);
             return fcl_model;
           },
-          py::arg("urdf_string"), py::arg("collision_links"),
+          py::arg("urdf_string"), py::arg("collision_links"), py::kw_only(),
           py::arg("verbose") = false,
           DOC(mplib, collision_detection, fcl, FCLModelTpl, createFromURDFString))
 

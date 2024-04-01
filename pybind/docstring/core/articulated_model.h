@@ -35,7 +35,7 @@ Construct an articulated model from URDF and SRDF files.
 :param urdf_filename: path to URDF file, can be relative to the current working
     directory
 :param srdf_filename: path to SRDF file, we use it to disable self-collisions
-:param gravity: gravity vector
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param link_names: list of links that are considered for planning
 :param joint_names: list of joints that are considered for planning
 :param convex: use convex decomposition for collision objects. Default:
@@ -54,8 +54,12 @@ Constructs an ArticulatedModel from URDF/SRDF strings and collision links
 :param urdf_string: URDF string (without visual/collision elements for links)
 :param srdf_string: SRDF string (only disable_collisions element)
 :param collision_links: Collision link names and the vector of
-    CollisionObjectPtr [(link_name, [CollisionObjectPtr, ...]), ...] The
-    collision objects are at the shape's local_pose
+    CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
+    ...]``. The collision objects are at the shape's local_pose.
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+:param link_names: list of links that are considered for planning
+:param joint_names: list of joints that are considered for planning
+:param verbose: print debug information. Default: ``False``.
 :return: a unique_ptr to ArticulatedModel)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_getBasePose =

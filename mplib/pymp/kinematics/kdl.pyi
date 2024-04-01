@@ -20,6 +20,7 @@ class KDLModel:
         urdf_filename: str,
         link_names: list[str],
         joint_names: list[str],
+        *,
         verbose: bool = False,
     ) -> None: ...
     def chain_IK_LMA(
