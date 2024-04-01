@@ -118,7 +118,6 @@ class PlanningDemo(DemoSetup):
             goal_qposes,
             self.robot.get_qpos(),
             use_point_cloud=True,
-            use_attach=has_attach,
             time_step=1 / 250,
             fixed_joint_indices=range(2),
         )
@@ -140,7 +139,6 @@ class PlanningDemo(DemoSetup):
             goal_qposes,
             self.robot.get_qpos(),
             use_point_cloud=True,
-            use_attach=has_attach,
             time_step=1 / 250,
             fixed_joint_indices=range(2, 9),
         )
@@ -166,7 +164,7 @@ class PlanningDemo(DemoSetup):
         collision_object = fcl.CollisionObject(
             fcl_red_cube, [0.7, 0, 0.07], [1, 0, 0, 0]
         )
-        self.planner.planning_world.set_normal_object("target", collision_object)
+        self.planner.planning_world.add_normal_object("target", collision_object)
 
         # go above the target
         pickup_pose[2] += 0.2

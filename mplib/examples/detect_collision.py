@@ -49,32 +49,28 @@ class DetectCollisionDemo(DemoSetup):
             floor, [0, 0, -0.1], [1, 0, 0, 0]
         )
         # update the planning world with the floor collision object
-        self.planner.set_normal_object("floor", floor_fcl_collision_object)
+        self.planner.planning_world.add_normal_object(
+            "floor", floor_fcl_collision_object
+        )
         # floor ankor end
         print("\n----- self-collision-free qpos -----")
         # if the joint qpos does not include the gripper joints,
         # it will be set to the current gripper joint angle
         self_collision_free_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78]
         self.print_collisions(
-            self.planner.check_for_self_collision(
-                self.planner.robot, self_collision_free_qpos
-            )
+            self.planner.check_for_self_collision(self_collision_free_qpos)
         )
 
         print("\n----- self-collision qpos -----")
         self_collision_qpos = [0, 1.36, 0, -3, -3, 3, -1]
         self.print_collisions(
-            self.planner.check_for_self_collision(
-                self.planner.robot, self_collision_qpos
-            )
+            self.planner.check_for_self_collision(self_collision_qpos)
         )
 
         print("\n----- env-collision-free qpos -----")
         env_collision_free_qpos = self_collision_free_qpos
         self.print_collisions(
-            self.planner.check_for_env_collision(
-                self.planner.robot, env_collision_free_qpos
-            )
+            self.planner.check_for_env_collision(env_collision_free_qpos)
         )
 
         print("\n----- env-collision qpos -----")

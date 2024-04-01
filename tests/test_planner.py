@@ -124,25 +124,13 @@ class TestPlanner(unittest.TestCase):
 
     def test_self_collision(self):
         self_collision_qpos = [0, 1.36, 0, -3, -3, 3, -1]
-        self.assertTrue(
-            self.planner.check_for_self_collision(
-                self.planner.robot, self_collision_qpos
-            )
-        )
+        self.assertTrue(self.planner.check_for_self_collision(self_collision_qpos))
         self_collision_qpos[0] += (
             1  # rotating the robot around the base should not cause self-collision to disappear
         )
-        self.assertTrue(
-            self.planner.check_for_self_collision(
-                self.planner.robot, self_collision_qpos
-            )
-        )
+        self.assertTrue(self.planner.check_for_self_collision(self_collision_qpos))
         collision_free_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78]
-        self.assertFalse(
-            self.planner.check_for_self_collision(
-                self.planner.robot, collision_free_qpos
-            )
-        )
+        self.assertFalse(self.planner.check_for_self_collision(collision_free_qpos))
 
     def test_env_collision(self):
         floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
@@ -151,7 +139,9 @@ class TestPlanner(unittest.TestCase):
             floor, [0, 0, -0.1], [1, 0, 0, 0]
         )
         # update the planning world with the floor collision object
-        self.planner.set_normal_object("floor", floor_fcl_collision_object)
+        self.planner.planning_world.add_normal_object(
+            "floor", floor_fcl_collision_object
+        )
 
         env_collision_qpos = [
             0,
@@ -162,15 +152,11 @@ class TestPlanner(unittest.TestCase):
             0,
             0,
         ]  # this qpos causes several joints to dip below the floor
-        self.assertTrue(
-            self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos)
-        )
+        self.assertTrue(self.planner.check_for_env_collision(env_collision_qpos))
 
         # remove the floor and check for env-collision returns no collision
         self.planner.remove_normal_object("floor")
-        self.assertFalse(
-            self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos)
-        )
+        self.assertFalse(self.planner.check_for_env_collision(env_collision_qpos))
 
     def test_IK(self):
         num_success = 0
@@ -196,7 +182,9 @@ class TestPlanner(unittest.TestCase):
         )
         status, _ = self.planner.IK([0.4, 0.3, -0.1, 0, 1, 0, 0], self.init_qpos)
         self.assertEqual(status, "Success")
-        self.planner.set_normal_object("floor", floor_fcl_collision_object)
+        self.planner.planning_world.add_normal_object(
+            "floor", floor_fcl_collision_object
+        )
         status, _ = self.planner.IK([0.4, 0.3, -0.1, 0, 1, 0, 0], self.init_qpos)
         self.assertNotEqual(status, "Success")
 
@@ -255,27 +243,27 @@ class TestPlanner(unittest.TestCase):
     def test_update_point_cloud(self):
         # use screw based planning. first succeeds but after point cloud obstacle fails
         pose = [0.7, 0, 0.12, 0, 1, 0, 0]
-        self.add_point_cloud()
         result_screw = self.planner.plan_screw(pose, self.init_qpos)
         self.assertEqual(result_screw["status"], "Success")
-        result_screw = self.planner.plan_screw(
-            pose, self.init_qpos, use_point_cloud=True
-        )
+
+        # now add a point cloud and we should fail
+        self.add_point_cloud()
+
+        result_screw = self.planner.plan_screw(pose, self.init_qpos)
         self.assertNotEqual(result_screw["status"], "Success")
 
     def test_update_attach(self):
         starting_qpos = [0, 0.48, 0, -1.48, 0, 1.96, 0.78]
         target_pose = [0.4, 0.3, 0.33, 0, 1, 0, 0]
-        self.planner.update_attached_box([0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0])
         self.add_point_cloud()
 
-        result_screw = self.planner.plan_screw(
-            target_pose, starting_qpos, use_point_cloud=True
-        )
+        result_screw = self.planner.plan_screw(target_pose, starting_qpos)
         self.assertEqual(result_screw["status"], "Success")
-        result_screw = self.planner.plan_screw(
-            target_pose, starting_qpos, use_point_cloud=True, use_attach=True
-        )
+
+        # now attach a box to the end effector and we should fail
+        self.planner.update_attached_box([0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0])
+
+        result_screw = self.planner.plan_screw(target_pose, starting_qpos)
         self.assertNotEqual(result_screw["status"], "Success")
 
     def test_fixed_joint(self):
