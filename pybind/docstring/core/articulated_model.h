@@ -42,6 +42,22 @@ Construct an articulated model from URDF and SRDF files.
     ``False``.
 :param verbose: print debug information. Default: ``False``.)doc";
 
+static const char *__doc_mplib_ArticulatedModelTpl_ArticulatedModelTpl_2 =
+R"doc(
+Dummy default constructor that is protected by Secret. Used by
+``createFromURDFString()`` only)doc";
+
+static const char *__doc_mplib_ArticulatedModelTpl_createFromURDFString =
+R"doc(
+Constructs an ArticulatedModel from URDF/SRDF strings and collision links
+
+:param urdf_string: URDF string (without visual/collision elements for links)
+:param srdf_string: SRDF string (only disable_collisions element)
+:param collision_links: Collision link names and the vector of
+    CollisionObjectPtr [(link_name, [CollisionObjectPtr, ...]), ...] The
+    collision objects are at the shape's local_pose
+:return: a unique_ptr to ArticulatedModel)doc";
+
 static const char *__doc_mplib_ArticulatedModelTpl_getBasePose =
 R"doc(
 Get the base pose of the robot.

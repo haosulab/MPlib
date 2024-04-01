@@ -63,6 +63,17 @@ Perform self-collision checking and returns all found collisions.
 :param request: collision request
 :return: list of CollisionResult for each collision pair)doc";
 
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_createFromURDFString =
+R"doc(
+Constructs a FCLModel from URDF string and collision links
+
+:param urdf_string: URDF string (without visual/collision elements for links)
+:param collision_links: Collision link names and the vector of
+    CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
+    ...]``. The collision objects are at the shape's local_pose.
+:param verbose: print debug information. Default: ``False``.
+:return: a unique_ptr to FCLModel)doc";
+
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_getCollisionLinkNames =
 R"doc(
 )doc";
@@ -95,10 +106,16 @@ Print all collision pairs)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_removeCollisionPairsFromSRDF =
 R"doc(
-Remove collision pairs from SRDF.
+Remove collision pairs from SRDF file.
 
 :param srdf_filename: path to SRDF file, can be relative to the current working
     directory)doc";
+
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_removeCollisionPairsFromSRDFString =
+R"doc(
+Remove collision pairs from SRDF string.
+
+:param srdf_string: SRDF string (only disable_collisions element))doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_setLinkOrder =
 R"doc(

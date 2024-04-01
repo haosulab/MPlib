@@ -519,6 +519,22 @@ class FCLModel:
 
     See https://github.com/flexible-collision-library/fcl
     """
+    @staticmethod
+    def create_from_urdf_string(
+        urdf_string: str,
+        collision_links: list[tuple[str, list[CollisionObject]]],
+        verbose: bool = False,
+    ) -> FCLModel:
+        """
+        Constructs a FCLModel from URDF string and collision links
+
+        :param urdf_string: URDF string (without visual/collision elements for links)
+        :param collision_links: Collision link names and the vector of
+            CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
+            ...]``. The collision objects are at the shape's local_pose.
+        :param verbose: print debug information. Default: ``False``.
+        :return: a unique_ptr to FCLModel
+        """
     def __init__(
         self, urdf_filename: str, convex: bool = False, verbose: bool = False
     ) -> None:
@@ -562,7 +578,7 @@ class FCLModel:
         """
     def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None:
         """
-        Remove collision pairs from SRDF.
+        Remove collision pairs from SRDF file.
 
         :param srdf_filename: path to SRDF file, can be relative to the current working
             directory

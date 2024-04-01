@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -29,21 +30,35 @@ class PinocchioModelTpl {
    * Construct a Pinocchio model from the given URDF file.
    *
    * @param urdf_filename: path to the URDF file
-   * @param gravity: gravity vector
+   * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
    * @param verbose: print debug information. Default: ``false``.
    */
-  PinocchioModelTpl(const std::string &urdf_filename, const Vector3<S> &gravity,
+  PinocchioModelTpl(const std::string &urdf_filename,
+                    const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
                     bool verbose = false);
 
   /**
    * Construct a Pinocchio model from the given URDF file.
    *
    * @param urdf_model: a urdf tree as urdf::ModelInterfaceSharedPtr
-   * @param gravity: gravity vector
+   * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
    * @param verbose: print debug information. Default: ``false``.
    */
   PinocchioModelTpl(const urdf::ModelInterfaceSharedPtr &urdf_model,
-                    const Vector3<S> &gravity, bool verbose = false);
+                    const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
+                    bool verbose = false);
+
+  /**
+   * Constructs a PinocchioModel from URDF string
+   *
+   * @param urdf_string: URDF string (without visual/collision elements for links)
+   * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+   * @param verbose: print debug information. Default: ``false``.
+   * @return: a unique_ptr to PinocchioModel
+   */
+  static std::unique_ptr<PinocchioModelTpl<S>> createFromURDFString(
+      const std::string &urdf_string,
+      const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81}, bool verbose = false);
 
   /// Get the underlying pinocchio::Model
   const pinocchio::ModelTpl<S> &getModel() const { return model_; }

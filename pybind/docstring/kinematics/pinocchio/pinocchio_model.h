@@ -109,6 +109,15 @@ computeForwardKinematics() first.
     frame of the link
 :return: 6 x n jacobian of the link)doc";
 
+static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_createFromURDFString =
+R"doc(
+Constructs a PinocchioModel from URDF string
+
+:param urdf_string: URDF string (without visual/collision elements for links)
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+:param verbose: print debug information. Default: ``False``.
+:return: a unique_ptr to PinocchioModel)doc";
+
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_getChainJointIndex =
 R"doc(
 Get the joint indices of the joints in the chain from the root to the given

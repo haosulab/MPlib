@@ -1,7 +1,9 @@
 #include "mplib/collision_detection/fcl/fcl_model.h"
 
 #include <algorithm>
+#include <fstream>
 #include <memory>
+#include <sstream>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -38,6 +40,38 @@ FCLModelTpl<S>::FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdf_model,
 }
 
 template <typename S>
+std::unique_ptr<FCLModelTpl<S>> FCLModelTpl<S>::createFromURDFString(
+    const std::string &urdf_string,
+    const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
+        &collision_links,
+    bool verbose) {
+  auto urdf = urdf::parseURDF(urdf_string);
+  // package_dir is not needed since urdf_string contains no visual/collision elements
+  auto fcl_model = std::make_unique<FCLModelTpl<S>>(urdf, "", verbose, false);
+
+  for (const auto &[link_name, collision_objs] : collision_links)
+    for (const auto &collision_obj : collision_objs) {
+      fcl_model->collision_objects_.push_back(collision_obj);
+      fcl_model->collision_link_names_.push_back(link_name);
+      // fcl_model->parent_link_names_.push_back(parent_link_name);  // FIXME: remove
+      fcl_model->collision_origin2link_poses_.push_back(collision_obj->getTransform());
+    }
+  // setLinkOrder with unique collision link names as user_link_names
+  auto user_link_names = fcl_model->collision_link_names_;
+  auto last = std::unique(user_link_names.begin(), user_link_names.end());
+  user_link_names.erase(last, user_link_names.end());
+  fcl_model->setLinkOrder(user_link_names);
+
+  // We assume that the collisions between objects on the same link can be ignored.
+  for (size_t i = 0; i < fcl_model->collision_link_names_.size(); i++)
+    for (size_t j = 0; j < i; j++)
+      if (fcl_model->collision_link_names_[i] != fcl_model->collision_link_names_[j])
+        fcl_model->collision_pairs_.push_back(std::make_pair(j, i));
+
+  return fcl_model;
+}
+
+template <typename S>
 void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
                           const std::string &package_dir) {
   urdf_model_ = urdf_model;
@@ -46,10 +80,11 @@ void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
     throw std::invalid_argument("The XML stream does not contain a valid URDF model.");
   urdf::LinkConstSharedPtr root_link = urdf_model_->getRoot();
   dfsParseTree(root_link, "root's parent");
-  auto tmp_user_link_names = collision_link_names_;
-  auto last = std::unique(tmp_user_link_names.begin(), tmp_user_link_names.end());
-  tmp_user_link_names.erase(last, tmp_user_link_names.end());
-  setLinkOrder(tmp_user_link_names);
+  // setLinkOrder with unique collision link names as user_link_names
+  auto user_link_names = collision_link_names_;
+  auto last = std::unique(user_link_names.begin(), user_link_names.end());
+  user_link_names.erase(last, user_link_names.end());
+  setLinkOrder(user_link_names);
 
   for (size_t i = 0; i < collision_link_names_.size(); i++)
     for (size_t j = 0; j < i; j++)
@@ -144,37 +179,44 @@ void FCLModelTpl<S>::setLinkOrder(const std::vector<std::string> &names) {
 
 template <typename S>
 void FCLModelTpl<S>::removeCollisionPairsFromSRDF(const std::string &srdf_filename) {
-  std::string extension = srdf_filename.substr(srdf_filename.find_last_of('.') + 1);
+  const std::string extension =
+      srdf_filename.substr(srdf_filename.find_last_of('.') + 1);
   if (srdf_filename == "") {
     print_warning("No SRDF file provided!");
     return;
   }
-
   ASSERT(extension == "srdf", srdf_filename + " does not have the right extension.");
 
   std::ifstream srdf_stream(srdf_filename.c_str());
-
   ASSERT(srdf_stream.is_open(), "Cannot open " + srdf_filename);
+
+  std::stringstream buffer;
+  buffer << srdf_stream.rdbuf();
+  removeCollisionPairsFromSRDFString(buffer.str());
+}
+
+template <typename S>
+void FCLModelTpl<S>::removeCollisionPairsFromSRDFString(
+    const std::string &srdf_string) {
+  std::istringstream srdf_stream(srdf_string);
 
   boost::property_tree::ptree pt;
   boost::property_tree::xml_parser::read_xml(srdf_stream, pt);
 
-  for (const auto &node : pt.get_child("robot")) {
+  for (const auto &node : pt.get_child("robot"))
     if (node.first == "disable_collisions") {
       const std::string link1 = node.second.get<std::string>("<xmlattr>.link1");
       const std::string link2 = node.second.get<std::string>("<xmlattr>.link2");
       if (verbose_) print_verbose("Try to Remove collision parts: ", link1, " ", link2);
-      for (auto iter = collision_pairs_.begin(); iter != collision_pairs_.end();) {
+      for (auto iter = collision_pairs_.begin(); iter != collision_pairs_.end();)
         if ((collision_link_names_[iter->first] == link1 &&
              collision_link_names_[iter->second] == link2) ||
             (collision_link_names_[iter->first] == link2 &&
-             collision_link_names_[iter->second] == link1)) {
+             collision_link_names_[iter->second] == link1))
           iter = collision_pairs_.erase(iter);
-        } else
+        else
           iter++;
-      }
     }
-  }
 }
 
 template <typename S>

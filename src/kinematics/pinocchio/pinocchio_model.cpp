@@ -34,6 +34,13 @@ PinocchioModelTpl<S>::PinocchioModelTpl(const urdf::ModelInterfaceSharedPtr &urd
 }
 
 template <typename S>
+std::unique_ptr<PinocchioModelTpl<S>> PinocchioModelTpl<S>::createFromURDFString(
+    const std::string &urdf_string, const Vector3<S> &gravity, bool verbose) {
+  auto urdf = urdf::parseURDF(urdf_string);
+  return std::make_unique<PinocchioModelTpl<S>>(urdf, gravity, verbose);
+}
+
+template <typename S>
 void PinocchioModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
                                 const Vector3<S> &gravity) {
   urdf_model_ = urdf_model;

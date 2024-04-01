@@ -23,15 +23,45 @@ class ArticulatedModel:
     Supports initialization from URDF and SRDF files, and provides access to
     underlying Pinocchio and FCL models.
     """
+    @staticmethod
+    def create_from_urdf_string(
+        urdf_string: str,
+        srdf_string: str,
+        collision_links: list[
+            tuple[str, list[collision_detection.fcl.CollisionObject]]
+        ],
+        *,
+        gravity: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ] = ...,
+        link_names: list[str] = [],
+        joint_names: list[str] = [],
+        verbose: bool = False,
+    ) -> ArticulatedModel:
+        """
+        Constructs an ArticulatedModel from URDF/SRDF strings and collision links
+
+        :param urdf_string: URDF string (without visual/collision elements for links)
+        :param srdf_string: SRDF string (only disable_collisions element)
+        :param collision_links: Collision link names and the vector of
+            CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
+            ...]``. The collision objects are at the shape's local_pose.
+        :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+        :param link_names: list of links that are considered for planning
+        :param joint_names: list of joints that are considered for planning
+        :param verbose: print debug information. Default: ``False``.
+        :return: a unique_ptr to ArticulatedModel
+        """
     def __init__(
         self,
         urdf_filename: str,
         srdf_filename: str,
+        *,
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
-        link_names: list[str],
-        joint_names: list[str],
+        ] = ...,
+        link_names: list[str] = [],
+        joint_names: list[str] = [],
         convex: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -41,7 +71,7 @@ class ArticulatedModel:
         :param urdf_filename: path to URDF file, can be relative to the current working
             directory
         :param srdf_filename: path to SRDF file, we use it to disable self-collisions
-        :param gravity: gravity vector
+        :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
         :param link_names: list of links that are considered for planning
         :param joint_names: list of joints that are considered for planning
         :param convex: use convex decomposition for collision objects. Default:

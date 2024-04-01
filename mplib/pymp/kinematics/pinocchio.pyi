@@ -16,6 +16,22 @@ class PinocchioModel:
 
     See https://github.com/stack-of-tasks/pinocchio
     """
+    @staticmethod
+    def create_from_urdf_string(
+        urdf_string: str,
+        gravity: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ] = ...,
+        verbose: bool = False,
+    ) -> PinocchioModel:
+        """
+        Constructs a PinocchioModel from URDF string
+
+        :param urdf_string: URDF string (without visual/collision elements for links)
+        :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+        :param verbose: print debug information. Default: ``False``.
+        :return: a unique_ptr to PinocchioModel
+        """
     def __init__(
         self,
         urdf_filename: str,
@@ -28,7 +44,7 @@ class PinocchioModel:
         Construct a Pinocchio model from the given URDF file.
 
         :param urdf_filename: path to the URDF file
-        :param gravity: gravity vector
+        :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
         :param verbose: print debug information. Default: ``False``.
         """
     def compute_IK_CLIK(

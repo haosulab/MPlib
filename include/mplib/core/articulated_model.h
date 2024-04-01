@@ -1,8 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "mplib/collision_detection/fcl/types.h"
 #include "mplib/collision_detection/types.h"
 #include "mplib/kinematics/types.h"
 #include "mplib/macros/class_forward.h"
@@ -20,6 +23,10 @@ MPLIB_CLASS_TEMPLATE_FORWARD(ArticulatedModelTpl);
  */
 template <typename S>
 class ArticulatedModelTpl {
+ private:
+  // Used for protecting public default constructor (passkey idiom)
+  struct Secret;
+
  public:
   /**
    * Construct an articulated model from URDF and SRDF files.
@@ -38,6 +45,33 @@ class ArticulatedModelTpl {
                       const std::vector<std::string> &link_names = {},
                       const std::vector<std::string> &joint_names = {},
                       bool convex = false, bool verbose = false);
+
+  /**
+   * Dummy default constructor that is protected by Secret.
+   * Used by ``createFromURDFString()`` only
+   */
+  ArticulatedModelTpl(Secret secret) {}
+
+  /**
+   * Constructs an ArticulatedModel from URDF/SRDF strings and collision links
+   *
+   * @param urdf_string: URDF string (without visual/collision elements for links)
+   * @param srdf_string: SRDF string (only disable_collisions element)
+   * @param collision_links: Collision link names and the vector of CollisionObjectPtr.
+   *    Format is: ``[(link_name, [CollisionObjectPtr, ...]), ...]``.
+   *    The collision objects are at the shape's local_pose.
+   * @param gravity: gravity vector
+   * @param link_names: list of links that are considered for planning
+   * @param joint_names: list of joints that are considered for planning
+   * @param verbose: print debug information. Default: ``false``.
+   * @returns a unique_ptr to ArticulatedModel
+   */
+  static std::unique_ptr<ArticulatedModelTpl<S>> createFromURDFString(
+      const std::string &urdf_string, const std::string &srdf_string,
+      const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
+          &collision_links,
+      const Vector3<S> &gravity, const std::vector<std::string> &joint_names = {},
+      const std::vector<std::string> &link_names = {}, bool verbose = false);
 
   /**
    * Get name of the articulated model.
@@ -174,6 +208,11 @@ class ArticulatedModelTpl {
   }
 
  private:
+  // Used for protecting public default constructor (passkey idiom)
+  struct Secret {
+    explicit Secret() = default;
+  };
+
   std::string name_;
 
   kinematics::PinocchioModelTplPtr<S> pinocchio_model_;

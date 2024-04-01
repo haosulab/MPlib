@@ -40,6 +40,37 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
 }
 
 template <typename S>
+std::unique_ptr<ArticulatedModelTpl<S>> ArticulatedModelTpl<S>::createFromURDFString(
+    const std::string &urdf_string, const std::string &srdf_string,
+    const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
+        &collision_links,
+    const Vector3<S> &gravity, const std::vector<std::string> &link_names,
+    const std::vector<std::string> &joint_names, bool verbose) {
+  auto articulation = std::make_unique<ArticulatedModelTpl<S>>(Secret());
+
+  auto pinocchio_model = articulation->pinocchio_model_ =
+      kinematics::PinocchioModelTpl<S>::createFromURDFString(urdf_string, gravity,
+                                                             verbose);
+  auto fcl_model = articulation->fcl_model_ =
+      collision_detection::FCLModelTpl<S>::createFromURDFString(
+          urdf_string, collision_links, verbose);
+  articulation->verbose_ = verbose;
+
+  auto user_link_names = articulation->user_link_names_ =
+      link_names.size() == 0 ? pinocchio_model->getLinkNames(false) : link_names;
+  auto user_joint_names = articulation->user_joint_names_ =
+      joint_names.size() == 0 ? pinocchio_model->getJointNames(false) : joint_names;
+  pinocchio_model->setLinkOrder(user_link_names);
+  pinocchio_model->setJointOrder(user_joint_names);
+  fcl_model->setLinkOrder(user_link_names);
+  fcl_model->removeCollisionPairsFromSRDFString(srdf_string);
+  articulation->current_qpos_ = VectorX<S>::Constant(pinocchio_model->getModel().nv, 0);
+  articulation->setMoveGroup(user_link_names);
+
+  return articulation;
+}
+
+template <typename S>
 std::vector<std::string> ArticulatedModelTpl<S>::getMoveGroupJointNames() const {
   std::vector<std::string> ret;
   for (const auto &i : move_group_user_joints_) ret.push_back(user_joint_names_[i]);
