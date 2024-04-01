@@ -117,7 +117,7 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
       collision_objects_.push_back(obj);
       collision_link_names_.push_back(link->name);
       parent_link_names_.push_back(parent_link_name);
-      collision_origin2link_poses.push_back(toIsometry<S>(geom->origin));
+      collision_origin2link_poses_.push_back(toIsometry<S>(geom->origin));
     }
   for (const auto &child : link->child_links) dfsParseTree(child, link->name);
 }
@@ -183,7 +183,7 @@ void FCLModelTpl<S>::updateCollisionObjects(
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
     collision_objects_[i]->setTransform(toIsometry<S>(link_pose[link_i]) *
-                                        collision_origin2link_poses[i]);
+                                        collision_origin2link_poses_[i]);
   }
 }
 
@@ -193,7 +193,7 @@ void FCLModelTpl<S>::updateCollisionObjects(
   for (size_t i = 0; i < collision_objects_.size(); i++) {
     auto link_i = collision_link_user_indices_[i];
     collision_objects_[i]->setTransform(link_pose[link_i] *
-                                        collision_origin2link_poses[i]);
+                                        collision_origin2link_poses_[i]);
   }
 }
 
