@@ -157,6 +157,62 @@ Construct a cylinder with given radius and height.
 :param radius: radius of the cylinder
 :param lz: height of the cylinder along z axis)doc";
 
+// ----- fcl::Ellipsoid ----- //
+static const char *__doc_fcl_Ellipsoid =
+R"doc(Ellipsoid collision geometry.
+
+Inheriting from CollisionGeometry, this class specializes to a ellipsoid
+geometry.)doc";
+
+static const char *__doc_fcl_Ellipsoid_Ellipsoid =
+R"doc(
+Construct a ellipsoid with given parameters.
+
+:param a: length of the ``x`` semi-axis
+:param b: length of the ``y`` semi-axis
+:param c: length of the ``z`` semi-axis)doc";
+
+static const char *__doc_fcl_Ellipsoid_Ellipsoid_2 =
+R"doc(
+Construct a ellipsoid with given parameters.
+
+:param radii: vector of the length of the ``x``, ``y``, and ``z`` semi-axes)doc";
+
+// ----- fcl::Halfspace ----- //
+static const char *__doc_fcl_Halfspace =
+R"doc(Infinite halfspace collision geometry.
+
+Inheriting from CollisionGeometry, this class specializes to a halfspace geometry.)doc";
+
+static const char *__doc_fcl_Halfspace_Halfspace =
+R"doc(
+Construct a halfspace with given normal direction and offset where ``n * p = d``.
+Points in the negative side of the separation plane ``{p | n * p < d}`` are inside
+the half space (will have collision).
+
+:param n: normal direction of the halfspace
+:param d: offset of the halfspace)doc";
+
+static const char *__doc_fcl_Halfspace_Halfspace_2 =
+R"doc(
+Construct a halfspace with given halfspace parameters where ``ax + by + cz = d``.
+Points in the negative side of the separation plane ``{(x, y, z) | ax + by + cz < d}``
+are inside the half space (will have collision).)doc";
+
+static const char *__doc_fcl_Halfspace_signedDistance =
+R"doc(
+Compute the signed distance of a point to the halfspace as ``n * p - d``.
+
+:param p: a point in 3D space
+:return: signed distance of the point to the halfspace)doc";
+
+static const char *__doc_fcl_Halfspace_distance =
+R"doc(
+Compute the distance of a point to the halfspace as ``abs(n * p - d)``.
+
+:param p: a point in 3D space
+:return: distance of the point to the halfspace)doc";
+
 // ----- fcl::Plane ----- //
 static const char *__doc_fcl_Plane =
 R"doc(Infinite plane collision geometry.
@@ -165,7 +221,7 @@ Inheriting from CollisionGeometry, this class specializes to a plane geometry.)d
 
 static const char *__doc_fcl_Plane_Plane =
 R"doc(
-Construct a plane with given normal direction and offset where ``n * v = d``.
+Construct a plane with given normal direction and offset where ``n * p = d``.
 
 :param n: normal direction of the plane
 :param d: offset of the plane)doc";
@@ -173,6 +229,20 @@ Construct a plane with given normal direction and offset where ``n * v = d``.
 static const char *__doc_fcl_Plane_Plane_2 =
 R"doc(
 Construct a plane with given plane parameters where ``ax + by + cz = d``.)doc";
+
+static const char *__doc_fcl_Plane_signedDistance =
+R"doc(
+Compute the signed distance of a point to the plane as ``n * p - d``.
+
+:param p: a point in 3D space
+:return: signed distance of the point to the plane)doc";
+
+static const char *__doc_fcl_Plane_distance =
+R"doc(
+Compute the distance of a point to the plane as ``abs(n * p - d)``.
+
+:param p: a point in 3D space
+:return: distance of the point to the plane)doc";
 
 // ----- fcl::Sphere ----- //
 static const char *__doc_fcl_Sphere =
@@ -185,6 +255,20 @@ R"doc(
 Construct a sphere with given radius.
 
 :param radius: radius of the sphere)doc";
+
+// ----- fcl::TriangleP ----- //
+static const char *__doc_fcl_TriangleP =
+R"doc(TriangleP collision geometry.
+
+Inheriting from CollisionGeometry, this class specializes to a triangleP geometry.)doc";
+
+static const char *__doc_fcl_TriangleP_TriangleP =
+R"doc(
+Construct a set of triangles from vectors of point coordinates.
+
+:param a: vector of point ``x`` coordinates
+:param b: vector of point ``y`` coordinates
+:param c: vector of point ``z`` coordinates)doc";
 
 // ----- fcl::BVHModel<fcl::OBBRSS> ----- //
 static const char *__doc_fcl_BVHModel_OBBRSS =

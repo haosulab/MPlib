@@ -22,14 +22,17 @@ __all__ = [
     "Cylinder",
     "DistanceRequest",
     "DistanceResult",
+    "Ellipsoid",
     "FCLModel",
     "GJKSolverType",
     "GST_INDEP",
     "GST_LIBCCD",
+    "Halfspace",
     "OcTree",
     "Plane",
     "Sphere",
     "Triangle",
+    "TriangleP",
     "collide",
     "distance",
     "load_mesh_as_BVH",
@@ -513,6 +516,39 @@ class DistanceResult:
         tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
     ]: ...
 
+class Ellipsoid(CollisionGeometry):
+    """
+    Ellipsoid collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a ellipsoid
+    geometry.
+    """
+
+    radii: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    @typing.overload
+    def __init__(self, a: float, b: float, c: float) -> None:
+        """
+        Construct a ellipsoid with given parameters.
+
+        :param a: length of the ``x`` semi-axis
+        :param b: length of the ``y`` semi-axis
+        :param c: length of the ``z`` semi-axis
+        """
+    @typing.overload
+    def __init__(
+        self,
+        radii: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Construct a ellipsoid with given parameters.
+
+        :param radii: vector of the length of the ``x``, ``y``, and ``z`` semi-axes
+        """
+
 class FCLModel:
     """
     FCL collision model of an articulation
@@ -633,6 +669,65 @@ class GJKSolverType:
     @property
     def value(self) -> int: ...
 
+class Halfspace(CollisionGeometry):
+    """
+    Infinite halfspace collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a halfspace geometry.
+    """
+
+    d: float
+    n: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    @typing.overload
+    def __init__(
+        self,
+        n: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        d: float,
+    ) -> None:
+        """
+        Construct a halfspace with given normal direction and offset where ``n * p = d``.
+        Points in the negative side of the separation plane ``{p | n * p < d}`` are inside
+        the half space (will have collision).
+
+        :param n: normal direction of the halfspace
+        :param d: offset of the halfspace
+        """
+    @typing.overload
+    def __init__(self, a: float, b: float, c: float, d: float) -> None:
+        """
+        Construct a halfspace with given halfspace parameters where ``ax + by + cz = d``.
+        Points in the negative side of the separation plane ``{(x, y, z) | ax + by + cz < d}``
+        are inside the half space (will have collision).
+        """
+    def distance(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> float:
+        """
+        Compute the distance of a point to the halfspace as ``abs(n * p - d)``.
+
+        :param p: a point in 3D space
+        :return: distance of the point to the halfspace
+        """
+    def signed_distance(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> float:
+        """
+        Compute the signed distance of a point to the halfspace as ``n * p - d``.
+
+        :param p: a point in 3D space
+        :return: signed distance of the point to the halfspace
+        """
+
 class OcTree(CollisionGeometry):
     """
     OcTree collision geometry.
@@ -683,7 +778,7 @@ class Plane(CollisionGeometry):
         d: float,
     ) -> None:
         """
-        Construct a plane with given normal direction and offset where ``n * v = d``.
+        Construct a plane with given normal direction and offset where ``n * p = d``.
 
         :param n: normal direction of the plane
         :param d: offset of the plane
@@ -692,6 +787,30 @@ class Plane(CollisionGeometry):
     def __init__(self, a: float, b: float, c: float, d: float) -> None:
         """
         Construct a plane with given plane parameters where ``ax + by + cz = d``.
+        """
+    def distance(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> float:
+        """
+        Compute the distance of a point to the plane as ``abs(n * p - d)``.
+
+        :param p: a point in 3D space
+        :return: distance of the point to the plane
+        """
+    def signed_distance(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> float:
+        """
+        Compute the signed distance of a point to the plane as ``n * p - d``.
+
+        :param p: a point in 3D space
+        :return: signed distance of the point to the plane
         """
 
 class Sphere(CollisionGeometry):
@@ -723,6 +842,42 @@ class Triangle:
     def __init__(self, p1: int, p2: int, p3: int) -> None: ...
     def get(self, arg0: int) -> int: ...
     def set(self, arg0: int, arg1: int, arg2: int) -> None: ...
+
+class TriangleP(CollisionGeometry):
+    """
+    TriangleP collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a triangleP geometry.
+    """
+
+    a: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    b: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    c: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    def __init__(
+        self,
+        a: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        b: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        c: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Construct a set of triangles from vectors of point coordinates.
+
+        :param a: vector of point ``x`` coordinates
+        :param b: vector of point ``y`` coordinates
+        :param c: vector of point ``z`` coordinates
+        """
 
 def collide(
     arg0: CollisionObject, arg1: CollisionObject, arg2: CollisionRequest
