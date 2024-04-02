@@ -45,11 +45,11 @@ Construct an attached body for a specified link.
 
 static const char *__doc_mplib_AttachedBodyTpl_getAttachedArticulation =
 R"doc(
-Gets the articulation this body attached to)doc";
+Gets the articulation this body is attached to)doc";
 
 static const char *__doc_mplib_AttachedBodyTpl_getAttachedLinkId =
 R"doc(
-Gets the articulation this body attached to)doc";
+Gets the articulation this body is attached to)doc";
 
 static const char *__doc_mplib_AttachedBodyTpl_getGlobalPose =
 R"doc(

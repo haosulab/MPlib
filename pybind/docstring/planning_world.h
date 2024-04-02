@@ -64,7 +64,7 @@ Adds a point cloud as a collision object with given name to world
 
 :param name: name of the point cloud collision object
 :param vertices: point cloud vertices matrix
-:param resolution: resolution of the point OcTree)doc";
+:param resolution: resolution of the point in ``octomap::OcTree``)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_attachBox =
 R"doc(

@@ -51,10 +51,10 @@ class AttachedBodyTpl {
   /// @brief Gets the attached object (CollisionObjectPtr)
   CollisionObjectPtr getObject() const { return object_; }
 
-  /// @brief Gets the articulation this body attached to
+  /// @brief Gets the articulation this body is attached to
   ArticulatedModelPtr getAttachedArticulation() const { return attached_articulation_; }
 
-  /// @brief Gets the articulation this body attached to
+  /// @brief Gets the articulation this body is attached to
   int getAttachedLinkId() const { return attached_link_id_; }
 
   /// @brief Gets the attached pose (relative pose from attached link to object)

@@ -235,11 +235,11 @@ class AttachedBody:
         """
     def get_attached_articulation(self) -> ArticulatedModel:
         """
-        Gets the articulation this body attached to
+        Gets the articulation this body is attached to
         """
     def get_attached_link_id(self) -> int:
         """
-        Gets the articulation this body attached to
+        Gets the articulation this body is attached to
         """
     def get_global_pose(self) -> ...:
         """
@@ -337,7 +337,7 @@ class PlanningWorld:
 
         :param name: name of the point cloud collision object
         :param vertices: point cloud vertices matrix
-        :param resolution: resolution of the point OcTree
+        :param resolution: resolution of the point in ``octomap::OcTree``
         """
     def attach_box(
         self,

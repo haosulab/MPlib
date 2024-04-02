@@ -170,7 +170,7 @@ class PlanningWorldTpl {
    *
    * @param name: name of the point cloud collision object
    * @param vertices: point cloud vertices matrix
-   * @param resolution: resolution of the point OcTree
+   * @param resolution: resolution of the point in ``octomap::OcTree``
    */
   void addPointCloud(const std::string &name, const MatrixX3<S> &vertices,
                      double resolution = 0.01);
