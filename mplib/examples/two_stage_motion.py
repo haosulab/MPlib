@@ -78,19 +78,19 @@ class PlanningDemo(DemoSetup):
         # boxes
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.06])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.06], color=[1, 0, 0])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.06])
         red_cube = builder.build(name="red_cube")
         red_cube.set_pose(sapien.Pose([0.7, 0, 0.06]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.04, 0.04, 0.005])
-        builder.add_box_visual(half_size=[0.04, 0.04, 0.005], color=[0, 1, 0])
+        builder.add_box_visual(half_size=[0.04, 0.04, 0.005])
         green_cube = builder.build(name="green_cube")
         green_cube.set_pose(sapien.Pose([0.4, 0.3, 0.005]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.05, 0.2, 0.1])
-        builder.add_box_visual(half_size=[0.05, 0.2, 0.1], color=[0, 0, 1])
+        builder.add_box_visual(half_size=[0.05, 0.2, 0.1])
         blue_cube = builder.build(name="blue_cube")
         blue_cube.set_pose(sapien.Pose([0.55, 0, 0.1]))
 
@@ -117,7 +117,6 @@ class PlanningDemo(DemoSetup):
         result = self.planner.plan_qpos_to_qpos(
             goal_qposes,
             self.robot.get_qpos(),
-            use_point_cloud=True,
             time_step=1 / 250,
             fixed_joint_indices=range(2),
         )
@@ -138,7 +137,6 @@ class PlanningDemo(DemoSetup):
         result = self.planner.plan_qpos_to_qpos(
             goal_qposes,
             self.robot.get_qpos(),
-            use_point_cloud=True,
             time_step=1 / 250,
             fixed_joint_indices=range(2, 9),
         )
@@ -179,6 +177,9 @@ class PlanningDemo(DemoSetup):
         result = self.plan_without_base(pickup_pose)
         self.follow_path(result)
         self.close_gripper()
+
+        # Set planner robot qpos to allow auto-detect touch_links
+        self.planner.robot.set_qpos(self.robot.get_qpos(), True)
 
         # add the attached box to the planning world
         self.planner.update_attached_box([0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0])

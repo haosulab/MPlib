@@ -76,9 +76,7 @@ class DetectCollisionDemo(DemoSetup):
         print("\n----- env-collision qpos -----")
         # this qpos causes several joints to dip below the floor
         env_collision_qpos = [0, 1.5, 0, -1.5, 0, 0, 0]
-        self.print_collisions(
-            self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos)
-        )
+        self.print_collisions(self.planner.check_for_env_collision(env_collision_qpos))
 
         print("\n----- env-collision causing planner to timeout -----")
         status, path = self.planner.planner.plan(
@@ -88,9 +86,7 @@ class DetectCollisionDemo(DemoSetup):
 
         print("\n----- no more env-collision after removing the floor -----")
         self.planner.remove_normal_object("floor")
-        self.print_collisions(
-            self.planner.check_for_env_collision(self.planner.robot, env_collision_qpos)
-        )
+        self.print_collisions(self.planner.check_for_env_collision(env_collision_qpos))
         # end ankor
 
 

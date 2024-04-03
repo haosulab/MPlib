@@ -372,7 +372,14 @@ class Planner:
             if success:
                 # check collision
                 self.planning_world.set_qpos_all(ik_qpos[move_joint_idx])
-                if len(self.planning_world.collide_full()) > 0:
+                collisions = self.planning_world.collide_full()
+                if len(collisions) > 0:
+                    for collision in collisions:
+                        print(
+                            f"Collision between {collision.link_name1} of entity "
+                            f"{collision.object_name1} with {collision.link_name2} of "
+                            f"entity {collision.object_name2}"
+                        )
                     success = False
 
             if success:

@@ -20,7 +20,7 @@ class PlanningDemo(DemoSetup):
         in the x and y direction.
         """
         super().__init__()
-        self.setup_scene()
+        self.setup_scene(camera_xyz_x=2.2, camera_xyz_y=1.25, camera_xyz_z=0.4)
         self.load_robot(robot_origin_xyz=[1, 1, 0])
         self.setup_planner()
 
@@ -42,19 +42,19 @@ class PlanningDemo(DemoSetup):
         # boxes
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.06])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.06], color=[1, 0, 0])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.06])
         red_cube = builder.build(name="red_cube")
         red_cube.set_pose(sapien.Pose([1.4, 1.3, 0.06]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.04])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.04], color=[0, 1, 0])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.04])
         green_cube = builder.build(name="green_cube")
         green_cube.set_pose(sapien.Pose([1.2, 0.7, 0.04]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.07])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.07], color=[0, 0, 1])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.07])
         blue_cube = builder.build(name="blue_cube")
         blue_cube.set_pose(sapien.Pose([1.6, 1.1, 0.07]))
 

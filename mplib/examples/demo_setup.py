@@ -116,7 +116,7 @@ class DemoSetup:
         # under gravity
         for i in range(n_step):
             qf = self.robot.compute_passive_force(
-                external=False, gravity=True, coriolis_and_centrifugal=True
+                gravity=True, coriolis_and_centrifugal=True
             )
             self.robot.set_qf(qf)
             # set the joint positions and velocities for move group joints only.
@@ -146,7 +146,7 @@ class DemoSetup:
         # 100 steps is plenty to reach the target position
         for i in range(100):
             qf = self.robot.compute_passive_force(
-                external=False, gravity=True, coriolis_and_centrifugal=True
+                gravity=True, coriolis_and_centrifugal=True
             )
             self.robot.set_qf(qf)
             self.scene.step()
@@ -170,10 +170,9 @@ class DemoSetup:
         # result is a dictionary with keys 'status', 'time', 'position', 'velocity',
         # 'acceleration', 'duration'
         # plan_qpos_to_pose ankor
+        print("plan_qpos_to_pose")
         result = self.planner.plan_qpos_to_pose(
-            pose,
-            self.robot.get_qpos(),
-            time_step=1 / 250,
+            pose, self.robot.get_qpos(), time_step=1 / 250
         )
         # plan_qpos_to_pose ankor end
         if result["status"] != "Success":
