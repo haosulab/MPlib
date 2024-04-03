@@ -352,7 +352,6 @@ class Planner:
                 If return_closest, q_goals is np.ndarray if successful
                 and None if not successful.
         """
-        # TODO: verbose: print collision info
         if mask is None:
             mask = []
 
@@ -372,15 +371,15 @@ class Planner:
             if success:
                 # check collision
                 self.planning_world.set_qpos_all(ik_qpos[move_joint_idx])
-                collisions = self.planning_world.collide_full()
-                if len(collisions) > 0:
-                    for collision in collisions:
-                        print(
-                            f"Collision between {collision.link_name1} of entity "
-                            f"{collision.object_name1} with {collision.link_name2} of "
-                            f"entity {collision.object_name2}"
-                        )
+                if len(collisions := self.planning_world.collide_full()) > 0:
                     success = False
+                    if verbose:
+                        for collision in collisions:
+                            print(
+                                f"Collision between {collision.link_name1} of entity "
+                                f"{collision.object_name1} with {collision.link_name2} "
+                                f"of entity {collision.object_name2}"
+                            )
 
             if success:
                 self.pinocchio_model.compute_forward_kinematics(ik_qpos)
