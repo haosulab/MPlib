@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "mplib"
 dynamic = ["version"]
 dependencies = ["numpy", "toppra >= 0.4.0", "transforms3d >= 0.3.1"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 authors = [
   {name="Minghua Liu", email = "minghua@ucsd.edu"},
   {name="Jiayuan Gu", email="jigu@ucsd.edu"},
@@ -31,8 +31,6 @@ classifiers=[
   "Natural Language :: English",
   "Framework :: Robot Framework :: Tool",
   "Programming Language :: C++",
-  "Programming Language :: Python :: 3.6",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",

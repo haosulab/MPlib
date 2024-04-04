@@ -17,7 +17,7 @@ functionalities in robot manipulation.
 
 ## Installation
 
-Pre-built pip packages support Ubuntu 18.04+ with Python 3.7+.
+Pre-built pip packages support Ubuntu 20.04+ with Python 3.8+.
 
 ```
 pip install mplib
