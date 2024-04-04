@@ -1,8 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <pinocchio/multibody/data.hpp>
@@ -72,6 +74,13 @@ class PinocchioModelTpl {
    * @return: list of leaf links
    */
   const std::vector<std::string> &getLeafLinks() const { return leaf_links_; }
+
+  /**
+   * Get the all adjacent link names.
+   *
+   * @return: adjacent link names as a set of pairs of strings
+   */
+  std::set<std::pair<std::string, std::string>> getAdjacentLinks() const;
 
   /**
    * Pinocchio might have a different link order or it might add additional links.

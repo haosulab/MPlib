@@ -237,6 +237,26 @@ void PinocchioModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
 }
 
 template <typename S>
+std::set<std::pair<std::string, std::string>> PinocchioModelTpl<S>::getAdjacentLinks()
+    const {
+  std::set<std::pair<std::string, std::string>> ret;
+
+  const auto root_name = urdf_model_->getRoot()->name;
+  for (auto link_name : getLeafLinks())
+    while (link_name != root_name) {
+      const auto parent_link = urdf_model_->getLink(link_name)->getParent();
+      const auto parent_name = parent_link->name;
+      ret.insert({parent_name, link_name});
+      // if the parent has a fixed link to its parent, also disable collision
+      if (parent_name != root_name &&
+          parent_link->parent_joint->type == urdf::Joint::FIXED)
+        ret.insert({parent_link->getParent()->name, link_name});
+      link_name = parent_name;
+    }
+  return ret;
+}
+
+template <typename S>
 void PinocchioModelTpl<S>::setLinkOrder(const std::vector<std::string> &names) {
   user_link_names_ = names;
   link_index_user2pinocchio_ = VectorXi(names.size());
