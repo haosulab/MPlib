@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from typing import Optional, Sequence
+from xml.dom import minidom
 
 import numpy as np
 import toppra as ta
@@ -11,7 +13,7 @@ import toppra.constraint as constraint
 from transforms3d.quaternions import mat2quat, quat2mat
 
 from mplib.pymp import ArticulatedModel, PlanningWorld
-from mplib.pymp.collision_detection import WorldCollisionResult
+from mplib.pymp.collision_detection import AllowedCollisionMatrix, WorldCollisionResult
 from mplib.pymp.planning import ompl
 
 
@@ -155,52 +157,95 @@ class Planner:
                         out_f.write(content)
         return rtn_urdf
 
-    def generate_collision_pair(self):
+    def generate_collision_pair(self, num_samples=100000):
         """
         We read the srdf file to get the link pairs that should not collide.
         If not provided, we need to randomly sample configurations
         to find the link pairs that will always collide.
+
+        :param num_samples: number of samples to find the link that will always collide
         """
         print(
             "Since no SRDF file is provided. We will first detect link pairs that will"
             " always collide. This may take several minutes."
         )
 
-        import xml.etree.ElementTree as ET
-        from xml.dom import minidom
-
         root = ET.Element("robot")
         robot_name = self.urdf.split("/")[-1].split(".")[0]
         root.set("name", robot_name)
         self.srdf = self.urdf.replace(".urdf", ".srdf")
 
-        for link1, link2 in self.pinocchio_model.get_adjacent_links():
-            print(f"Ignore collision pair: ({link1}, {link2}), " "reason: adjacent")
-            collision = ET.SubElement(root, "disable_collisions")
-            collision.set("link1", link1)
-            collision.set("link2", link2)
-            collision.set("reason", "adjacent")
+        acm = AllowedCollisionMatrix()
 
-        leaf_links = self.pinocchio_model.get_leaf_links()
-        for i in range(len(leaf_links) - 1):
-            j = i + 1
-            link1 = leaf_links[i]
-            link2 = leaf_links[j]
+        # 1. disable adjacent link pairs
+        for link1, link2 in self.pinocchio_model.get_adjacent_links():
+            print(f"Ignore collision pair: ({link1}, {link2}), reason: Adjacent")
+            acm.set_entry(link1, link2, True)
+            _ = ET.SubElement(
+                root,
+                "disable_collisions",
+                attrib={"link1": link1, "link2": link2, "reason": "Adjacent"},
+            )
+
+        # 2. disable all-zeros qpos (default) collision
+        self.robot.set_qpos(np.zeros(len(self.user_joint_names)), True)
+        for collision in self.check_for_self_collision():
+            link1, link2 = collision.link_name1, collision.link_name2
+            if acm.get_entry(link1, link2) is not None:  # already ignored
+                continue
             print(
                 f"Ignore collision pair: ({link1}, {link2}), "
-                "reason: leaf links, so highly likely to be gripper parts"
+                "reason: Default (collides at all-zeros qpos)"
             )
-            collision = ET.SubElement(root, "disable_collisions")
-            collision.set("link1", link1)
-            collision.set("link2", link2)
-            collision.set("reason", "leaf")
+            acm.set_entry(link1, link2, True)
+            _ = ET.SubElement(
+                root,
+                "disable_collisions",
+                attrib={"link1": link1, "link2": link2, "reason": "Default"},
+            )
 
+        # 3. disable collision pairs that always collide and never collide via sampling
+        n_links = len(self.user_link_names)
+        collision_cnt = np.zeros((n_links, n_links), dtype=int)
+        for _ in range(num_samples):
+            self.robot.set_qpos(self.pinocchio_model.get_random_configuration(), True)
+            for collision in self.check_for_self_collision():
+                u = self.link_name_2_idx[collision.link_name1]
+                v = self.link_name_2_idx[collision.link_name2]
+                collision_cnt[u][v] += 1
+
+        for i, link1 in enumerate(self.user_link_names):
+            for j in range(i + 1, n_links):
+                link2 = self.user_link_names[j]
+                if acm.get_entry(link1, link2) is not None:  # already ignored
+                    continue
+                if (cnt := (collision_cnt[i][j] + collision_cnt[j][i])) == num_samples:
+                    print(
+                        f"Ignore collision pair: ({link1}, {link2}), "
+                        "reason: Always collide"
+                    )
+                    _ = ET.SubElement(
+                        root,
+                        "disable_collisions",
+                        attrib={"link1": link1, "link2": link2, "reason": "Always"},
+                    )
+                elif cnt == 0:
+                    print(
+                        f"Ignore collision pair: ({link1}, {link2}), "
+                        "reason: Never collide"
+                    )
+                    _ = ET.SubElement(
+                        root,
+                        "disable_collisions",
+                        attrib={"link1": link1, "link2": link2, "reason": "Never"},
+                    )
+
+        # Save SRDF
         with open(self.srdf, "w") as srdf_file:
             srdf_file.write(
-                minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+                minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
             )
-            srdf_file.close()
-        print("Saving the SRDF file to %s" % self.srdf)
+        print(f"Saving the SRDF file to {self.srdf}")
 
     def distance_6D(self, p1, q1, p2, q2):
         """
