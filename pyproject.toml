@@ -8,7 +8,14 @@ dynamic = ["version"]
 dependencies = ["numpy", "toppra >= 0.4.0", "transforms3d >= 0.3.1"]
 requires-python = ">=3.7"
 authors = [
-  {email = "minghua@ucsd.edu"},
+  {name="Minghua Liu", email = "minghua@ucsd.edu"},
+  {name="Jiayuan Gu", email="jigu@ucsd.edu"},
+  {name="Kolin Guo", email="ruguo@ucsd.edu"},
+  {name="Xinsong Lin", email="x8lin@ucsd.edu"},
+]
+maintainers = [
+  {name="Kolin Guo", email="ruguo@ucsd.edu"},
+  {name="Xinsong Lin", email="x8lin@ucsd.edu"},
 ]
 description = "A lightweight motion planning library"
 readme = "README.md"
