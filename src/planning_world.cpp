@@ -116,6 +116,29 @@ bool PlanningWorldTpl<S>::removeNormalObject(const std::string &name) {
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
+                                       const std::vector<std::string> &touch_links) {
+  const auto T_world_obj = normal_object_map_.at(name)->getTransform();
+  const auto T_world_link = toIsometry(
+      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(
+          link_id));
+  attachObject(name, art_name, link_id, toPoseVec(T_world_link.inverse() * T_world_obj),
+               touch_links);
+}
+
+template <typename S>
+void PlanningWorldTpl<S>::attachObject(const std::string &name,
+                                       const std::string &art_name, int link_id) {
+  const auto T_world_obj = normal_object_map_.at(name)->getTransform();
+  const auto T_world_link = toIsometry(
+      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(
+          link_id));
+  attachObject(name, art_name, link_id,
+               toPoseVec(T_world_link.inverse() * T_world_obj));
+}
+
+template <typename S>
+void PlanningWorldTpl<S>::attachObject(const std::string &name,
+                                       const std::string &art_name, int link_id,
                                        const Vector7<S> &pose,
                                        const std::vector<std::string> &touch_links) {
   auto obj = normal_object_map_.at(name);

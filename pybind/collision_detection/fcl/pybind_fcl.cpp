@@ -247,6 +247,7 @@ void build_pyfcl(py::module &m) {
            DOC(fcl, OcTree, OcTree, 2));
 
   // Collision Object = Geometry + Transformation
+  // TODO(merge): get_transformation
   auto PyCollisionObject =
       py::class_<CollisionObject, std::shared_ptr<CollisionObject>>(
           m, "CollisionObject", DOC(fcl, CollisionObject));

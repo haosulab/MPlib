@@ -207,7 +207,39 @@ class PlanningWorldTpl {
   }
 
   /**
-   * Attaches existing normal object to specified link of articulation.
+   * Attaches existing normal object to specified link of articulation at its current
+   * pose. If the object is currently attached, disallow collision between the object
+   * and previous touch_links.
+   * Updates acm_ to allow collisions between attached object and touch_links.
+   *
+   * @param name: normal object name to attach
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param touch_links: link names that the attached object touches
+   * @throws std::out_of_range if normal object with given name does not exist
+   *  or if planned articulation with given name does not exist
+   */
+  void attachObject(const std::string &name, const std::string &art_name, int link_id,
+                    const std::vector<std::string> &touch_links);
+
+  /**
+   * Attaches existing normal object to specified link of articulation at its current
+   * pose. If the object is not currently attached, automatically sets touch_links as
+   * the name of self links that collide with the object in the current state.
+   * Updates acm_ to allow collisions between attached object and touch_links.
+   * If the object is already attached, the touch_links of the attached object
+   * is preserved and acm_ remains unchanged.
+   *
+   * @param name: normal object name to attach
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @throws std::out_of_range if normal object with given name does not exist
+   *  or if planned articulation with given name does not exist
+   */
+  void attachObject(const std::string &name, const std::string &art_name, int link_id);
+
+  /**
+   * Attaches existing normal object to specified link of articulation at given pose.
    * If the object is currently attached, disallow collision between the object
    * and previous touch_links.
    * Updates acm_ to allow collisions between attached object and touch_links.
@@ -225,7 +257,7 @@ class PlanningWorldTpl {
                     const std::vector<std::string> &touch_links);
 
   /**
-   * Attaches existing normal object to specified link of articulation.
+   * Attaches existing normal object to specified link of articulation at given pose.
    * If the object is not currently attached, automatically sets touch_links as
    * the name of self links that collide with the object in the current state.
    * Updates acm_ to allow collisions between attached object and touch_links.
@@ -243,7 +275,7 @@ class PlanningWorldTpl {
                     const Vector7<S> &pose);
 
   /**
-   * Attaches given object (w/ p_geom) to specified link of articulation.
+   * Attaches given object (w/ p_geom) to specified link of articulation at given pose.
    * This is done by removing normal object and then adding and attaching object.
    * As a result, all previous acm_ entries with the object are removed
    *
@@ -259,7 +291,7 @@ class PlanningWorldTpl {
                     const std::vector<std::string> &touch_links);
 
   /**
-   * Attaches given object (w/ p_geom) to specified link of articulation.
+   * Attaches given object (w/ p_geom) to specified link of articulation at given pose.
    * This is done by removing normal object and then adding and attaching object.
    * As a result, all previous acm_ entries with the object are removed.
    * Automatically sets touch_links as the name of self links
