@@ -5,11 +5,18 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import os
+import re
 
 project = "mplib"
 author = "Minghua Liu, Jiayuan Gu, Kolin Guo, Xinsong Lin"
 copyright = f"2021-2024, {author}. All rights reserved."
-release = "0.1.0"
+release = "+git.".join(
+    re.findall(
+        "^v(.*)-[0-9]+-g(.*)", os.popen("git describe --abbrev=8 --tags").read().strip()
+    )[0]
+)  # tag-commithash
+version = release
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
