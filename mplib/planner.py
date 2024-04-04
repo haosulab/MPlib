@@ -79,24 +79,12 @@ class Planner:
         self.user_link_names = self.pinocchio_model.get_link_names()
         self.user_joint_names = self.pinocchio_model.get_joint_names()
 
-        self.planning_world = PlanningWorld(
-            [self.robot],
-            ["robot"],
-            kwargs.get("normal_objects", []),
-            kwargs.get("normal_object_names", []),
-        )
-        self.acm = self.planning_world.get_allowed_collision_matrix()
-
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
             self.joint_name_2_idx[joint] = i
         self.link_name_2_idx = {}
         for i, link in enumerate(self.user_link_names):
             self.link_name_2_idx[link] = i
-
-        if self.srdf == "":
-            self.generate_collision_pair()
-            self.robot.update_SRDF(self.srdf)
 
         assert (
             move_group in self.user_link_names
@@ -135,6 +123,18 @@ class Planner:
         self.equiv_joint_mask = [
             t.startswith("JointModelR") for t in self.joint_types
         ] & (self.joint_limits[:, 1] - self.joint_limits[:, 0] > 2 * np.pi)
+
+        self.planning_world = PlanningWorld(
+            [self.robot],
+            ["robot"],
+            kwargs.get("normal_objects", []),
+            kwargs.get("normal_object_names", []),
+        )
+        self.acm = self.planning_world.get_allowed_collision_matrix()
+
+        if self.srdf == "":
+            self.generate_collision_pair()
+            self.robot.update_SRDF(self.srdf)
 
         self.planner = ompl.OMPLPlanner(world=self.planning_world)
 
