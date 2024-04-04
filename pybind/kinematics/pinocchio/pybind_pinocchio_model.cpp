@@ -40,6 +40,8 @@ void build_pypinocchio_model(py::module &m) {
 
       .def("get_leaf_links", &PinocchioModel::getLeafLinks,
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getLeafLinks))
+      .def("get_adjacent_links", &PinocchioModel::getAdjacentLinks,
+           DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getAdjacentLinks))
 
       .def("set_link_order", &PinocchioModel::setLinkOrder, py::arg("names"),
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, setLinkOrder))
@@ -86,7 +88,6 @@ void build_pypinocchio_model(py::module &m) {
       .def("get_chain_joint_index", &PinocchioModel::getChainJointIndex,
            py::arg("end_effector"),
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getChainJointIndex))
-      .def("get_adjacent_links", &PinocchioModel::getAdjacentLinks)
 
       .def("get_random_configuration", &PinocchioModel::getRandomConfiguration,
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getRandomConfiguration))

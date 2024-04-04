@@ -1,10 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
-#include <set>
 
 #include <pinocchio/multibody/data.hpp>
 #include <urdf_model/types.h>
@@ -73,6 +74,13 @@ class PinocchioModelTpl {
    * @return: list of leaf links
    */
   const std::vector<std::string> &getLeafLinks() const { return leaf_links_; }
+
+  /**
+   * Get the all adjacent link names.
+   *
+   * @return: adjacent link names as a set of pairs of strings
+   */
+  std::set<std::pair<std::string, std::string>> getAdjacentLinks() const;
 
   /**
    * Pinocchio might have a different link order or it might add additional links.
@@ -239,13 +247,6 @@ class PinocchioModelTpl {
    * @return: joint indices of the joints in the chain
    */
   std::vector<std::size_t> getChainJointIndex(const std::string &end_effector) const;
-
-  /**
-   * @brief Get the all adjacent links as a set of pairs.
-   * 
-   * @return std::set<std::pair<std::string, std::string>> 
-   */
-  std::set<std::pair<std::string, std::string>> getAdjacentLinks() const;
 
   /**
    * Get a random configuration.
