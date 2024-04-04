@@ -13,10 +13,12 @@ void build_pyfcl_utils(py::module &pyfcl);
 }  // namespace fcl
 
 void build_pycollision_common(py::module &m);
+void build_pycollision_matrix(py::module &m);
 
 void build_pycollision_detection(py::module &pymp) {
   auto m = pymp.def_submodule("collision_detection", "Collision detection submodule");
   build_pycollision_common(m);
+  build_pycollision_matrix(m);
 
   auto pyfcl = m.def_submodule("fcl", "FCL submodule");
   fcl::build_pyfcl(pyfcl);

@@ -16,9 +16,27 @@ class PinocchioModel:
 
     See https://github.com/stack-of-tasks/pinocchio
     """
+    @staticmethod
+    def create_from_urdf_string(
+        urdf_string: str,
+        *,
+        gravity: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ] = ...,
+        verbose: bool = False,
+    ) -> PinocchioModel:
+        """
+        Constructs a PinocchioModel from URDF string
+
+        :param urdf_string: URDF string (without visual/collision elements for links)
+        :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+        :param verbose: print debug information. Default: ``False``.
+        :return: a unique_ptr to PinocchioModel
+        """
     def __init__(
         self,
         urdf_filename: str,
+        *,
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
         ] = ...,
@@ -28,7 +46,7 @@ class PinocchioModel:
         Construct a Pinocchio model from the given URDF file.
 
         :param urdf_filename: path to the URDF file
-        :param gravity: gravity vector
+        :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
         :param verbose: print debug information. Default: ``False``.
         """
     def compute_IK_CLIK(
@@ -118,9 +136,9 @@ class PinocchioModel:
         qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
     ) -> None:
         """
-        Compute the full jacobian for the given joint configuration.
-
-        If you want the result you need to call ``get_link_jacobian()``
+        Compute the full jacobian for the given joint configuration. Note you need to
+        call computeForwardKinematics() first. If you want the result you need to call
+        ``get_link_jacobian()``
 
         :param qpos: joint configuration. Needs to be full configuration, not just the
             movegroup joints.
@@ -132,7 +150,8 @@ class PinocchioModel:
         local: bool = False,
     ) -> numpy.ndarray[tuple[typing.Literal[6], N], numpy.dtype[numpy.float64]]:
         """
-        Compute the jacobian of the given link.
+        Compute the jacobian of the given link. Note you need to call
+        computeForwardKinematics() first.
 
         :param qpos: joint configuration. Needs to be full configuration, not just the
             movegroup joints.
@@ -278,7 +297,8 @@ class PinocchioModel:
         self, index: int, local: bool = False
     ) -> numpy.ndarray[tuple[typing.Literal[6], N], numpy.dtype[numpy.float64]]:
         """
-        Get the jacobian of the given link.
+        Get the jacobian of the given link. You must call ``compute_full_jacobian()``
+        first.
 
         :param index: index of the link (in the order you passed to the constructor or
             the default order)

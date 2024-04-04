@@ -18,7 +18,7 @@ PANDA_SPEC = {
 class TestPinocchioModel(unittest.TestCase):
     def setUp(self):
         # Create a PinocchioModel instance for testing
-        self.model = PinocchioModel(PANDA_SPEC["urdf"], [0, 0, -9.81], verbose=False)
+        self.model = PinocchioModel(PANDA_SPEC["urdf"], verbose=False)
         self.joint_limits = [
             [-2.8973, 2.8973],
             [-1.7628, 1.7628],

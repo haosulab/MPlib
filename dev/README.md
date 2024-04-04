@@ -13,6 +13,8 @@ and use it to build wheel for the specified python version.
 The wheel will be generated in the `wheelhouse/` and the generated pybind11 docstring
 will be in [`./pybind/docstring/`](../pybind/docstring/).
 
+If you want to start the documentation webserver, run `./dev/start_doc_webserver.sh`
+
 If you want to start a docker container for debugging, run `./dev/docker_setup.sh`
 
 ### Versioning & Release Process
@@ -89,7 +91,7 @@ where the `clang-version` should match your local LLVM installation
 
 ## Stubs & Documentation Generation
 
-To generate stubs and documentations, run [`./dev/generate_stub_and_doc.sh`](./generate_stub_and_doc.sh).
+To generate stubs and documentations, run [`./dev/generate_stubs.sh`](./generate_stubs.sh).
 By default it uses `python3.10` in docker image [`kolinguo/mplib-build`](https://hub.docker.com/r/kolinguo/mplib-build).
 
 The script does the following:

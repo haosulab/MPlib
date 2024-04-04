@@ -10,10 +10,12 @@ from . import collision_detection, kinematics, planning
 
 __all__ = [
     "ArticulatedModel",
+    "AttachedBody",
     "PlanningWorld",
     "collision_detection",
     "kinematics",
     "planning",
+    "set_global_seed",
 ]
 
 class ArticulatedModel:
@@ -21,15 +23,45 @@ class ArticulatedModel:
     Supports initialization from URDF and SRDF files, and provides access to
     underlying Pinocchio and FCL models.
     """
+    @staticmethod
+    def create_from_urdf_string(
+        urdf_string: str,
+        srdf_string: str,
+        collision_links: list[
+            tuple[str, list[collision_detection.fcl.CollisionObject]]
+        ],
+        *,
+        gravity: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ] = ...,
+        link_names: list[str] = [],
+        joint_names: list[str] = [],
+        verbose: bool = False,
+    ) -> ArticulatedModel:
+        """
+        Constructs an ArticulatedModel from URDF/SRDF strings and collision links
+
+        :param urdf_string: URDF string (without visual/collision elements for links)
+        :param srdf_string: SRDF string (only disable_collisions element)
+        :param collision_links: Collision link names and the vector of
+            CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
+            ...]``. The collision objects are at the shape's local_pose.
+        :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+        :param link_names: list of links that are considered for planning
+        :param joint_names: list of joints that are considered for planning
+        :param verbose: print debug information. Default: ``False``.
+        :return: a unique_ptr to ArticulatedModel
+        """
     def __init__(
         self,
         urdf_filename: str,
         srdf_filename: str,
+        *,
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
-        link_names: list[str],
-        joint_names: list[str],
+        ] = ...,
+        link_names: list[str] = [],
+        joint_names: list[str] = [],
         convex: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -39,7 +71,7 @@ class ArticulatedModel:
         :param urdf_filename: path to URDF file, can be relative to the current working
             directory
         :param srdf_filename: path to SRDF file, we use it to disable self-collisions
-        :param gravity: gravity vector
+        :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
         :param link_names: list of links that are considered for planning
         :param joint_names: list of joints that are considered for planning
         :param convex: use convex decomposition for collision objects. Default:
@@ -86,6 +118,12 @@ class ArticulatedModel:
 
         :return: dimension of the move group qpos
         """
+    def get_name(self) -> str:
+        """
+        Get name of the articulated model.
+
+        :return: name of the articulated model
+        """
     def get_pinocchio_model(self) -> kinematics.pinocchio.PinocchioModel:
         """
         Get the underlying Pinocchio model.
@@ -129,7 +167,7 @@ class ArticulatedModel:
         Set the move group, i.e. the chain ending in end effector for which to compute
         the forward kinematics for all subsequent queries.
 
-        :param chain: list of links extending to the end effector
+        :param end_effector: name of the end effector link
         """
     @typing.overload
     def set_move_group(self, end_effectors: list[str]) -> None:
@@ -137,7 +175,13 @@ class ArticulatedModel:
         Set the move group but we have multiple end effectors in a chain. I.e., Base -->
         EE1 --> EE2 --> ... --> EEn
 
-        :param end_effectors: names of the end effector link
+        :param end_effectors: list of links extending to the end effector
+        """
+    def set_name(self, name: str) -> None:
+        """
+        Set name of the articulated model.
+
+        @param: name of the articulated model
         """
     def set_qpos(
         self,
@@ -159,242 +203,525 @@ class ArticulatedModel:
         :param srdf: path to SRDF file, can be relative to the current working directory
         """
 
+class AttachedBody:
+    """
+    Object defining bodies that can be attached to robot links. This is useful when
+    handling objects picked up by the robot.
+
+    Mimicking MoveIt2's ``moveit::core::AttachedBody``
+
+    https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1AttachedBody.html
+    """
+    def __init__(
+        self,
+        name: str,
+        object: collision_detection.fcl.CollisionObject,
+        attached_articulation: ArticulatedModel,
+        attached_link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        touch_links: list[str] = [],
+    ) -> None:
+        """
+        Construct an attached body for a specified link.
+
+        :param name: name of the attached body
+        :param object: collision object of the attached body
+        :param attached_articulation: robot articulated model to attach to
+        :param attached_link_id: id of the articulation link to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+        :param touch_links: the link names that the attached body touches
+        """
+    def get_attached_articulation(self) -> ArticulatedModel:
+        """
+        Gets the articulation this body is attached to
+        """
+    def get_attached_link_id(self) -> int:
+        """
+        Gets the articulation this body is attached to
+        """
+    def get_global_pose(self) -> ...:
+        """
+        Gets the global pose of the attached object
+        """
+    def get_name(self) -> str:
+        """
+        Gets the attached object name
+        """
+    def get_object(self) -> collision_detection.fcl.CollisionObject:
+        """
+        Gets the attached object (CollisionObjectPtr)
+        """
+    def get_pose(self) -> ...:
+        """
+        Gets the attached pose (relative pose from attached link to object)
+        """
+    def get_touch_links(self) -> list[str]:
+        """
+        Gets the link names that the attached body touches
+        """
+    def set_pose(
+        self,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Sets the attached pose (relative pose from attached link to object)
+        """
+    def set_touch_links(self, touch_links: list[str]) -> None:
+        """
+        Sets the link names that the attached body touches
+        """
+    def update_pose(self) -> None:
+        """
+        Updates the global pose of the attached object using current state
+        """
+
 class PlanningWorld:
     """
     Planning world for collision checking
+
+    Mimicking MoveIt2's ``planning_scene::PlanningScene``,
+    ``collision_detection::World``, ``moveit::core::RobotState``
+
+    https://moveit.picknik.ai/main/api/html/classplanning__scene_1_1PlanningScene.html
+    https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1World.html
+    https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1RobotState.html
     """
     def __init__(
         self,
         articulations: list[ArticulatedModel],
         articulation_names: list[str],
-        normal_objects: list[collision_detection.fcl.CollisionObject],
-        normal_object_names: list[str],
-        plan_articulation_id: int = 0,
+        normal_objects: list[collision_detection.fcl.CollisionObject] = [],
+        normal_object_names: list[str] = [],
     ) -> None:
         """
-        Constructs a PlanningWorld with given articulations and normal objects
+        Constructs a PlanningWorld with given (planned) articulations and normal objects
 
-        :param articulations: list of articulated models
+        :param articulations: list of planned articulated models
         :param articulation_names: name of the articulated models
         :param normal_objects: list of collision objects that are not articulated
         :param normal_object_names: name of the normal objects
-        :param plan_articulation_id: id of the articulated model that is used for
-            planning
         """
-    def add_articulation(self, model: ArticulatedModel, name: str) -> None:
+    def add_articulation(
+        self, name: str, model: ArticulatedModel, planned: bool = False
+    ) -> None:
         """
-        Add an articulated model to the planning world.
+        Adds an articulation (ArticulatedModelPtr) with given name to world
 
-        :param model: articulated model to be added
         :param name: name of the articulated model
+        :param model: articulated model to be added
+        :param planned: whether the articulation is being planned
         """
-    def add_articulations(
-        self, models: list[ArticulatedModel], names: list[str]
+    def add_normal_object(
+        self, name: str, collision_object: collision_detection.fcl.CollisionObject
     ) -> None:
         """
-        Add a list of articulated models to the planning world.
+        Adds a normal object (CollisionObjectPtr) with given name to world
 
-        :param models: list of articulated models to be added
-        :param names: list of names of the articulated models
+        :param name: name of the collision object
+        :param collision_object: collision object to be added
         """
-    def collide(self, request: collision_detection.fcl.CollisionRequest = ...) -> bool:
-        """
-        Check collision in the planning world.
-
-        :param request: collision request params. Can leave empty for default value
-        :return: ``True`` if collision exists
-        """
-    def collide_full(
-        self, index: int = 0, request: collision_detection.fcl.CollisionRequest = ...
-    ) -> list[collision_detection.WorldCollisionResult]:
-        """
-        Check collision between the articulated model and all objects.
-
-        :param index: index of the articulated model
-        :param request: collision request params. Can leave empty for default value
-        :return: List of WorldCollisionResult objects
-        """
-    def collide_with_others(
-        self, index: int = 0, request: collision_detection.fcl.CollisionRequest = ...
-    ) -> list[collision_detection.WorldCollisionResult]:
-        """
-        Check collision between the articulated model and other objects.
-
-        :param index: index of the articulated model
-        :param request: collision request params. Can leave empty for default value
-        :return: List of WorldCollisionResult objects
-        """
-    def get_articulation_names(self) -> list[str]:
-        """
-        Get the names of articulated models.
-
-        :return: list of names of articulated models
-        """
-    def get_articulations(self) -> list[ArticulatedModel]:
-        """
-        Get the list of articulated models.
-
-        :return: list of articulated models
-        """
-    def get_normal_object_names(self) -> list[str]:
-        """
-        Get the names of non-articulated collision objects.
-
-        :return: list of names of non-articulated collision objects
-        """
-    def get_normal_objects(self) -> list[collision_detection.fcl.CollisionObject]:
-        """
-        Get the list of non-articulated collision objects.
-
-        :return: list of non-articulated collision objects
-        """
-    def print_attached_tool_pose(self) -> None:
-        """
-        Print the pose of the attached tool.
-        """
-    def remove_attach(self) -> None:
-        """
-        Remove attach object so there won't be anything on the end effector when
-        ``use_attach`` is set to ``True`` again
-        """
-    def remove_normal_object(self, name: str) -> bool:
-        """
-        Remove am non-articulated object
-
-        :param name: name of the non-articulated collision object
-        :return: ``True`` if the item exists and ``False`` otherwise
-        """
-    def self_collide(
-        self, index: int = 0, request: collision_detection.fcl.CollisionRequest = ...
-    ) -> list[collision_detection.WorldCollisionResult]:
-        """
-        Check collision between the articulated model and itself.
-
-        :param index: index of the articulated model
-        :param request: collision request params. Can leave empty for default value
-        :return: List of WorldCollisionResult objects
-        """
-    def set_normal_object(
-        self, collision_object: str, name: collision_detection.fcl.CollisionObject
-    ) -> None:
-        """
-        Add a non-articulated collision object to the planning world.
-
-        :param name: name of the non-articulated collision object
-        :param collision_object: the non-articulated collision object to be added
-        """
-    def set_qpos(
+    def add_point_cloud(
         self,
-        index: int,
-        qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
+        name: str,
+        vertices: numpy.ndarray[
+            tuple[M, typing.Literal[3]], numpy.dtype[numpy.float64]
+        ],
+        resolution: float = 0.01,
     ) -> None:
         """
-        Set the joint qpos of the articulated model.
+        Adds a point cloud as a collision object with given name to world
 
-        :param index: index of the articulated model
-        :param qpos: joint angles of the *movegroup only*
+        :param name: name of the point cloud collision object
+        :param vertices: point cloud vertices matrix
+        :param resolution: resolution of the point in ``octomap::OcTree``
         """
-    def set_qpos_all(
-        self,
-        qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
-    ) -> None:
-        """
-        Set the joint qpos of all articulated models.
-
-        :param qpos: joint angles of all the models (*movegroup only*)
-        """
-    def set_use_attach(self, use: bool) -> None:
-        """
-        Set whether to use attached tool for collision checking.
-
-        :param use: whether to use attached tool
-        """
-    def set_use_point_cloud(self, use: bool) -> None:
-        """
-        Set whether to use point cloud for collision checking.
-
-        :param use: whether to use point cloud
-        """
-    def update_attached_box(
+    def attach_box(
         self,
         size: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
         ],
+        art_name: str,
         link_id: int,
         pose: numpy.ndarray[
             tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
         ],
     ) -> None:
         """
-        Add a box as the attached tool.
+        Attaches given box to specified link of articulation (auto touch_links)
 
-        :param size: size of the box, [size_x, size_y, size_z]
-        :param link_id: link id of the attached box
-        :param pose: pose of the attached box w.r.t. the link it's attached to. [x, y,
-            z, qw, qx, qy, qz]
+        :param size: box side length
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :param pose: attached pose (relative pose from attached link to object)
         """
-    def update_attached_mesh(
+    def attach_mesh(
         self,
         mesh_path: str,
+        art_name: str,
         link_id: int,
         pose: numpy.ndarray[
             tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
         ],
     ) -> None:
         """
-        Add a mesh as the attached tool.
+        Attaches given mesh to specified link of articulation (auto touch_links)
 
-        :param mesh_path: path to the mesh file
-        :param link_id: link id of the attached mesh
-        :param pose: pose of the attached mesh w.r.t. the link it's attached to. [x, y,
-            z, qw, qx, qy, qz]
+        :param mesh_path: path to a mesh file
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :param pose: attached pose (relative pose from attached link to object)
         """
-    def update_attached_sphere(
+    @typing.overload
+    def attach_object(
+        self, name: str, art_name: str, link_id: int, touch_links: list[str]
+    ) -> None:
+        """
+        Attaches existing normal object to specified link of articulation at its current
+        pose. If the object is currently attached, disallow collision between the object
+        and previous touch_links. Updates acm_ to allow collisions between attached
+        object and touch_links.
+
+        :param name: normal object name to attach
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :param touch_links: link names that the attached object touches
+        :raises ValueError: if normal object with given name does not exist or if
+            planned articulation with given name does not exist
+        """
+    @typing.overload
+    def attach_object(self, name: str, art_name: str, link_id: int) -> None:
+        """
+        Attaches existing normal object to specified link of articulation at its current
+        pose. If the object is not currently attached, automatically sets touch_links as
+        the name of self links that collide with the object in the current state.
+        Updates acm_ to allow collisions between attached object and touch_links. If the
+        object is already attached, the touch_links of the attached object is preserved
+        and acm_ remains unchanged.
+
+        :param name: normal object name to attach
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :raises ValueError: if normal object with given name does not exist or if
+            planned articulation with given name does not exist
+        """
+    @typing.overload
+    def attach_object(
         self,
-        radius: float,
+        name: str,
+        art_name: str,
+        link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        touch_links: list[str],
+    ) -> None:
+        """
+        Attaches existing normal object to specified link of articulation at given pose.
+        If the object is currently attached, disallow collision between the object and
+        previous touch_links. Updates acm_ to allow collisions between attached object
+        and touch_links.
+
+        :param name: normal object name to attach
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+        :param touch_links: link names that the attached object touches
+        :raises ValueError: if normal object with given name does not exist or if
+            planned articulation with given name does not exist
+        """
+    @typing.overload
+    def attach_object(
+        self,
+        name: str,
+        art_name: str,
         link_id: int,
         pose: numpy.ndarray[
             tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
         ],
     ) -> None:
         """
-        Add a sphere as the attached tool.
+        Attaches existing normal object to specified link of articulation at given pose.
+        If the object is not currently attached, automatically sets touch_links as the
+        name of self links that collide with the object in the current state. Updates
+        acm_ to allow collisions between attached object and touch_links. If the object
+        is already attached, the touch_links of the attached object is preserved and
+        acm_ remains unchanged.
 
-        :param radius: radius of the sphere
-        :param link_id: link id of the attached sphere
-        :param pose: pose of the attached sphere w.r.t. the link it's attached to. [x,
-            y, z, qw, qx, qy, qz]
+        :param name: normal object name to attach
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+        :raises ValueError: if normal object with given name does not exist or if
+            planned articulation with given name does not exist
         """
-    def update_attached_tool(
+    @typing.overload
+    def attach_object(
         self,
+        name: str,
         p_geom: collision_detection.fcl.CollisionGeometry,
+        art_name: str,
+        link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        touch_links: list[str],
+    ) -> None:
+        """
+        Attaches given object (w/ p_geom) to specified link of articulation at given
+        pose. This is done by removing normal object and then adding and attaching
+        object. As a result, all previous acm_ entries with the object are removed
+
+        :param name: normal object name to attach
+        :param p_geom: pointer to a CollisionGeometry object
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+        :param touch_links: link names that the attached object touches
+        """
+    @typing.overload
+    def attach_object(
+        self,
+        name: str,
+        p_geom: collision_detection.fcl.CollisionGeometry,
+        art_name: str,
         link_id: int,
         pose: numpy.ndarray[
             tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
         ],
     ) -> None:
         """
-        Attach or update the attached object
+        Attaches given object (w/ p_geom) to specified link of articulation at given
+        pose. This is done by removing normal object and then adding and attaching
+        object. As a result, all previous acm_ entries with the object are removed.
+        Automatically sets touch_links as the name of self links that collide with the
+        object in the current state (auto touch_links).
 
-        :param p_geom: fcl collision geometry of the attached tool
-        :param link_id: id of the link to which the object is attached
-        :param pose: pose of the attached object w.r.t. the link it's attached to. [x,
-            y, z, qw, qx, qy, qz]
+        :param name: normal object name to attach
+        :param p_geom: pointer to a CollisionGeometry object
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :param pose: attached pose (relative pose from attached link to object)
         """
-    def update_point_cloud(
+    def attach_sphere(
         self,
-        vertices: numpy.ndarray[
-            tuple[M, typing.Literal[3]], numpy.dtype[numpy.float64]
-        ],
         radius: float,
+        art_name: str,
+        link_id: int,
+        pose: numpy.ndarray[
+            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
     ) -> None:
         """
-        Update the point cloud for collision checking.
+        Attaches given sphere to specified link of articulation (auto touch_links)
 
-        :param vertices: vertices of the point cloud
-        :param radius: radius of each point in the point cloud
+        :param radius: sphere radius
+        :param art_name: name of the planned articulation to attach to
+        :param link_id: index of the link of the planned articulation to attach to
+        :param pose: attached pose (relative pose from attached link to object)
         """
-    @property
-    def use_attach(self) -> bool: ...
-    @property
-    def use_point_cloud(self) -> bool: ...
+    def collide(self, request: collision_detection.fcl.CollisionRequest = ...) -> bool:
+        """
+        Check full collision and return only a boolean indicating collision
+
+        :param request: collision request params.
+        :return: ``True`` if collision exists
+        """
+    def collide_full(
+        self, request: collision_detection.fcl.CollisionRequest = ...
+    ) -> list[collision_detection.WorldCollisionResult]:
+        """
+        Check full collision (calls selfCollide() and collideWithOthers())
+
+        :param request: collision request params.
+        :return: List of WorldCollisionResult objects
+        """
+    def collide_with_others(
+        self, request: collision_detection.fcl.CollisionRequest = ...
+    ) -> list[collision_detection.WorldCollisionResult]:
+        """
+        Check collision with other scene bodies (planned articulations with attached
+        objects collide against unplanned articulations and scene objects)
+
+        :param request: collision request params.
+        :return: List of WorldCollisionResult objects
+        """
+    def detach_object(self, name: str, also_remove: bool = False) -> bool:
+        """
+        Detaches object with given name. Updates acm_ to disallow collision between the
+        object and touch_links.
+
+        :param name: normal object name to detach
+        :param also_remove: whether to also remove object from world
+        :return: ``True`` if success, ``False`` if the object with given name is not
+            attached
+        """
+    def distance(self, request: collision_detection.fcl.DistanceRequest = ...) -> float:
+        """
+        Returns the minimum distance-to-collision in current state
+
+        :param request: distance request params.
+        :return: minimum distance-to-collision
+        """
+    def distance_full(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
+        """
+        Compute the min distance to collision (calls distanceSelf() and
+        distanceOthers())
+
+        :param request: distance request params.
+        :return: a WorldDistanceResult object
+        """
+    def distance_with_others(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
+        """
+        Compute the min distance between a robot and the world
+
+        :param request: distance request params.
+        :return: a WorldDistanceResult object
+        """
+    def get_allowed_collision_matrix(
+        self,
+    ) -> collision_detection.AllowedCollisionMatrix:
+        """
+        Get the current allowed collision matrix
+        """
+    def get_articulation(self, name: str) -> ArticulatedModel:
+        """
+        Gets the articulation (ArticulatedModelPtr) with given name
+
+        :param name: name of the articulated model
+        :return: the articulated model with given name or ``None`` if not found.
+        """
+    def get_articulation_names(self) -> list[str]:
+        """
+        Gets names of all articulations in world (unordered)
+        """
+    def get_attached_object(self, name: str) -> AttachedBody:
+        """
+        Gets the attached body (AttachedBodyPtr) with given name
+
+        :param name: name of the attached body
+        :return: the attached body with given name or ``None`` if not found.
+        """
+    def get_normal_object(self, name: str) -> collision_detection.fcl.CollisionObject:
+        """
+        Gets the normal object (CollisionObjectPtr) with given name
+
+        :param name: name of the normal object
+        :return: the normal object with given name or ``None`` if not found.
+        """
+    def get_normal_object_names(self) -> list[str]:
+        """
+        Gets names of all normal objects in world (unordered)
+        """
+    def get_planned_articulations(self) -> list[ArticulatedModel]:
+        """
+        Gets all planned articulations (ArticulatedModelPtr)
+        """
+    def has_articulation(self, name: str) -> bool:
+        """
+        Check whether the articulation with given name exists
+
+        :param name: name of the articulated model
+        :return: ``True`` if exists, ``False`` otherwise.
+        """
+    def has_normal_object(self, name: str) -> bool:
+        """
+        Check whether the normal object with given name exists
+
+        :param name: name of the normal object
+        :return: ``True`` if exists, ``False`` otherwise.
+        """
+    def is_articulation_planned(self, name: str) -> bool:
+        """
+        Check whether the articulation with given name is being planned
+
+        :param name: name of the articulated model
+        :return: ``True`` if exists, ``False`` otherwise.
+        """
+    def is_normal_object_attached(self, name: str) -> bool:
+        """
+        Check whether normal object with given name is attached
+
+        :param name: name of the normal object
+        :return: ``True`` if it is attached, ``False`` otherwise.
+        """
+    def print_attached_body_pose(self) -> None:
+        """
+        Prints global pose of all attached bodies
+        """
+    def remove_articulation(self, name: str) -> bool:
+        """
+        Removes the articulation with given name if exists. Updates acm_
+
+        :param name: name of the articulated model
+        :return: ``True`` if success, ``False`` if articulation with given name does not
+            exist
+        """
+    def remove_normal_object(self, name: str) -> bool:
+        """
+        Removes (and detaches) the collision object with given name if exists. Updates
+        acm_
+
+        :param name: name of the non-articulated collision object
+        :return: ``True`` if success, ``False`` if normal object with given name does
+            not exist
+        """
+    def self_collide(
+        self, request: collision_detection.fcl.CollisionRequest = ...
+    ) -> list[collision_detection.WorldCollisionResult]:
+        """
+        Check self collision (including planned articulation self-collision, planned
+        articulation-attach collision, attach-attach collision)
+
+        :param request: collision request params.
+        :return: List of WorldCollisionResult objects
+        """
+    def self_distance(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
+        """
+        Get the min distance to self-collision given the robot in current state
+
+        :param request: distance request params.
+        :return: a WorldDistanceResult object
+        """
+    def set_articulation_planned(self, name: str, planned: bool) -> None:
+        """
+        Sets articulation with given name as being planned
+
+        :param name: name of the articulated model
+        :param planned: whether the articulation is being planned
+        :raises ValueError: if the articulation with given name does not exist
+        """
+    def set_qpos(
+        self,
+        name: str,
+        qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
+    ) -> None:
+        """
+        Set qpos of articulation with given name
+
+        :param name: name of the articulated model
+        :param qpos: joint angles of the *movegroup only* // FIXME: double check
+        """
+    def set_qpos_all(
+        self,
+        state: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
+    ) -> None:
+        """
+        Set qpos of all planned articulations
+        """
+
+def set_global_seed(seed: int) -> None:
+    """
+    Sets the global seed for MPlib (``std::srand()``, OMPL's RNG, and FCL's RNG).
+
+    :param seed: the random seed value
+    """

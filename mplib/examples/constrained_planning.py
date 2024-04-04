@@ -29,7 +29,7 @@ class ConstrainedPlanningDemo(DemoSetup):
         all_pts = np.concatenate(
             [points + [-0.65, -0.1, 0.4], points + [0.55, 0, 0.1]], axis=0
         )
-        self.planner.update_point_cloud(all_pts, radius=0.02)
+        self.planner.update_point_cloud(all_pts, resolution=0.02)
         return
 
     def get_eef_z(self):
@@ -68,7 +68,7 @@ class ConstrainedPlanningDemo(DemoSetup):
 
         # constraint jacobian ankor
         def j(x, out):
-            full_qpos = self.planner.pad_qpos(x)
+            full_qpos = self.planner.pad_move_group_qpos(x)
             jac = self.planner.robot.get_pinocchio_model().compute_single_link_jacobian(
                 full_qpos, len(self.planner.move_group_joint_indices) - 1
             )
@@ -112,9 +112,6 @@ class ConstrainedPlanningDemo(DemoSetup):
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,
-                use_point_cloud=True,
-                use_attach=False,
-                planner_name="RRTConnect",
                 constraint_function=self.make_f(),
                 constraint_jacobian=self.make_j(),
                 constraint_tolerance=0.05,
@@ -134,10 +131,7 @@ class ConstrainedPlanningDemo(DemoSetup):
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,
-                use_point_cloud=True,
-                use_attach=False,
-                planner_name="RRTConnect",
-                no_simplification=True,
+                simplify=False,
             )
             if result["status"] != "Success":
                 print(result["status"])

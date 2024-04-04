@@ -1,8 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "mplib/collision_detection/fcl/types.h"
 #include "mplib/collision_detection/types.h"
 #include "mplib/kinematics/types.h"
 #include "mplib/macros/class_forward.h"
@@ -20,6 +23,10 @@ MPLIB_CLASS_TEMPLATE_FORWARD(ArticulatedModelTpl);
  */
 template <typename S>
 class ArticulatedModelTpl {
+ private:
+  // Used for protecting public default constructor (passkey idiom)
+  struct Secret;
+
  public:
   /**
    * Construct an articulated model from URDF and SRDF files.
@@ -27,17 +34,60 @@ class ArticulatedModelTpl {
    * @param urdf_filename: path to URDF file, can be relative to the current working
    *  directory
    * @param srdf_filename: path to SRDF file, we use it to disable self-collisions
-   * @param gravity: gravity vector
+   * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
    * @param link_names: list of links that are considered for planning
    * @param joint_names: list of joints that are considered for planning
    * @param convex: use convex decomposition for collision objects. Default: ``false``.
    * @param verbose: print debug information. Default: ``false``.
    */
   ArticulatedModelTpl(const std::string &urdf_filename,
-                      const std::string &srdf_filename, const Vector3<S> &gravity,
+                      const std::string &srdf_filename,
+                      const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
                       const std::vector<std::string> &link_names = {},
                       const std::vector<std::string> &joint_names = {},
                       bool convex = false, bool verbose = false);
+
+  /**
+   * Dummy default constructor that is protected by Secret.
+   * Used by ``createFromURDFString()`` only
+   */
+  ArticulatedModelTpl(Secret secret) {}
+
+  /**
+   * Constructs an ArticulatedModel from URDF/SRDF strings and collision links
+   *
+   * @param urdf_string: URDF string (without visual/collision elements for links)
+   * @param srdf_string: SRDF string (only disable_collisions element)
+   * @param collision_links: Collision link names and the vector of CollisionObjectPtr.
+   *    Format is: ``[(link_name, [CollisionObjectPtr, ...]), ...]``.
+   *    The collision objects are at the shape's local_pose.
+   * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+   * @param link_names: list of links that are considered for planning
+   * @param joint_names: list of joints that are considered for planning
+   * @param verbose: print debug information. Default: ``false``.
+   * @return: a unique_ptr to ArticulatedModel
+   */
+  static std::unique_ptr<ArticulatedModelTpl<S>> createFromURDFString(
+      const std::string &urdf_string, const std::string &srdf_string,
+      const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
+          &collision_links,
+      const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
+      const std::vector<std::string> &link_names = {},
+      const std::vector<std::string> &joint_names = {}, bool verbose = false);
+
+  /**
+   * Get name of the articulated model.
+   *
+   * @return: name of the articulated model
+   */
+  const std::string &getName() const { return name_; }
+
+  /**
+   * Set name of the articulated model.
+   *
+   * @param: name of the articulated model
+   */
+  void setName(const std::string &name) { name_ = name; }
 
   /**
    * Get the underlying Pinocchio model.
@@ -100,7 +150,7 @@ class ArticulatedModelTpl {
    * Set the move group, i.e. the chain ending in end effector for which to compute the
    * forward kinematics for all subsequent queries.
    *
-   * @param chain: list of links extending to the end effector
+   * @param end_effector: name of the end effector link
    */
   void setMoveGroup(const std::string &end_effector);
 
@@ -108,7 +158,7 @@ class ArticulatedModelTpl {
    * Set the move group but we have multiple end effectors in a chain.
    * I.e., Base --> EE1 --> EE2 --> ... --> EEn
    *
-   * @param end_effectors: names of the end effector link
+   * @param end_effectors: list of links extending to the end effector
    */
   void setMoveGroup(const std::vector<std::string> &end_effectors);
 
@@ -160,6 +210,13 @@ class ArticulatedModelTpl {
   }
 
  private:
+  // Used for protecting public default constructor (passkey idiom)
+  struct Secret {
+    explicit Secret() = default;
+  };
+
+  std::string name_;
+
   kinematics::PinocchioModelTplPtr<S> pinocchio_model_;
   collision_detection::FCLModelTplPtr<S> fcl_model_;
 
@@ -170,13 +227,13 @@ class ArticulatedModelTpl {
   // The planning world only update the state in planning group.
   std::vector<std::string> move_group_end_effectors_;
   std::vector<size_t> move_group_user_joints_;
-  size_t move_group_qpos_dim_;
+  size_t move_group_qpos_dim_ {};
   VectorX<S> current_qpos_;
 
   // the base pose of the robot
   Isometry3<S> base_pose_;
 
-  bool verbose_;
+  bool verbose_ {};
 };
 
 // Common Type Alias ===================================================================

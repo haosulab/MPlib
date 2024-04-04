@@ -7,10 +7,25 @@
 
 namespace mplib::collision_detection::fcl {
 
+/**
+ * Load a triangle mesh from mesh_path as a non-convex collision object.
+ *
+ * @param mesh_path: path to the mesh
+ * @param scale: mesh scale factor
+ * @return: a shared_ptr to an fcl::BVHModel_OBBRSS<S> collision object
+ */
 template <typename S>
 fcl::BVHModel_OBBRSSPtr<S> loadMeshAsBVH(const std::string &mesh_path,
                                          const Vector3<S> &scale);
 
+/**
+ * Load a convex mesh from mesh_path.
+ *
+ * @param mesh_path: path to the mesh
+ * @param scale: mesh scale factor
+ * @return: a shared_ptr to an fcl::Convex<S> collision object
+ * @throws std::runtime_error if the mesh is not convex.
+ */
 template <typename S>
 fcl::ConvexPtr<S> loadMeshAsConvex(const std::string &mesh_path,
                                    const Vector3<S> &scale);

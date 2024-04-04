@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -50,6 +51,22 @@ class FCLModelTpl {
               bool verbose = false);
 
   /**
+   * Constructs a FCLModel from URDF string and collision links
+   *
+   * @param urdf_string: URDF string (without visual/collision elements for links)
+   * @param collision_links: Collision link names and the vector of CollisionObjectPtr.
+   *    Format is: ``[(link_name, [CollisionObjectPtr, ...]), ...]``.
+   *    The collision objects are at the shape's local_pose.
+   * @param verbose: print debug information. Default: ``false``.
+   * @return: a unique_ptr to FCLModel
+   */
+  static std::unique_ptr<FCLModelTpl<S>> createFromURDFString(
+      const std::string &urdf_string,
+      const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
+          &collision_links,
+      bool verbose = false);
+
+  /**
    * Get the collision objects of the FCL model.
    *
    * @return: all collision objects of the FCL model
@@ -90,12 +107,19 @@ class FCLModelTpl {
   void setLinkOrder(const std::vector<std::string> &names);
 
   /**
-   * Remove collision pairs from SRDF.
+   * Remove collision pairs from SRDF file.
    *
    * @param srdf_filename: path to SRDF file, can be relative to the current working
    *  directory
    */
   void removeCollisionPairsFromSRDF(const std::string &srdf_filename);
+
+  /**
+   * Remove collision pairs from SRDF string.
+   *
+   * @param srdf_string: SRDF string (only disable_collisions element)
+   */
+  void removeCollisionPairsFromSRDFString(const std::string &srdf_string);
 
   /**
    * Update the collision objects of the FCL model.
@@ -134,18 +158,18 @@ class FCLModelTpl {
 
   urdf::ModelInterfaceSharedPtr urdf_model_;
   std::string package_dir_;
-  bool use_convex_;
+  bool use_convex_ {};
 
   std::vector<fcl::CollisionObjectPtr<S>> collision_objects_;
   std::vector<std::string> collision_link_names_;
   std::vector<std::string> parent_link_names_;
-  std::vector<Isometry3<S>> collision_origin2link_poses;
+  std::vector<Isometry3<S>> collision_origin2link_poses_;
   std::vector<std::pair<size_t, size_t>> collision_pairs_;
 
   std::vector<std::string> user_link_names_;
   std::vector<size_t> collision_link_user_indices_;
 
-  bool verbose_;
+  bool verbose_ {};
 };
 
 // Common Type Alias ===================================================================

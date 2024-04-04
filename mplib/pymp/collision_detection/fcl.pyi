@@ -22,14 +22,17 @@ __all__ = [
     "Cylinder",
     "DistanceRequest",
     "DistanceResult",
+    "Ellipsoid",
     "FCLModel",
     "GJKSolverType",
     "GST_INDEP",
     "GST_LIBCCD",
+    "Halfspace",
     "OcTree",
     "Plane",
     "Sphere",
     "Triangle",
+    "TriangleP",
     "collide",
     "distance",
     "load_mesh_as_BVH",
@@ -513,14 +516,64 @@ class DistanceResult:
         tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
     ]: ...
 
+class Ellipsoid(CollisionGeometry):
+    """
+    Ellipsoid collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a ellipsoid
+    geometry.
+    """
+
+    radii: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    @typing.overload
+    def __init__(self, a: float, b: float, c: float) -> None:
+        """
+        Construct a ellipsoid with given parameters.
+
+        :param a: length of the ``x`` semi-axis
+        :param b: length of the ``y`` semi-axis
+        :param c: length of the ``z`` semi-axis
+        """
+    @typing.overload
+    def __init__(
+        self,
+        radii: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Construct a ellipsoid with given parameters.
+
+        :param radii: vector of the length of the ``x``, ``y``, and ``z`` semi-axes
+        """
+
 class FCLModel:
     """
     FCL collision model of an articulation
 
     See https://github.com/flexible-collision-library/fcl
     """
+    @staticmethod
+    def create_from_urdf_string(
+        urdf_string: str,
+        collision_links: list[tuple[str, list[CollisionObject]]],
+        *,
+        verbose: bool = False,
+    ) -> FCLModel:
+        """
+        Constructs a FCLModel from URDF string and collision links
+
+        :param urdf_string: URDF string (without visual/collision elements for links)
+        :param collision_links: Collision link names and the vector of
+            CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
+            ...]``. The collision objects are at the shape's local_pose.
+        :param verbose: print debug information. Default: ``False``.
+        :return: a unique_ptr to FCLModel
+        """
     def __init__(
-        self, urdf_filename: str, convex: bool = False, verbose: bool = False
+        self, urdf_filename: str, *, convex: bool = False, verbose: bool = False
     ) -> None:
         """
         Construct an FCL model from URDF and SRDF files.
@@ -562,7 +615,7 @@ class FCLModel:
         """
     def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None:
         """
-        Remove collision pairs from SRDF.
+        Remove collision pairs from SRDF file.
 
         :param srdf_filename: path to SRDF file, can be relative to the current working
             directory
@@ -616,6 +669,65 @@ class GJKSolverType:
     @property
     def value(self) -> int: ...
 
+class Halfspace(CollisionGeometry):
+    """
+    Infinite halfspace collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a halfspace geometry.
+    """
+
+    d: float
+    n: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    @typing.overload
+    def __init__(
+        self,
+        n: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        d: float,
+    ) -> None:
+        """
+        Construct a halfspace with given normal direction and offset where ``n * p = d``.
+        Points in the negative side of the separation plane ``{p | n * p < d}`` are inside
+        the half space (will have collision).
+
+        :param n: normal direction of the halfspace
+        :param d: offset of the halfspace
+        """
+    @typing.overload
+    def __init__(self, a: float, b: float, c: float, d: float) -> None:
+        """
+        Construct a halfspace with given halfspace parameters where ``ax + by + cz = d``.
+        Points in the negative side of the separation plane ``{(x, y, z) | ax + by + cz < d}``
+        are inside the half space (will have collision).
+        """
+    def distance(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> float:
+        """
+        Compute the distance of a point to the halfspace as ``abs(n * p - d)``.
+
+        :param p: a point in 3D space
+        :return: distance of the point to the halfspace
+        """
+    def signed_distance(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> float:
+        """
+        Compute the signed distance of a point to the halfspace as ``n * p - d``.
+
+        :param p: a point in 3D space
+        :return: signed distance of the point to the halfspace
+        """
+
 class OcTree(CollisionGeometry):
     """
     OcTree collision geometry.
@@ -666,7 +778,7 @@ class Plane(CollisionGeometry):
         d: float,
     ) -> None:
         """
-        Construct a plane with given normal direction and offset where ``n * v = d``.
+        Construct a plane with given normal direction and offset where ``n * p = d``.
 
         :param n: normal direction of the plane
         :param d: offset of the plane
@@ -675,6 +787,30 @@ class Plane(CollisionGeometry):
     def __init__(self, a: float, b: float, c: float, d: float) -> None:
         """
         Construct a plane with given plane parameters where ``ax + by + cz = d``.
+        """
+    def distance(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> float:
+        """
+        Compute the distance of a point to the plane as ``abs(n * p - d)``.
+
+        :param p: a point in 3D space
+        :return: distance of the point to the plane
+        """
+    def signed_distance(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> float:
+        """
+        Compute the signed distance of a point to the plane as ``n * p - d``.
+
+        :param p: a point in 3D space
+        :return: signed distance of the point to the plane
         """
 
 class Sphere(CollisionGeometry):
@@ -707,6 +843,42 @@ class Triangle:
     def get(self, arg0: int) -> int: ...
     def set(self, arg0: int, arg1: int, arg2: int) -> None: ...
 
+class TriangleP(CollisionGeometry):
+    """
+    TriangleP collision geometry.
+
+    Inheriting from CollisionGeometry, this class specializes to a triangleP geometry.
+    """
+
+    a: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    b: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    c: numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]
+    def __init__(
+        self,
+        a: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        b: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+        c: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Construct a set of triangles from vectors of point coordinates.
+
+        :param a: vector of point ``x`` coordinates
+        :param b: vector of point ``y`` coordinates
+        :param c: vector of point ``z`` coordinates
+        """
+
 def collide(
     arg0: CollisionObject, arg1: CollisionObject, arg2: CollisionRequest
 ) -> CollisionResult: ...
@@ -718,13 +890,29 @@ def load_mesh_as_BVH(
     scale: numpy.ndarray[
         tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
     ],
-) -> BVHModel: ...
+) -> BVHModel:
+    """
+    Load a triangle mesh from mesh_path as a non-convex collision object.
+
+    :param mesh_path: path to the mesh
+    :param scale: mesh scale factor
+    :return: a shared_ptr to an fcl::BVHModel_OBBRSS<S> collision object
+    """
+
 def load_mesh_as_Convex(
     mesh_path: str,
     scale: numpy.ndarray[
         tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
     ],
-) -> Convex: ...
+) -> Convex:
+    """
+    Load a convex mesh from mesh_path.
+
+    :param mesh_path: path to the mesh
+    :param scale: mesh scale factor
+    :return: a shared_ptr to an fcl::Convex<S> collision object
+    :raises RuntimeError: if the mesh is not convex.
+    """
 
 GST_INDEP: GJKSolverType  # value = <GJKSolverType.GST_INDEP: 1>
 GST_LIBCCD: GJKSolverType  # value = <GJKSolverType.GST_LIBCCD: 0>

@@ -39,14 +39,13 @@ Plan a path from start state to goal states.
 :param start_state: start state of the movegroup joints
 :param goal_states: list of goal states. Planner will stop when one of them is
     reached
-:param planner_name: name of the planner pick between {RRTConnect, RRTstar}
 :param time: planning time limit
 :param range: planning range (for RRT family of planners and represents the
     maximum step size)
 :param fixed_joints: list of fixed joints not considered in planning for this
     particular call
-:param no_simplification: if ``True``, the path will not be simplified
-    (constained planning does not support simplification)
+:param simplify: whether the path will be simplified by calling
+    ``_simplifyPath()`` (constained planning does not support simplification)
 :param constraint_function: a R^d to R^1 function that evals to 0 when
     constraint is satisfied. Constraint ignored if fixed joints not empty
 :param constraint_jacobian: the jacobian of the constraint w.r.t. the joint

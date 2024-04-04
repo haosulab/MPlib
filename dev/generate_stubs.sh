@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Python version to build wheels and generate stubs / docs
+# Python version to build wheels and generate stubs
 PY_VERSION=310
-# Docker image name to install wheel and generate stubs / docs
+# Docker image name to install wheel and generate stubs
 IMGNAME="kolinguo/mplib-build:latest"
 
 ############################################################
@@ -54,12 +54,14 @@ BUILD_STUB_CMD="\
   && python3 -m pip install wheelhouse/mplib*.whl \
   && python3 dev/stubgen.py \
   && python3 -m pip install ruff \
-  && ruff check --select I --fix ./stubs \
-  && ruff format ./stubs
+  && ruff check --no-cache --select I --fix ./stubs \
+  && ruff format --no-cache ./stubs \
+  && chown -R \${USER_UID}:\${USER_UID} ./stubs
 "
 
 echo_info "Building stubs in docker '${IMGNAME}'"
 docker run -it --rm \
+  -e USER_UID="$UID" \
   -v "$REPO_DIR":/${REPO_NAME} \
   "$IMGNAME" \
   bash -c "$BUILD_STUB_CMD"

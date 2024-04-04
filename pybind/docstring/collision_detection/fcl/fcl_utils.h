@@ -26,11 +26,20 @@
 
 static const char *__doc_mplib_collision_detection_fcl_loadMeshAsBVH =
 R"doc(
-)doc";
+Load a triangle mesh from mesh_path as a non-convex collision object.
+
+:param mesh_path: path to the mesh
+:param scale: mesh scale factor
+:return: a shared_ptr to an fcl::BVHModel_OBBRSS<S> collision object)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_loadMeshAsConvex =
 R"doc(
-)doc";
+Load a convex mesh from mesh_path.
+
+:param mesh_path: path to the mesh
+:param scale: mesh scale factor
+:return: a shared_ptr to an fcl::Convex<S> collision object
+:raises RuntimeError: if the mesh is not convex.)doc";
 
 /* ----- Begin of custom docstring section ----- */
 

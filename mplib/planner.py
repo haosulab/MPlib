@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from typing import Optional, Sequence
 
 import numpy as np
@@ -10,6 +11,7 @@ import toppra.constraint as constraint
 from transforms3d.quaternions import mat2quat, quat2mat
 
 from mplib.pymp import ArticulatedModel, PlanningWorld
+from mplib.pymp.collision_detection import WorldCollisionResult
 from mplib.pymp.planning import ompl
 
 
@@ -66,9 +68,8 @@ class Planner:
         self.robot = ArticulatedModel(
             self.urdf,
             self.srdf,
-            [0, 0, -9.81],
-            user_link_names,
-            user_joint_names,
+            link_names=user_link_names,
+            joint_names=user_joint_names,
             convex=kwargs.get("convex", False),
             verbose=False,
         )
@@ -82,6 +83,7 @@ class Planner:
             kwargs.get("normal_objects", []),
             kwargs.get("normal_object_names", []),
         )
+        self.acm = self.planning_world.get_allowed_collision_matrix()
 
         self.joint_name_2_idx = {}
         for i, joint in enumerate(self.user_joint_names):
@@ -127,7 +129,11 @@ class Planner:
             f"number of total joints ({len(self.joint_limits)})"
         )
 
-        self.planning_world = PlanningWorld([self.robot], ["robot"], [], [])
+        # Mask for joints that have equivalent values (revolute joints with range > 2pi)
+        self.equiv_joint_mask = [
+            t.startswith("JointModelR") for t in self.joint_types
+        ] & (self.joint_limits[:, 1] - self.joint_limits[:, 0] > 2 * np.pi)
+
         self.planner = ompl.OMPLPlanner(world=self.planning_world)
 
     def replace_package_keyword(self, package_keyword_replacement):
@@ -214,199 +220,217 @@ class Planner:
             np.linalg.norm(q1 - q2), np.linalg.norm(q1 + q2)
         )
 
-    def wrap_joint_limit(self, q) -> bool:
+    def wrap_joint_limit(self, qpos: np.ndarray) -> bool:
         """
-        Checks if the joint configuration is within the joint limits.
+        Checks if the joint configuration can be wrapped to be within the joint limits.
         For revolute joints, the joint angle is wrapped to be within [q_min, q_min+2*pi)
 
-        Args:
-            q: joint configuration, angles of revolute joints might be modified
-
-        Returns:
-            True if q can be wrapped to be within the joint limits
+        :param qpos: joint positions, angles of revolute joints might be modified.
+            If not within_limits (returns False), qpos might not be fully wrapped.
+        :return: whether qpos can be wrapped to be within the joint limits.
         """
-        n = len(q)
-        flag = True
-        for i in range(n):
-            if self.joint_types[i].startswith("JointModelR"):
-                if -1e-3 <= q[i] - self.joint_limits[i][0] < 0:
+        for i, (q, joint_type, qlimit) in enumerate(
+            zip(qpos, self.joint_types, self.joint_limits)
+        ):
+            if joint_type.startswith("JointModelR"):  # revolute joint
+                if -1e-3 <= q - qlimit[0] < 0:
                     continue
-                q[i] -= (
-                    2 * np.pi * np.floor((q[i] - self.joint_limits[i][0]) / (2 * np.pi))
-                )
-                if q[i] > self.joint_limits[i][1] + 1e-3:
-                    flag = False
+                q -= 2 * np.pi * np.floor((q - qlimit[0]) / (2 * np.pi))
+                qpos[i] = q  # clip qpos
+                if q > qlimit[1] + 1e-3:
+                    return False
             else:
-                if (
-                    q[i] < self.joint_limits[i][0] - 1e-3
-                    or q[i] > self.joint_limits[i][1] + 1e-3
-                ):
-                    flag = False
-        return flag
+                if q < qlimit[0] - 1e-3 or q > qlimit[1] + 1e-3:
+                    return False
+        return True
 
-    def pad_qpos(self, qpos, articulation=None):
+    def pad_move_group_qpos(self, qpos, articulation=None):
         """
-        if the user does not provide the full qpos but only the move_group joints,
-        pad the qpos with the rest of the joints
+        If qpos contains only the move_group joints, return qpos padded with
+        current values of the remaining joints of articulation.
+        Otherwise, verify number of joints and return.
+
+        :param qpos: joint positions
+        :param articulation: the articulation to get qpos from. If None, use self.robot
+        :return: joint positions with full dof
         """
-        if len(qpos) == len(self.move_group_joint_indices):
-            tmp = (
-                articulation.get_qpos()
-                if articulation is not None
-                else self.robot.get_qpos()
-            )
-            tmp[: len(qpos)] = qpos
+        if articulation is None:
+            articulation = self.robot
+
+        if (ndim := len(qpos)) == articulation.get_move_group_qpos_dim():
+            tmp = articulation.get_qpos().copy()
+            tmp[:ndim] = qpos
             qpos = tmp
 
         assert len(qpos) == len(self.joint_limits), (
-            f"length of qpos ({len(qpos)}) =/= "
+            f"length of qpos ({len(qpos)}) != "
             f"number of total joints ({len(self.joint_limits)})"
         )
-
         return qpos
 
     def check_for_collision(
         self,
         collision_function,
-        articulation: Optional[ArticulatedModel] = None,
-        qpos: Optional[np.ndarray] = None,
-    ) -> list:
-        """helper function to check for collision"""
-        # handle no user input
-        if articulation is None:
-            articulation = self.robot
-        if qpos is None:
-            qpos = articulation.get_qpos()
-        qpos = self.pad_qpos(qpos, articulation)
+        state: Optional[np.ndarray] = None,
+    ) -> list[WorldCollisionResult]:
+        """
+        Helper function to check for collision
+
+        :param state: all planned articulations qpos state. If None, use current qpos.
+        :return: A list of collisions.
+        """
+        planned_articulations = self.planning_world.get_planned_articulations()
+        if len(planned_articulations) > 1:
+            raise NotImplementedError("Only support 1 planned articulation now")
+        articulation = planned_articulations[0]
 
         # first save the current qpos
         old_qpos = articulation.get_qpos()
+        # Ensure state contains full dof
+        state = self.pad_move_group_qpos(
+            old_qpos if state is None else state, articulation
+        )
         # set robot to new qpos
-        articulation.set_qpos(qpos, True)
-        # find the index of the articulation inside the array
-        idx = self.planning_world.get_articulations().index(articulation)
-        # check for self-collision
-        collisions = collision_function(idx)
+        articulation.set_qpos(state, True)
+        # check for collision
+        collisions = collision_function()
         # reset qpos
         articulation.set_qpos(old_qpos, True)
         return collisions
 
     def check_for_self_collision(
         self,
-        articulation: Optional[ArticulatedModel] = None,
-        qpos: Optional[np.ndarray] = None,
-    ) -> list:
-        """Check if the robot is in self-collision.
-
-        Args:
-            articulation: robot model. if none will be self.robot
-            qpos: robot configuration. if none will be the current pose
-
-        Returns:
-            A list of collisions.
+        state: Optional[np.ndarray] = None,
+    ) -> list[WorldCollisionResult]:
         """
-        return self.check_for_collision(
-            self.planning_world.self_collide, articulation, qpos
-        )
+        Check if the robot is in self-collision.
+
+        :param state: all planned articulations qpos state. If None, use current qpos.
+        :return: A list of collisions.
+        """
+        return self.check_for_collision(self.planning_world.self_collide, state)
 
     def check_for_env_collision(
         self,
-        articulation: Optional[ArticulatedModel] = None,
-        qpos: Optional[np.ndarray] = None,
-        with_point_cloud=False,
-        use_attach=False,
-    ) -> list:
-        """Check if the robot is in collision with the environment
-
-        Args:
-            articulation: robot model. if none will be self.robot
-            qpos: robot configuration. if none will be the current pose
-            with_point_cloud: whether to check collision against point cloud
-            use_attach: whether to include the object attached to the end effector
-                in collision checking
-        Returns:
-            A list of collisions.
+        state: Optional[np.ndarray] = None,
+    ) -> list[WorldCollisionResult]:
         """
-        # store previous results
-        prev_use_point_cloud = self.planning_world.use_point_cloud
-        prev_use_attach = self.planning_world.use_attach
-        self.planning_world.set_use_point_cloud(with_point_cloud)
-        self.planning_world.set_use_attach(use_attach)
+        Check if the robot is in collision with the environment
 
-        results = self.check_for_collision(
-            self.planning_world.collide_with_others, articulation, qpos
-        )
-
-        # restore
-        self.planning_world.set_use_point_cloud(prev_use_point_cloud)
-        self.planning_world.set_use_attach(prev_use_attach)
-        return results
-
-    def IK(self, goal_pose, start_qpos, mask=None, n_init_qpos=20, threshold=1e-3):
+        :param state: all planned articulations qpos state. If None, use current qpos.
+        :return: A list of collisions.
         """
-        Inverse kinematics
+        return self.check_for_collision(self.planning_world.collide_with_others, state)
 
-        Args:
-            goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
-            start_qpos: initial configuration
-            mask: if the value at a given index is True,
-                the joint is *not* used in the IK
-            n_init_qpos: number of random initial configurations
-            threshold: threshold for the distance between the goal pose and
-                the result pose
+    def IK(
+        self,
+        goal_pose: np.ndarray,
+        start_qpos: np.ndarray,
+        mask: Optional[list[bool] | np.ndarray] = None,
+        *,
+        n_init_qpos: int = 20,
+        threshold: float = 1e-3,
+        return_closest: bool = False,
+        verbose: bool = False,
+    ) -> tuple[str, list[np.ndarray] | np.ndarray | None]:
         """
+        Compute inverse kinematics
 
+        :param goal_pose: goal pose (xyz, wxyz), (7,) np.floating np.ndarray.
+        :param start_qpos: initial configuration, (ndof,) np.floating np.ndarray.
+        :param mask: qpos mask to disable IK sampling, (ndof,) bool np.ndarray.
+        :param n_init_qpos: number of random initial configurations to sample.
+        :param threshold: distance_6D threshold for marking sampled IK as success.
+                          distance_6D is position error norm + quaternion error norm.
+        :param return_closest: whether to return the qpos that is closest to start_qpos,
+                               considering equivalent joint values.
+        :param verbose: whether to print collision info if any collision exists.
+        :return: (status, q_goals)
+            status: IK status, "Success" if succeeded.
+            q_goals: list of sampled IK qpos, (ndof,) np.floating np.ndarray.
+                IK is successful if q_goals is not None.
+                If return_closest, q_goals is np.ndarray if successful
+                and None if not successful.
+        """
         if mask is None:
             mask = []
-        index = self.link_name_2_idx[self.move_group]
-        min_dis = 1e9
-        idx = self.move_group_joint_indices
-        qpos0 = np.copy(start_qpos)
-        results = []
+
+        move_link_idx = self.link_name_2_idx[self.move_group]
+        move_joint_idx = self.move_group_joint_indices
         self.robot.set_qpos(start_qpos, True)
+
+        min_dis = 1e9
+        q_goals = []
+        qpos = start_qpos
         for _ in range(n_init_qpos):
-            ik_results = self.pinocchio_model.compute_IK_CLIK(
-                index, goal_pose, start_qpos, mask
+            ik_qpos, ik_success, ik_error = self.pinocchio_model.compute_IK_CLIK(
+                move_link_idx, goal_pose, qpos, mask
             )
-            flag = self.wrap_joint_limit(ik_results[0])  # will wrap revolute joints
+            success = ik_success and self.wrap_joint_limit(ik_qpos)
 
-            # check collision
-            self.planning_world.set_qpos_all(ik_results[0][idx])
-            if len(self.planning_world.collide_full()) != 0:
-                flag = False
+            if success:
+                # check collision
+                self.planning_world.set_qpos_all(ik_qpos[move_joint_idx])
+                if len(collisions := self.planning_world.collide_full()) > 0:
+                    success = False
+                    if verbose:
+                        for collision in collisions:
+                            print(
+                                f"Collision between {collision.link_name1} of entity "
+                                f"{collision.object_name1} with {collision.link_name2} "
+                                f"of entity {collision.object_name2}"
+                            )
 
-            if flag:
-                self.pinocchio_model.compute_forward_kinematics(ik_results[0])
-                new_pose = self.pinocchio_model.get_link_pose(index)
+            if success:
+                self.pinocchio_model.compute_forward_kinematics(ik_qpos)
+                new_pose = self.pinocchio_model.get_link_pose(move_link_idx)
                 tmp_dis = self.distance_6D(
                     goal_pose[:3], goal_pose[3:], new_pose[:3], new_pose[3:]
                 )
                 if tmp_dis < min_dis:
                     min_dis = tmp_dis
                 if tmp_dis < threshold:
-                    result = ik_results[0]
-                    unique = True
-                    for j in range(len(results)):
-                        if np.linalg.norm(results[j][idx] - result[idx]) < 0.1:
-                            unique = False
-                    if unique:
-                        results.append(result)
-            start_qpos = self.pinocchio_model.get_random_configuration()
-            mask_len = len(mask)
-            if mask_len > 0:
-                for j in range(mask_len):
-                    if mask[j]:
-                        start_qpos[j] = qpos0[j]
-        if len(results) != 0:
+                    for q_goal in q_goals:
+                        if (
+                            np.linalg.norm(
+                                q_goal[move_joint_idx] - ik_qpos[move_joint_idx]
+                            )
+                            < 0.1
+                        ):
+                            break  # not unique ik_qpos
+                    else:
+                        q_goals.append(ik_qpos)
+
+            qpos = self.pinocchio_model.get_random_configuration()
+            qpos[mask] = start_qpos[mask]  # use start_qpos for disabled joints
+
+        if len(q_goals) != 0:
             status = "Success"
         elif min_dis != 1e9:
-            status = "IK Failed! Distance {:f} is greater than threshold {:f}.".format(
-                min_dis,
-                threshold,
-            )
+            status = f"IK Failed! Distance {min_dis} is greater than {threshold=}."
+            return status, None
         else:
             status = "IK Failed! Cannot find valid solution."
-        return status, results
+            return status, None
+
+        if return_closest:
+            q_goals = np.asarray(q_goals)  # [N, ndof]
+            start_qpos = np.asarray(start_qpos)[None]  # [1, ndof]
+
+            # Consider equivalent joint values
+            q1 = q_goals[:, self.equiv_joint_mask]  # [N, n_equiv_joint]
+            q2 = q1 + 2 * np.pi  # equivalent joints
+            start_q = start_qpos[:, self.equiv_joint_mask]  # [1, n_equiv_joint]
+
+            # Mask where q2 is valid and closer to start_q
+            q2_closer_mask = (
+                q2 < self.joint_limits[:, 1][None, self.equiv_joint_mask]
+            ) & (np.abs(q1 - start_q) > np.abs(q2 - start_q))  # [N, n_equiv_joint]
+            # Convert q_goals to equivalent joint values closest to start_qpos
+            q_goals[:, self.equiv_joint_mask] = np.where(q2_closer_mask, q2, q1)
+
+            q_goals = q_goals[np.linalg.norm(q_goals - start_qpos, axis=1).argmin()]
+        return status, q_goals
 
     def TOPP(self, path, step=0.1, verbose=False):
         """
@@ -438,59 +462,124 @@ class Planner:
         qdds_sample = jnt_traj(ts_sample, 2)
         return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration
 
-    def update_point_cloud(self, pc, radius=1e-3):
+    # TODO: change method name to align with PlanningWorld API?
+    def update_point_cloud(self, points, resolution=1e-3, name="scene_pcd"):
         """
-        Args:
-            pc: numpy array of shape (n, 3)
-            radius: radius of each point. This gives a buffer around each point
-                that planner will avoid
+        Adds a point cloud as a collision object with given name to world.
+        If the ``name`` is the same, the point cloud is simply updated.
+
+        :param points: points, numpy array of shape (n, 3)
+        :param resolution: resolution of the point OcTree
+        :param name: name of the point cloud collision object
         """
-        self.planning_world.update_point_cloud(pc, radius)
+        self.planning_world.add_point_cloud(name, points, resolution)
 
-    def update_attached_tool(self, fcl_collision_geometry, pose, link_id=-1):
-        """helper function to update the attached tool"""
-        if link_id == -1:
-            link_id = self.move_group_link_id
-        self.planning_world.update_attached_tool(fcl_collision_geometry, link_id, pose)
-
-    def update_attached_sphere(self, radius, pose, link_id=-1):
+    def remove_point_cloud(self, name="scene_pcd") -> bool:
         """
-        attach a sphere to some link
+        Removes the point cloud collision object with given name
 
-        Args:
-            radius: radius of the sphere
-            pose: [x,y,z,qw,qx,qy,qz] pose of the sphere
-            link_id: if not provided, the end effector will be the target.
+        :param name: name of the point cloud collision object
+        :return: ``True`` if success, ``False`` if normal object with given name doesn't
+            exist
         """
-        if link_id == -1:
-            link_id = self.move_group_link_id
-        self.planning_world.update_attached_sphere(radius, link_id, pose)
+        return self.planning_world.remove_normal_object(name)
 
-    def update_attached_box(self, size, pose, link_id=-1):
+    def update_attached_object(
+        self,
+        collision_geometry,
+        pose,
+        name="attached_geom",
+        art_name=None,
+        link_id=-1,
+    ):
         """
-        attach a box to some link
+        Attach given object (w/ collision geometry) to specified link of articulation
 
-        Args:
-            size: [x,y,z] size of the box
-            pose: [x,y,z,qw,qx,qy,qz] pose of the box
-            link_id: if not provided, the end effector will be the target.
-        """
-        if link_id == -1:
-            link_id = self.move_group_link_id
-        self.planning_world.update_attached_box(size, link_id, pose)
-
-    def update_attached_mesh(self, mesh_path, pose, link_id=-1):
-        """
-        attach a mesh to some link
-
-        Args:
-            mesh_path: path to the mesh
-            pose: [x,y,z,qw,qx,qy,qz] pose of the mesh
-            link_id: if not provided, the end effector will be the target.
+        :param collision_geometry: FCL collision geometry
+        :param pose: attaching pose (relative pose from attached link to object),
+                     [x,y,z,qw,qx,qy,qz]
+        :param name: name of the attached geometry.
+        :param art_name: name of the articulated object to attach to.
+                         If None, attach to self.robot.
+        :param link_id: if not provided, the end effector will be the target.
         """
         if link_id == -1:
             link_id = self.move_group_link_id
-        self.planning_world.update_attached_mesh(mesh_path, link_id, pose)
+        self.planning_world.attach_object(
+            name,
+            collision_geometry,
+            self.robot.get_name() if art_name is None else art_name,
+            link_id,
+            pose,
+        )
+
+    def update_attached_sphere(self, radius, pose, art_name=None, link_id=-1):
+        """
+        Attach a sphere to some link
+
+        :param radius: radius of the sphere
+        :param pose: attaching pose (relative pose from attached link to object),
+                     [x,y,z,qw,qx,qy,qz]
+        :param art_name: name of the articulated object to attach to.
+                         If None, attach to self.robot.
+        :param link_id: if not provided, the end effector will be the target.
+        """
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.attach_sphere(
+            radius,
+            self.robot.get_name() if art_name is None else art_name,
+            link_id,
+            pose,
+        )
+
+    def update_attached_box(self, size, pose, art_name=None, link_id=-1):
+        """
+        Attach a box to some link
+
+        :param size: box side length
+        :param pose: attaching pose (relative pose from attached link to object),
+                     [x,y,z,qw,qx,qy,qz]
+        :param art_name: name of the articulated object to attach to.
+                         If None, attach to self.robot.
+        :param link_id: if not provided, the end effector will be the target.
+        """
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.attach_box(
+            size, self.robot.get_name() if art_name is None else art_name, link_id, pose
+        )
+
+    def update_attached_mesh(self, mesh_path, pose, art_name=None, link_id=-1):
+        """
+        Attach a mesh to some link
+
+        :param mesh_path: path to a mesh file
+        :param pose: attaching pose (relative pose from attached link to object),
+                     [x,y,z,qw,qx,qy,qz]
+        :param art_name: name of the articulated object to attach to.
+                         If None, attach to self.robot.
+        :param link_id: if not provided, the end effector will be the target.
+        """
+        if link_id == -1:
+            link_id = self.move_group_link_id
+        self.planning_world.attach_mesh(
+            mesh_path,
+            self.robot.get_name() if art_name is None else art_name,
+            link_id,
+            pose,
+        )
+
+    def detach_object(self, name="attached_geom", also_remove=False) -> bool:
+        """
+        Detact the attached object with given name
+
+        :param name: object name to detach
+        :param also_remove: whether to also remove object from world
+        :return: ``True`` if success, ``False`` if the object with given name is not
+            attached
+        """
+        return self.planning_world.detach_object(name, also_remove)
 
     def set_base_pose(self, pose):
         """
@@ -501,37 +590,31 @@ class Planner:
         """
         self.robot.set_base_pose(pose)
 
-    def set_normal_object(self, name, collision_object):
-        """adds or updates a non-articulated collision object in the scene"""
-        self.planning_world.set_normal_object(name, collision_object)
-
-    def remove_normal_object(self, name):
+    def remove_normal_object(self, name) -> bool:
         """returns true if the object was removed, false if it was not found"""
         return self.planning_world.remove_normal_object(name)
 
     def plan_qpos_to_qpos(
         self,
-        goal_qposes: list,
-        current_qpos,
-        time_step=0.1,
-        rrt_range=0.1,
-        planning_time=1,
-        fix_joint_limits=True,
-        use_point_cloud=False,
-        use_attach=False,
-        planner_name="RRTConnect",
-        no_simplification=False,
-        constraint_function=None,
-        constraint_jacobian=None,
-        constraint_tolerance=1e-3,
-        fixed_joint_indices=None,
-        verbose=False,
-    ):
+        goal_qposes: list[np.ndarray],
+        current_qpos: np.ndarray,
+        *,
+        time_step: float = 0.1,
+        rrt_range: float = 0.1,
+        planning_time: float = 1,
+        fix_joint_limits: bool = True,
+        fixed_joint_indices: Optional[list[int]] = None,
+        simplify: bool = True,
+        constraint_function: Optional[Callable] = None,
+        constraint_jacobian: Optional[Callable] = None,
+        constraint_tolerance: float = 1e-3,
+        verbose: bool = False,
+    ) -> dict[str, str | np.ndarray | np.float64]:
         """
-        plan a path from a specified joint position to a goal pose
+        Plan a path from a specified joint position to a goal pose
 
         Args:
-            goal_pose: 7D pose of the end-effector [x,y,z,qw,qx,qy,qz]
+            goal_qposes: list of target joint configurations, [(ndof,)]
             current_qpos: current joint configuration (either full or move_group joints)
             mask: mask for IK. When set, the IK will leave certain joints out of
                 planning
@@ -540,11 +623,8 @@ class Planner:
             planning_time: time limit for RRT
             fix_joint_limits: if True, will clip the joint configuration to be within
                 the joint limits
-            use_point_cloud: if True, will use the point cloud to avoid collision
-            use_attach: if True, will consider the attached tool collision when planning
-            planner_name: planner name pick from {"RRTConnect", "RRTstar"}
-            no_simplification: if true, will not simplify the path. constraint planning
-                does not support simplification
+            simplify: whether the planned path will be simplified.
+                (constained planning does not support simplification)
             constraint_function: evals to 0 when constraint is satisfied
             constraint_jacobian: jacobian of constraint_function
             constraint_tolerance: tolerance for constraint_function
@@ -554,42 +634,36 @@ class Planner:
         """
         if fixed_joint_indices is None:
             fixed_joint_indices = []
-        self.planning_world.set_use_point_cloud(use_point_cloud)
-        self.planning_world.set_use_attach(use_attach)
-        n = current_qpos.shape[0]
-        if fix_joint_limits:
-            for i in range(n):
-                if current_qpos[i] < self.joint_limits[i][0]:
-                    current_qpos[i] = self.joint_limits[i][0] + 1e-3
-                if current_qpos[i] > self.joint_limits[i][1]:
-                    current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
-        current_qpos = self.pad_qpos(current_qpos)
+        if fix_joint_limits:
+            current_qpos = np.clip(
+                current_qpos, self.joint_limits[:, 0], self.joint_limits[:, 1]
+            )
+        current_qpos = self.pad_move_group_qpos(current_qpos)
 
         self.robot.set_qpos(current_qpos, True)
         collisions = self.planning_world.collide_full()
-        if len(collisions) != 0:
+        if len(collisions) > 0:
             print("Invalid start state!")
             for collision in collisions:
                 print(f"{collision.link_name1} and {collision.link_name2} collide!")
 
-        idx = self.move_group_joint_indices
+        move_joint_idx = self.move_group_joint_indices
 
-        goal_qpos_ = [goal_qposes[i][idx] for i in range(len(goal_qposes))]
+        goal_qpos_ = [goal_qposes[i][move_joint_idx] for i in range(len(goal_qposes))]
 
         fixed_joints = set()
         for joint_idx in fixed_joint_indices:
             fixed_joints.add(ompl.FixedJoint(0, joint_idx, current_qpos[joint_idx]))
 
-        assert len(current_qpos[idx]) == len(goal_qpos_[0])
+        assert len(current_qpos[move_joint_idx]) == len(goal_qpos_[0])
         status, path = self.planner.plan(
-            current_qpos[idx],
+            current_qpos[move_joint_idx],
             goal_qpos_,
-            range=rrt_range,
             time=planning_time,
+            range=rrt_range,
             fixed_joints=fixed_joints,
-            planner_name=planner_name,
-            no_simplification=no_simplification,
+            simplify=simplify,
             constraint_function=constraint_function,
             constraint_jacobian=constraint_jacobian,
             constraint_tolerance=constraint_tolerance,
@@ -611,7 +685,7 @@ class Planner:
                 "duration": duration,
             }
         else:
-            return {"status": "RRT Failed. %s" % status}
+            return {"status": f"RRTConnect Failed. {status}"}
 
     def transform_goal_to_wrt_base(self, goal_pose):
         base_pose = self.robot.get_base_pose()
@@ -629,23 +703,21 @@ class Planner:
 
     def plan_qpos_to_pose(
         self,
-        goal_pose,
-        current_qpos,
-        mask=None,
-        time_step=0.1,
-        rrt_range=0.1,
-        planning_time=1,
-        fix_joint_limits=True,
-        use_point_cloud=False,
-        use_attach=False,
-        wrt_world=True,
-        planner_name="RRTConnect",
-        no_simplification=False,
-        constraint_function=None,
-        constraint_jacobian=None,
-        constraint_tolerance=1e-3,
-        verbose=False,
-    ):
+        goal_pose: np.ndarray,
+        current_qpos: np.ndarray,
+        mask: Optional[list[bool] | np.ndarray] = None,
+        *,
+        time_step: float = 0.1,
+        rrt_range: float = 0.1,
+        planning_time: float = 1,
+        fix_joint_limits: bool = True,
+        wrt_world: bool = True,
+        simplify: bool = True,
+        constraint_function: Optional[Callable] = None,
+        constraint_jacobian: Optional[Callable] = None,
+        constraint_tolerance: float = 1e-3,
+        verbose: bool = False,
+    ) -> dict[str, str | np.ndarray | np.float64]:
         """
         plan from a start configuration to a goal pose of the end-effector
 
@@ -659,23 +731,18 @@ class Planner:
             planning_time: time limit for RRT
             fix_joint_limits: if True, will clip the joint configuration to be within
                 the joint limits
-            use_point_cloud: if True, will use the point cloud to avoid collision
-            use_attach: if True, will consider the attached tool collision when planning
             wrt_world: if true, interpret the target pose with respect to
                 the world frame instead of the base frame
             verbose: if True, will print the log of OMPL and TOPPRA
         """
         if mask is None:
             mask = []
-        n = current_qpos.shape[0]
-        if fix_joint_limits:
-            for i in range(n):
-                if current_qpos[i] < self.joint_limits[i][0]:
-                    current_qpos[i] = self.joint_limits[i][0] + 1e-3
-                if current_qpos[i] > self.joint_limits[i][1]:
-                    current_qpos[i] = self.joint_limits[i][1] - 1e-3
 
-        current_qpos = self.pad_qpos(current_qpos)
+        if fix_joint_limits:
+            current_qpos = np.clip(
+                current_qpos, self.joint_limits[:, 0], self.joint_limits[:, 1]
+            )
+        current_qpos = self.pad_move_group_qpos(current_qpos)
 
         if wrt_world:
             goal_pose = self.transform_goal_to_wrt_base(goal_pose)
@@ -692,7 +759,7 @@ class Planner:
             for i in range(len(goal_qpos)):
                 print(goal_qpos[i])
 
-        # goal_qpos_ = [goal_qpos[i][idx] for i in range(len(goal_qpos))]
+        # goal_qpos_ = [goal_qpos[i][move_joint_idx] for i in range(len(goal_qpos))]
         self.robot.set_qpos(current_qpos, True)
 
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
@@ -707,55 +774,47 @@ class Planner:
         return self.plan_qpos_to_qpos(
             goal_qpos,
             current_qpos,
-            time_step,
-            rrt_range,
-            planning_time,
-            fix_joint_limits,
-            use_point_cloud,
-            use_attach,
-            planner_name,
-            no_simplification,
-            constraint_function,
-            constraint_jacobian,
-            constraint_tolerance,
+            time_step=time_step,
+            rrt_range=rrt_range,
+            planning_time=planning_time,
+            fix_joint_limits=fix_joint_limits,
+            simplify=simplify,
+            constraint_function=constraint_function,
+            constraint_jacobian=constraint_jacobian,
+            constraint_tolerance=constraint_tolerance,
             verbose=verbose,
         )
 
     # plan_screw ankor
     def plan_screw(
         self,
-        target_pose,
-        qpos,
-        qpos_step=0.1,
-        time_step=0.1,
-        use_point_cloud=False,
-        use_attach=False,
-        wrt_world=True,
-        verbose=False,
-    ):
+        goal_pose: np.ndarray,
+        current_qpos: np.ndarray,
+        *,
+        qpos_step: float = 0.1,
+        time_step: float = 0.1,
+        wrt_world: bool = True,
+        verbose: bool = False,
+    ) -> dict[str, str | np.ndarray | np.float64]:
         # plan_screw ankor end
         """
         Plan from a start configuration to a goal pose of the end-effector using
         screw motion
 
         Args:
-            target_pose: [x, y, z, qw, qx, qy, qz] pose of the goal
-            qpos: current joint configuration (either full or move_group joints)
+            goal_pose: [x, y, z, qw, qx, qy, qz] pose of the goal
+            current_qpos: current joint configuration (either full or move_group joints)
             qpos_step: size of the random step for RRT
             time_step: time step for the discretization
-            use_point_cloud: if True, will use the point cloud to avoid collision
-            use_attach: if True, will use the attached tool to avoid collision
             wrt_world: if True, interpret the target pose with respect to the
                 world frame instead of the base frame
             verbose: if True, will print the log of TOPPRA
         """
-        self.planning_world.set_use_point_cloud(use_point_cloud)
-        self.planning_world.set_use_attach(use_attach)
-        qpos = self.pad_qpos(qpos.copy())
-        self.robot.set_qpos(qpos, True)
+        current_qpos = self.pad_move_group_qpos(current_qpos.copy())
+        self.robot.set_qpos(current_qpos, True)
 
         if wrt_world:
-            target_pose = self.transform_goal_to_wrt_base(target_pose)
+            goal_pose = self.transform_goal_to_wrt_base(goal_pose)
 
         def pose7D2mat(pose):
             mat = np.eye(4)
@@ -802,10 +861,10 @@ class Planner:
             v = inv_left_jacobian @ pose[:3, 3]
             return np.concatenate([v, omega]), theta
 
-        self.pinocchio_model.compute_forward_kinematics(qpos)
+        self.pinocchio_model.compute_forward_kinematics(current_qpos)
         ee_index = self.link_name_2_idx[self.move_group]
         current_p = pose7D2mat(self.pinocchio_model.get_link_pose(ee_index))
-        target_p = pose7D2mat(target_pose)
+        target_p = pose7D2mat(goal_pose)
         relative_transform = target_p @ np.linalg.inv(current_p)
 
         omega, theta = pose2exp_coordinate(relative_transform)
@@ -814,11 +873,11 @@ class Planner:
             return {"status": "screw plan failed."}
         omega = omega.reshape((-1, 1)) * theta
 
-        index = self.move_group_joint_indices
-        path = [np.copy(qpos[index])]
+        move_joint_idx = self.move_group_joint_indices
+        path = [np.copy(current_qpos[move_joint_idx])]
 
         while True:
-            self.pinocchio_model.compute_full_jacobian(qpos)
+            self.pinocchio_model.compute_full_jacobian(current_qpos)
             J = self.pinocchio_model.get_link_jacobian(ee_index, local=False)
             delta_q = np.linalg.pinv(J) @ omega
             delta_q *= qpos_step / (np.linalg.norm(delta_q))
@@ -831,7 +890,7 @@ class Planner:
                 delta_twist = delta_twist * ratio
                 flag = True
 
-            qpos += delta_q.reshape(-1)
+            current_qpos += delta_q.reshape(-1)
             omega -= delta_twist
 
             def check_joint_limit(q):
@@ -844,14 +903,14 @@ class Planner:
                         return False
                 return True
 
-            within_joint_limit = check_joint_limit(qpos)
-            self.planning_world.set_qpos_all(qpos[index])
+            within_joint_limit = check_joint_limit(current_qpos)
+            self.planning_world.set_qpos_all(current_qpos[move_joint_idx])
             collide = self.planning_world.collide()
 
             if np.linalg.norm(delta_twist) < 1e-4 or collide or not within_joint_limit:
                 return {"status": "screw plan failed"}
 
-            path.append(np.copy(qpos[index]))
+            path.append(np.copy(current_qpos[move_joint_idx]))
 
             if flag:
                 if verbose:

@@ -56,7 +56,7 @@ class KDLModelTpl {
   std::map<std::string, int> user_joint_idx_mapping_;
   std::vector<int> joint_mapping_kdl_2_user_;
 
-  bool verbose_;
+  bool verbose_ {};
 };
 
 // Common Type Alias ===================================================================

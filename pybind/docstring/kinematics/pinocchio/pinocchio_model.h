@@ -34,7 +34,7 @@ R"doc(
 Construct a Pinocchio model from the given URDF file.
 
 :param urdf_filename: path to the URDF file
-:param gravity: gravity vector
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_PinocchioModelTpl_2 =
@@ -42,7 +42,7 @@ R"doc(
 Construct a Pinocchio model from the given URDF file.
 
 :param urdf_model: a urdf tree as urdf::ModelInterfaceSharedPtr
-:param gravity: gravity vector
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param verbose: print debug information. Default: ``False``.)doc";
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_computeForwardKinematics =
@@ -56,9 +56,9 @@ If you want the result you need to call ``get_link_pose()``
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_computeFullJacobian =
 R"doc(
-Compute the full jacobian for the given joint configuration.
-
-If you want the result you need to call ``get_link_jacobian()``
+Compute the full jacobian for the given joint configuration. Note you need to
+call computeForwardKinematics() first. If you want the result you need to call
+``get_link_jacobian()``
 
 :param qpos: joint configuration. Needs to be full configuration, not just the
     movegroup joints.)doc";
@@ -98,7 +98,8 @@ the given limits.
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_computeSingleLinkJacobian =
 R"doc(
-Compute the jacobian of the given link.
+Compute the jacobian of the given link. Note you need to call
+computeForwardKinematics() first.
 
 :param qpos: joint configuration. Needs to be full configuration, not just the
     movegroup joints.
@@ -107,6 +108,15 @@ Compute the jacobian of the given link.
 :param local: if ``True`` return the jacobian w.r.t. the instantaneous local
     frame of the link
 :return: 6 x n jacobian of the link)doc";
+
+static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_createFromURDFString =
+R"doc(
+Constructs a PinocchioModel from URDF string
+
+:param urdf_string: URDF string (without visual/collision elements for links)
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+:param verbose: print debug information. Default: ``False``.
+:return: a unique_ptr to PinocchioModel)doc";
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_getChainJointIndex =
 R"doc(
@@ -240,7 +250,8 @@ Get the leaf links (links without child) of the kinematic tree.
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_getLinkJacobian =
 R"doc(
-Get the jacobian of the given link.
+Get the jacobian of the given link. You must call ``compute_full_jacobian()``
+first.
 
 :param index: index of the link (in the order you passed to the constructor or
     the default order)

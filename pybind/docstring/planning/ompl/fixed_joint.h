@@ -30,9 +30,11 @@ static const char *__doc_mplib_planning_ompl_FixedJointTpl_FixedJointTpl =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_planning_ompl_FixedJointTpl_articulation_idx = R"doc()doc";
+static const char *__doc_mplib_planning_ompl_FixedJointTpl_articulation_idx =
+R"doc(index of the articulated model in the PlanningWorld that the fixed joint belong
+to)doc";
 
-static const char *__doc_mplib_planning_ompl_FixedJointTpl_joint_idx = R"doc()doc";
+static const char *__doc_mplib_planning_ompl_FixedJointTpl_joint_idx = R"doc(the index of the fixed joint)doc";
 
 static const char *__doc_mplib_planning_ompl_FixedJointTpl_operator_eq =
 R"doc(
@@ -42,7 +44,7 @@ static const char *__doc_mplib_planning_ompl_FixedJointTpl_operator_lt =
 R"doc(
 )doc";
 
-static const char *__doc_mplib_planning_ompl_FixedJointTpl_value = R"doc()doc";
+static const char *__doc_mplib_planning_ompl_FixedJointTpl_value = R"doc(the value of the fixed joint)doc";
 
 static const char *__doc_mplib_planning_ompl_addFixedJoints =
 R"doc(

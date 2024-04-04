@@ -27,8 +27,11 @@ using Capsule = fcl::Capsule<S>;
 using Cone = fcl::Cone<S>;
 using Convex = fcl::Convex<S>;
 using Cylinder = fcl::Cylinder<S>;
+using Ellipsoid = fcl::Ellipsoid<S>;
+using Halfspace = fcl::Halfspace<S>;
 using Plane = fcl::Plane<S>;
 using Sphere = fcl::Sphere<S>;
+using TriangleP = fcl::TriangleP<S>;
 using BVHModel_OBBRSS = fcl::BVHModel<fcl::OBBRSS<S>>;
 using OcTree = fcl::OcTree<S>;
 
@@ -129,6 +132,29 @@ void build_pyfcl(py::module &m) {
       .def_readwrite("radius", &Cylinder::radius)
       .def_readwrite("lz", &Cylinder::lz);
 
+  auto PyEllipsoid = py::class_<Ellipsoid, std::shared_ptr<Ellipsoid>>(
+      m, "Ellipsoid", PyCollisionGeometry, DOC(fcl, Ellipsoid));
+  PyEllipsoid
+      .def(py::init<S, S, S>(), py::arg("a"), py::arg("b"), py::arg("c"),
+           DOC(fcl, Ellipsoid, Ellipsoid))
+      .def(py::init<const Vector3<S> &>(), py::arg("radii"),
+           DOC(fcl, Ellipsoid, Ellipsoid, 2))
+      .def_readwrite("radii", &Ellipsoid::radii);
+
+  auto PyHalfspace = py::class_<Halfspace, std::shared_ptr<Halfspace>>(
+      m, "Halfspace", PyCollisionGeometry, DOC(fcl, Halfspace));
+  PyHalfspace
+      .def(py::init<const Vector3<S> &, S>(), py::arg("n"), py::arg("d"),
+           DOC(fcl, Halfspace, Halfspace))
+      .def(py::init<S, S, S, S>(), py::arg("a"), py::arg("b"), py::arg("c"),
+           py::arg("d"), DOC(fcl, Halfspace, Halfspace, 2))
+      .def_readwrite("n", &Halfspace::n)
+      .def_readwrite("d", &Halfspace::d)
+      .def("signed_distance", &Halfspace::signedDistance, py::arg("p"),
+           DOC(fcl, Halfspace, signedDistance))
+      .def("distance", &Halfspace::distance, py::arg("p"),
+           DOC(fcl, Halfspace, distance));
+
   auto PyPlane = py::class_<Plane, std::shared_ptr<Plane>>(
       m, "Plane", PyCollisionGeometry, DOC(fcl, Plane));
   PyPlane
@@ -137,12 +163,24 @@ void build_pyfcl(py::module &m) {
       .def(py::init<S, S, S, S>(), py::arg("a"), py::arg("b"), py::arg("c"),
            py::arg("d"), DOC(fcl, Plane, Plane, 2))
       .def_readwrite("n", &Plane::n)
-      .def_readwrite("d", &Plane::d);
+      .def_readwrite("d", &Plane::d)
+      .def("signed_distance", &Plane::signedDistance, py::arg("p"),
+           DOC(fcl, Plane, signedDistance))
+      .def("distance", &Plane::distance, py::arg("p"), DOC(fcl, Plane, distance));
 
   auto PySphere = py::class_<Sphere, std::shared_ptr<Sphere>>(
       m, "Sphere", PyCollisionGeometry, DOC(fcl, Sphere));
   PySphere.def(py::init<S>(), py::arg("radius"), DOC(fcl, Sphere, Sphere))
       .def_readwrite("radius", &Sphere::radius);
+
+  auto PyTriangleP = py::class_<TriangleP, std::shared_ptr<TriangleP>>(
+      m, "TriangleP", PyCollisionGeometry, DOC(fcl, TriangleP));
+  PyTriangleP
+      .def(py::init<const Vector3<S> &, const Vector3<S> &, const Vector3<S> &>(),
+           py::arg("a"), py::arg("b"), py::arg("c"), DOC(fcl, TriangleP, TriangleP))
+      .def_readwrite("a", &TriangleP::a)
+      .def_readwrite("b", &TriangleP::b)
+      .def_readwrite("c", &TriangleP::c);
 
   auto PyBVHModel_OBBRSS =
       py::class_<BVHModel_OBBRSS, std::shared_ptr<BVHModel_OBBRSS>>(
@@ -209,6 +247,7 @@ void build_pyfcl(py::module &m) {
            DOC(fcl, OcTree, OcTree, 2));
 
   // Collision Object = Geometry + Transformation
+  // TODO(merge): get_transformation
   auto PyCollisionObject =
       py::class_<CollisionObject, std::shared_ptr<CollisionObject>>(
           m, "CollisionObject", DOC(fcl, CollisionObject));

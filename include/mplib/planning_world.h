@@ -4,8 +4,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "mplib/collision_detection/collision_matrix.h"
 #include "mplib/collision_detection/types.h"
 #include "mplib/core/articulated_model.h"
+#include "mplib/core/attached_body.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
 #include "mplib/utils/color_printing.h"
@@ -15,272 +17,455 @@ namespace mplib {
 // PlanningWorldTplPtr
 MPLIB_CLASS_TEMPLATE_FORWARD(PlanningWorldTpl);
 
-/// Planning world for collision checking
+// TODO(merge): rename "normal object" as just "object"
+
+/**
+ * Planning world for collision checking
+ *
+ * Mimicking MoveIt2's ``planning_scene::PlanningScene``,
+ * ``collision_detection::World``, ``moveit::core::RobotState``
+ *
+ * https://moveit.picknik.ai/main/api/html/classplanning__scene_1_1PlanningScene.html
+ * https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1World.html
+ * https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1RobotState.html
+ */
 template <typename S>
 class PlanningWorldTpl {
   // Common type alias
   using CollisionRequest = fcl::CollisionRequest<S>;
   using CollisionResult = fcl::CollisionResult<S>;
+  using DistanceRequest = fcl::DistanceRequest<S>;
+  using DistanceResult = fcl::DistanceResult<S>;
   using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
   using CollisionObject = fcl::CollisionObject<S>;
   using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
+  using AllowedCollisionMatrix = collision_detection::AllowedCollisionMatrix;
+  using AllowedCollisionMatrixPtr = collision_detection::AllowedCollisionMatrixPtr;
   // using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
   using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
 
   using WorldCollisionResult = WorldCollisionResultTpl<S>;
+  using WorldDistanceResult = WorldDistanceResultTpl<S>;
   using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
+  using AttachedBody = AttachedBodyTpl<S>;
+  using AttachedBodyPtr = AttachedBodyTplPtr<S>;
 
  public:
   /**
-   * Constructs a PlanningWorld with given articulations and normal objects
+   * Constructs a PlanningWorld with given (planned) articulations and normal objects
    *
-   * @param articulations: list of articulated models
+   * @param articulations: list of planned articulated models
    * @param articulation_names: name of the articulated models
    * @param normal_objects: list of collision objects that are not articulated
    * @param normal_object_names: name of the normal objects
-   * @param plan_articulation_id: id of the articulated model that is used for planning
    */
   PlanningWorldTpl(const std::vector<ArticulatedModelPtr> &articulations,
                    const std::vector<std::string> &articulation_names,
-                   const std::vector<CollisionObjectPtr> &normal_objects,
-                   const std::vector<std::string> &normal_object_names,
-                   int plan_articulation_id = 0);
+                   const std::vector<CollisionObjectPtr> &normal_objects = {},
+                   const std::vector<std::string> &normal_object_names = {});
+
+  /// @brief Gets names of all articulations in world (unordered)
+  std::vector<std::string> getArticulationNames() const;
+
+  /// @brief Gets all planned articulations (ArticulatedModelPtr)
+  std::vector<ArticulatedModelPtr> getPlannedArticulations() const;
 
   /**
-   * Get the list of articulated models.
+   * Gets the articulation (ArticulatedModelPtr) with given name
    *
-   * @return: list of articulated models
-   */
-  const std::vector<ArticulatedModelPtr> &getArticulations() const {
-    return articulations_;
-  }
-
-  /**
-   * Get the names of articulated models.
-   *
-   * @return: list of names of articulated models
-   */
-  const std::vector<std::string> &getArticulationNames() const {
-    return articulation_names_;
-  }
-
-  /**
-   * Get the list of non-articulated collision objects.
-   *
-   * @return: list of non-articulated collision objects
-   */
-  std::vector<CollisionObjectPtr> getNormalObjects() const {
-    std::vector<CollisionObjectPtr> ret;
-    for (const auto &itm : normal_object_map_) ret.push_back(itm.second);
-    return ret;
-  }
-
-  /**
-   * Get the names of non-articulated collision objects.
-   *
-   * @return: list of names of non-articulated collision objects
-   */
-  std::vector<std::string> getNormalObjectNames() const {
-    std::vector<std::string> ret;
-    for (const auto &itm : normal_object_map_) ret.push_back(itm.first);
-    return ret;
-  }
-
-  int getMoveArticulationId() const { return move_articulation_id_; }
-
-  void setMoveArticulationId(int id) { move_articulation_id_ = id; }
-
-  /**
-   * Add an articulated model to the planning world.
-   *
-   * @param model: articulated model to be added
    * @param name: name of the articulated model
+   * @return: the articulated model with given name or ``nullptr`` if not found.
    */
-  void addArticulation(const ArticulatedModelPtr &model, const std::string &name) {
-    articulations_.push_back(model);
-    articulation_names_.push_back(name);
+  ArticulatedModelPtr getArticulation(const std::string &name) const {
+    auto it = articulation_map_.find(name);
+    return it != articulation_map_.end() ? it->second : nullptr;
   }
 
   /**
-   * Add a list of articulated models to the planning world.
+   * Check whether the articulation with given name exists
    *
-   * @param models: list of articulated models to be added
-   * @param names: list of names of the articulated models
+   * @param name: name of the articulated model
+   * @return: ``true`` if exists, ``false`` otherwise.
    */
-  void addArticulations(const std::vector<ArticulatedModelPtr> &models,
-                        const std::vector<std::string> &names) {
-    articulations_.insert(articulations_.end(), models.begin(), models.end());
-    articulation_names_.insert(articulation_names_.end(), names.begin(), names.end());
+  bool hasArticulation(const std::string &name) const {
+    return articulation_map_.find(name) != articulation_map_.end();
   }
 
   /**
-   * Add a non-articulated collision object to the planning world.
+   * Adds an articulation (ArticulatedModelPtr) with given name to world
    *
-   * @param name: name of the non-articulated collision object
-   * @param collision_object: the non-articulated collision object to be added
+   * @param name: name of the articulated model
+   * @param model: articulated model to be added
+   * @param planned: whether the articulation is being planned
    */
-  void setNormalObject(const std::string &name,
+  // TODO(merge): remove name
+  void addArticulation(const std::string &name, const ArticulatedModelPtr &model,
+                       bool planned = false);
+
+  /**
+   * Removes the articulation with given name if exists. Updates acm_
+   *
+   * @param name: name of the articulated model
+   * @return: ``true`` if success, ``false`` if articulation with given name does not
+   *  exist
+   */
+  bool removeArticulation(const std::string &name);
+
+  /**
+   * Check whether the articulation with given name is being planned
+   *
+   * @param name: name of the articulated model
+   * @return: ``true`` if exists, ``false`` otherwise.
+   */
+  bool isArticulationPlanned(const std::string &name) const {
+    return planned_articulation_map_.find(name) != planned_articulation_map_.end();
+  }
+
+  /**
+   * Sets articulation with given name as being planned
+   *
+   * @param name: name of the articulated model
+   * @param planned: whether the articulation is being planned
+   * @throws std::out_of_range if the articulation with given name does not exist
+   */
+  void setArticulationPlanned(const std::string &name, bool planned);
+
+  /// @brief Gets names of all normal objects in world (unordered)
+  std::vector<std::string> getNormalObjectNames() const;
+
+  /**
+   * Gets the normal object (CollisionObjectPtr) with given name
+   *
+   * @param name: name of the normal object
+   * @return: the normal object with given name or ``nullptr`` if not found.
+   */
+  CollisionObjectPtr getNormalObject(const std::string &name) const {
+    auto it = normal_object_map_.find(name);
+    return it != normal_object_map_.end() ? it->second : nullptr;
+  }
+
+  /**
+   * Check whether the normal object with given name exists
+   *
+   * @param name: name of the normal object
+   * @return: ``true`` if exists, ``false`` otherwise.
+   */
+  bool hasNormalObject(const std::string &name) const {
+    return normal_object_map_.find(name) != normal_object_map_.end();
+  }
+
+  /**
+   * Adds a normal object (CollisionObjectPtr) with given name to world
+   *
+   * @param name: name of the collision object
+   * @param collision_object: collision object to be added
+   */
+  void addNormalObject(const std::string &name,
                        const CollisionObjectPtr &collision_object) {
     normal_object_map_[name] = collision_object;
   }
 
   /**
-   * Remove am non-articulated object
+   * Adds a point cloud as a collision object with given name to world
+   *
+   * @param name: name of the point cloud collision object
+   * @param vertices: point cloud vertices matrix
+   * @param resolution: resolution of the point in ``octomap::OcTree``
+   */
+  void addPointCloud(const std::string &name, const MatrixX3<S> &vertices,
+                     double resolution = 0.01);
+
+  /**
+   * Removes (and detaches) the collision object with given name if exists.
+   * Updates acm_
    *
    * @param name: name of the non-articulated collision object
-   * @return: ``true`` if the item exists and ``false`` otherwise
+   * @return: ``true`` if success, ``false`` if normal object with given name does not
+   * exist
    */
-  bool removeNormalObject(const std::string &name) {
-    if (!normal_object_map_.count(name)) return false;
-    normal_object_map_.erase(name);
-    return true;
+  bool removeNormalObject(const std::string &name);
+
+  /**
+   * Check whether normal object with given name is attached
+   *
+   * @param name: name of the normal object
+   * @return: ``true`` if it is attached, ``false`` otherwise.
+   */
+  bool isNormalObjectAttached(const std::string &name) const {
+    return attached_body_map_.find(name) != attached_body_map_.end();
   }
 
   /**
-   * Set whether to use point cloud for collision checking.
+   * Gets the attached body (AttachedBodyPtr) with given name
    *
-   * @param use: whether to use point cloud
+   * @param name: name of the attached body
+   * @return: the attached body with given name or ``nullptr`` if not found.
    */
-  void setUsePointCloud(bool use) { use_point_cloud_ = use; }
-
-  /**
-   * Update the point cloud for collision checking.
-   *
-   * @param vertices: vertices of the point cloud
-   * @param radius: radius of each point in the point cloud
-   */
-  void updatePointCloud(const MatrixX3<S> &vertices, double radius = 1e-3);
-
-  /**
-   * Set whether to use attached tool for collision checking.
-   *
-   * @param use: whether to use attached tool
-   */
-  void setUseAttach(bool use) { use_attach_ = use; }
-
-  /**
-   * Remove attach object so there won't be anything on the end effector when
-   * ``use_attach`` is set to ``true`` again
-   */
-  void removeAttach() { has_attach_ = false; }
-
-  /**
-   * Attach or update the attached object
-   *
-   * @param p_geom: fcl collision geometry of the attached tool
-   * @param link_id: id of the link to which the object is attached
-   * @param pose: pose of the attached object w.r.t. the link it's attached to.
-   *              [x, y, z, qw, qx, qy, qz]
-   */
-  void updateAttachedTool(const CollisionGeometryPtr &p_geom, int link_id,
-                          const Vector7<S> &pose);
-
-  /**
-   * Add a box as the attached tool.
-   *
-   * @param size: size of the box, [size_x, size_y, size_z]
-   * @param link_id: link id of the attached box
-   * @param pose: pose of the attached box w.r.t. the link it's attached to.
-   *              [x, y, z, qw, qx, qy, qz]
-   */
-  void updateAttachedBox(const Vector3<S> &size, int link_id, const Vector7<S> &pose);
-
-  /**
-   * Add a sphere as the attached tool.
-   *
-   * @param radius: radius of the sphere
-   * @param link_id: link id of the attached sphere
-   * @param pose: pose of the attached sphere w.r.t. the link it's attached to.
-   *              [x, y, z, qw, qx, qy, qz]
-   */
-  void updateAttachedSphere(S radius, int link_id, const Vector7<S> &pose);
-
-  /**
-   * Add a mesh as the attached tool.
-   *
-   * @param mesh_path: path to the mesh file
-   * @param link_id: link id of the attached mesh
-   * @param pose: pose of the attached mesh w.r.t. the link it's attached to.
-   *              [x, y, z, qw, qx, qy, qz]
-   */
-  void updateAttachedMesh(const std::string &mesh_path, int link_id,
-                          const Vector7<S> &pose);
-
-  /// Print the pose of the attached tool.
-  void printAttachedToolPose() const {
-    const auto tmp1 = attached_tool_.get()->getTranslation();
-    const auto tmp2 = attached_tool_.get()->getRotation();
-    print_info("Attached tool pose: ", tmp1.transpose(), " ", tmp2);
+  AttachedBodyPtr getAttachedObject(const std::string &name) const {
+    auto it = attached_body_map_.find(name);
+    return it != attached_body_map_.end() ? it->second : nullptr;
   }
 
   /**
-   * Set the joint qpos of the articulated model.
+   * Attaches existing normal object to specified link of articulation at its current
+   * pose. If the object is currently attached, disallow collision between the object
+   * and previous touch_links.
+   * Updates acm_ to allow collisions between attached object and touch_links.
    *
-   * @param index: index of the articulated model
-   * @param qpos: joint angles of the *movegroup only*
+   * @param name: normal object name to attach
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param touch_links: link names that the attached object touches
+   * @throws std::out_of_range if normal object with given name does not exist
+   *  or if planned articulation with given name does not exist
    */
-  void setQpos(int index, const VectorX<S> &qpos) const;
+  void attachObject(const std::string &name, const std::string &art_name, int link_id,
+                    const std::vector<std::string> &touch_links);
 
   /**
-   * Set the joint qpos of all articulated models.
+   * Attaches existing normal object to specified link of articulation at its current
+   * pose. If the object is not currently attached, automatically sets touch_links as
+   * the name of self links that collide with the object in the current state.
+   * Updates acm_ to allow collisions between attached object and touch_links.
+   * If the object is already attached, the touch_links of the attached object
+   * is preserved and acm_ remains unchanged.
    *
-   * @param qpos: joint angles of all the models (*movegroup only*)
+   * @param name: normal object name to attach
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @throws std::out_of_range if normal object with given name does not exist
+   *  or if planned articulation with given name does not exist
    */
-  void setQposAll(const VectorX<S> &qpos) const;
+  void attachObject(const std::string &name, const std::string &art_name, int link_id);
 
   /**
-   * Check collision in the planning world.
+   * Attaches existing normal object to specified link of articulation at given pose.
+   * If the object is currently attached, disallow collision between the object
+   * and previous touch_links.
+   * Updates acm_ to allow collisions between attached object and touch_links.
    *
-   * @param request: collision request params. Can leave empty for default value
+   * @param name: normal object name to attach
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param pose: attached pose (relative pose from attached link to object)
+   * @param touch_links: link names that the attached object touches
+   * @throws std::out_of_range if normal object with given name does not exist
+   *  or if planned articulation with given name does not exist
+   */
+  void attachObject(const std::string &name, const std::string &art_name, int link_id,
+                    const Vector7<S> &pose,
+                    const std::vector<std::string> &touch_links);
+
+  /**
+   * Attaches existing normal object to specified link of articulation at given pose.
+   * If the object is not currently attached, automatically sets touch_links as
+   * the name of self links that collide with the object in the current state.
+   * Updates acm_ to allow collisions between attached object and touch_links.
+   * If the object is already attached, the touch_links of the attached object
+   * is preserved and acm_ remains unchanged.
+   *
+   * @param name: normal object name to attach
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param pose: attached pose (relative pose from attached link to object)
+   * @throws std::out_of_range if normal object with given name does not exist
+   *  or if planned articulation with given name does not exist
+   */
+  void attachObject(const std::string &name, const std::string &art_name, int link_id,
+                    const Vector7<S> &pose);
+
+  /**
+   * Attaches given object (w/ p_geom) to specified link of articulation at given pose.
+   * This is done by removing normal object and then adding and attaching object.
+   * As a result, all previous acm_ entries with the object are removed
+   *
+   * @param name: normal object name to attach
+   * @param p_geom: pointer to a CollisionGeometry object
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param pose: attached pose (relative pose from attached link to object)
+   * @param touch_links: link names that the attached object touches
+   */
+  void attachObject(const std::string &name, const CollisionGeometryPtr &p_geom,
+                    const std::string &art_name, int link_id, const Vector7<S> &pose,
+                    const std::vector<std::string> &touch_links);
+
+  /**
+   * Attaches given object (w/ p_geom) to specified link of articulation at given pose.
+   * This is done by removing normal object and then adding and attaching object.
+   * As a result, all previous acm_ entries with the object are removed.
+   * Automatically sets touch_links as the name of self links
+   * that collide with the object in the current state (auto touch_links).
+   *
+   * @param name: normal object name to attach
+   * @param p_geom: pointer to a CollisionGeometry object
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param pose: attached pose (relative pose from attached link to object)
+   */
+  void attachObject(const std::string &name, const CollisionGeometryPtr &p_geom,
+                    const std::string &art_name, int link_id, const Vector7<S> &pose);
+
+  /**
+   * Attaches given sphere to specified link of articulation (auto touch_links)
+   *
+   * @param radius: sphere radius
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param pose: attached pose (relative pose from attached link to object)
+   */
+  void attachSphere(S radius, const std::string &art_name, int link_id,
+                    const Vector7<S> &pose);
+
+  /**
+   * Attaches given box to specified link of articulation (auto touch_links)
+   *
+   * @param size: box side length
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param pose: attached pose (relative pose from attached link to object)
+   */
+  void attachBox(const Vector3<S> &size, const std::string &art_name, int link_id,
+                 const Vector7<S> &pose);
+
+  /**
+   * Attaches given mesh to specified link of articulation (auto touch_links)
+   *
+   * @param mesh_path: path to a mesh file
+   * @param art_name: name of the planned articulation to attach to
+   * @param link_id: index of the link of the planned articulation to attach to
+   * @param pose: attached pose (relative pose from attached link to object)
+   */
+  void attachMesh(const std::string &mesh_path, const std::string &art_name,
+                  int link_id, const Vector7<S> &pose);
+
+  /**
+   * Detaches object with given name.
+   * Updates acm_ to disallow collision between the object and touch_links.
+   *
+   * @param name: normal object name to detach
+   * @param also_remove: whether to also remove object from world
+   * @return: ``true`` if success, ``false`` if the object with given name is not
+   *  attached
+   */
+  bool detachObject(const std::string &name, bool also_remove = false);
+
+  /// @brief Prints global pose of all attached bodies
+  void printAttachedBodyPose() const;
+
+  /**
+   * Set qpos of articulation with given name
+   *
+   * @param name: name of the articulated model
+   * @param qpos: joint angles of the *movegroup only*  // FIXME: double check
+   */
+  void setQpos(const std::string &name, const VectorX<S> &qpos) const;
+
+  /// @brief Set qpos of all planned articulations
+  void setQposAll(const VectorX<S> &state) const;
+
+  /// @brief Get the current allowed collision matrix
+  AllowedCollisionMatrixPtr getAllowedCollisionMatrix() const { return acm_; }
+
+  // TODO(merge): rename collision/distance function name to align with MoveIt2
+  /**
+   * Check full collision and return only a boolean indicating collision
+   *
+   * @param request: collision request params.
    * @return: ``true`` if collision exists
    */
   bool collide(const CollisionRequest &request = CollisionRequest()) const {
-    return collideFull(0, request).size() > 0;
+    return collideFull(request).size() > 0;
   }
 
   /**
-   * Check collision between the articulated model and itself.
+   * Check self collision (including planned articulation self-collision,
+   * planned articulation-attach collision, attach-attach collision)
    *
-   * @param index: index of the articulated model
-   * @param request: collision request params. Can leave empty for default value
+   * @param request: collision request params.
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> selfCollide(
-      size_t index, const CollisionRequest &request = CollisionRequest()) const;
+      const CollisionRequest &request = CollisionRequest()) const;
   /**
-   * Check collision between the articulated model and other objects.
+   * Check collision with other scene bodies (planned articulations with
+   * attached objects collide against unplanned articulations and scene objects)
    *
-   * @param index: index of the articulated model
-   * @param request: collision request params. Can leave empty for default value
+   * @param request: collision request params.
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> collideWithOthers(
-      size_t index, const CollisionRequest &request = CollisionRequest()) const;
+      const CollisionRequest &request = CollisionRequest()) const;
 
   /**
-   * Check collision between the articulated model and all objects.
+   * Check full collision (calls selfCollide() and collideWithOthers())
    *
-   * @param index: index of the articulated model
-   * @param request: collision request params. Can leave empty for default value
+   * @param request: collision request params.
    * @return: List of WorldCollisionResult objects
    */
   std::vector<WorldCollisionResult> collideFull(
-      size_t index, const CollisionRequest &request = CollisionRequest()) const;
+      const CollisionRequest &request = CollisionRequest()) const;
 
-  bool use_point_cloud_, use_attach_;  // expose to python
+  /**
+   * Returns the minimum distance-to-collision in current state
+   *
+   * @param request: distance request params.
+   * @return: minimum distance-to-collision
+   */
+  S distance(const DistanceRequest &request = DistanceRequest()) const {
+    return distanceFull().min_distance;
+  }
+
+  /**
+   * Get the min distance to self-collision given the robot in current state
+   *
+   * @param request: distance request params.
+   * @return: a WorldDistanceResult object
+   */
+  WorldDistanceResult distanceSelf(
+      const DistanceRequest &request = DistanceRequest()) const;
+
+  /**
+   * Compute the min distance between a robot and the world
+   *
+   * @param request: distance request params.
+   * @return: a WorldDistanceResult object
+   */
+  WorldDistanceResult distanceOthers(
+      const DistanceRequest &request = DistanceRequest()) const;
+
+  /**
+   * Compute the min distance to collision (calls distanceSelf() and distanceOthers())
+   *
+   * @param request: distance request params.
+   * @return: a WorldDistanceResult object
+   */
+  WorldDistanceResult distanceFull(
+      const DistanceRequest &request = DistanceRequest()) const;
 
  private:
-  std::vector<ArticulatedModelPtr> articulations_;
-  std::vector<std::string> articulation_names_;
-
+  std::unordered_map<std::string, ArticulatedModelPtr> articulation_map_;
+  // TODO: add name to CollisionObject similar as ArticulatedModel
   std::unordered_map<std::string, CollisionObjectPtr> normal_object_map_;
 
-  int move_articulation_id_, attach_link_id_;
-  CollisionObjectPtr point_cloud_, attached_tool_;
-  bool has_point_cloud_, has_attach_;
-  Isometry3<S> attach_to_link_pose_;
+  // TODO: can planned_articulations_ be unordered_map? (setQposAll)
+  std::map<std::string, ArticulatedModelPtr> planned_articulation_map_;
+  std::unordered_map<std::string, AttachedBodyPtr> attached_body_map_;
 
+  AllowedCollisionMatrixPtr acm_;
+
+  // TODO: Switch to BroadPhaseCollision
   // BroadPhaseCollisionManagerPtr normal_manager;
+
+  /// @brief Update attached bodies global pose using current state
+  void updateAttachedBodiesPose() const {
+    for (const auto &[name, attached_body] : attached_body_map_)
+      attached_body->updatePose();
+  }
+
+  /// @brief Filter collisions using acm_
+  std::vector<WorldCollisionResult> filterCollisions(
+      const std::vector<WorldCollisionResult> &collisions) const;
 };
 
 // Common Type Alias ===================================================================

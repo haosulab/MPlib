@@ -48,11 +48,10 @@ class TestArticulation(unittest.TestCase):
         self.robot = mplib.ArticulatedModel(
             PANDA_SPEC["urdf"],
             PANDA_SPEC["srdf"],
-            gravity=[0, 0, -9.81],
-            joint_names=[],
             link_names=[],
-            verbose=False,
+            joint_names=[],
             convex=True,
+            verbose=False,
         )
 
         self.target_pose = [0.4, 0.3, 0.12, 0, 1, 0, 0]

@@ -36,19 +36,19 @@ class PlanningDemo(DemoSetup):
         # boxes ankor
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.06])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.06], color=[1, 0, 0])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.06])
         red_cube = builder.build(name="red_cube")
         red_cube.set_pose(sapien.Pose([0.4, 0.3, 0.06]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.04])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.04], color=[0, 1, 0])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.04])
         green_cube = builder.build(name="green_cube")
         green_cube.set_pose(sapien.Pose([0.2, -0.3, 0.04]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.07])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.07], color=[0, 0, 1])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.07])
         blue_cube = builder.build(name="blue_cube")
         blue_cube.set_pose(sapien.Pose([0.6, 0.1, 0.07]))
         # boxes ankor end

@@ -35,12 +35,32 @@ Construct an articulated model from URDF and SRDF files.
 :param urdf_filename: path to URDF file, can be relative to the current working
     directory
 :param srdf_filename: path to SRDF file, we use it to disable self-collisions
-:param gravity: gravity vector
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param link_names: list of links that are considered for planning
 :param joint_names: list of joints that are considered for planning
 :param convex: use convex decomposition for collision objects. Default:
     ``False``.
 :param verbose: print debug information. Default: ``False``.)doc";
+
+static const char *__doc_mplib_ArticulatedModelTpl_ArticulatedModelTpl_2 =
+R"doc(
+Dummy default constructor that is protected by Secret. Used by
+``createFromURDFString()`` only)doc";
+
+static const char *__doc_mplib_ArticulatedModelTpl_createFromURDFString =
+R"doc(
+Constructs an ArticulatedModel from URDF/SRDF strings and collision links
+
+:param urdf_string: URDF string (without visual/collision elements for links)
+:param srdf_string: SRDF string (only disable_collisions element)
+:param collision_links: Collision link names and the vector of
+    CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
+    ...]``. The collision objects are at the shape's local_pose.
+:param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
+:param link_names: list of links that are considered for planning
+:param joint_names: list of joints that are considered for planning
+:param verbose: print debug information. Default: ``False``.
+:return: a unique_ptr to ArticulatedModel)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_getBasePose =
 R"doc(
@@ -71,6 +91,12 @@ R"doc(
 Get the joint names of the move group.
 
 :return: list of joint names of the move group)doc";
+
+static const char *__doc_mplib_ArticulatedModelTpl_getName =
+R"doc(
+Get name of the articulated model.
+
+:return: name of the articulated model)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_getPinocchioModel =
 R"doc(
@@ -113,14 +139,20 @@ R"doc(
 Set the move group, i.e. the chain ending in end effector for which to compute
 the forward kinematics for all subsequent queries.
 
-:param chain: list of links extending to the end effector)doc";
+:param end_effector: name of the end effector link)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_setMoveGroup_2 =
 R"doc(
 Set the move group but we have multiple end effectors in a chain. I.e., Base -->
 EE1 --> EE2 --> ... --> EEn
 
-:param end_effectors: names of the end effector link)doc";
+:param end_effectors: list of links extending to the end effector)doc";
+
+static const char *__doc_mplib_ArticulatedModelTpl_setName =
+R"doc(
+Set name of the articulated model.
+
+@param: name of the articulated model)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_setQpos =
 R"doc(

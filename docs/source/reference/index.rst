@@ -5,8 +5,10 @@ API Reference
    :maxdepth: 2
 
    Planner
-   ArticulatedModel
    PlanningWorld
+   core/ArticulatedModel
+   core/AttachedBody
+   utils/random
 
 .. toctree::
    :maxdepth: 3

@@ -20,4 +20,7 @@ using FCLModelTplPtr = fcl::FCLModelTplPtr<S>;
 template <typename S>
 using WorldCollisionResultTpl = collision_detection::WorldCollisionResultTpl<S>;
 
+template <typename S>
+using WorldDistanceResultTpl = collision_detection::WorldDistanceResultTpl<S>;
+
 }  // namespace mplib

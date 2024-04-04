@@ -23,9 +23,20 @@ void build_pypinocchio_model(py::module &m) {
 
   PyPinocchioModel
       .def(py::init<const std::string &, const Vector3<S> &, bool>(),
-           py::arg("urdf_filename"), py::arg("gravity") = Vector3<S> {0, 0, -9.81},
-           py::arg("verbose") = false,
+           py::arg("urdf_filename"), py::kw_only(),
+           py::arg("gravity") = Vector3<S> {0, 0, -9.81}, py::arg("verbose") = false,
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, PinocchioModelTpl))
+
+      .def_static(
+          "create_from_urdf_string",
+          [](const std::string &urdf_string, const Vector3<S> &gravity, bool verbose) {
+            std::shared_ptr<PinocchioModel> pinocchio_model =
+                PinocchioModel::createFromURDFString(urdf_string, gravity, verbose);
+            return pinocchio_model;
+          },
+          py::arg("urdf_string"), py::kw_only(),
+          py::arg("gravity") = Vector3<S> {0, 0, -9.81}, py::arg("verbose") = false,
+          DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, createFromURDFString))
 
       .def("get_leaf_links", &PinocchioModel::getLeafLinks,
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getLeafLinks))
