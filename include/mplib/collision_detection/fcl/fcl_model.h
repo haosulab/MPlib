@@ -162,7 +162,6 @@ class FCLModelTpl {
 
   std::vector<fcl::FCLObject<S>> collision_objects_;
   std::vector<std::string> collision_link_names_;
-  std::vector<std::string> parent_link_names_;
   std::vector<std::pair<size_t, size_t>> collision_pairs_;
 
   std::vector<std::string> user_link_names_;

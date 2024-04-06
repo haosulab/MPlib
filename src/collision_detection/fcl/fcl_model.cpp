@@ -53,7 +53,6 @@ std::unique_ptr<FCLModelTpl<S>> FCLModelTpl<S>::createFromURDFString(
     for (const auto &collision_obj : collision_objs) {
       fcl_model->collision_objects_.push_back(collision_obj);
       fcl_model->collision_link_names_.push_back(link_name);
-      // fcl_model->parent_link_names_.push_back(parent_link_name);  // FIXME: remove
       fcl_model->collision_origin2link_poses_.push_back(collision_obj->getTransform());
     }
   // setLinkOrder with unique collision link names as user_link_names
@@ -88,13 +87,8 @@ void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
 
   for (size_t i = 0; i < collision_link_names_.size(); i++)
     for (size_t j = 0; j < i; j++)
-      if (collision_link_names_[i] != collision_link_names_[j] &&
-          parent_link_names_[i] != collision_link_names_[j] &&
-          parent_link_names_[j] != collision_link_names_[i]) {
-        // We assume that the collisions between objects append to the same joint can be
-        // ignored.
+      if (collision_link_names_[i] != collision_link_names_[j])
         collision_pairs_.push_back(std::make_pair(j, i));
-      }
 }
 
 template <typename S>
@@ -154,7 +148,6 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
 
       collision_objects_.push_back(fcl_obj);
       collision_link_names_.push_back(link->name);
-      parent_link_names_.push_back(parent_link_name);
     }
   }
   for (const auto &child : link->child_links) dfsParseTree(child, link->name);
