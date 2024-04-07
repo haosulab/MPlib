@@ -54,7 +54,7 @@ R"doc(
 Perform self-collision checking.
 
 :param request: collision request
-:return: ``True`` if any collision pair collides)doc";
+:return: ``True`` if any collision pair collides and ``False`` otherwise.)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_collideFull =
 R"doc(
@@ -68,9 +68,9 @@ R"doc(
 Constructs a FCLModel from URDF string and collision links
 
 :param urdf_string: URDF string (without visual/collision elements for links)
-:param collision_links: Collision link names and the vector of
-    CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
-    ...]``. The collision objects are at the shape's local_pose.
+:param collision_links: Vector of collision link names and FCLObjectPtr. Format
+    is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
+    shape's local_pose.
 :param verbose: print debug information. Default: ``False``.
 :return: a unique_ptr to FCLModel)doc";
 
@@ -131,7 +131,9 @@ Update the collision objects of the FCL model.
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_updateCollisionObjects_2 =
 R"doc(
-)doc";
+Update the collision objects of the FCL model.
+
+:param link_poses: list of link poses in the order of the link order)doc";
 
 /* ----- Begin of custom docstring section ----- */
 

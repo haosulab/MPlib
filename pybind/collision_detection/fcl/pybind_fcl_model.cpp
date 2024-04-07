@@ -20,7 +20,6 @@ namespace mplib::collision_detection::fcl {
 using FCLModel = FCLModelTpl<S>;
 
 using CollisionRequest = fcl::CollisionRequest<S>;
-using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
 
 void build_pyfcl_model(py::module &m) {
   auto PyFCLModel = py::class_<FCLModel, std::shared_ptr<FCLModel>>(
@@ -33,7 +32,7 @@ void build_pyfcl_model(py::module &m) {
       .def_static(
           "create_from_urdf_string",
           [](const std::string &urdf_string,
-             const std::vector<std::pair<std::string, std::vector<CollisionObjectPtr>>>
+             const std::vector<std::pair<std::string, FCLObjectPtr<S>>>
                  &collision_links,
              bool verbose) {
             std::shared_ptr<FCLModel> fcl_model =

@@ -53,9 +53,9 @@ Constructs an ArticulatedModel from URDF/SRDF strings and collision links
 
 :param urdf_string: URDF string (without visual/collision elements for links)
 :param srdf_string: SRDF string (only disable_collisions element)
-:param collision_links: Collision link names and the vector of
-    CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
-    ...]``. The collision objects are at the shape's local_pose.
+:param collision_links: Vector of collision link names and FCLObjectPtr. Format
+    is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
+    shape's local_pose.
 :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param link_names: list of links that are considered for planning
 :param joint_names: list of joints that are considered for planning

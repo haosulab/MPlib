@@ -24,6 +24,7 @@ __all__ = [
     "DistanceResult",
     "Ellipsoid",
     "FCLModel",
+    "FCLObject",
     "GJKSolverType",
     "GST_INDEP",
     "GST_LIBCCD",
@@ -558,7 +559,7 @@ class FCLModel:
     @staticmethod
     def create_from_urdf_string(
         urdf_string: str,
-        collision_links: list[tuple[str, list[CollisionObject]]],
+        collision_links: list[tuple[str, ...]],
         *,
         verbose: bool = False,
     ) -> FCLModel:
@@ -566,9 +567,9 @@ class FCLModel:
         Constructs a FCLModel from URDF string and collision links
 
         :param urdf_string: URDF string (without visual/collision elements for links)
-        :param collision_links: Collision link names and the vector of
-            CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
-            ...]``. The collision objects are at the shape's local_pose.
+        :param collision_links: Vector of collision link names and FCLObjectPtr. Format
+            is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
+            shape's local_pose.
         :param verbose: print debug information. Default: ``False``.
         :return: a unique_ptr to FCLModel
         """
@@ -589,7 +590,7 @@ class FCLModel:
         Perform self-collision checking.
 
         :param request: collision request
-        :return: ``True`` if any collision pair collides
+        :return: ``True`` if any collision pair collides and ``False`` otherwise.
         """
     def collide_full(self, request: CollisionRequest = ...) -> list[CollisionResult]:
         """
@@ -599,7 +600,7 @@ class FCLModel:
         :return: list of CollisionResult for each collision pair
         """
     def get_collision_link_names(self) -> list[str]: ...
-    def get_collision_objects(self) -> list[CollisionObject]:
+    def get_collision_objects(self) -> list[...]:
         """
         Get the collision objects of the FCL model.
 
@@ -638,6 +639,56 @@ class FCLModel:
         Update the collision objects of the FCL model.
 
         :param link_poses: list of link poses in the order of the link order
+        """
+
+class FCLObject:
+    """
+    A general high-level object which consists of multiple FCLCollisionObjects. It
+    is the top level data structure which is used in the collision checking process.
+
+    Mimicking MoveIt2's ``collision_detection::FCLObject`` and
+    ``collision_detection::World::Object``
+
+    https://moveit.picknik.ai/main/api/html/structcollision__detection_1_1FCLObject.html
+    https://moveit.picknik.ai/main/api/html/structcollision__detection_1_1World_1_1Object.html
+    """
+    @staticmethod
+    @typing.overload
+    def __init__(*args, **kwargs) -> None:
+        """
+        Construct a new FCLObject with the given name and shapes
+
+        :param name: name of this FCLObject
+        :param pose: pose of this FCLObject. All shapes are relative to this pose
+        :param shapes: all collision shapes as a vector of ``fcl::CollisionObjectPtr``
+        :param shape_poses: relative poses from this FCLObject to each collision shape
+        """
+    @typing.overload
+    def __init__(self, name: str) -> None:
+        """
+        Construct a new FCLObject with the given name
+
+        :param name: name of this FCLObject
+        """
+    @property
+    def name(self) -> str:
+        """
+        Name of this FCLObject
+        """
+    @property
+    def pose(self) -> ...:
+        """
+        Pose of this FCLObject. All shapes are relative to this pose
+        """
+    @property
+    def shape_poses(self) -> list[..., 3, 1, ...]:
+        """
+        Relative poses from this FCLObject to each collision shape
+        """
+    @property
+    def shapes(self) -> list[CollisionObject]:
+        """
+        All collision shapes (``fcl::CollisionObjectPtr``) making up this FCLObject
         """
 
 class GJKSolverType:
@@ -879,11 +930,21 @@ class TriangleP(CollisionGeometry):
         :param c: vector of point ``z`` coordinates
         """
 
+@typing.overload
 def collide(
-    arg0: CollisionObject, arg1: CollisionObject, arg2: CollisionRequest
+    obj1: CollisionObject, obj2: CollisionObject, request: CollisionRequest = ...
 ) -> CollisionResult: ...
+@typing.overload
+def collide(
+    obj1: FCLObject, obj2: FCLObject, request: CollisionRequest = ...
+) -> CollisionResult: ...
+@typing.overload
 def distance(
-    arg0: CollisionObject, arg1: CollisionObject, arg2: DistanceRequest
+    obj1: CollisionObject, obj2: CollisionObject, request: DistanceRequest = ...
+) -> DistanceResult: ...
+@typing.overload
+def distance(
+    obj1: FCLObject, obj2: FCLObject, request: DistanceRequest = ...
 ) -> DistanceResult: ...
 def load_mesh_as_BVH(
     mesh_path: str,

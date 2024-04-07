@@ -21,7 +21,7 @@ using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 using CollisionRequest = fcl::CollisionRequest<S>;
 using DistanceRequest = fcl::DistanceRequest<S>;
 using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
-using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
+using FCLObjectPtr = collision_detection::FCLObjectPtr<S>;
 
 void build_pyplanning_world(py::module &pymp) {
   auto PyPlanningWorld = py::class_<PlanningWorld, std::shared_ptr<PlanningWorld>>(
@@ -29,11 +29,10 @@ void build_pyplanning_world(py::module &pymp) {
 
   PyPlanningWorld
       .def(py::init<const std::vector<ArticulatedModelPtr> &,
-                    const std::vector<std::string> &,
-                    const std::vector<CollisionObjectPtr> &,
+                    const std::vector<std::string> &, const std::vector<FCLObjectPtr> &,
                     const std::vector<std::string> &>(),
            py::arg("articulations"), py::arg("articulation_names"),
-           py::arg("normal_objects") = std::vector<CollisionObjectPtr>(),
+           py::arg("normal_objects") = std::vector<FCLObjectPtr>(),
            py::arg("normal_object_names") = std::vector<std::string>(),
            DOC(mplib, PlanningWorldTpl, PlanningWorldTpl))
 

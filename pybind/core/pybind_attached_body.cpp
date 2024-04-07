@@ -16,14 +16,14 @@ namespace py = pybind11;
 namespace mplib {
 
 using AttachedBody = AttachedBodyTpl<S>;
-using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
+using FCLObjectPtr = collision_detection::FCLObjectPtr<S>;
 using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 
 void build_pyattached_body(py::module &pymp) {
   auto PyAttachedBody = py::class_<AttachedBody, std::shared_ptr<AttachedBody>>(
       pymp, "AttachedBody", DOC(mplib, AttachedBodyTpl));
   PyAttachedBody
-      .def(py::init([](const std::string &name, const CollisionObjectPtr &object,
+      .def(py::init([](const std::string &name, const FCLObjectPtr &object,
                        const ArticulatedModelPtr &attached_articulation,
                        int attached_link_id, const Vector7<S> &posevec,
                        const std::vector<std::string> &touch_links) {

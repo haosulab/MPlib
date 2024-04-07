@@ -19,22 +19,21 @@ template <typename S>
 PlanningWorldTpl<S>::PlanningWorldTpl(
     const std::vector<ArticulatedModelPtr> &articulations,
     const std::vector<std::string> &articulation_names,
-    const std::vector<CollisionObjectPtr> &normal_objects,
+    const std::vector<FCLObjectPtr> &normal_objects,
     const std::vector<std::string> &normal_object_names)
     : acm_(std::make_shared<AllowedCollisionMatrix>()) {
   ASSERT(articulations.size() == articulation_names.size(),
          "articulations and articulation_names should have the same size");
   ASSERT(normal_objects.size() == normal_object_names.size(),
          "normal_objects and normal_object_names should have the same size");
-  // TODO(merge): remove articulation_names, and normal_object_names
+  // TODO(merge): remove articulation_names and normal_object_names
   for (size_t i = 0; i < articulations.size(); i++) {
     articulations[i]->setName(articulation_names[i]);
     articulation_map_[articulation_names[i]] = articulations[i];
     planned_articulation_map_[articulation_names[i]] = articulations[i];
   }
-  for (size_t i = 0; i < normal_objects.size(); i++) {
-    setNormalObject(normal_object_names[i], normal_objects[i]);
-  }
+  for (size_t i = 0; i < normal_objects.size(); i++)
+    normal_object_map_[normal_object_names[i]] = normal_objects[i];
 }
 
 template <typename S>
@@ -98,8 +97,12 @@ void PlanningWorldTpl<S>::addPointCloud(const std::string &name,
   auto tree = std::make_shared<octomap::OcTree>(resolution);
   for (const auto &row : vertices.rowwise())
     tree->updateNode(octomap::point3d(row(0), row(1), row(2)), true);
-  auto obj = std::make_shared<CollisionObject>(std::make_shared<fcl::OcTree<S>>(tree));
-  addNormalObject(name, obj);
+  addNormalObject(
+      name, std::make_shared<FCLObject>(
+                name, Isometry3<S>::Identity(),
+                std::vector<CollisionObjectPtr> {std::make_shared<CollisionObject>(
+                    std::make_shared<fcl::OcTree<S>>(tree))},
+                std::vector<Isometry3<S>> {Isometry3<S>::Identity()}));
 }
 
 template <typename S>
@@ -117,7 +120,7 @@ template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
                                        const std::vector<std::string> &touch_links) {
-  const auto T_world_obj = normal_object_map_.at(name)->getTransform();
+  const auto T_world_obj = normal_object_map_.at(name)->pose;
   const auto T_world_link = toIsometry(
       planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(
           link_id));
@@ -128,7 +131,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id) {
-  const auto T_world_obj = normal_object_map_.at(name)->getTransform();
+  const auto T_world_obj = normal_object_map_.at(name)->pose;
   const auto T_world_link = toIsometry(
       planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(
           link_id));
@@ -192,7 +195,12 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const Vector7<S> &pose,
                                        const std::vector<std::string> &touch_links) {
   removeNormalObject(name);
-  addNormalObject(name, std::make_shared<CollisionObject>(p_geom));
+  addNormalObject(
+      name,
+      std::make_shared<FCLObject>(
+          name, Isometry3<S>::Identity(),
+          std::vector<CollisionObjectPtr> {std::make_shared<CollisionObject>(p_geom)},
+          std::vector<Isometry3<S>> {Isometry3<S>::Identity()}));
   attachObject(name, art_name, link_id, pose, touch_links);
 }
 
@@ -202,7 +210,12 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
                                        const Vector7<S> &pose) {
   removeNormalObject(name);
-  addNormalObject(name, std::make_shared<CollisionObject>(p_geom));
+  addNormalObject(
+      name,
+      std::make_shared<FCLObject>(
+          name, Isometry3<S>::Identity(),
+          std::vector<CollisionObjectPtr> {std::make_shared<CollisionObject>(p_geom)},
+          std::vector<Isometry3<S>> {Isometry3<S>::Identity()}));
   attachObject(name, art_name, link_id, pose);
 }
 
@@ -226,6 +239,7 @@ template <typename S>
 void PlanningWorldTpl<S>::attachMesh(const std::string &mesh_path,
                                      const std::string &art_name, int link_id,
                                      const Vector7<S> &pose) {
+  // TODO(merge): Convex mesh?
   // FIXME: Use link_name to avoid changes
   auto name = art_name + "_" + std::to_string(link_id) + "_mesh";
   attachObject(
@@ -319,43 +333,39 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
         ret.push_back(tmp);
       }
 
-    // Collision among planned_articulations_
+    // Collision among planned_articulation_map_
     for (const auto &[art_name2, art2] : planned_articulation_map_) {
       if (art_name == art_name2) break;
-      auto fcl_model2 = art2->getFCLModel();
-      auto col_objs2 = fcl_model2->getCollisionObjects();
-      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
-
-      for (size_t i = 0; i < col_objs.size(); i++)
-        for (size_t j = 0; j < col_objs2.size(); j++) {
+      for (const auto &col_obj : col_objs)
+        for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects()) {
           result.clear();
-          ::fcl::collide(col_objs[i].get(), col_objs2[j].get(), request, result);
+          collision_detection::fcl::collide(col_obj, col_obj2, request, result);
           if (result.isCollision()) {
             WorldCollisionResult tmp;
             tmp.res = result;
             tmp.collision_type = "self_articulation";
             tmp.object_name1 = art_name;
             tmp.object_name2 = art_name2;
-            tmp.link_name1 = col_link_names[i];
-            tmp.link_name2 = col_link_names2[j];
+            tmp.link_name1 = col_obj->name;
+            tmp.link_name2 = col_obj2->name;
             ret.push_back(tmp);
           }
         }
     }
 
-    // Articulation collide with attached_bodies_
+    // Articulation collide with attached_body_map_
     for (const auto &[attached_body_name, attached_body] : attached_body_map_) {
-      auto attached_obj = attached_body->getObject();
-      for (size_t i = 0; i < col_objs.size(); i++) {
+      const auto attached_obj = attached_body->getObject();
+      for (const auto &col_obj : col_objs) {
         result.clear();
-        ::fcl::collide(attached_obj.get(), col_objs[i].get(), request, result);
+        collision_detection::fcl::collide(attached_obj, col_obj, request, result);
         if (result.isCollision()) {
           WorldCollisionResult tmp;
           tmp.res = result;
           tmp.collision_type = "self_attach";
           tmp.object_name1 = art_name;
           tmp.object_name2 = attached_body_name;
-          tmp.link_name1 = col_link_names[i];
+          tmp.link_name1 = col_obj->name;
           tmp.link_name2 = attached_body_name;
           ret.push_back(tmp);
         }
@@ -363,12 +373,12 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
     }
   }
 
-  // Collision among attached_bodies_
+  // Collision among attached_body_map_
   for (auto it = attached_body_map_.begin(); it != attached_body_map_.end(); ++it)
     for (auto it2 = attached_body_map_.begin(); it2 != it; ++it2) {
       result.clear();
-      ::fcl::collide(it->second->getObject().get(), it2->second->getObject().get(),
-                     request, result);
+      collision_detection::fcl::collide(it->second->getObject(),
+                                        it2->second->getObject(), request, result);
       if (result.isCollision()) {
         auto name1 = it->first, name2 = it2->first;
         WorldCollisionResult tmp;
@@ -394,102 +404,87 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
 
   // Collect unplanned articulations, not attached scene objects
   std::vector<ArticulatedModelPtr> unplanned_articulations;
-  std::unordered_map<std::string, CollisionObjectPtr> scene_objects;
+  std::vector<FCLObjectPtr> scene_objects;
   for (const auto &[name, art] : articulation_map_)
     if (planned_articulation_map_.find(name) == planned_articulation_map_.end())
       unplanned_articulations.push_back(art);
   for (const auto &[name, obj] : normal_object_map_)
     if (attached_body_map_.find(name) == attached_body_map_.end())
-      scene_objects[name] = obj;
+      scene_objects.push_back(obj);
 
   // Collision involving planned articulation
   for (const auto &[art_name, art] : planned_articulation_map_) {
     auto fcl_model = art->getFCLModel();
     auto col_objs = fcl_model->getCollisionObjects();
-    auto col_link_names = fcl_model->getCollisionLinkNames();
 
     // Collision with unplanned articulation
-    for (const auto &art2 : unplanned_articulations) {
-      auto art_name2 = art2->getName();
-      auto fcl_model2 = art2->getFCLModel();
-      auto col_objs2 = fcl_model2->getCollisionObjects();
-      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
-
-      for (size_t i = 0; i < col_objs.size(); i++)
-        for (size_t j = 0; j < col_objs2.size(); j++) {
+    for (const auto &art2 : unplanned_articulations)
+      for (const auto &col_obj : col_objs)
+        for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects()) {
           result.clear();
-          ::fcl::collide(col_objs[i].get(), col_objs2[j].get(), request, result);
+          collision_detection::fcl::collide(col_obj, col_obj2, request, result);
           if (result.isCollision()) {
             WorldCollisionResult tmp;
             tmp.res = result;
             tmp.collision_type = "articulation_articulation";
             tmp.object_name1 = art_name;
-            tmp.object_name2 = art_name2;
-            tmp.link_name1 = col_link_names[i];
-            tmp.link_name2 = col_link_names2[j];
+            tmp.object_name2 = art2->getName();
+            tmp.link_name1 = col_obj->name;
+            tmp.link_name2 = col_obj2->name;
             ret.push_back(tmp);
           }
         }
-    }
 
     // Collision with scene objects
-    for (const auto &[name, obj] : scene_objects)
-      for (size_t i = 0; i < col_objs.size(); i++) {
+    for (const auto &scene_obj : scene_objects)
+      for (const auto &col_obj : col_objs) {
         result.clear();
-        collision_detection::fcl::collideFCLObjects(
-            CollisionObjects[j], CollisionObjects_other[k], request, result);
+        collision_detection::fcl::collide(col_obj, scene_obj, request, result);
         if (result.isCollision()) {
           WorldCollisionResult tmp;
           tmp.res = result;
           tmp.collision_type = "articulation_sceneobject";
           tmp.object_name1 = art_name;
-          tmp.object_name2 = name;
-          tmp.link_name1 = col_link_names[i];
-          tmp.link_name2 = name;
+          tmp.object_name2 = scene_obj->name;
+          tmp.link_name1 = col_obj->name;
+          tmp.link_name2 = scene_obj->name;
           ret.push_back(tmp);
         }
       }
   }
 
-  // Collision involving attached_bodies_
+  // Collision involving attached_body_map_
   for (const auto &[attached_body_name, attached_body] : attached_body_map_) {
-    auto attached_obj = attached_body->getObject();
-
+    const auto attached_obj = attached_body->getObject();
     // Collision with unplanned articulation
-    for (const auto &art2 : unplanned_articulations) {
-      auto art_name2 = art2->getName();
-      auto fcl_model2 = art2->getFCLModel();
-      auto col_objs2 = fcl_model2->getCollisionObjects();
-      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
-
-      for (size_t i = 0; i < col_objs2.size(); i++) {
+    for (const auto &art2 : unplanned_articulations)
+      for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects()) {
         result.clear();
-        ::fcl::collide(attached_obj.get(), col_objs2[i].get(), request, result);
+        collision_detection::fcl::collide(attached_obj, col_obj2, request, result);
         if (result.isCollision()) {
           WorldCollisionResult tmp;
           tmp.res = result;
           tmp.collision_type = "attach_articulation";
           tmp.object_name1 = attached_body_name;
-          tmp.object_name2 = art_name2;
+          tmp.object_name2 = art2->getName();
           tmp.link_name1 = attached_body_name;
-          tmp.link_name2 = col_link_names2[i];
+          tmp.link_name2 = col_obj2->name;
           ret.push_back(tmp);
         }
       }
-    }
 
     // Collision with scene objects
-    for (const auto &[name, obj] : scene_objects) {
+    for (const auto &scene_obj : scene_objects) {
       result.clear();
-      ::fcl::collide(attached_obj.get(), obj.get(), request, result);
+      collision_detection::fcl::collide(attached_obj, scene_obj, request, result);
       if (result.isCollision()) {
         WorldCollisionResult tmp;
         tmp.res = result;
         tmp.collision_type = "attach_sceneobject";
         tmp.object_name1 = attached_body_name;
-        tmp.object_name2 = name;
+        tmp.object_name2 = scene_obj->name;
         tmp.link_name1 = attached_body_name;
-        tmp.link_name2 = name;
+        tmp.link_name2 = scene_obj->name;
         ret.push_back(tmp);
       }
     }
@@ -501,7 +496,7 @@ template <typename S>
 std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideFull(
     const CollisionRequest &request) const {
   auto ret1 = selfCollide(request);
-  auto ret2 = collideWithOthers(request);
+  const auto ret2 = collideWithOthers(request);
   ret1.insert(ret1.end(), ret2.begin(), ret2.end());
   return ret1;
 }
@@ -521,12 +516,13 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
     auto col_link_names = fcl_model->getCollisionLinkNames();
     auto col_pairs = fcl_model->getCollisionPairs();
 
+    // TODO(merge): add FCLModel::distanceSelf() method
     // Articulation minimum distance to self-collision
     for (const auto &[x, y] : col_pairs)
       if (auto type = acm_->getAllowedCollision(col_link_names[x], col_link_names[y]);
           !type || type == collision_detection::AllowedCollision::NEVER) {
         result.clear();
-        ::fcl::distance(col_objs[x].get(), col_objs[y].get(), request, result);
+        collision_detection::fcl::distance(col_objs[x], col_objs[y], request, result);
         if (result.min_distance < ret.min_distance) {
           ret.res = result;
           ret.min_distance = result.min_distance;
@@ -538,28 +534,23 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
         }
       }
 
-    // Minimum distance among planned_articulations_
+    // Minimum distance among planned_articulation_map_
     for (const auto &[art_name2, art2] : planned_articulation_map_) {
       if (art_name == art_name2) break;
-      auto fcl_model2 = art2->getFCLModel();
-      auto col_objs2 = fcl_model2->getCollisionObjects();
-      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
-
-      for (size_t i = 0; i < col_objs.size(); i++)
-        for (size_t j = 0; j < col_objs2.size(); j++)
-          if (auto type =
-                  acm_->getAllowedCollision(col_link_names[i], col_link_names2[j]);
+      for (const auto &col_obj : col_objs)
+        for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects())
+          if (auto type = acm_->getAllowedCollision(col_obj->name, col_obj2->name);
               !type || type == collision_detection::AllowedCollision::NEVER) {
             result.clear();
-            ::fcl::distance(col_objs[i].get(), col_objs2[j].get(), request, result);
+            collision_detection::fcl::distance(col_obj, col_obj2, request, result);
             if (result.min_distance < ret.min_distance) {
               ret.res = result;
               ret.min_distance = result.min_distance;
               ret.distance_type = "self_articulation";
               ret.object_name1 = art_name;
               ret.object_name2 = art_name2;
-              ret.link_name1 = col_link_names[i];
-              ret.link_name2 = col_link_names2[j];
+              ret.link_name1 = col_obj->name;
+              ret.link_name2 = col_obj2->name;
             }
           }
     }
@@ -567,23 +558,21 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
     // Articulation minimum distance to attached_body_map_
     for (const auto &[attached_body_name, attached_body] : attached_body_map_) {
       auto attached_obj = attached_body->getObject();
-      for (size_t i = 0; i < col_objs.size(); i++) {
-        if (auto type =
-                acm_->getAllowedCollision(col_link_names[i], attached_body_name);
+      for (const auto &col_obj : col_objs)
+        if (auto type = acm_->getAllowedCollision(col_obj->name, attached_body_name);
             !type || type == collision_detection::AllowedCollision::NEVER) {
           result.clear();
-          ::fcl::distance(attached_obj.get(), col_objs[i].get(), request, result);
+          collision_detection::fcl::distance(attached_obj, col_obj, request, result);
           if (result.min_distance < ret.min_distance) {
             ret.res = result;
             ret.min_distance = result.min_distance;
             ret.distance_type = "self_attach";
             ret.object_name1 = art_name;
             ret.object_name2 = attached_body_name;
-            ret.link_name1 = col_link_names[i];
+            ret.link_name1 = col_obj->name;
             ret.link_name2 = attached_body_name;
           }
         }
-      }
     }
   }
 
@@ -594,8 +583,8 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
       if (auto type = acm_->getAllowedCollision(name1, name2);
           !type || type == collision_detection::AllowedCollision::NEVER) {
         result.clear();
-        ::fcl::distance(it->second->getObject().get(), it2->second->getObject().get(),
-                        request, result);
+        collision_detection::fcl::distance(it->second->getObject(),
+                                           it2->second->getObject(), request, result);
         if (result.min_distance < ret.min_distance) {
           ret.res = result;
           ret.min_distance = result.min_distance;
@@ -620,108 +609,92 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceOthers(
 
   // Collect unplanned articulations, not attached scene objects
   std::vector<ArticulatedModelPtr> unplanned_articulations;
-  std::unordered_map<std::string, CollisionObjectPtr> scene_objects;
+  std::vector<FCLObjectPtr> scene_objects;
   for (const auto &[name, art] : articulation_map_)
     if (planned_articulation_map_.find(name) == planned_articulation_map_.end())
       unplanned_articulations.push_back(art);
   for (const auto &[name, obj] : normal_object_map_)
     if (attached_body_map_.find(name) == attached_body_map_.end())
-      scene_objects[name] = obj;
+      scene_objects.push_back(obj);
 
   // Minimum distance involving planned articulation
   for (const auto &[art_name, art] : planned_articulation_map_) {
     auto fcl_model = art->getFCLModel();
     auto col_objs = fcl_model->getCollisionObjects();
-    auto col_link_names = fcl_model->getCollisionLinkNames();
 
     // Minimum distance to unplanned articulation
-    for (const auto &art2 : unplanned_articulations) {
-      auto art_name2 = art2->getName();
-      auto fcl_model2 = art2->getFCLModel();
-      auto col_objs2 = fcl_model2->getCollisionObjects();
-      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
-
-      for (size_t i = 0; i < col_objs.size(); i++)
-        for (size_t j = 0; j < col_objs2.size(); j++)
-          if (auto type =
-                  acm_->getAllowedCollision(col_link_names[i], col_link_names2[j]);
+    for (const auto &art2 : unplanned_articulations)
+      for (const auto &col_obj : col_objs)
+        for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects())
+          if (auto type = acm_->getAllowedCollision(col_obj->name, col_obj2->name);
               !type || type == collision_detection::AllowedCollision::NEVER) {
             result.clear();
-            ::fcl::distance(col_objs[i].get(), col_objs2[j].get(), request, result);
+            collision_detection::fcl::distance(col_obj, col_obj2, request, result);
             if (result.min_distance < ret.min_distance) {
               ret.res = result;
               ret.min_distance = result.min_distance;
               ret.distance_type = "articulation_articulation";
               ret.object_name1 = art_name;
-              ret.object_name2 = art_name2;
-              ret.link_name1 = col_link_names[i];
-              ret.link_name2 = col_link_names2[j];
+              ret.object_name2 = art2->getName();
+              ret.link_name1 = col_obj->name;
+              ret.link_name2 = col_obj2->name;
             }
           }
-    }
 
     // Minimum distance to scene objects
-    for (const auto &[name, obj] : scene_objects)
-      for (size_t i = 0; i < col_objs.size(); i++)
-        if (auto type = acm_->getAllowedCollision(col_link_names[i], name);
+    for (const auto &scene_obj : scene_objects)
+      for (const auto &col_obj : col_objs)
+        if (auto type = acm_->getAllowedCollision(col_obj->name, scene_obj->name);
             !type || type == collision_detection::AllowedCollision::NEVER) {
           result.clear();
-          ::fcl::distance(col_objs[i].get(), obj.get(), request, result);
+          collision_detection::fcl::distance(col_obj, scene_obj, request, result);
           if (result.min_distance < ret.min_distance) {
             ret.res = result;
             ret.min_distance = result.min_distance;
             ret.distance_type = "articulation_sceneobject";
             ret.object_name1 = art_name;
-            ret.object_name2 = name;
-            ret.link_name1 = col_link_names[i];
-            ret.link_name2 = name;
+            ret.object_name2 = scene_obj->name;
+            ret.link_name1 = col_obj->name;
+            ret.link_name2 = scene_obj->name;
           }
         }
   }
 
   // Minimum distance involving attached_body_map_
   for (const auto &[attached_body_name, attached_body] : attached_body_map_) {
-    auto attached_obj = attached_body->getObject();
-
+    const auto attached_obj = attached_body->getObject();
     // Minimum distance to unplanned articulation
-    for (const auto &art2 : unplanned_articulations) {
-      auto art_name2 = art2->getName();
-      auto fcl_model2 = art2->getFCLModel();
-      auto col_objs2 = fcl_model2->getCollisionObjects();
-      auto col_link_names2 = fcl_model2->getCollisionLinkNames();
-
-      for (size_t i = 0; i < col_objs2.size(); i++)
-        if (auto type =
-                acm_->getAllowedCollision(attached_body_name, col_link_names2[i]);
+    for (const auto &art2 : unplanned_articulations)
+      for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects())
+        if (auto type = acm_->getAllowedCollision(attached_body_name, col_obj2->name);
             !type || type == collision_detection::AllowedCollision::NEVER) {
           result.clear();
-          ::fcl::distance(attached_obj.get(), col_objs2[i].get(), request, result);
+          collision_detection::fcl::distance(attached_obj, col_obj2, request, result);
           if (result.min_distance < ret.min_distance) {
             ret.res = result;
             ret.min_distance = result.min_distance;
             ret.distance_type = "attach_articulation";
             ret.object_name1 = attached_body_name;
-            ret.object_name2 = art_name2;
+            ret.object_name2 = art2->getName();
             ret.link_name1 = attached_body_name;
-            ret.link_name2 = col_link_names2[i];
+            ret.link_name2 = col_obj2->name;
           }
         }
-    }
 
     // Minimum distance to scene objects
-    for (const auto &[name, obj] : scene_objects)
-      if (auto type = acm_->getAllowedCollision(attached_body_name, name);
+    for (const auto &scene_obj : scene_objects)
+      if (auto type = acm_->getAllowedCollision(attached_body_name, scene_obj->name);
           !type || type == collision_detection::AllowedCollision::NEVER) {
         result.clear();
-        ::fcl::distance(attached_obj.get(), obj.get(), request, result);
+        collision_detection::fcl::distance(attached_obj, scene_obj, request, result);
         if (result.min_distance < ret.min_distance) {
           ret.res = result;
           ret.min_distance = result.min_distance;
           ret.distance_type = "attach_sceneobject";
           ret.object_name1 = attached_body_name;
-          ret.object_name2 = name;
+          ret.object_name2 = scene_obj->name;
           ret.link_name1 = attached_body_name;
-          ret.link_name2 = name;
+          ret.link_name2 = scene_obj->name;
         }
       }
   }
@@ -731,8 +704,8 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceOthers(
 template <typename S>
 WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceFull(
     const DistanceRequest &request) const {
-  auto ret1 = distanceSelf(request);
-  auto ret2 = distanceOthers(request);
+  const auto ret1 = distanceSelf(request);
+  const auto ret2 = distanceOthers(request);
   return ret1.min_distance < ret2.min_distance ? ret1 : ret2;
 }
 

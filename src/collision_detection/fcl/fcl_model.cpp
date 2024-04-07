@@ -4,6 +4,7 @@
 #include <fstream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -42,24 +43,25 @@ FCLModelTpl<S>::FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdf_model,
 template <typename S>
 std::unique_ptr<FCLModelTpl<S>> FCLModelTpl<S>::createFromURDFString(
     const std::string &urdf_string,
-    const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
-        &collision_links,
+    const std::vector<std::pair<std::string, FCLObjectPtr<S>>> &collision_links,
     bool verbose) {
   auto urdf = urdf::parseURDF(urdf_string);
   // package_dir is not needed since urdf_string contains no visual/collision elements
   auto fcl_model = std::make_unique<FCLModelTpl<S>>(urdf, "", verbose, false);
 
-  for (const auto &[link_name, collision_objs] : collision_links)
-    for (const auto &collision_obj : collision_objs) {
-      fcl_model->collision_objects_.push_back(collision_obj);
-      fcl_model->collision_link_names_.push_back(link_name);
-      fcl_model->collision_origin2link_poses_.push_back(collision_obj->getTransform());
-    }
+  for (const auto &[link_name, collision_obj] : collision_links) {
+    fcl_model->collision_objects_.push_back(collision_obj);
+    fcl_model->collision_link_names_.push_back(link_name);
+  }
+
+  // TODO: this should not be needed after switching to FCLObject
   // setLinkOrder with unique collision link names as user_link_names
   auto user_link_names = fcl_model->collision_link_names_;
   auto last = std::unique(user_link_names.begin(), user_link_names.end());
-  user_link_names.erase(last, user_link_names.end());
-  fcl_model->setLinkOrder(user_link_names);
+  if (last != user_link_names.end())
+    throw std::runtime_error("URDF link names are not unique.");
+  // user_link_names.erase(last, user_link_names.end());
+  fcl_model->setLinkOrder(fcl_model->collision_link_names_);
 
   // We assume that the collisions between objects on the same link can be ignored.
   for (size_t i = 0; i < fcl_model->collision_link_names_.size(); i++)
@@ -79,11 +81,15 @@ void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
     throw std::invalid_argument("The XML stream does not contain a valid URDF model.");
   urdf::LinkConstSharedPtr root_link = urdf_model_->getRoot();
   dfsParseTree(root_link, "root's parent");
+
+  // TODO: this should not be needed after switching to FCLObject
   // setLinkOrder with unique collision link names as user_link_names
   auto user_link_names = collision_link_names_;
   auto last = std::unique(user_link_names.begin(), user_link_names.end());
-  user_link_names.erase(last, user_link_names.end());
-  setLinkOrder(user_link_names);
+  if (last != user_link_names.end())
+    throw std::runtime_error("URDF link names are not unique.");
+  // user_link_names.erase(last, user_link_names.end());
+  setLinkOrder(collision_link_names_);
 
   for (size_t i = 0; i < collision_link_names_.size(); i++)
     for (size_t j = 0; j < i; j++)
@@ -95,10 +101,12 @@ template <typename S>
 void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
                                   const std::string &parent_link_name) {
   if (link->collision) {
+    auto fcl_obj = std::make_shared<FCLObject<S>>(link->name);
+    fcl_obj->pose = Isometry3<S>::Identity();
+
     for (const auto &geom : link->collision_array) {
       auto geom_model = geom->geometry;
       fcl::CollisionGeometryPtr<S> collision_geometry;
-      auto pose = Isometry3<S>::Identity();
       if (geom_model->type == urdf::Geometry::MESH) {
         const urdf::MeshSharedPtr urdf_mesh =
             urdf::dynamic_pointer_cast<urdf::Mesh>(geom_model);
@@ -141,14 +149,14 @@ void FCLModelTpl<S>::dfsParseTree(const urdf::LinkConstSharedPtr &link,
 
       if (!collision_geometry)
         throw std::invalid_argument("The polyhedron retrived is empty");
-      fcl::FCLObject<S> fcl_obj;
-      auto obj {std::make_shared<fcl::CollisionObject<S>>(collision_geometry, pose)};
-      fcl_obj.collision_objects_.push_back(obj);
-      fcl_obj.tfs_.push_back(toIsometry<S>(geom->origin));
 
-      collision_objects_.push_back(fcl_obj);
-      collision_link_names_.push_back(link->name);
+      fcl_obj->shapes.push_back(std::make_shared<fcl::CollisionObject<S>>(
+          collision_geometry, Isometry3<S>::Identity()));
+      fcl_obj->shape_poses.push_back(toIsometry<S>(geom->origin));
     }
+
+    collision_objects_.push_back(fcl_obj);
+    collision_link_names_.push_back(link->name);
   }
   for (const auto &child : link->child_links) dfsParseTree(child, link->name);
 }
@@ -217,33 +225,34 @@ void FCLModelTpl<S>::removeCollisionPairsFromSRDFString(
 
 template <typename S>
 void FCLModelTpl<S>::updateCollisionObjects(
-    const std::vector<Isometry3<S>> &link_pose) const {
+    const std::vector<Vector7<S>> &link_poses) const {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
-    auto link_i = collision_link_user_indices_[i];
-    auto link_wrt_world = link_pose[link_i];
-    const fcl::FCLObject<S> &fcl_obj = collision_objects_[i];
-    for (size_t j = 0; j < fcl_obj.collision_objects_.size(); j++) {
-      auto geom_wrt_world = link_wrt_world * fcl_obj.tfs_[j];
-      fcl_obj.collision_objects_[j]->setTransform(geom_wrt_world);
-    }
+    const auto link_pose = toIsometry<S>(link_poses[collision_link_user_indices_[i]]);
+    const auto &fcl_obj = collision_objects_[i];
+    fcl_obj->pose = link_pose;
+    for (size_t j = 0; j < fcl_obj->shapes.size(); j++)
+      fcl_obj->shapes[j]->setTransform(link_pose * fcl_obj->shape_poses[j]);
   }
 }
 
 template <typename S>
 void FCLModelTpl<S>::updateCollisionObjects(
-    const std::vector<Vector7<S>> &link_pose) const {
-  std::vector<Isometry3<S>> link_tfs;
-  link_tfs.reserve(link_pose.size());
-  for (const auto &pose : link_pose) link_tfs.push_back(toIsometry<S>(pose));
-  updateCollisionObjects(link_tfs);
+    const std::vector<Isometry3<S>> &link_poses) const {
+  for (size_t i = 0; i < collision_objects_.size(); i++) {
+    const auto link_pose = link_poses[collision_link_user_indices_[i]];
+    const auto &fcl_obj = collision_objects_[i];
+    fcl_obj->pose = link_pose;
+    for (size_t j = 0; j < fcl_obj->shapes.size(); j++)
+      fcl_obj->shapes[j]->setTransform(link_pose * fcl_obj->shape_poses[j]);
+  }
 }
 
 template <typename S>
 bool FCLModelTpl<S>::collide(const fcl::CollisionRequest<S> &request) const {
   fcl::CollisionResult<S> result;
-  for (const auto &col_pair : collision_pairs_) {
-    collideFCLObjects(collision_objects_[col_pair.first],
-                      collision_objects_[col_pair.second], request, result);
+  for (const auto &[i, j] : collision_pairs_) {
+    collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
+                                      request, result);
     if (result.isCollision()) return true;
   }
   return false;
@@ -252,12 +261,13 @@ bool FCLModelTpl<S>::collide(const fcl::CollisionRequest<S> &request) const {
 template <typename S>
 std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::collideFull(
     const fcl::CollisionRequest<S> &request) const {
+  // TODO(merge): return only CollisionResult in collision?
   // Result will be returned via the collision result structure
   std::vector<fcl::CollisionResult<S>> ret;
-  for (const auto &col_pair : collision_pairs_) {
+  for (const auto &[i, j] : collision_pairs_) {
     fcl::CollisionResult<S> result;
-    collideFCLObjects(collision_objects_[col_pair.first],
-                      collision_objects_[col_pair.second], request, result);
+    collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
+                                      request, result);
     ret.push_back(result);
   }
   return ret;

@@ -17,7 +17,7 @@ namespace py = pybind11;
 namespace mplib {
 
 using ArticulatedModel = ArticulatedModelTpl<S>;
-using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
+using FCLObjectPtr = collision_detection::FCLObjectPtr<S>;
 
 void build_pyarticulated_model(py::module &pymp) {
   auto PyArticulatedModel =
@@ -38,8 +38,7 @@ void build_pyarticulated_model(py::module &pymp) {
       .def_static(
           "create_from_urdf_string",
           [](const std::string &urdf_string, const std::string &srdf_string,
-             const std::vector<std::pair<std::string, std::vector<CollisionObjectPtr>>>
-                 &collision_links,
+             const std::vector<std::pair<std::string, FCLObjectPtr>> &collision_links,
              const Vector3<S> &gravity, const std::vector<std::string> &link_names,
              const std::vector<std::string> &joint_names, bool verbose) {
             std::shared_ptr<ArticulatedModel> articulation =

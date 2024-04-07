@@ -5,7 +5,6 @@
 #include <utility>
 #include <vector>
 
-#include "mplib/collision_detection/fcl/types.h"
 #include "mplib/collision_detection/types.h"
 #include "mplib/kinematics/types.h"
 #include "mplib/macros/class_forward.h"
@@ -58,8 +57,8 @@ class ArticulatedModelTpl {
    *
    * @param urdf_string: URDF string (without visual/collision elements for links)
    * @param srdf_string: SRDF string (only disable_collisions element)
-   * @param collision_links: Collision link names and the vector of CollisionObjectPtr.
-   *    Format is: ``[(link_name, [CollisionObjectPtr, ...]), ...]``.
+   * @param collision_links: Vector of collision link names and FCLObjectPtr.
+   *    Format is: ``[(link_name, FCLObjectPtr), ...]``.
    *    The collision objects are at the shape's local_pose.
    * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
    * @param link_names: list of links that are considered for planning
@@ -69,7 +68,7 @@ class ArticulatedModelTpl {
    */
   static std::unique_ptr<ArticulatedModelTpl<S>> createFromURDFString(
       const std::string &urdf_string, const std::string &srdf_string,
-      const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
+      const std::vector<std::pair<std::string, collision_detection::FCLObjectPtr<S>>>
           &collision_links,
       const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
       const std::vector<std::string> &link_names = {},

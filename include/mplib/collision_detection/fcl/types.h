@@ -8,8 +8,6 @@
 #include <fcl/geometry/shape/convex.h>
 #include <fcl/narrowphase/collision_object.h>
 
-#include "mplib/types.h"
-
 namespace mplib::collision_detection::fcl {
 
 // Namespace alias
@@ -21,9 +19,6 @@ namespace fcl {
 
 template <typename S>
 using CollisionGeometryPtr = std::shared_ptr<fcl::CollisionGeometry<S>>;
-
-template <typename S>
-using CollisionObjectPtr = std::shared_ptr<fcl::CollisionObject<S>>;
 
 template <typename S>
 using ConvexPtr = std::shared_ptr<fcl::Convex<S>>;
@@ -40,11 +35,5 @@ using CollisionObjectPtr = std::shared_ptr<fcl::CollisionObject<S>>;
 template <typename S>
 using BroadPhaseCollisionManagerPtr =
     std::shared_ptr<fcl::BroadPhaseCollisionManager<S>>;
-
-template <typename S>
-struct FCLObject {
-   std::vector<CollisionObjectPtr<S>> collision_objects_;
-   std::vector<mplib::Isometry3<S>> tfs_;
-};
 
 }  // namespace fcl

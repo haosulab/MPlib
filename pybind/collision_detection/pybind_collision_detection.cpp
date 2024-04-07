@@ -9,6 +9,7 @@ namespace fcl {
 void build_pyfcl(py::module &pyfcl);
 void build_pyfcl_model(py::module &pyfcl);
 void build_pyfcl_utils(py::module &pyfcl);
+void build_pyfcl_collision_common(py::module &pyfcl);
 
 }  // namespace fcl
 
@@ -24,6 +25,7 @@ void build_pycollision_detection(py::module &pymp) {
   fcl::build_pyfcl(pyfcl);
   fcl::build_pyfcl_model(pyfcl);
   fcl::build_pyfcl_utils(pyfcl);
+  fcl::build_pyfcl_collision_common(pyfcl);
 }
 
 }  // namespace mplib::collision_detection
