@@ -139,6 +139,7 @@ class Planner:
 
     def replace_package_keyword(self, package_keyword_replacement: str):
         # TODO(merge): fix file writing
+        # TODO(merge): convert to staticmethod
         """
         some ROS URDF files use package:// keyword to refer the package dir
         replace it with the given string (default is empty)
@@ -158,6 +159,7 @@ class Planner:
         return rtn_urdf
 
     def generate_collision_pair(self, num_samples=100000):
+        # TODO(merge): convert to staticmethod
         """
         We read the srdf file to get the link pairs that should not collide.
         If not provided, we need to randomly sample configurations
