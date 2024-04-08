@@ -27,32 +27,39 @@ class Planner:
         self,
         urdf: str,
         move_group: str,
+        *,
         srdf: str = "",
         package_keyword_replacement: str = "",
+        use_convex: bool = False,
         user_link_names: Sequence[str] = [],
         user_joint_names: Sequence[str] = [],
         joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
         joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
+        verbose: bool = False,
         **kwargs,
     ):
         # constructor ankor end
-        """Motion planner for robots.
+        """
+        Motion planner for robots.
 
-        Args:
-            urdf: Unified Robot Description Format file.
-            user_link_names: names of links, the order matters.
-                If empty, all links will be used.
-            user_joint_names: names of the joints to plan.
-                If empty, all active joints will be used.
-            move_group: target link to move, usually the end-effector.
-            joint_vel_limits: maximum joint velocities for time parameterization,
-                which should have the same length as
-            joint_acc_limits: maximum joint accelerations for time parameterization,
-                which should have the same length as
-            srdf: Semantic Robot Description Format file.
         References:
             http://docs.ros.org/en/kinetic/api/moveit_tutorials/html/doc/urdf_srdf/urdf_srdf_tutorial.html
 
+        :param urdf: Unified Robot Description Format file.
+        :param move_group: target link to move, usually the end-effector.
+        :param srdf: Semantic Robot Description Format file.
+        :param package_keyword_replacement: replace ``package://`` keyword in URDF
+        :param use_convex: if True, load collision mesh as convex mesh.
+            If mesh is not convex, a ``RuntimeError`` will be raised.
+        :param user_link_names: names of links, the order matters.
+            If empty, all links will be used.
+        :param user_joint_names: names of the joints to plan.
+            If empty, all active joints will be used.
+        :param joint_vel_limits: maximum joint velocities for time parameterization,
+            which should have the same length as
+        :param joint_acc_limits: maximum joint accelerations for time parameterization,
+            which should have the same length as
+        :param verbose: if True, print verbose logs for debugging
         """
         if joint_vel_limits is None:
             joint_vel_limits = []
@@ -72,8 +79,8 @@ class Planner:
             self.srdf,
             link_names=user_link_names,  # type: ignore
             joint_names=user_joint_names,  # type: ignore
-            convex=kwargs.get("convex", False),
-            verbose=False,
+            convex=use_convex,
+            verbose=verbose,
         )
         self.pinocchio_model = self.robot.get_pinocchio_model()
         self.user_link_names = self.pinocchio_model.get_link_names()
@@ -138,7 +145,8 @@ class Planner:
 
         self.planner = ompl.OMPLPlanner(world=self.planning_world)
 
-    def replace_package_keyword(self, package_keyword_replacement):
+    def replace_package_keyword(self, package_keyword_replacement: str):
+        # TODO(merge): fix file writing
         """
         some ROS URDF files use package:// keyword to refer the package dir
         replace it with the given string (default is empty)
