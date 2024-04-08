@@ -63,7 +63,7 @@ class SapienPlanningWorld(PlanningWorld):
                 urdf_str,
                 srdf_str,
                 collision_links=collision_links,
-                gravity=[0, 0, -9.81],
+                gravity=sim_scene.get_physx_system().config.gravity,  # type: ignore
                 link_names=[link.name for link in articulation.links],
                 joint_names=[j.name for j in articulation.active_joints],
                 verbose=False,
