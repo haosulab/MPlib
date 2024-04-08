@@ -64,8 +64,8 @@ class SapienPlanningWorld(PlanningWorld):
                 srdf_str,
                 collision_links=collision_links,
                 gravity=[0, 0, -9.81],
+                link_names=[link.name for link in articulation.links],
                 joint_names=[j.name for j in articulation.active_joints],
-                link_names=[l.name for l in articulation.links],
                 verbose=False,
             )
             articulated_model.set_qpos(articulation.qpos)  # set_qpos to update poses
