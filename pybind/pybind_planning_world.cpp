@@ -21,6 +21,7 @@ using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 using CollisionRequest = fcl::CollisionRequest<S>;
 using DistanceRequest = fcl::DistanceRequest<S>;
 using CollisionGeometryPtr = fcl::CollisionGeometryPtr<S>;
+using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
 using FCLObjectPtr = collision_detection::FCLObjectPtr<S>;
 
 void build_pyplanning_world(py::module &pymp) {
@@ -61,8 +62,16 @@ void build_pyplanning_world(py::module &pymp) {
            DOC(mplib, PlanningWorldTpl, getNormalObject))
       .def("has_normal_object", &PlanningWorld::hasNormalObject, py::arg("name"),
            DOC(mplib, PlanningWorldTpl, hasNormalObject))
-      .def("add_normal_object", &PlanningWorld::addNormalObject, py::arg("name"),
-           py::arg("collision_object"), DOC(mplib, PlanningWorldTpl, addNormalObject))
+      .def("add_normal_object",
+           py::overload_cast<const std::string &, const FCLObjectPtr &>(
+               &PlanningWorld::addNormalObject),
+           py::arg("name"), py::arg("collision_object"),
+           DOC(mplib, PlanningWorldTpl, addNormalObject))
+      .def("add_normal_object",
+           py::overload_cast<const std::string &, const CollisionObjectPtr &>(
+               &PlanningWorld::addNormalObject),
+           py::arg("name"), py::arg("collision_object"),
+           DOC(mplib, PlanningWorldTpl, addNormalObject, 2))
       .def("add_point_cloud", &PlanningWorld::addPointCloud, py::arg("name"),
            py::arg("vertices"), py::arg("resolution") = 0.01,
            DOC(mplib, PlanningWorldTpl, addPointCloud))

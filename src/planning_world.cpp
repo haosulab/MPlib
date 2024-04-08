@@ -91,6 +91,15 @@ std::vector<std::string> PlanningWorldTpl<S>::getNormalObjectNames() const {
 }
 
 template <typename S>
+void PlanningWorldTpl<S>::addNormalObject(const std::string &name,
+                                          const CollisionObjectPtr &collision_object) {
+  addNormalObject(name, std::make_shared<FCLObject>(
+                            name, collision_object->getTransform(),
+                            std::vector<CollisionObjectPtr> {collision_object},
+                            std::vector<Isometry3<S>> {Isometry3<S>::Identity()}));
+}
+
+template <typename S>
 void PlanningWorldTpl<S>::addPointCloud(const std::string &name,
                                         const MatrixX3<S> &vertices,
                                         double resolution) {
@@ -98,11 +107,7 @@ void PlanningWorldTpl<S>::addPointCloud(const std::string &name,
   for (const auto &row : vertices.rowwise())
     tree->updateNode(octomap::point3d(row(0), row(1), row(2)), true);
   addNormalObject(
-      name, std::make_shared<FCLObject>(
-                name, Isometry3<S>::Identity(),
-                std::vector<CollisionObjectPtr> {std::make_shared<CollisionObject>(
-                    std::make_shared<fcl::OcTree<S>>(tree))},
-                std::vector<Isometry3<S>> {Isometry3<S>::Identity()}));
+      name, std::make_shared<CollisionObject>(std::make_shared<fcl::OcTree<S>>(tree)));
 }
 
 template <typename S>
@@ -195,12 +200,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const Vector7<S> &pose,
                                        const std::vector<std::string> &touch_links) {
   removeNormalObject(name);
-  addNormalObject(
-      name,
-      std::make_shared<FCLObject>(
-          name, Isometry3<S>::Identity(),
-          std::vector<CollisionObjectPtr> {std::make_shared<CollisionObject>(p_geom)},
-          std::vector<Isometry3<S>> {Isometry3<S>::Identity()}));
+  addNormalObject(name, std::make_shared<CollisionObject>(p_geom));
   attachObject(name, art_name, link_id, pose, touch_links);
 }
 
@@ -210,12 +210,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
                                        const Vector7<S> &pose) {
   removeNormalObject(name);
-  addNormalObject(
-      name,
-      std::make_shared<FCLObject>(
-          name, Isometry3<S>::Identity(),
-          std::vector<CollisionObjectPtr> {std::make_shared<CollisionObject>(p_geom)},
-          std::vector<Isometry3<S>> {Isometry3<S>::Identity()}));
+  addNormalObject(name, std::make_shared<CollisionObject>(p_geom));
   attachObject(name, art_name, link_id, pose);
 }
 

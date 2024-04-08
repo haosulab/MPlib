@@ -313,11 +313,23 @@ class PlanningWorld:
         :param model: articulated model to be added
         :param planned: whether the articulation is being planned
         """
+    @typing.overload
     def add_normal_object(
         self, name: str, collision_object: collision_detection.fcl.FCLObject
     ) -> None:
         """
-        Adds a normal object (``FCLObjectPtr``) with given name to world
+        Adds a normal object containing multiple collision objects (``FCLObjectPtr``)
+        with given name to world
+
+        :param name: name of the collision object
+        :param collision_object: collision object to be added
+        """
+    @typing.overload
+    def add_normal_object(
+        self, name: str, collision_object: collision_detection.fcl.CollisionObject
+    ) -> None:
+        """
+        Adds a normal object (``CollisionObjectPtr``) with given name to world
 
         :param name: name of the collision object
         :param collision_object: collision object to be added
