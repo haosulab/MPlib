@@ -50,7 +50,7 @@ class BVHModel(CollisionGeometry):
     """
     def __init__(self) -> None: ...
     @typing.overload
-    def addSubModel(
+    def add_sub_model(
         self,
         vertices: list[
             numpy.ndarray[
@@ -64,7 +64,7 @@ class BVHModel(CollisionGeometry):
         :param vertices: vertices of the sub-model
         """
     @typing.overload
-    def addSubModel(
+    def add_sub_model(
         self,
         vertices: list[
             numpy.ndarray[
@@ -80,7 +80,7 @@ class BVHModel(CollisionGeometry):
         :param faces: faces of the sub-model represented by a list of vertex indices
         """
     @typing.overload
-    def addSubModel(
+    def add_sub_model(
         self,
         vertices: list[
             numpy.ndarray[
@@ -99,14 +99,14 @@ class BVHModel(CollisionGeometry):
         :param vertices: vertices of the sub-model
         :param faces: faces of the sub-model represented by a list of vertex indices
         """
-    def beginModel(self, num_faces: int = 0, num_vertices: int = 0) -> int:
+    def begin_model(self, num_faces: int = 0, num_vertices: int = 0) -> int:
         """
         Begin to construct a BVHModel.
 
         :param num_faces: number of faces of the mesh
         :param num_vertices: number of vertices of the mesh
         """
-    def endModel(self) -> int:
+    def end_model(self) -> int:
         """
         End the construction of a BVHModel.
         """
@@ -195,26 +195,26 @@ class CollisionGeometry:
     ]
     aabb_radius: float
     cost_density: float
-    def computeCOM(
+    def compute_com(
         self,
     ) -> numpy.ndarray[
         tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
     ]: ...
-    def computeLocalAABB(self) -> None: ...
-    def computeMomentofInertia(
+    def compute_local_aabb(self) -> None: ...
+    def compute_moment_of_inertia(
         self,
     ) -> numpy.ndarray[
         tuple[typing.Literal[3], typing.Literal[3]], numpy.dtype[numpy.float64]
     ]: ...
-    def computeMomentofInertiaRelatedToCOM(
+    def compute_moment_of_inertia_related_to_com(
         self,
     ) -> numpy.ndarray[
         tuple[typing.Literal[3], typing.Literal[3]], numpy.dtype[numpy.float64]
     ]: ...
-    def computeVolume(self) -> float: ...
-    def isFree(self) -> bool: ...
-    def isOccupied(self) -> bool: ...
-    def isUncertain(self) -> bool: ...
+    def compute_volume(self) -> float: ...
+    def is_free(self) -> bool: ...
+    def is_occupied(self) -> bool: ...
+    def is_uncertain(self) -> bool: ...
 
 class CollisionObject:
     """
@@ -269,7 +269,7 @@ class CollisionRequest:
         gjk_solver_type: GJKSolverType = ...,
         gjk_tolerance: float = 1e-06,
     ) -> None: ...
-    def isSatisfied(self, result: ...) -> bool: ...
+    def is_satisfied(self, result: ...) -> bool: ...
 
 class CollisionResult:
     def __init__(self) -> None: ...
@@ -503,7 +503,7 @@ class DistanceRequest:
         distance_tolerance: float = 1e-06,
         gjk_solver_type: GJKSolverType = ...,
     ) -> None: ...
-    def isSatisfied(self, result: ...) -> bool: ...
+    def is_satisfied(self, result: ...) -> bool: ...
 
 class DistanceResult:
     def __init__(self, min_distance: float = 1.7976931348623157e308) -> None: ...
