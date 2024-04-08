@@ -56,15 +56,11 @@ class Planner:
         :param user_joint_names: names of the joints to plan.
             If empty, all active joints will be used.
         :param joint_vel_limits: maximum joint velocities for time parameterization,
-            which should have the same length as
+            which should have the same length as ``self.move_group_joint_indices``
         :param joint_acc_limits: maximum joint accelerations for time parameterization,
-            which should have the same length as
+            which should have the same length as ``self.move_group_joint_indices``
         :param verbose: if True, print verbose logs for debugging
         """
-        if joint_vel_limits is None:
-            joint_vel_limits = []
-        if joint_acc_limits is None:
-            joint_acc_limits = []
         self.urdf = urdf
         self.srdf = srdf
         if self.srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
@@ -102,28 +98,24 @@ class Planner:
 
         self.joint_types = self.pinocchio_model.get_joint_types()
         self.joint_limits = np.concatenate(self.pinocchio_model.get_joint_limits())
-        self.joint_vel_limits = (
-            joint_vel_limits
-            if len(joint_vel_limits)
-            else np.ones(len(self.move_group_joint_indices))
-        )
-        self.joint_acc_limits = (
-            joint_acc_limits
-            if len(joint_acc_limits)
-            else np.ones(len(self.move_group_joint_indices))
-        )
+        if joint_vel_limits is None:
+            joint_vel_limits = np.ones(len(self.move_group_joint_indices))
+        if joint_acc_limits is None:
+            joint_acc_limits = np.ones(len(self.move_group_joint_indices))
+        self.joint_vel_limits = joint_vel_limits
+        self.joint_acc_limits = joint_acc_limits
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
-        assert len(self.joint_vel_limits) == len(self.joint_acc_limits), (
-            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "
-            f"length of joint_acc_limits ({len(self.joint_acc_limits)})"
-        )
-        assert len(self.joint_vel_limits) == len(self.move_group_joint_indices), (
-            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "
-            f"length of move_group ({len(self.move_group_joint_indices)})"
-        )
-        assert len(self.joint_vel_limits) <= len(self.joint_limits), (
-            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) > "
-            f"number of total joints ({len(self.joint_limits)})"
+
+        assert (
+            len(self.joint_vel_limits)
+            == len(self.joint_acc_limits)
+            == len(self.move_group_joint_indices)
+            <= len(self.joint_limits)
+        ), (
+            "length of joint_vel_limits, joint_acc_limits, and move_group_joint_indices"
+            " should equal and be <= number of total joints. "
+            f"{len(self.joint_vel_limits)} == {len(self.joint_acc_limits)} "
+            f"== {len(self.move_group_joint_indices)} <= {len(self.joint_limits)}"
         )
 
         # Mask for joints that have equivalent values (revolute joints with range > 2pi)

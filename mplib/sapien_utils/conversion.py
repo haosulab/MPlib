@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional, Sequence
+
 import numpy as np
 from sapien import Entity, Pose, Scene
 from sapien.physx import (
@@ -16,6 +18,7 @@ from sapien.physx import (
 )
 from transforms3d.euler import euler2quat
 
+from ..planner import Planner
 from ..pymp import ArticulatedModel, PlanningWorld
 from ..pymp.collision_detection.fcl import (
     Box,
@@ -29,6 +32,7 @@ from ..pymp.collision_detection.fcl import (
     collide,
     distance,
 )
+from ..pymp.planning import ompl
 from .srdf_exporter import export_srdf
 from .urdf_exporter import export_kinematic_chain_urdf
 
@@ -94,11 +98,12 @@ class SapienPlanningWorld(PlanningWorld):
 
             self.add_normal_object(self.get_object_name(entity), col_objs[0])
 
-    def update_from_simulation(self, update_attached_object: bool = True) -> None:
-        """Updates planning_world articulations/objects pose with current Scene state
+    def update_from_simulation(self, *, update_attached_object: bool = True) -> None:
+        """
+        Updates planning_world articulations/objects pose with current Scene state
 
         :param update_attached_object: whether to update the attached pose of
-                                    all attached objects
+            all attached objects
         """
         for articulation in self._sim_scene.get_all_articulations():
             # set_qpos to update poses
@@ -224,3 +229,87 @@ class SapienPlanningWorld(PlanningWorld):
         else:
             raise TypeError(f"Unknown shape type: {type(shape)}")
         return [CollisionObject(collision_geom, pose.p, pose.q)]  # type: ignore
+
+
+class SapienPlanner(Planner):
+    def __init__(
+        self,
+        sapien_planning_world: SapienPlanningWorld,
+        move_group: str,
+        joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
+        joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
+    ):
+        """
+        Creates an mplib.planner.Planner from a SapienPlanningWorld.
+
+        :param sapien_planning_world: a SapienPlanningWorld created from sapien.Scene
+        :param move_group: name of the move group (end effector link)
+        :param joint_vel_limits: joint velocity limits for time parameterization
+        :param joint_acc_limits: joint acceleration limits for time parameterization
+        """
+        self._sim_scene = sapien_planning_world._sim_scene
+
+        self.planning_world = sapien_planning_world
+        self.acm = self.planning_world.get_allowed_collision_matrix()
+
+        if len(planned_arts := self.planning_world.get_planned_articulations()) != 1:
+            raise NotImplementedError("Must have exactly one planned articulation")
+        self.robot = planned_arts[0]
+        self.pinocchio_model = self.robot.get_pinocchio_model()
+        self.user_link_names = self.pinocchio_model.get_link_names()
+        self.user_joint_names = self.pinocchio_model.get_joint_names()
+
+        self.joint_name_2_idx = {}
+        for i, joint in enumerate(self.user_joint_names):
+            self.joint_name_2_idx[joint] = i
+        self.link_name_2_idx = {}
+        for i, link in enumerate(self.user_link_names):
+            self.link_name_2_idx[link] = i
+
+        assert (
+            move_group in self.user_link_names
+        ), f"end-effector not found as one of the links in {self.user_link_names}"
+        self.move_group = move_group
+        self.robot.set_move_group(self.move_group)
+        self.move_group_joint_indices = self.robot.get_move_group_joint_indices()
+
+        self.joint_types = self.pinocchio_model.get_joint_types()
+        self.joint_limits = np.concatenate(self.pinocchio_model.get_joint_limits())
+        if joint_vel_limits is None:
+            joint_vel_limits = np.ones(len(self.move_group_joint_indices))
+        if joint_acc_limits is None:
+            joint_acc_limits = np.ones(len(self.move_group_joint_indices))
+        self.joint_vel_limits = joint_vel_limits
+        self.joint_acc_limits = joint_acc_limits
+        self.move_group_link_id = self.link_name_2_idx[self.move_group]
+
+        assert (
+            len(self.joint_vel_limits)
+            == len(self.joint_acc_limits)
+            == len(self.move_group_joint_indices)
+            <= len(self.joint_limits)
+        ), (
+            "length of joint_vel_limits, joint_acc_limits, and move_group_joint_indices"
+            " should equal and be <= number of total joints. "
+            f"{len(self.joint_vel_limits)} == {len(self.joint_acc_limits)} "
+            f"== {len(self.move_group_joint_indices)} <= {len(self.joint_limits)}"
+        )
+
+        # Mask for joints that have equivalent values (revolute joints with range > 2pi)
+        self.equiv_joint_mask = [
+            t.startswith("JointModelR") for t in self.joint_types
+        ] & (self.joint_limits[:, 1] - self.joint_limits[:, 0] > 2 * np.pi)
+
+        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+
+    def update_from_simulation(self, *, update_attached_object: bool = True) -> None:
+        """
+        Updates planning_world articulations/objects pose with current Scene state.
+        Directly calls ``SapienPlanningWorld.update_from_simulation()``
+
+        :param update_attached_object: whether to update the attached pose of
+            all attached objects
+        """
+        self.planning_world.update_from_simulation(
+            update_attached_object=update_attached_object
+        )
