@@ -32,7 +32,7 @@ struct FCLObject {
    *
    * @param name: name of this FCLObject
    */
-  FCLObject(const std::string &name) : name(name) {}
+  FCLObject(const std::string &name) : name(name), pose(Isometry3<S>::Identity()) {}
 
   /**
    * Construct a new FCLObject with the given name and shapes
@@ -44,8 +44,7 @@ struct FCLObject {
    */
   FCLObject(const std::string &name, const Isometry3<S> &pose,
             const std::vector<fcl::CollisionObjectPtr<S>> &shapes,
-            const std::vector<Isometry3<S>> &shape_poses)
-      : name(name), pose(pose), shapes(shapes), shape_poses(shape_poses) {}
+            const std::vector<Isometry3<S>> &shape_poses);
 
   std::string name;   ///< Name of this FCLObject
   Isometry3<S> pose;  ///< Pose of this FCLObject. All shapes are relative to this pose
@@ -84,6 +83,7 @@ S distance(const FCLObjectPtr<S> &obj1, const FCLObjectPtr<S> &obj2,
 
 // Explicit Template Instantiation Declaration =========================================
 #define DECLARE_TEMPLATE_FCL_COMMON(S)                                           \
+  extern template struct FCLObject<S>;                                           \
   extern template size_t collide<S>(                                             \
       const FCLObjectPtr<S> &obj1, const FCLObjectPtr<S> &obj2,                  \
       const fcl::CollisionRequest<S> &request, fcl::CollisionResult<S> &result); \

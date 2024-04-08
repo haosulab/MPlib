@@ -1,9 +1,12 @@
 #include "mplib/collision_detection/fcl/collision_common.h"
 
+#include "mplib/macros/assert.h"
+
 namespace mplib::collision_detection::fcl {
 
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_FCL_COMMON(S)                                                  \
+  template struct FCLObject<S>;                                                        \
   template size_t collide<S>(const FCLObjectPtr<S> &obj1, const FCLObjectPtr<S> &obj2, \
                              const fcl::CollisionRequest<S> &request,                  \
                              fcl::CollisionResult<S> &result);                         \
@@ -13,6 +16,18 @@ namespace mplib::collision_detection::fcl {
 
 DEFINE_TEMPLATE_FCL_COMMON(float);
 DEFINE_TEMPLATE_FCL_COMMON(double);
+
+template <typename S>
+FCLObject<S>::FCLObject(const std::string &name, const Isometry3<S> &pose,
+                        const std::vector<fcl::CollisionObjectPtr<S>> &shapes,
+                        const std::vector<Isometry3<S>> &shape_poses)
+    : name(name), pose(pose), shapes(shapes), shape_poses(shape_poses) {
+  ASSERT(shapes.size() == shape_poses.size(),
+         "shapes and shape_poses should have the same size");
+  // Update pose of the shapes
+  for (size_t i = 0; i < shapes.size(); i++)
+    shapes[i]->setTransform(pose * shape_poses[i]);
+}
 
 template <typename S>
 size_t collide(const FCLObjectPtr<S> &obj1, const FCLObjectPtr<S> &obj2,
