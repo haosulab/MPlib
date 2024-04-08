@@ -27,37 +27,40 @@ class Planner:
         self,
         urdf: str,
         move_group: str,
+        *,
         srdf: str = "",
         package_keyword_replacement: str = "",
+        use_convex: bool = False,
         user_link_names: Sequence[str] = [],
         user_joint_names: Sequence[str] = [],
         joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
         joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
+        verbose: bool = False,
         **kwargs,
     ):
         # constructor ankor end
-        """Motion planner for robots.
+        """
+        Motion planner for robots.
 
-        Args:
-            urdf: Unified Robot Description Format file.
-            user_link_names: names of links, the order matters.
-                If empty, all links will be used.
-            user_joint_names: names of the joints to plan.
-                If empty, all active joints will be used.
-            move_group: target link to move, usually the end-effector.
-            joint_vel_limits: maximum joint velocities for time parameterization,
-                which should have the same length as
-            joint_acc_limits: maximum joint accelerations for time parameterization,
-                which should have the same length as
-            srdf: Semantic Robot Description Format file.
         References:
             http://docs.ros.org/en/kinetic/api/moveit_tutorials/html/doc/urdf_srdf/urdf_srdf_tutorial.html
 
+        :param urdf: Unified Robot Description Format file.
+        :param move_group: target link to move, usually the end-effector.
+        :param srdf: Semantic Robot Description Format file.
+        :param package_keyword_replacement: replace ``package://`` keyword in URDF
+        :param use_convex: if True, load collision mesh as convex mesh.
+            If mesh is not convex, a ``RuntimeError`` will be raised.
+        :param user_link_names: names of links, the order matters.
+            If empty, all links will be used.
+        :param user_joint_names: names of the joints to plan.
+            If empty, all active joints will be used.
+        :param joint_vel_limits: maximum joint velocities for time parameterization,
+            which should have the same length as ``self.move_group_joint_indices``
+        :param joint_acc_limits: maximum joint accelerations for time parameterization,
+            which should have the same length as ``self.move_group_joint_indices``
+        :param verbose: if True, print verbose logs for debugging
         """
-        if joint_vel_limits is None:
-            joint_vel_limits = []
-        if joint_acc_limits is None:
-            joint_acc_limits = []
         self.urdf = urdf
         self.srdf = srdf
         if self.srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
@@ -70,10 +73,10 @@ class Planner:
         self.robot = ArticulatedModel(
             self.urdf,
             self.srdf,
-            link_names=user_link_names,
-            joint_names=user_joint_names,
-            convex=kwargs.get("convex", False),
-            verbose=False,
+            link_names=user_link_names,  # type: ignore
+            joint_names=user_joint_names,  # type: ignore
+            convex=use_convex,
+            verbose=verbose,
         )
         self.pinocchio_model = self.robot.get_pinocchio_model()
         self.user_link_names = self.pinocchio_model.get_link_names()
@@ -95,28 +98,24 @@ class Planner:
 
         self.joint_types = self.pinocchio_model.get_joint_types()
         self.joint_limits = np.concatenate(self.pinocchio_model.get_joint_limits())
-        self.joint_vel_limits = (
-            joint_vel_limits
-            if len(joint_vel_limits)
-            else np.ones(len(self.move_group_joint_indices))
-        )
-        self.joint_acc_limits = (
-            joint_acc_limits
-            if len(joint_acc_limits)
-            else np.ones(len(self.move_group_joint_indices))
-        )
+        if joint_vel_limits is None:
+            joint_vel_limits = np.ones(len(self.move_group_joint_indices))
+        if joint_acc_limits is None:
+            joint_acc_limits = np.ones(len(self.move_group_joint_indices))
+        self.joint_vel_limits = joint_vel_limits
+        self.joint_acc_limits = joint_acc_limits
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
-        assert len(self.joint_vel_limits) == len(self.joint_acc_limits), (
-            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "
-            f"length of joint_acc_limits ({len(self.joint_acc_limits)})"
-        )
-        assert len(self.joint_vel_limits) == len(self.move_group_joint_indices), (
-            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) =/= "
-            f"length of move_group ({len(self.move_group_joint_indices)})"
-        )
-        assert len(self.joint_vel_limits) <= len(self.joint_limits), (
-            f"length of joint_vel_limits ({len(self.joint_vel_limits)}) > "
-            f"number of total joints ({len(self.joint_limits)})"
+
+        assert (
+            len(self.joint_vel_limits)
+            == len(self.joint_acc_limits)
+            == len(self.move_group_joint_indices)
+            <= len(self.joint_limits)
+        ), (
+            "length of joint_vel_limits, joint_acc_limits, and move_group_joint_indices"
+            " should equal and be <= number of total joints. "
+            f"{len(self.joint_vel_limits)} == {len(self.joint_acc_limits)} "
+            f"== {len(self.move_group_joint_indices)} <= {len(self.joint_limits)}"
         )
 
         # Mask for joints that have equivalent values (revolute joints with range > 2pi)
@@ -138,7 +137,9 @@ class Planner:
 
         self.planner = ompl.OMPLPlanner(world=self.planning_world)
 
-    def replace_package_keyword(self, package_keyword_replacement):
+    def replace_package_keyword(self, package_keyword_replacement: str):
+        # TODO(merge): fix file writing
+        # TODO(merge): convert to staticmethod
         """
         some ROS URDF files use package:// keyword to refer the package dir
         replace it with the given string (default is empty)
@@ -158,6 +159,7 @@ class Planner:
         return rtn_urdf
 
     def generate_collision_pair(self, num_samples=100000):
+        # TODO(merge): convert to staticmethod
         """
         We read the srdf file to get the link pairs that should not collide.
         If not provided, we need to randomly sample configurations
@@ -367,7 +369,7 @@ class Planner:
         self,
         goal_pose: np.ndarray,
         start_qpos: np.ndarray,
-        mask: Optional[list[bool] | np.ndarray] = None,
+        mask: Optional[Sequence[bool] | np.ndarray] = None,
         *,
         n_init_qpos: int = 20,
         threshold: float = 1e-3,
@@ -404,8 +406,11 @@ class Planner:
         q_goals = []
         qpos = start_qpos
         for _ in range(n_init_qpos):
-            ik_qpos, ik_success, ik_error = self.pinocchio_model.compute_IK_CLIK(
-                move_link_idx, goal_pose, qpos, mask
+            ik_qpos, ik_success, _ = self.pinocchio_model.compute_IK_CLIK(
+                move_link_idx,
+                goal_pose,
+                qpos,
+                mask,  # type: ignore
             )
             success = ik_success and self.wrap_joint_limit(ik_qpos)
 
@@ -497,11 +502,11 @@ class Planner:
         jnt_traj = instance.compute_trajectory()
         if jnt_traj is None:
             raise RuntimeError("Fail to parameterize path")
-        ts_sample = np.linspace(0, jnt_traj.duration, int(jnt_traj.duration / step))
+        ts_sample = np.linspace(0, jnt_traj.duration, int(jnt_traj.duration / step))  # type: ignore
         qs_sample = jnt_traj(ts_sample)
         qds_sample = jnt_traj(ts_sample, 1)
         qdds_sample = jnt_traj(ts_sample, 2)
-        return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration
+        return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration  # type: ignore
 
     # TODO: change method name to align with PlanningWorld API?
     def update_point_cloud(self, points, resolution=1e-3, name="scene_pcd"):
@@ -646,8 +651,8 @@ class Planner:
         fix_joint_limits: bool = True,
         fixed_joint_indices: Optional[list[int]] = None,
         simplify: bool = True,
-        constraint_function: Optional[Callable] = None,
-        constraint_jacobian: Optional[Callable] = None,
+        constraint_function: Optional[Callable[[np.ndarray, np.ndarray], None]] = None,
+        constraint_jacobian: Optional[Callable[[np.ndarray, np.ndarray], None]] = None,
         constraint_tolerance: float = 1e-3,
         verbose: bool = False,
     ) -> dict[str, str | np.ndarray | np.float64]:
@@ -705,8 +710,8 @@ class Planner:
             range=rrt_range,
             fixed_joints=fixed_joints,
             simplify=simplify,
-            constraint_function=constraint_function,
-            constraint_jacobian=constraint_jacobian,
+            constraint_function=constraint_function,  # type: ignore
+            constraint_jacobian=constraint_jacobian,  # type: ignore
             constraint_tolerance=constraint_tolerance,
             verbose=verbose,
         )
@@ -791,14 +796,15 @@ class Planner:
         # we need to take only the move_group joints when planning
         # idx = self.move_group_joint_indices
 
+        # TODO(merge): verify this
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
             return {"status": ik_status}
 
         if verbose:
             print("IK results:")
-            for i in range(len(goal_qpos)):
-                print(goal_qpos[i])
+            for i in range(len(goal_qpos)):  # type: ignore
+                print(goal_qpos[i])  # type: ignore
 
         # goal_qpos_ = [goal_qpos[i][move_joint_idx] for i in range(len(goal_qpos))]
         self.robot.set_qpos(current_qpos, True)
@@ -809,11 +815,11 @@ class Planner:
 
         if verbose:
             print("IK results:")
-            for i in range(len(goal_qpos)):
-                print(goal_qpos[i])
+            for i in range(len(goal_qpos)):  # type: ignore
+                print(goal_qpos[i])  # type: ignore
 
         return self.plan_qpos_to_qpos(
-            goal_qpos,
+            goal_qpos,  # type: ignore
             current_qpos,
             time_step=time_step,
             rrt_range=rrt_range,

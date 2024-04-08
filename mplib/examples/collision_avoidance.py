@@ -1,6 +1,7 @@
 import sapien.core as sapien
 
 from mplib.examples.demo_setup import DemoSetup
+from mplib.sapien_utils import SapienPlanner, SapienPlanningWorld
 
 
 class PlanningDemo(DemoSetup):
@@ -20,7 +21,6 @@ class PlanningDemo(DemoSetup):
         super().__init__()
         self.setup_scene()
         self.load_robot()
-        self.setup_planner()
 
         # Set initial joint positions
         init_qpos = [0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78, 0, 0]
@@ -53,6 +53,9 @@ class PlanningDemo(DemoSetup):
         builder.add_box_visual(half_size=[0.05, 0.2, 0.1])
         blue_cube = builder.build(name="blue_cube")
         blue_cube.set_pose(sapien.Pose([0.55, 0, 0.1]))
+
+        planning_world = SapienPlanningWorld(self.scene, [self.robot])
+        self.planner = SapienPlanner(planning_world, "panda_hand")
 
     def add_point_cloud(self):
         """We tell the planner about the obstacle through a point cloud"""

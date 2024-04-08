@@ -61,14 +61,14 @@ void build_pyfcl(py::module &m) {
   auto PyCollisionGeometry =
       py::class_<CollisionGeometry, std::shared_ptr<CollisionGeometry>>(
           m, "CollisionGeometry", DOC(fcl, CollisionGeometry));
-  PyCollisionGeometry.def("computeLocalAABB", &CollisionGeometry::computeLocalAABB)
-      .def("isOccupied", &CollisionGeometry::isOccupied)
-      .def("isFree", &CollisionGeometry::isFree)
-      .def("isUncertain", &CollisionGeometry::isUncertain)
-      .def("computeCOM", &CollisionGeometry::computeCOM)
-      .def("computeMomentofInertia", &CollisionGeometry::computeMomentofInertia)
-      .def("computeVolume", &CollisionGeometry::computeVolume)
-      .def("computeMomentofInertiaRelatedToCOM",
+  PyCollisionGeometry.def("compute_local_aabb", &CollisionGeometry::computeLocalAABB)
+      .def("is_occupied", &CollisionGeometry::isOccupied)
+      .def("is_free", &CollisionGeometry::isFree)
+      .def("is_uncertain", &CollisionGeometry::isUncertain)
+      .def("compute_com", &CollisionGeometry::computeCOM)
+      .def("compute_moment_of_inertia", &CollisionGeometry::computeMomentofInertia)
+      .def("compute_volume", &CollisionGeometry::computeVolume)
+      .def("compute_moment_of_inertia_related_to_com",
            &CollisionGeometry::computeMomentofInertiaRelatedToCOM)
       .def_readwrite("aabb_center", &CollisionGeometry::aabb_center)
       .def_readwrite("aabb_radius", &CollisionGeometry::aabb_radius)
@@ -186,21 +186,21 @@ void build_pyfcl(py::module &m) {
       py::class_<BVHModel_OBBRSS, std::shared_ptr<BVHModel_OBBRSS>>(
           m, "BVHModel", PyCollisionGeometry, DOC(fcl, BVHModel_OBBRSS));
   PyBVHModel_OBBRSS.def(py::init<>())
-      .def("beginModel", &BVHModel_OBBRSS::beginModel, py::arg("num_faces") = 0,
+      .def("begin_model", &BVHModel_OBBRSS::beginModel, py::arg("num_faces") = 0,
            py::arg("num_vertices") = 0, DOC(fcl, BVHModel_OBBRSS, beginModel))
-      .def("endModel", &BVHModel_OBBRSS::endModel, DOC(fcl, BVHModel_OBBRSS, endModel))
-      .def("addSubModel",
+      .def("end_model", &BVHModel_OBBRSS::endModel, DOC(fcl, BVHModel_OBBRSS, endModel))
+      .def("add_sub_model",
            py::overload_cast<const std::vector<Vector3<S>> &>(
                &BVHModel_OBBRSS::addSubModel),
            py::arg("vertices"), DOC(fcl, BVHModel_OBBRSS, addSubModel))
-      .def("addSubModel",
+      .def("add_sub_model",
            py::overload_cast<const std::vector<Vector3<S>> &,
                              const std::vector<Triangle> &>(
                &BVHModel_OBBRSS::addSubModel),
            py::arg("vertices"), py::arg("faces"),
            DOC(fcl, BVHModel_OBBRSS, addSubModel, 2))
       .def(
-          "addSubModel",
+          "add_sub_model",
           [](BVHModel_OBBRSS &a, const std::vector<Vector3<S>> &vertices,
              const std::vector<Vector3i> &faces) {
             std::vector<Triangle> face_list;
@@ -284,7 +284,7 @@ void build_pyfcl(py::module &m) {
            py::arg("use_approximate_cost") = true,
            py::arg("gjk_solver_type") = GJKSolverType::GST_LIBCCD,
            py::arg("gjk_tolerance") = 1e-6)
-      .def("isSatisfied", &CollisionRequest::isSatisfied, py::arg("result"));
+      .def("is_satisfied", &CollisionRequest::isSatisfied, py::arg("result"));
 
   // CollisionResult
   auto PyCollisionResult =
@@ -322,7 +322,7 @@ void build_pyfcl(py::module &m) {
            py::arg("enable_signed_distance") = false, py::arg("rel_err") = 0.0,
            py::arg("abs_err") = 0.0, py::arg("distance_tolerance") = 1e-6,
            py::arg("gjk_solver_type") = GJKSolverType::GST_LIBCCD)
-      .def("isSatisfied", &DistanceRequest::isSatisfied, py::arg("result"));
+      .def("is_satisfied", &DistanceRequest::isSatisfied, py::arg("result"));
 
   // DistanceResult
   auto PyDistanceResult =
