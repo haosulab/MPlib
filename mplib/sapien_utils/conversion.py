@@ -19,6 +19,7 @@ from transforms3d.euler import euler2quat
 from ..pymp import ArticulatedModel, PlanningWorld
 from ..pymp.collision_detection.fcl import (
     Box,
+    BVHModel,
     Capsule,
     CollisionObject,
     Convex,
@@ -196,10 +197,10 @@ class SapienPlanningWorld(PlanningWorld):
         elif isinstance(shape, PhysxCollisionShapeSphere):
             collision_geom = Sphere(radius=shape.radius)
         elif isinstance(shape, PhysxCollisionShapeTriangleMesh):
-            # NOTE: see mplib.pymp.fcl.Triangle
-            raise NotImplementedError(
-                "Support for TriangleMesh collision is not implemented yet."
-            )
+            collision_geom = BVHModel()
+            collision_geom.begin_model()
+            collision_geom.add_sub_model(vertices=shape.vertices, faces=shape.triangles)
+            collision_geom.end_model()
         else:
             raise TypeError(f"Unknown shape type: {type(shape)}")
         return [CollisionObject(collision_geom, pose.p, pose.q)]
