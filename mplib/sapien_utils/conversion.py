@@ -236,6 +236,7 @@ class SapienPlanner(Planner):
         self,
         sapien_planning_world: SapienPlanningWorld,
         move_group: str,
+        *,
         joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
         joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
     ):
