@@ -10,7 +10,7 @@
 #include <urdf_model/types.h>
 #include <urdf_world/types.h>
 
-#include "mplib/collision_detection/fcl/types.h"
+#include "mplib/collision_detection/fcl/collision_common.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
 
@@ -54,16 +54,15 @@ class FCLModelTpl {
    * Constructs a FCLModel from URDF string and collision links
    *
    * @param urdf_string: URDF string (without visual/collision elements for links)
-   * @param collision_links: Collision link names and the vector of CollisionObjectPtr.
-   *    Format is: ``[(link_name, [CollisionObjectPtr, ...]), ...]``.
+   * @param collision_links: Vector of collision link names and FCLObjectPtr.
+   *    Format is: ``[(link_name, FCLObjectPtr), ...]``.
    *    The collision objects are at the shape's local_pose.
    * @param verbose: print debug information. Default: ``false``.
    * @return: a unique_ptr to FCLModel
    */
   static std::unique_ptr<FCLModelTpl<S>> createFromURDFString(
       const std::string &urdf_string,
-      const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
-          &collision_links,
+      const std::vector<std::pair<std::string, FCLObjectPtr<S>>> &collision_links,
       bool verbose = false);
 
   /**
@@ -71,7 +70,7 @@ class FCLModelTpl {
    *
    * @return: all collision objects of the FCL model
    */
-  const std::vector<fcl::CollisionObjectPtr<S>> &getCollisionObjects() const {
+  const std::vector<FCLObjectPtr<S>> &getCollisionObjects() const {
     return collision_objects_;
   }
 
@@ -126,15 +125,20 @@ class FCLModelTpl {
    *
    * @param link_poses: list of link poses in the order of the link order
    */
-  void updateCollisionObjects(const std::vector<Vector7<S>> &link_pose) const;
+  void updateCollisionObjects(const std::vector<Vector7<S>> &link_poses) const;
 
-  void updateCollisionObjects(const std::vector<Isometry3<S>> &link_pose) const;
+  /**
+   * Update the collision objects of the FCL model.
+   *
+   * @param link_poses: list of link poses in the order of the link order
+   */
+  void updateCollisionObjects(const std::vector<Isometry3<S>> &link_poses) const;
 
   /**
    * Perform self-collision checking.
    *
    * @param request: collision request
-   * @return: ``true`` if any collision pair collides
+   * @return: ``true`` if any collision pair collides and ``false`` otherwise.
    */
   bool collide(
       const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
@@ -160,10 +164,8 @@ class FCLModelTpl {
   std::string package_dir_;
   bool use_convex_ {};
 
-  std::vector<fcl::CollisionObjectPtr<S>> collision_objects_;
+  std::vector<FCLObjectPtr<S>> collision_objects_;
   std::vector<std::string> collision_link_names_;
-  std::vector<std::string> parent_link_names_;
-  std::vector<Isometry3<S>> collision_origin2link_poses_;
   std::vector<std::pair<size_t, size_t>> collision_pairs_;
 
   std::vector<std::string> user_link_names_;

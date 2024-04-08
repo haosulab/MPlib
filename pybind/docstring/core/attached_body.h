@@ -61,7 +61,7 @@ Gets the attached object name)doc";
 
 static const char *__doc_mplib_AttachedBodyTpl_getObject =
 R"doc(
-Gets the attached object (CollisionObjectPtr))doc";
+Gets the attached object (``FCLObjectPtr``))doc";
 
 static const char *__doc_mplib_AttachedBodyTpl_getPose =
 R"doc(

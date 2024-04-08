@@ -27,9 +27,7 @@ class ArticulatedModel:
     def create_from_urdf_string(
         urdf_string: str,
         srdf_string: str,
-        collision_links: list[
-            tuple[str, list[collision_detection.fcl.CollisionObject]]
-        ],
+        collision_links: list[tuple[str, collision_detection.fcl.FCLObject]],
         *,
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
@@ -43,9 +41,9 @@ class ArticulatedModel:
 
         :param urdf_string: URDF string (without visual/collision elements for links)
         :param srdf_string: SRDF string (only disable_collisions element)
-        :param collision_links: Collision link names and the vector of
-            CollisionObjectPtr. Format is: ``[(link_name, [CollisionObjectPtr, ...]),
-            ...]``. The collision objects are at the shape's local_pose.
+        :param collision_links: Vector of collision link names and FCLObjectPtr. Format
+            is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
+            shape's local_pose.
         :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
         :param link_names: list of links that are considered for planning
         :param joint_names: list of joints that are considered for planning
@@ -215,7 +213,7 @@ class AttachedBody:
     def __init__(
         self,
         name: str,
-        object: collision_detection.fcl.CollisionObject,
+        object: collision_detection.fcl.FCLObject,
         attached_articulation: ArticulatedModel,
         attached_link_id: int,
         pose: numpy.ndarray[
@@ -249,9 +247,9 @@ class AttachedBody:
         """
         Gets the attached object name
         """
-    def get_object(self) -> collision_detection.fcl.CollisionObject:
+    def get_object(self) -> collision_detection.fcl.FCLObject:
         """
-        Gets the attached object (CollisionObjectPtr)
+        Gets the attached object (``FCLObjectPtr``)
         """
     def get_pose(self) -> ...:
         """
@@ -294,7 +292,7 @@ class PlanningWorld:
         self,
         articulations: list[ArticulatedModel],
         articulation_names: list[str],
-        normal_objects: list[collision_detection.fcl.CollisionObject] = [],
+        normal_objects: list[collision_detection.fcl.FCLObject] = [],
         normal_object_names: list[str] = [],
     ) -> None:
         """
@@ -315,11 +313,23 @@ class PlanningWorld:
         :param model: articulated model to be added
         :param planned: whether the articulation is being planned
         """
+    @typing.overload
+    def add_normal_object(
+        self, name: str, collision_object: collision_detection.fcl.FCLObject
+    ) -> None:
+        """
+        Adds a normal object containing multiple collision objects (``FCLObjectPtr``)
+        with given name to world
+
+        :param name: name of the collision object
+        :param collision_object: collision object to be added
+        """
+    @typing.overload
     def add_normal_object(
         self, name: str, collision_object: collision_detection.fcl.CollisionObject
     ) -> None:
         """
-        Adds a normal object (CollisionObjectPtr) with given name to world
+        Adds a normal object (``CollisionObjectPtr``) with given name to world
 
         :param name: name of the collision object
         :param collision_object: collision object to be added
@@ -609,9 +619,9 @@ class PlanningWorld:
         :param name: name of the attached body
         :return: the attached body with given name or ``None`` if not found.
         """
-    def get_normal_object(self, name: str) -> collision_detection.fcl.CollisionObject:
+    def get_normal_object(self, name: str) -> collision_detection.fcl.FCLObject:
         """
-        Gets the normal object (CollisionObjectPtr) with given name
+        Gets the normal object (``FCLObjectPtr``) with given name
 
         :param name: name of the normal object
         :return: the normal object with given name or ``None`` if not found.

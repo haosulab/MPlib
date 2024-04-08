@@ -10,7 +10,6 @@
 #include "mplib/core/attached_body.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
-#include "mplib/utils/color_printing.h"
 
 namespace mplib {
 
@@ -41,6 +40,8 @@ class PlanningWorldTpl {
   using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
   using AllowedCollisionMatrix = collision_detection::AllowedCollisionMatrix;
   using AllowedCollisionMatrixPtr = collision_detection::AllowedCollisionMatrixPtr;
+  using FCLObject = collision_detection::FCLObject<S>;
+  using FCLObjectPtr = collision_detection::FCLObjectPtr<S>;
   // using DynamicAABBTreeCollisionManager = fcl::DynamicAABBTreeCollisionManager<S>;
   using BroadPhaseCollisionManagerPtr = fcl::BroadPhaseCollisionManagerPtr<S>;
 
@@ -61,7 +62,7 @@ class PlanningWorldTpl {
    */
   PlanningWorldTpl(const std::vector<ArticulatedModelPtr> &articulations,
                    const std::vector<std::string> &articulation_names,
-                   const std::vector<CollisionObjectPtr> &normal_objects = {},
+                   const std::vector<FCLObjectPtr> &normal_objects = {},
                    const std::vector<std::string> &normal_object_names = {});
 
   /// @brief Gets names of all articulations in world (unordered)
@@ -134,12 +135,12 @@ class PlanningWorldTpl {
   std::vector<std::string> getNormalObjectNames() const;
 
   /**
-   * Gets the normal object (CollisionObjectPtr) with given name
+   * Gets the normal object (``FCLObjectPtr``) with given name
    *
    * @param name: name of the normal object
    * @return: the normal object with given name or ``nullptr`` if not found.
    */
-  CollisionObjectPtr getNormalObject(const std::string &name) const {
+  FCLObjectPtr getNormalObject(const std::string &name) const {
     auto it = normal_object_map_.find(name);
     return it != normal_object_map_.end() ? it->second : nullptr;
   }
@@ -155,15 +156,26 @@ class PlanningWorldTpl {
   }
 
   /**
-   * Adds a normal object (CollisionObjectPtr) with given name to world
+   * Adds a normal object containing multiple collision objects (``FCLObjectPtr``) with
+   * given name to world
    *
    * @param name: name of the collision object
    * @param collision_object: collision object to be added
    */
-  void addNormalObject(const std::string &name,
-                       const CollisionObjectPtr &collision_object) {
+  // TODO(merge): remove name
+  void addNormalObject(const std::string &name, const FCLObjectPtr &collision_object) {
     normal_object_map_[name] = collision_object;
   }
+
+  /**
+   * Adds a normal object (``CollisionObjectPtr``) with given name to world
+   *
+   * @param name: name of the collision object
+   * @param collision_object: collision object to be added
+   */
+  // TODO(merge): remove name
+  void addNormalObject(const std::string &name,
+                       const CollisionObjectPtr &collision_object);
 
   /**
    * Adds a point cloud as a collision object with given name to world
@@ -445,8 +457,7 @@ class PlanningWorldTpl {
 
  private:
   std::unordered_map<std::string, ArticulatedModelPtr> articulation_map_;
-  // TODO: add name to CollisionObject similar as ArticulatedModel
-  std::unordered_map<std::string, CollisionObjectPtr> normal_object_map_;
+  std::unordered_map<std::string, FCLObjectPtr> normal_object_map_;
 
   // TODO: can planned_articulations_ be unordered_map? (setQposAll)
   std::map<std::string, ArticulatedModelPtr> planned_articulation_map_;

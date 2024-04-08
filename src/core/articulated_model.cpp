@@ -42,7 +42,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
 template <typename S>
 std::unique_ptr<ArticulatedModelTpl<S>> ArticulatedModelTpl<S>::createFromURDFString(
     const std::string &urdf_string, const std::string &srdf_string,
-    const std::vector<std::pair<std::string, std::vector<fcl::CollisionObjectPtr<S>>>>
+    const std::vector<std::pair<std::string, collision_detection::FCLObjectPtr<S>>>
         &collision_links,
     const Vector3<S> &gravity, const std::vector<std::string> &link_names,
     const std::vector<std::string> &joint_names, bool verbose) {

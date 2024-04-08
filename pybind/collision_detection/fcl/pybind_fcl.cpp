@@ -368,19 +368,24 @@ void build_pyfcl(py::module &m) {
       .def_readonly("total_cost", &CostSource::total_cost);
 
   // collide / distance functions
-  m.def("collide",
-        [](const CollisionObject *o1, const CollisionObject *o2,
-           const CollisionRequest &request) {
-          CollisionResult result;
-          fcl::collide(o1, o2, request, result);
-          return result;
-        })
-      .def("distance", [](const CollisionObject *o1, const CollisionObject *o2,
-                          const DistanceRequest &request) {
-        DistanceResult result;
-        fcl::distance(o1, o2, request, result);
-        return result;
-      });
+  m.def(
+       "collide",
+       [](const CollisionObject *obj1, const CollisionObject *obj2,
+          const CollisionRequest &request) {
+         CollisionResult result;
+         fcl::collide(obj1, obj2, request, result);
+         return result;
+       },
+       py::arg("obj1"), py::arg("obj2"), py::arg("request") = CollisionRequest())
+      .def(
+          "distance",
+          [](const CollisionObject *obj1, const CollisionObject *obj2,
+             const DistanceRequest &request) {
+            DistanceResult result;
+            fcl::distance(obj1, obj2, request, result);
+            return result;
+          },
+          py::arg("obj1"), py::arg("obj2"), py::arg("request") = DistanceRequest());
 }
 
 }  // namespace mplib::collision_detection::fcl

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "mplib/collision_detection/types.h"
 #include "mplib/core/articulated_model.h"
 #include "mplib/kinematics/types.h"
 #include "mplib/macros/class_forward.h"
@@ -26,10 +27,9 @@ template <typename S>
 class AttachedBodyTpl {
  public:
   // Common type alias
-  using CollisionObjectPtr = fcl::CollisionObjectPtr<S>;
+  using FCLObjectPtr = collision_detection::FCLObjectPtr<S>;
   using ArticulatedModelPtr = ArticulatedModelTplPtr<S>;
 
-  // TODO(merge): Support multi collision geometry
   /**
    * Construct an attached body for a specified link.
    *
@@ -40,7 +40,7 @@ class AttachedBodyTpl {
    * @param pose: attached pose (relative pose from attached link to object)
    * @param touch_links: the link names that the attached body touches
    */
-  AttachedBodyTpl(const std::string &name, const CollisionObjectPtr &object,
+  AttachedBodyTpl(const std::string &name, const FCLObjectPtr &object,
                   const ArticulatedModelPtr &attached_articulation,
                   int attached_link_id, const Isometry3<S> &pose,
                   const std::vector<std::string> &touch_links = {});
@@ -48,8 +48,8 @@ class AttachedBodyTpl {
   /// @brief Gets the attached object name
   const std::string &getName() const { return name_; }
 
-  /// @brief Gets the attached object (CollisionObjectPtr)
-  CollisionObjectPtr getObject() const { return object_; }
+  /// @brief Gets the attached object (``FCLObjectPtr``)
+  FCLObjectPtr getObject() const { return object_; }
 
   /// @brief Gets the articulation this body is attached to
   ArticulatedModelPtr getAttachedArticulation() const { return attached_articulation_; }
@@ -69,7 +69,7 @@ class AttachedBodyTpl {
   }
 
   /// @brief Updates the global pose of the attached object using current state
-  void updatePose() const { object_->setTransform(getGlobalPose()); }
+  void updatePose() const;
 
   /// @brief Gets the link names that the attached body touches
   const std::vector<std::string> &getTouchLinks() const { return touch_links_; }
@@ -81,7 +81,7 @@ class AttachedBodyTpl {
 
  private:
   std::string name_;
-  CollisionObjectPtr object_;
+  FCLObjectPtr object_;
   ArticulatedModelPtr attached_articulation_;
   kinematics::PinocchioModelTplPtr<S> pinocchio_model_;
   int attached_link_id_ {};

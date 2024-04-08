@@ -53,7 +53,15 @@ Adds an articulation (ArticulatedModelPtr) with given name to world
 
 static const char *__doc_mplib_PlanningWorldTpl_addNormalObject =
 R"doc(
-Adds a normal object (CollisionObjectPtr) with given name to world
+Adds a normal object containing multiple collision objects (``FCLObjectPtr``)
+with given name to world
+
+:param name: name of the collision object
+:param collision_object: collision object to be added)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_addNormalObject_2 =
+R"doc(
+Adds a normal object (``CollisionObjectPtr``) with given name to world
 
 :param name: name of the collision object
 :param collision_object: collision object to be added)doc";
@@ -265,7 +273,7 @@ Gets the attached body (AttachedBodyPtr) with given name
 
 static const char *__doc_mplib_PlanningWorldTpl_getNormalObject =
 R"doc(
-Gets the normal object (CollisionObjectPtr) with given name
+Gets the normal object (``FCLObjectPtr``) with given name
 
 :param name: name of the normal object
 :return: the normal object with given name or ``None`` if not found.)doc";
