@@ -34,11 +34,13 @@ from .urdf_exporter import export_kinematic_chain_urdf
 
 
 class SapienPlanningWorld(PlanningWorld):
-    def __init__(self, sim_scene: Scene, planned_articulation_names: list[str] = []):
+    def __init__(
+        self, sim_scene: Scene, planned_articulations: list[PhysxArticulation] = []
+    ):
         """
         Creates an mplib.pymp.planning_world.PlanningWorld from a sapien.Scene.
 
-        :param planned_articulation_names: name of planned articulations.
+        :param planned_articulations: list of planned articulations.
         """
         super().__init__([], [])
         self._sim_scene = sim_scene
@@ -68,10 +70,10 @@ class SapienPlanningWorld(PlanningWorld):
             )
             articulated_model.set_qpos(articulation.qpos)  # set_qpos to update poses
 
-            self.add_articulation(articulation.name, articulated_model)
+            self.add_articulation(self.get_object_name(articulation), articulated_model)
 
-        for articulation_name in planned_articulation_names:
-            self.set_articulation_planned(articulation_name, True)
+        for articulation in planned_articulations:
+            self.set_articulation_planned(self.get_object_name(articulation), True)
 
         for entity in actors:
             component = entity.find_component_by_type(PhysxRigidBaseComponent)
@@ -90,7 +92,7 @@ class SapienPlanningWorld(PlanningWorld):
                 f"entity '{entity.name}'"
             )
 
-            self.add_normal_object(entity.name, col_objs[0])
+            self.add_normal_object(self.get_object_name(entity), col_objs[0])
 
     def update_from_simulation(self, update_attached_object: bool = True) -> None:
         """Updates planning_world articulations/objects pose with current Scene state
@@ -100,7 +102,9 @@ class SapienPlanningWorld(PlanningWorld):
         """
         for articulation in self._sim_scene.get_all_articulations():
             # set_qpos to update poses
-            self.get_articulation(articulation.name).set_qpos(articulation.qpos)
+            self.get_articulation(self.get_object_name(articulation)).set_qpos(
+                articulation.qpos
+            )
 
         for entity in self._sim_scene.get_all_actors():
             component = entity.find_component_by_type(PhysxRigidBaseComponent)
@@ -127,8 +131,8 @@ class SapienPlanningWorld(PlanningWorld):
                 pose = pose * Pose(q=euler2quat(0, np.pi / 2, 0))
 
             # handle attached object
-            if self.is_normal_object_attached(entity.name):
-                attached_body = self.get_attached_object(entity.name)
+            if self.is_normal_object_attached(self.get_object_name(entity)):
+                attached_body = self.get_attached_object(self.get_object_name(entity))
                 if update_attached_object:
                     parent_posevec = (
                         attached_body.get_attached_articulation()
@@ -140,9 +144,25 @@ class SapienPlanningWorld(PlanningWorld):
                     attached_body.set_pose(np.hstack((pose.p, pose.q)))
                 attached_body.update_pose()
             else:
-                self.get_normal_object(entity.name).set_transformation(
+                self.get_normal_object(self.get_object_name(entity)).set_transformation(
                     np.hstack((pose.p, pose.q))
                 )
+
+    @staticmethod
+    def get_object_name(obj: PhysxArticulation | Entity) -> str:
+        """
+        Constructs a unique name for the corresponding mplib object.
+        This is necessary because mplib objects assume unique names.
+
+        :param obj: a SAPIEN object
+        :return: the unique mplib object name
+        """
+        if isinstance(obj, PhysxArticulation):
+            return f"{obj.name}_{obj.root.entity.per_scene_id}"
+        elif isinstance(obj, Entity):
+            return f"{obj.name}_{obj.per_scene_id}"
+        else:
+            raise NotImplementedError(f"Unknown SAPIEN object type {type(obj)}")
 
     @staticmethod
     def convert_sapien_col_shape(
