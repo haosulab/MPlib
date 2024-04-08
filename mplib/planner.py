@@ -70,8 +70,8 @@ class Planner:
         self.robot = ArticulatedModel(
             self.urdf,
             self.srdf,
-            link_names=user_link_names,
-            joint_names=user_joint_names,
+            link_names=user_link_names,  # type: ignore
+            joint_names=user_joint_names,  # type: ignore
             convex=kwargs.get("convex", False),
             verbose=False,
         )
@@ -367,7 +367,7 @@ class Planner:
         self,
         goal_pose: np.ndarray,
         start_qpos: np.ndarray,
-        mask: Optional[list[bool] | np.ndarray] = None,
+        mask: Optional[Sequence[bool] | np.ndarray] = None,
         *,
         n_init_qpos: int = 20,
         threshold: float = 1e-3,
@@ -404,8 +404,11 @@ class Planner:
         q_goals = []
         qpos = start_qpos
         for _ in range(n_init_qpos):
-            ik_qpos, ik_success, ik_error = self.pinocchio_model.compute_IK_CLIK(
-                move_link_idx, goal_pose, qpos, mask
+            ik_qpos, ik_success, _ = self.pinocchio_model.compute_IK_CLIK(
+                move_link_idx,
+                goal_pose,
+                qpos,
+                mask,  # type: ignore
             )
             success = ik_success and self.wrap_joint_limit(ik_qpos)
 
@@ -497,11 +500,11 @@ class Planner:
         jnt_traj = instance.compute_trajectory()
         if jnt_traj is None:
             raise RuntimeError("Fail to parameterize path")
-        ts_sample = np.linspace(0, jnt_traj.duration, int(jnt_traj.duration / step))
+        ts_sample = np.linspace(0, jnt_traj.duration, int(jnt_traj.duration / step))  # type: ignore
         qs_sample = jnt_traj(ts_sample)
         qds_sample = jnt_traj(ts_sample, 1)
         qdds_sample = jnt_traj(ts_sample, 2)
-        return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration
+        return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration  # type: ignore
 
     # TODO: change method name to align with PlanningWorld API?
     def update_point_cloud(self, points, resolution=1e-3, name="scene_pcd"):
@@ -646,8 +649,8 @@ class Planner:
         fix_joint_limits: bool = True,
         fixed_joint_indices: Optional[list[int]] = None,
         simplify: bool = True,
-        constraint_function: Optional[Callable] = None,
-        constraint_jacobian: Optional[Callable] = None,
+        constraint_function: Optional[Callable[[np.ndarray, np.ndarray], None]] = None,
+        constraint_jacobian: Optional[Callable[[np.ndarray, np.ndarray], None]] = None,
         constraint_tolerance: float = 1e-3,
         verbose: bool = False,
     ) -> dict[str, str | np.ndarray | np.float64]:
@@ -705,8 +708,8 @@ class Planner:
             range=rrt_range,
             fixed_joints=fixed_joints,
             simplify=simplify,
-            constraint_function=constraint_function,
-            constraint_jacobian=constraint_jacobian,
+            constraint_function=constraint_function,  # type: ignore
+            constraint_jacobian=constraint_jacobian,  # type: ignore
             constraint_tolerance=constraint_tolerance,
             verbose=verbose,
         )
@@ -791,14 +794,15 @@ class Planner:
         # we need to take only the move_group joints when planning
         # idx = self.move_group_joint_indices
 
+        # TODO(merge): verify this
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
             return {"status": ik_status}
 
         if verbose:
             print("IK results:")
-            for i in range(len(goal_qpos)):
-                print(goal_qpos[i])
+            for i in range(len(goal_qpos)):  # type: ignore
+                print(goal_qpos[i])  # type: ignore
 
         # goal_qpos_ = [goal_qpos[i][move_joint_idx] for i in range(len(goal_qpos))]
         self.robot.set_qpos(current_qpos, True)
@@ -809,11 +813,11 @@ class Planner:
 
         if verbose:
             print("IK results:")
-            for i in range(len(goal_qpos)):
-                print(goal_qpos[i])
+            for i in range(len(goal_qpos)):  # type: ignore
+                print(goal_qpos[i])  # type: ignore
 
         return self.plan_qpos_to_qpos(
-            goal_qpos,
+            goal_qpos,  # type: ignore
             current_qpos,
             time_step=time_step,
             rrt_range=rrt_range,

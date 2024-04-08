@@ -68,7 +68,7 @@ class SapienPlanningWorld(PlanningWorld):
                 joint_names=[j.name for j in articulation.active_joints],
                 verbose=False,
             )
-            articulated_model.set_qpos(articulation.qpos)  # set_qpos to update poses
+            articulated_model.set_qpos(articulation.qpos)  # update qpos  # type: ignore
 
             self.add_articulation(self.get_object_name(articulation), articulated_model)
 
@@ -85,7 +85,7 @@ class SapienPlanningWorld(PlanningWorld):
             ), f"Component should not be PhysxArticulationLinkComponent: {component=}"
 
             # Convert collision shapes at current global pose
-            col_objs = self.convert_sapien_col_shape(component)
+            col_objs = self.convert_sapien_col_shape(component)  # type: ignore
             # TODO: multiple collision shapes
             assert len(col_objs) == 1, (
                 f"Should only have 1 collision object, got {len(col_objs)} shapes for "
@@ -103,7 +103,7 @@ class SapienPlanningWorld(PlanningWorld):
         for articulation in self._sim_scene.get_all_articulations():
             # set_qpos to update poses
             self.get_articulation(self.get_object_name(articulation)).set_qpos(
-                articulation.qpos
+                articulation.qpos  # type: ignore
             )
 
         for entity in self._sim_scene.get_all_actors():
@@ -115,7 +115,7 @@ class SapienPlanningWorld(PlanningWorld):
                 component, PhysxArticulationLinkComponent
             ), f"Component should not be PhysxArticulationLinkComponent: {component=}"
 
-            shapes = component.collision_shapes
+            shapes = component.collision_shapes  # type: ignore
             # TODO: multiple collision shapes
             assert len(shapes) == 1, (
                 f"Should only have 1 collision shape, got {len(shapes)} shapes for "
@@ -128,7 +128,7 @@ class SapienPlanningWorld(PlanningWorld):
             if isinstance(
                 shape, (PhysxCollisionShapeCapsule, PhysxCollisionShapeCylinder)
             ):
-                pose = pose * Pose(q=euler2quat(0, np.pi / 2, 0))
+                pose = pose * Pose(q=euler2quat(0, np.pi / 2, 0))  # type: ignore
 
             # handle attached object
             if self.is_normal_object_attached(self.get_object_name(entity)):
@@ -139,7 +139,7 @@ class SapienPlanningWorld(PlanningWorld):
                         .get_pinocchio_model()
                         .get_link_pose(attached_body.get_attached_link_id())
                     )
-                    parent_pose = Pose(parent_posevec[:3], parent_posevec[3:])
+                    parent_pose = Pose(parent_posevec[:3], parent_posevec[3:])  # type: ignore
                     pose = parent_pose.inv() * pose  # new attached pose
                     attached_body.set_pose(np.hstack((pose.p, pose.q)))
                 attached_body.update_pose()
@@ -198,7 +198,7 @@ class SapienPlanningWorld(PlanningWorld):
             collision_geom = Capsule(radius=shape.radius, lz=shape.half_length * 2)
             # NOTE: physx Capsule has x-axis along capsule height
             # FCL Capsule has z-axis along capsule height
-            pose = pose * Pose(q=euler2quat(0, np.pi / 2, 0))
+            pose = pose * Pose(q=euler2quat(0, np.pi / 2, 0))  # type: ignore
         elif isinstance(shape, PhysxCollisionShapeConvexMesh):
             assert np.allclose(
                 shape.scale, 1.0
@@ -208,7 +208,7 @@ class SapienPlanningWorld(PlanningWorld):
             collision_geom = Cylinder(radius=shape.radius, lz=shape.half_length * 2)
             # NOTE: physx Cylinder has x-axis along cylinder height
             # FCL Cylinder has z-axis along cylinder height
-            pose = pose * Pose(q=euler2quat(0, np.pi / 2, 0))
+            pose = pose * Pose(q=euler2quat(0, np.pi / 2, 0))  # type: ignore
         elif isinstance(shape, PhysxCollisionShapePlane):
             raise NotImplementedError(
                 "Support for Plane collision is not implemented yet in mplib, "
@@ -223,4 +223,4 @@ class SapienPlanningWorld(PlanningWorld):
             collision_geom.end_model()
         else:
             raise TypeError(f"Unknown shape type: {type(shape)}")
-        return [CollisionObject(collision_geom, pose.p, pose.q)]
+        return [CollisionObject(collision_geom, pose.p, pose.q)]  # type: ignore
