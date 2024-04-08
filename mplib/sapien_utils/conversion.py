@@ -248,8 +248,6 @@ class SapienPlanner(Planner):
         :param joint_vel_limits: joint velocity limits for time parameterization
         :param joint_acc_limits: joint acceleration limits for time parameterization
         """
-        self._sim_scene = sapien_planning_world._sim_scene
-
         self.planning_world = sapien_planning_world
         self.acm = self.planning_world.get_allowed_collision_matrix()
 
