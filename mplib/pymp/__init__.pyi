@@ -12,6 +12,7 @@ __all__ = [
     "ArticulatedModel",
     "AttachedBody",
     "PlanningWorld",
+    "Pose",
     "collision_detection",
     "kinematics",
     "planning",
@@ -728,6 +729,158 @@ class PlanningWorld:
         """
         Set qpos of all planned articulations
         """
+
+class Pose:
+    """
+    Pose stored as a unit quaternion and a position vector
+    """
+    def __getstate__(self) -> tuple: ...
+    def __imul__(self, other: Pose) -> Pose:
+        """
+        Overloading operator *= for ``Pose<S> *= Pose<S>``
+        """
+    @typing.overload
+    def __init__(self) -> None:
+        """
+        Constructs a default Pose with p = (0,0,0) and q = (1,0,0,0)
+        """
+    @typing.overload
+    def __init__(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ] = ...,
+        q: numpy.ndarray[
+            tuple[typing.Literal[4], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ] = ...,
+    ) -> None:
+        """
+        Constructs a Pose with given position and quaternion
+
+        :param p: position, format: (x, y, z)
+        :param q: quaternion (can be unnormalized), format: (w, x, y, z)
+        """
+    @typing.overload
+    def __init__(
+        self,
+        matrix: numpy.ndarray[
+            tuple[typing.Literal[4], typing.Literal[4]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Constructs a Pose with given transformation matrix
+
+        :param matrix: a 4x4 transformation matrix
+        """
+    @typing.overload
+    def __mul__(
+        self,
+        v: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]:
+        """
+        Overloading operator * for ``Pose<S> * Vector3<S>``
+        """
+    @typing.overload
+    def __mul__(self, other: Pose) -> Pose:
+        """
+        Overloading operator * for ``Pose<S> * Pose<S>``
+        """
+    def __repr__(self) -> str: ...
+    def __setstate__(self, arg0: tuple) -> None: ...
+    def get_p(
+        self,
+    ) -> numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]:
+        """
+        Gets the position part of the Pose
+
+        :return: position, format: (x, y, z)
+        """
+    def get_q(
+        self,
+    ) -> numpy.ndarray[
+        tuple[typing.Literal[4], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]:
+        """
+        Gets the quaternion part of the Pose
+
+        :return: quaternion, format: (w, x, y, z)
+        """
+    def inv(self) -> Pose:
+        """
+        Get the inserse Pose
+
+        :return: the inverse Pose
+        """
+    def set_p(
+        self,
+        p: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Sets the position part of the Pose
+
+        :param p: position, format: (x, y, z)
+        """
+    def set_q(
+        self,
+        q: numpy.ndarray[
+            tuple[typing.Literal[4], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None:
+        """
+        Sets the quaternion part of the Pose
+
+        :param q: quaternion (can be unnormalized), format: (w, x, y, z)
+        """
+    def to_transformation_matrix(
+        self,
+    ) -> numpy.ndarray[
+        tuple[typing.Literal[4], typing.Literal[4]], numpy.dtype[numpy.float64]
+    ]:
+        """
+        Constructs a transformation matrix from this Pose
+
+        :return: a 4x4 transformation matrix
+        """
+    @property
+    def p(
+        self,
+    ) -> numpy.ndarray[
+        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]:
+        """
+        Position part of the Pose (x, y, z)
+        """
+    @p.setter
+    def p(
+        self,
+        arg0: numpy.ndarray[
+            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None: ...
+    @property
+    def q(
+        self,
+    ) -> numpy.ndarray[
+        tuple[typing.Literal[4], typing.Literal[1]], numpy.dtype[numpy.float64]
+    ]:
+        """
+        Quaternion part of the Pose (w, x, y, z)
+        """
+    @q.setter
+    def q(
+        self,
+        arg1: numpy.ndarray[
+            tuple[typing.Literal[4], typing.Literal[1]], numpy.dtype[numpy.float64]
+        ],
+    ) -> None: ...
 
 def set_global_seed(seed: int) -> None:
     """

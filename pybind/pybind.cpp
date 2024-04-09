@@ -26,6 +26,7 @@ void build_pyarticulated_model(py::module &pymp);
 void build_pyattached_body(py::module &pymp);
 void build_pyplanning_world(py::module &pymp);
 void build_utils_random(py::module &pymp);
+void build_utils_pose(py::module &pymp);
 
 PYBIND11_MODULE(pymp, m) {
   m.doc() = "Motion planning python binding";
@@ -38,6 +39,7 @@ PYBIND11_MODULE(pymp, m) {
   build_pyattached_body(m);
   build_pyplanning_world(m);
   build_utils_random(m);
+  build_utils_pose(m);
 }
 
 }  // namespace mplib
