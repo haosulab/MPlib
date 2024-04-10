@@ -10,6 +10,7 @@
 #include "mplib/core/attached_body.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
+#include "mplib/utils/pose.h"
 
 namespace mplib {
 
@@ -265,8 +266,7 @@ class PlanningWorldTpl {
    *  or if planned articulation with given name does not exist
    */
   void attachObject(const std::string &name, const std::string &art_name, int link_id,
-                    const Vector7<S> &pose,
-                    const std::vector<std::string> &touch_links);
+                    const Pose<S> &pose, const std::vector<std::string> &touch_links);
 
   /**
    * Attaches existing normal object to specified link of articulation at given pose.
@@ -284,7 +284,7 @@ class PlanningWorldTpl {
    *  or if planned articulation with given name does not exist
    */
   void attachObject(const std::string &name, const std::string &art_name, int link_id,
-                    const Vector7<S> &pose);
+                    const Pose<S> &pose);
 
   /**
    * Attaches given object (w/ p_geom) to specified link of articulation at given pose.
@@ -299,7 +299,7 @@ class PlanningWorldTpl {
    * @param touch_links: link names that the attached object touches
    */
   void attachObject(const std::string &name, const CollisionGeometryPtr &p_geom,
-                    const std::string &art_name, int link_id, const Vector7<S> &pose,
+                    const std::string &art_name, int link_id, const Pose<S> &pose,
                     const std::vector<std::string> &touch_links);
 
   /**
@@ -316,7 +316,7 @@ class PlanningWorldTpl {
    * @param pose: attached pose (relative pose from attached link to object)
    */
   void attachObject(const std::string &name, const CollisionGeometryPtr &p_geom,
-                    const std::string &art_name, int link_id, const Vector7<S> &pose);
+                    const std::string &art_name, int link_id, const Pose<S> &pose);
 
   /**
    * Attaches given sphere to specified link of articulation (auto touch_links)
@@ -327,7 +327,7 @@ class PlanningWorldTpl {
    * @param pose: attached pose (relative pose from attached link to object)
    */
   void attachSphere(S radius, const std::string &art_name, int link_id,
-                    const Vector7<S> &pose);
+                    const Pose<S> &pose);
 
   /**
    * Attaches given box to specified link of articulation (auto touch_links)
@@ -338,7 +338,7 @@ class PlanningWorldTpl {
    * @param pose: attached pose (relative pose from attached link to object)
    */
   void attachBox(const Vector3<S> &size, const std::string &art_name, int link_id,
-                 const Vector7<S> &pose);
+                 const Pose<S> &pose);
 
   /**
    * Attaches given mesh to specified link of articulation (auto touch_links)
@@ -349,7 +349,7 @@ class PlanningWorldTpl {
    * @param pose: attached pose (relative pose from attached link to object)
    */
   void attachMesh(const std::string &mesh_path, const std::string &art_name,
-                  int link_id, const Vector7<S> &pose);
+                  int link_id, const Pose<S> &pose);
 
   /**
    * Detaches object with given name.

@@ -4,7 +4,13 @@
 
 namespace mplib {
 
-/// @brief Pose stored as a unit quaternion and a position vector
+/**
+ * Pose stored as a unit quaternion and a position vector
+ *
+ * This struct is intended to be used only for interfacing with Python.
+ * Internally, ``Pose`` is converted to and stored as ``Eigen::Isometry3``
+ * which is used by all computations.
+ */
 template <typename S>
 struct Pose {
   /// @brief Constructs a default Pose with p = (0,0,0) and q = (1,0,0,0)
@@ -28,6 +34,25 @@ struct Pose {
   Pose(const Vector3<S> &p, const Quaternion<S> &q) : p(p), q(q.normalized()) {}
 
   /**
+   * Constructs a Pose from a given ``Eigen::Isometry3`` instance
+   *
+   * @param pose: an ``Eigen::Isometry3`` instance
+   */
+  Pose(const Isometry3<S> &pose) : p(pose.translation()), q(pose.linear()) {}
+
+  /**
+   * Converts the Pose to an ``Eigen::Isometry3`` instance
+   *
+   * @return: an ``Eigen::Isometry3`` instance
+   */
+  Isometry3<S> toIsometry() const {
+    Isometry3<S> ret;
+    ret.linear() = q.toRotationMatrix();
+    ret.translation() = p;
+    return ret;
+  }
+
+  /**
    * Get the inserse Pose
    *
    * @return: the inverse Pose
@@ -35,6 +60,20 @@ struct Pose {
   Pose<S> inverse() const {
     Quaternion<S> qinv = q.conjugate();  // can use conjugate() since always normalized
     return {qinv * -p, qinv};
+  }
+
+  /**
+   * Computes the distance between two poses by
+   * ``norm(p1.p - p2.p) + min(norm(p1.q - p2.q), norm(p1.q + p2.q))`.
+   *
+   * The quaternion part has range [0, sqrt(2)].
+   *
+   * @param other: the other pose
+   * @return: the distance between the two poses
+   */
+  S distance(const Pose<S> &other) const {
+    return (p - other.p).norm() + std::min((q.coeffs() - other.q.coeffs()).norm(),
+                                           (q.coeffs() + other.q.coeffs()).norm());
   }
 
   /// @brief Overloading operator * for ``Pose<S> * Vector3<S>``

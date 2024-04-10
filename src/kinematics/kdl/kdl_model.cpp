@@ -48,15 +48,15 @@ KDLModelTpl<S>::KDLModelTpl(const std::string &urdf_filename,
 template <typename S>
 std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKLMA(size_t index,
                                                        const VectorX<S> &q0,
-                                                       const Vector7<S> &pose) const {
+                                                       const Pose<S> &pose) const {
   KDL::Chain chain;
   Vector6<double> L {1, 1, 1, 0.01, 0.01, 0.01};
   ASSERT(index < user_link_names_.size(), "link index out of bound");
   tree_.getChain(tree_root_name_, user_link_names_[index], chain);
 
-  KDL::Frame frame_goal =
-      KDL::Frame(KDL::Rotation::Quaternion(pose[4], pose[5], pose[6], pose[3]),
-                 KDL::Vector(pose[0], pose[1], pose[2]));
+  KDL::Frame frame_goal = KDL::Frame(
+      KDL::Rotation::Quaternion(pose.q.x(), pose.q.y(), pose.q.z(), pose.q.w()),
+      KDL::Vector(pose.p(0), pose.p(1), pose.p(2)));
   KDL::ChainIkSolverPos_LMA solver(chain, L);
   int n = chain.getNrOfJoints();
   KDL::JntArray q_init(n);
@@ -77,14 +77,14 @@ std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKLMA(size_t index,
 template <typename S>
 std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKNR(size_t index,
                                                       const VectorX<S> &q0,
-                                                      const Vector7<S> &pose) const {
+                                                      const Pose<S> &pose) const {
   KDL::Chain chain;
   ASSERT(index < user_link_names_.size(), "link index out of bound");
   tree_.getChain(tree_root_name_, user_link_names_[index], chain);
 
-  KDL::Frame frame_goal =
-      KDL::Frame(KDL::Rotation::Quaternion(pose[4], pose[5], pose[6], pose[3]),
-                 KDL::Vector(pose[0], pose[1], pose[2]));
+  KDL::Frame frame_goal = KDL::Frame(
+      KDL::Rotation::Quaternion(pose.q.x(), pose.q.y(), pose.q.z(), pose.q.w()),
+      KDL::Vector(pose.p(0), pose.p(1), pose.p(2)));
 
   KDL::ChainFkSolverPos_recursive fkpossolver(chain);
   KDL::ChainIkSolverVel_pinv ikvelsolver(chain);
@@ -110,16 +110,16 @@ std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKNR(size_t index,
 template <typename S>
 std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKNRJL(size_t index,
                                                         const VectorX<S> &q0,
-                                                        const Vector7<S> &pose,
+                                                        const Pose<S> &pose,
                                                         const VectorX<S> &qmin,
                                                         const VectorX<S> &qmax) const {
   KDL::Chain chain;
   ASSERT(index < user_link_names_.size(), "link index out of bound");
   tree_.getChain(tree_root_name_, user_link_names_[index], chain);
 
-  KDL::Frame frame_goal =
-      KDL::Frame(KDL::Rotation::Quaternion(pose[4], pose[5], pose[6], pose[3]),
-                 KDL::Vector(pose[0], pose[1], pose[2]));
+  KDL::Frame frame_goal = KDL::Frame(
+      KDL::Rotation::Quaternion(pose.q.x(), pose.q.y(), pose.q.z(), pose.q.w()),
+      KDL::Vector(pose.p(0), pose.p(1), pose.p(2)));
 
   KDL::ChainFkSolverPos_recursive fkpossolver(chain);
   KDL::ChainIkSolverVel_pinv ikvelsolver(chain);
@@ -151,7 +151,7 @@ std::tuple<VectorX<S>, int> KDLModelTpl<S>::chainIKNRJL(size_t index,
 template <typename S>
 std::tuple<VectorX<S>, int> KDLModelTpl<S>::TreeIKNRJL(
     const std::vector<std::string> endpoints, const VectorX<S> &q0,
-    const std::vector<Vector7<S>> &poses, const VectorX<S> &qmin,
+    const std::vector<Pose<S>> &poses, const VectorX<S> &qmin,
     const VectorX<S> &qmax) const {
   KDL::TreeFkSolverPos_recursive fkpossolver(tree_);
   KDL::TreeIkSolverVel_wdls ikvelsolver(tree_, endpoints);
@@ -166,11 +166,11 @@ std::tuple<VectorX<S>, int> KDLModelTpl<S>::TreeIKNRJL(
   }
 
   KDL::Frames frames;
-  for (size_t i = 0; i < endpoints.size(); i++) {
-    frames[endpoints[i]] = KDL::Frame(
-        KDL::Rotation::Quaternion(poses[i][4], poses[i][5], poses[i][6], poses[i][3]),
-        KDL::Vector(poses[i][0], poses[i][1], poses[i][2]));
-  }
+  for (size_t i = 0; i < endpoints.size(); i++)
+    frames[endpoints[i]] =
+        KDL::Frame(KDL::Rotation::Quaternion(poses[i].q.x(), poses[i].q.y(),
+                                             poses[i].q.z(), poses[i].q.w()),
+                   KDL::Vector(poses[i].p(0), poses[i].p(1), poses[i].p(2)));
 
   for (int i = 0; i < n; i++) q_init(i) = q0[joint_mapping_kdl_2_user_[i]];
 

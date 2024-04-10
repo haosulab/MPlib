@@ -30,6 +30,8 @@ void build_utils_pose(py::module &pymp);
 
 PYBIND11_MODULE(pymp, m) {
   m.doc() = "Motion planning python binding";
+  // Need to be built first so other methods can use Pose<S>() as default argument value
+  build_utils_pose(m);
 
   collision_detection::build_pycollision_detection(m);
   kinematics::build_pykinematics(m);
@@ -39,7 +41,6 @@ PYBIND11_MODULE(pymp, m) {
   build_pyattached_body(m);
   build_pyplanning_world(m);
   build_utils_random(m);
-  build_utils_pose(m);
 }
 
 }  // namespace mplib

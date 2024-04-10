@@ -10,7 +10,6 @@
 
 #include "docstring/collision_detection/fcl/fcl_model.h"
 #include "mplib/collision_detection/fcl/fcl_model.h"
-#include "mplib/types.h"
 #include "pybind_macros.hpp"
 
 namespace py = pybind11;
@@ -58,9 +57,7 @@ void build_pyfcl_model(py::module &m) {
            DOC(mplib, collision_detection, fcl, FCLModelTpl,
                removeCollisionPairsFromSRDF))
 
-      .def("update_collision_objects",
-           py::overload_cast<const std::vector<Vector7<S>> &>(
-               &FCLModel::updateCollisionObjects, py::const_),
+      .def("update_collision_objects", &FCLModel::updateCollisionObjects,
            py::arg("link_poses"),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, updateCollisionObjects))
 

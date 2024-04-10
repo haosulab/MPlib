@@ -36,7 +36,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
   fcl_model_->removeCollisionPairsFromSRDF(srdf_filename);
   current_qpos_ = VectorX<S>::Constant(pinocchio_model_->getModel().nv, 0);
   setMoveGroup(user_link_names_);
-  setBasePose({0, 0, 0, 1, 0, 0, 0});  // initialize base pose to identity
+  setBasePose(Pose<S>());  // initialize base pose to identity
 }
 
 template <typename S>
@@ -124,19 +124,10 @@ void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, bool full) {
   }
   pinocchio_model_->computeForwardKinematics(current_qpos_);
   if (verbose_) print_verbose("current_qpos ", current_qpos_);
-  std::vector<Isometry3<S>> link_pose;
-  for (size_t i = 0; i < user_link_names_.size(); i++) {
-    const Vector7<S> pose_i = pinocchio_model_->getLinkPose(i);
-    link_pose.push_back(base_pose_ * toIsometry<S>(pose_i));
-  }
+  std::vector<Pose<S>> link_pose;
+  for (size_t i = 0; i < user_link_names_.size(); i++)
+    link_pose.push_back(Pose<S>(base_pose_ * pinocchio_model_->getLinkPose(i)));
   fcl_model_->updateCollisionObjects(link_pose);
-}
-
-template <typename S>
-void ArticulatedModelTpl<S>::setBasePose(const Vector7<S> &pose) {
-  base_pose_ = toIsometry<S>(pose);
-  // we don't need to update Qpos, but this also updates fcl, which we need
-  setQpos(current_qpos_, true);
 }
 
 }  // namespace mplib

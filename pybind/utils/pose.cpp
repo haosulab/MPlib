@@ -28,7 +28,7 @@ void build_utils_pose(py::module &pymp) {
              return Pose<S> {mat.block<3, 1>(0, 3),
                              Quaternion<S>(mat.block<3, 3>(0, 0))};
            }),
-           py::arg("matrix"), DOC(mplib, Pose, Pose, 4))
+           py::arg("matrix"), DOC(mplib, Pose, Pose, 5))
       .def(
           "to_transformation_matrix",
           [](const Pose<S> &pose) {
@@ -69,6 +69,7 @@ void build_utils_pose(py::module &pymp) {
           DOC(mplib, Pose, get_q))
 
       .def("inv", &Pose<S>::inverse, DOC(mplib, Pose, inverse))
+      .def("distance", &Pose<S>::distance, py::arg("other"), DOC(mplib, Pose, distance))
       .def(py::self * Vector3<S>(), py::arg("v"), DOC(mplib, Pose, operator_mul))
       .def(py::self * py::self, py::arg("other"), DOC(mplib, Pose, operator_mul, 2))
       .def(py::self *= py::self, py::arg("other"), DOC(mplib, Pose, operator_imul))

@@ -12,7 +12,7 @@
 
 #include "mplib/collision_detection/fcl/collision_common.h"
 #include "mplib/macros/class_forward.h"
-#include "mplib/types.h"
+#include "mplib/utils/pose.h"
 
 namespace mplib::collision_detection::fcl {
 
@@ -125,14 +125,7 @@ class FCLModelTpl {
    *
    * @param link_poses: list of link poses in the order of the link order
    */
-  void updateCollisionObjects(const std::vector<Vector7<S>> &link_poses) const;
-
-  /**
-   * Update the collision objects of the FCL model.
-   *
-   * @param link_poses: list of link poses in the order of the link order
-   */
-  void updateCollisionObjects(const std::vector<Isometry3<S>> &link_poses) const;
+  void updateCollisionObjects(const std::vector<Pose<S>> &link_poses) const;
 
   /**
    * Perform self-collision checking.

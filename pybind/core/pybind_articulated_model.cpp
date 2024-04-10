@@ -54,6 +54,8 @@ void build_pyarticulated_model(py::module &pymp) {
           py::arg("verbose") = false,
           DOC(mplib, ArticulatedModelTpl, createFromURDFString))
 
+      .def_property("name", &ArticulatedModel::getName, &ArticulatedModel::setName,
+                    DOC(mplib, ArticulatedModelTpl, name))
       .def("get_name", &ArticulatedModel::getName,
            DOC(mplib, ArticulatedModelTpl, getName))
       .def("set_name", &ArticulatedModel::setName, py::arg("name"),
@@ -85,14 +87,28 @@ void build_pyarticulated_model(py::module &pymp) {
 
       .def("get_move_group_qpos_dim", &ArticulatedModel::getQposDim,
            DOC(mplib, ArticulatedModelTpl, getQposDim))
+      .def_property_readonly("qpos", &ArticulatedModel::getQpos,
+                             DOC(mplib, ArticulatedModelTpl, qpos))
       .def("get_qpos", &ArticulatedModel::getQpos,
            DOC(mplib, ArticulatedModelTpl, getQpos))
       .def("set_qpos", &ArticulatedModel::setQpos, py::arg("qpos"),
            py::arg("full") = false, DOC(mplib, ArticulatedModelTpl, setQpos))
 
+      .def_property("base_pose", &ArticulatedModel::getBasePose,
+                    &ArticulatedModel::setBasePose,
+                    DOC(mplib, ArticulatedModelTpl, base_pose))
       .def("get_base_pose", &ArticulatedModel::getBasePose,
            DOC(mplib, ArticulatedModelTpl, getBasePose))
       .def("set_base_pose", &ArticulatedModel::setBasePose, py::arg("pose"),
+           DOC(mplib, ArticulatedModelTpl, setBasePose))
+
+      // pose is an alias of base_pose
+      .def_property("pose", &ArticulatedModel::getBasePose,
+                    &ArticulatedModel::setBasePose,
+                    DOC(mplib, ArticulatedModelTpl, base_pose))
+      .def("get_pose", &ArticulatedModel::getBasePose,
+           DOC(mplib, ArticulatedModelTpl, getBasePose))
+      .def("set_pose", &ArticulatedModel::setBasePose, py::arg("pose"),
            DOC(mplib, ArticulatedModelTpl, setBasePose))
 
       .def("update_SRDF", &ArticulatedModel::updateSRDF, py::arg("SRDF"),

@@ -95,9 +95,20 @@ void build_pypinocchio_model(py::module &m) {
            py::arg("qpos"),
            DOC(mplib, kinematics, pinocchio, PinocchioModelTpl,
                computeForwardKinematics))
-      .def("get_link_pose", &PinocchioModel::getLinkPose, py::arg("index"),
-           DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getLinkPose))
-      //.def("get_joint_pose", &PinocchioModel::getJointPose, py::arg("index"))
+      .def(
+          "get_link_pose",
+          [](const PinocchioModel &self, size_t index) {
+            return Pose<S>(self.getLinkPose(index));
+          },
+          py::arg("index"),
+          DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getLinkPose))
+      //.def(
+      //    "get_joint_pose",
+      //    [](const PinocchioModel &self, size_t index) {
+      //      return Pose<S>(self.getJointPose(index));
+      //    },
+      //    py::arg("index"),
+      //    DOC(mplib, kinematics, pinocchio, PinocchioModelTpl, getJointPose))
 
       .def("compute_full_jacobian", &PinocchioModel::computeFullJacobian,
            py::arg("qpos"),

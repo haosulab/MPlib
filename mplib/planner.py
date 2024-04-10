@@ -3,17 +3,17 @@ from __future__ import annotations
 import os
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
-from typing import Optional, Sequence
+from typing import Literal, Optional, Sequence
 from xml.dom import minidom
 
 import numpy as np
 import toppra as ta
 import toppra.algorithm as algo
 import toppra.constraint as constraint
-from transforms3d.quaternions import mat2quat, quat2mat
 
-from mplib.pymp import ArticulatedModel, PlanningWorld
+from mplib.pymp import ArticulatedModel, PlanningWorld, Pose
 from mplib.pymp.collision_detection import AllowedCollisionMatrix, WorldCollisionResult
+from mplib.pymp.collision_detection.fcl import CollisionGeometry
 from mplib.pymp.planning import ompl
 
 
@@ -249,20 +249,6 @@ class Planner:
             )
         print(f"Saving the SRDF file to {self.srdf}")
 
-    def distance_6D(self, p1, q1, p2, q2):
-        """
-        compute the distance between two poses
-
-        Args:
-            p1: position of pose 1
-            q1: quaternion of pose 1
-            p2: position of pose 2
-            q2: quaternion of pose 2
-        """
-        return np.linalg.norm(p1 - p2) + min(
-            np.linalg.norm(q1 - q2), np.linalg.norm(q1 + q2)
-        )
-
     def wrap_joint_limit(self, qpos: np.ndarray) -> bool:
         """
         Checks if the joint configuration can be wrapped to be within the joint limits.
@@ -367,7 +353,7 @@ class Planner:
 
     def IK(
         self,
-        goal_pose: np.ndarray,
+        goal_pose: Pose,
         start_qpos: np.ndarray,
         mask: Optional[Sequence[bool] | np.ndarray] = None,
         *,
@@ -379,12 +365,12 @@ class Planner:
         """
         Compute inverse kinematics
 
-        :param goal_pose: goal pose (xyz, wxyz), (7,) np.floating np.ndarray.
+        :param goal_pose: goal pose
         :param start_qpos: initial configuration, (ndof,) np.floating np.ndarray.
         :param mask: qpos mask to disable IK sampling, (ndof,) bool np.ndarray.
         :param n_init_qpos: number of random initial configurations to sample.
-        :param threshold: distance_6D threshold for marking sampled IK as success.
-                          distance_6D is position error norm + quaternion error norm.
+        :param threshold: distance threshold for marking sampled IK as success.
+                          distance is position error norm + quaternion error norm.
         :param return_closest: whether to return the qpos that is closest to start_qpos,
                                considering equivalent joint values.
         :param verbose: whether to print collision info if any collision exists.
@@ -402,7 +388,7 @@ class Planner:
         move_joint_idx = self.move_group_joint_indices
         self.robot.set_qpos(start_qpos, True)
 
-        min_dis = 1e9
+        min_dist = 1e9
         q_goals = []
         qpos = start_qpos
         for _ in range(n_init_qpos):
@@ -430,12 +416,9 @@ class Planner:
             if success:
                 self.pinocchio_model.compute_forward_kinematics(ik_qpos)
                 new_pose = self.pinocchio_model.get_link_pose(move_link_idx)
-                tmp_dis = self.distance_6D(
-                    goal_pose[:3], goal_pose[3:], new_pose[:3], new_pose[3:]
-                )
-                if tmp_dis < min_dis:
-                    min_dis = tmp_dis
-                if tmp_dis < threshold:
+                if (dist := goal_pose.distance(new_pose)) < min_dist:
+                    min_dist = dist
+                if dist < threshold:
                     for q_goal in q_goals:
                         if (
                             np.linalg.norm(
@@ -452,8 +435,8 @@ class Planner:
 
         if len(q_goals) != 0:
             status = "Success"
-        elif min_dis != 1e9:
-            status = f"IK Failed! Distance {min_dis} is greater than {threshold=}."
+        elif min_dist != 1e9:
+            status = f"IK Failed! Distance {min_dist} is greater than {threshold=}."
             return status, None
         else:
             status = "IK Failed! Cannot find valid solution."
@@ -532,8 +515,8 @@ class Planner:
 
     def update_attached_object(
         self,
-        collision_geometry,
-        pose,
+        collision_geometry: CollisionGeometry,
+        pose: Pose,
         name="attached_geom",
         art_name=None,
         link_id=-1,
@@ -542,8 +525,7 @@ class Planner:
         Attach given object (w/ collision geometry) to specified link of articulation
 
         :param collision_geometry: FCL collision geometry
-        :param pose: attaching pose (relative pose from attached link to object),
-                     [x,y,z,qw,qx,qy,qz]
+        :param pose: attaching pose (relative pose from attached link to object)
         :param name: name of the attached geometry.
         :param art_name: name of the articulated object to attach to.
                          If None, attach to self.robot.
@@ -559,13 +541,14 @@ class Planner:
             pose,
         )
 
-    def update_attached_sphere(self, radius, pose, art_name=None, link_id=-1):
+    def update_attached_sphere(
+        self, radius: float, pose: Pose, art_name=None, link_id=-1
+    ):
         """
         Attach a sphere to some link
 
         :param radius: radius of the sphere
-        :param pose: attaching pose (relative pose from attached link to object),
-                     [x,y,z,qw,qx,qy,qz]
+        :param pose: attaching pose (relative pose from attached link to object)
         :param art_name: name of the articulated object to attach to.
                          If None, attach to self.robot.
         :param link_id: if not provided, the end effector will be the target.
@@ -579,13 +562,19 @@ class Planner:
             pose,
         )
 
-    def update_attached_box(self, size, pose, art_name=None, link_id=-1):
+    def update_attached_box(
+        self,
+        size: Sequence[float]
+        | np.ndarray[tuple[Literal[3], Literal[1]], np.dtype[np.floating]],
+        pose: Pose,
+        art_name=None,
+        link_id=-1,
+    ):
         """
         Attach a box to some link
 
         :param size: box side length
-        :param pose: attaching pose (relative pose from attached link to object),
-                     [x,y,z,qw,qx,qy,qz]
+        :param pose: attaching pose (relative pose from attached link to object)
         :param art_name: name of the articulated object to attach to.
                          If None, attach to self.robot.
         :param link_id: if not provided, the end effector will be the target.
@@ -593,16 +582,20 @@ class Planner:
         if link_id == -1:
             link_id = self.move_group_link_id
         self.planning_world.attach_box(
-            size, self.robot.get_name() if art_name is None else art_name, link_id, pose
+            size,  # type: ignore
+            self.robot.get_name() if art_name is None else art_name,
+            link_id,
+            pose,
         )
 
-    def update_attached_mesh(self, mesh_path, pose, art_name=None, link_id=-1):
+    def update_attached_mesh(
+        self, mesh_path: str, pose: Pose, art_name=None, link_id=-1
+    ):
         """
         Attach a mesh to some link
 
         :param mesh_path: path to a mesh file
-        :param pose: attaching pose (relative pose from attached link to object),
-                     [x,y,z,qw,qx,qy,qz]
+        :param pose: attaching pose (relative pose from attached link to object)
         :param art_name: name of the articulated object to attach to.
                          If None, attach to self.robot.
         :param link_id: if not provided, the end effector will be the target.
@@ -627,12 +620,12 @@ class Planner:
         """
         return self.planning_world.detach_object(name, also_remove)
 
-    def set_base_pose(self, pose):
+    def set_base_pose(self, pose: Pose):
         """
         tell the planner where the base of the robot is w.r.t the world frame
 
         Args:
-            pose: [x,y,z,qw,qx,qy,qz] pose of the base
+            pose: pose of the base
         """
         self.robot.set_base_pose(pose)
 
@@ -733,23 +726,13 @@ class Planner:
         else:
             return {"status": f"RRTConnect Failed. {status}"}
 
-    def transform_goal_to_wrt_base(self, goal_pose):
-        base_pose = self.robot.get_base_pose()
-        base_tf = np.eye(4)
-        base_tf[0:3, 3] = base_pose[:3]
-        base_tf[0:3, 0:3] = quat2mat(base_pose[3:])
-        goal_tf = np.eye(4)
-        goal_tf[0:3, 3] = goal_pose[:3]
-        goal_tf[0:3, 0:3] = quat2mat(goal_pose[3:])
-        goal_tf = np.linalg.inv(base_tf).dot(goal_tf)
-        new_goal_pose = np.zeros(7)
-        new_goal_pose[:3] = goal_tf[0:3, 3]
-        new_goal_pose[3:] = mat2quat(goal_tf[0:3, 0:3])
-        return new_goal_pose
+    def _transform_goal_to_wrt_base(self, goal_pose: Pose) -> Pose:
+        """Converts goal pose from T_world_goal to T_base_goal"""
+        return self.robot.get_base_pose().inv() * goal_pose
 
     def plan_qpos_to_pose(
         self,
-        goal_pose: np.ndarray,
+        goal_pose: Pose,
         current_qpos: np.ndarray,
         mask: Optional[list[bool] | np.ndarray] = None,
         *,
@@ -768,7 +751,7 @@ class Planner:
         plan from a start configuration to a goal pose of the end-effector
 
         Args:
-            goal_pose: [x,y,z,qw,qx,qy,qz] pose of the goal
+            goal_pose: pose of the goal
             current_qpos: current joint configuration (either full or move_group joints)
             mask: if the value at a given index is True, the joint is *not* used in the
                 IK
@@ -791,7 +774,7 @@ class Planner:
         current_qpos = self.pad_move_group_qpos(current_qpos)
 
         if wrt_world:
-            goal_pose = self.transform_goal_to_wrt_base(goal_pose)
+            goal_pose = self._transform_goal_to_wrt_base(goal_pose)
 
         # we need to take only the move_group joints when planning
         # idx = self.move_group_joint_indices
@@ -835,7 +818,7 @@ class Planner:
     # plan_screw ankor
     def plan_screw(
         self,
-        goal_pose: np.ndarray,
+        goal_pose: Pose,
         current_qpos: np.ndarray,
         *,
         qpos_step: float = 0.1,
@@ -849,7 +832,7 @@ class Planner:
         screw motion
 
         Args:
-            goal_pose: [x, y, z, qw, qx, qy, qz] pose of the goal
+            goal_pose: pose of the goal
             current_qpos: current joint configuration (either full or move_group joints)
             qpos_step: size of the random step for RRT
             time_step: time step for the discretization
@@ -861,13 +844,7 @@ class Planner:
         self.robot.set_qpos(current_qpos, True)
 
         if wrt_world:
-            goal_pose = self.transform_goal_to_wrt_base(goal_pose)
-
-        def pose7D2mat(pose):
-            mat = np.eye(4)
-            mat[0:3, 3] = pose[:3]
-            mat[0:3, 0:3] = quat2mat(pose[3:])
-            return mat
+            goal_pose = self._transform_goal_to_wrt_base(goal_pose)
 
         def skew(vec):
             return np.array([
@@ -876,7 +853,7 @@ class Planner:
                 [-vec[1], vec[0], 0],
             ])
 
-        def pose2exp_coordinate(pose: np.ndarray) -> tuple[np.ndarray, float]:
+        def pose2exp_coordinate(pose: Pose) -> tuple[np.ndarray, float]:
             def rot2so3(rotation: np.ndarray):
                 assert rotation.shape == (3, 3)
                 if np.isclose(rotation.trace(), 3):
@@ -896,7 +873,8 @@ class Planner:
                 )
                 return omega, theta
 
-            omega, theta = rot2so3(pose[:3, :3])
+            pose_mat = pose.to_transformation_matrix()
+            omega, theta = rot2so3(pose_mat[:3, :3])
             if theta < -1e5:
                 return omega, theta
             ss = skew(omega)
@@ -905,16 +883,14 @@ class Planner:
                 - 0.5 * ss
                 + (1.0 / theta - 0.5 / np.tan(theta / 2)) * ss @ ss
             )
-            v = inv_left_jacobian @ pose[:3, 3]
+            v = inv_left_jacobian @ pose_mat[:3, 3]
             return np.concatenate([v, omega]), theta
 
         self.pinocchio_model.compute_forward_kinematics(current_qpos)
         ee_index = self.link_name_2_idx[self.move_group]
-        current_p = pose7D2mat(self.pinocchio_model.get_link_pose(ee_index))
-        target_p = pose7D2mat(goal_pose)
-        relative_transform = target_p @ np.linalg.inv(current_p)
-
-        omega, theta = pose2exp_coordinate(relative_transform)
+        # relative_pose = T_base_goal * T_base_link.inv()
+        relative_pose = goal_pose * self.pinocchio_model.get_link_pose(ee_index).inv()
+        omega, theta = pose2exp_coordinate(relative_pose)
 
         if theta < -1e4:
             return {"status": "screw plan failed."}

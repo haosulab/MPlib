@@ -64,9 +64,9 @@ Constructs an ArticulatedModel from URDF/SRDF strings and collision links
 
 static const char *__doc_mplib_ArticulatedModelTpl_getBasePose =
 R"doc(
-Get the base pose of the robot.
+Get the base (root) pose of the robot.
 
-:return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format)doc";
+:return: base pose of the robot)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_getFCLModel =
 R"doc(
@@ -130,9 +130,10 @@ Get the link names that the user has provided for planning.
 
 static const char *__doc_mplib_ArticulatedModelTpl_setBasePose =
 R"doc(
-Set the base pose of the robot.
+Set the base pose of the robot and update all collision links in the
+``FCLModel``.
 
-:param pose: base pose of the robot in [x, y, z, qw, qx, qy, qz] format)doc";
+:param pose: base pose of the robot)doc";
 
 static const char *__doc_mplib_ArticulatedModelTpl_setMoveGroup =
 R"doc(
@@ -156,7 +157,8 @@ Set name of the articulated model.
 
 static const char *__doc_mplib_ArticulatedModelTpl_setQpos =
 R"doc(
-Let the planner know the current joint positions.
+Set the current joint positions and update all collision links in the
+``FCLModel``.
 
 :param qpos: current qpos of all active joints or just the move group joints
 :param full: whether to set the full qpos or just the move group qpos. If full
@@ -170,6 +172,15 @@ Update the SRDF file to disable self-collisions.
 :param srdf: path to SRDF file, can be relative to the current working directory)doc";
 
 /* ----- Begin of custom docstring section ----- */
+
+static const char *__doc_mplib_ArticulatedModelTpl_name =
+R"doc(Name of the articulated model)doc";
+
+static const char *__doc_mplib_ArticulatedModelTpl_qpos =
+R"doc(Current qpos of all active joints)doc";
+
+static const char *__doc_mplib_ArticulatedModelTpl_base_pose =
+R"doc(The base (root) pose of the robot)doc";
 
 /* ----- End of custom docstring section ----- */
 

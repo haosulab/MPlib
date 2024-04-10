@@ -9,6 +9,7 @@
 #include "mplib/collision_detection/fcl/types.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
+#include "mplib/utils/pose.h"
 
 namespace mplib::collision_detection::fcl {
 
@@ -42,9 +43,9 @@ struct FCLObject {
    * @param shapes: all collision shapes as a vector of ``fcl::CollisionObjectPtr``
    * @param shape_poses: relative poses from this FCLObject to each collision shape
    */
-  FCLObject(const std::string &name, const Isometry3<S> &pose,
-            const std::vector<fcl::CollisionObjectPtr<S>> &shapes,
-            const std::vector<Isometry3<S>> &shape_poses);
+  FCLObject(const std::string &name_, const Pose<S> &pose_,
+            const std::vector<fcl::CollisionObjectPtr<S>> &shapes_,
+            const std::vector<Pose<S>> &shape_poses_);
 
   std::string name;   ///< Name of this FCLObject
   Isometry3<S> pose;  ///< Pose of this FCLObject. All shapes are relative to this pose

@@ -353,8 +353,23 @@ R"doc(
 Construct a collision object with given collision geometry and transformation.
 
 :param collision_geometry: collision geometry of the object
-:param position: position of the object
-:param quaternion: quatenion of the object pose in [w, x, y, z] format)doc";
+:param pose: pose of the object)doc";
+
+static const char *__doc_fcl_CollisionObject_pose =
+R"doc(
+Pose of the collision object in world)doc";
+
+static const char *__doc_fcl_CollisionObject_set_pose =
+R"doc(
+Sets the pose of the collision object in world
+
+:param pose: New pose of the collision object)doc";
+
+static const char *__doc_fcl_CollisionObject_get_pose =
+R"doc(
+Gets the current pose of the collision object in world
+
+:return: The current pose of the collision object)doc";
 
 /* ----- End of custom docstring section ----- */
 

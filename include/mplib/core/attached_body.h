@@ -8,7 +8,7 @@
 #include "mplib/kinematics/types.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
-#include "mplib/utils/conversion.h"
+#include "mplib/utils/pose.h"
 
 namespace mplib {
 
@@ -42,7 +42,7 @@ class AttachedBodyTpl {
    */
   AttachedBodyTpl(const std::string &name, const FCLObjectPtr &object,
                   const ArticulatedModelPtr &attached_articulation,
-                  int attached_link_id, const Isometry3<S> &pose,
+                  int attached_link_id, const Pose<S> &pose,
                   const std::vector<std::string> &touch_links = {});
 
   /// @brief Gets the attached object name
@@ -65,7 +65,7 @@ class AttachedBodyTpl {
 
   /// @brief Gets the global pose of the attached object
   Isometry3<S> getGlobalPose() const {
-    return toIsometry(pinocchio_model_->getLinkPose(attached_link_id_)) * pose_;
+    return pinocchio_model_->getLinkPose(attached_link_id_) * pose_;
   }
 
   /// @brief Updates the global pose of the attached object using current state

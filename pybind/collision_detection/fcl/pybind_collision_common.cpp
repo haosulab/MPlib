@@ -9,7 +9,7 @@
 
 #include "docstring/collision_detection/fcl/collision_common.h"
 #include "mplib/collision_detection/fcl/collision_common.h"
-#include "mplib/types.h"
+#include "mplib/utils/pose.h"
 #include "pybind_macros.hpp"
 
 namespace py = pybind11;
@@ -25,23 +25,29 @@ void build_pyfcl_collision_common(py::module &m) {
   auto PyFCLObject = py::class_<FCLObject<S>, std::shared_ptr<FCLObject<S>>>(
       m, "FCLObject", DOC(mplib, collision_detection, fcl, FCLObject));
 
-  // TODO(merge): mplib.Pose
   PyFCLObject
       .def(py::init<const std::string &>(), py::arg("name"),
            DOC(mplib, collision_detection, fcl, FCLObject, FCLObject))
-      .def(py::init<const std::string &, const Isometry3<S> &,
+      .def(py::init<const std::string &, const Pose<S> &,
                     const std::vector<fcl::CollisionObjectPtr<S>> &,
-                    const std::vector<Isometry3<S>> &>(),
+                    const std::vector<Pose<S>> &>(),
            py::arg("name"), py::arg("pose"), py::arg("shapes"), py::arg("shape_poses"),
            DOC(mplib, collision_detection, fcl, FCLObject, FCLObject, 2))
       .def_readonly("name", &FCLObject<S>::name,
                     DOC(mplib, collision_detection, fcl, FCLObject, name))
-      .def_readonly("pose", &FCLObject<S>::pose,
-                    DOC(mplib, collision_detection, fcl, FCLObject, pose))
+      .def_property_readonly(
+          "pose", [](const FCLObject<S> &fcl_obj) { return Pose<S>(fcl_obj.pose); },
+          DOC(mplib, collision_detection, fcl, FCLObject, pose))
       .def_readonly("shapes", &FCLObject<S>::shapes,
                     DOC(mplib, collision_detection, fcl, FCLObject, shapes))
-      .def_readonly("shape_poses", &FCLObject<S>::shape_poses,
-                    DOC(mplib, collision_detection, fcl, FCLObject, shape_poses));
+      .def_property_readonly(
+          "shape_poses",
+          [](const FCLObject<S> &fcl_obj) {
+            std::vector<Pose<S>> ret;
+            for (const auto &pose : fcl_obj.shape_poses) ret.push_back(Pose<S>(pose));
+            return ret;
+          },
+          DOC(mplib, collision_detection, fcl, FCLObject, shape_poses));
 
   // collide / distance functions
   m.def(

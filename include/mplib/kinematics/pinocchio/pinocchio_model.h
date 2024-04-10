@@ -14,6 +14,7 @@
 #include "mplib/kinematics/pinocchio/types.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
+#include "mplib/utils/pose.h"
 
 namespace mplib::kinematics::pinocchio {
 
@@ -266,15 +267,15 @@ class PinocchioModelTpl {
   void computeForwardKinematics(const VectorX<S> &qpos);
 
   /**
-   * Get the pose of the given link.
+   * Get the pose of the given link in robot's base (root) frame.
    *
    * @param index: index of the link (in the order you passed to the constructor or the
    *    default order)
-   * @return: pose of the link [x, y, z, qw, qx, qy, qz]
+   * @return: pose of the link in robot's base (root) frame.
    */
-  Vector7<S> getLinkPose(size_t index) const;
+  Isometry3<S> getLinkPose(size_t index) const;
 
-  Vector7<S> getJointPose(size_t index) const;  // TODO: not same as sapien
+  Isometry3<S> getJointPose(size_t index) const;  // TODO: not same as sapien
 
   /**
    * Compute the full jacobian for the given joint configuration.
@@ -318,7 +319,7 @@ class PinocchioModelTpl {
    *
    * @param index: index of the link (in the order you passed to the constructor or the
    *    default order)
-   * @param pose: desired pose of the link [x, y, z, qw, qx, qy, qz]
+   * @param pose: desired pose of the link
    * @param q_init: initial joint configuration
    * @param mask: if the value at a given index is ``true``, the joint is *not* used in
    *    the IK
@@ -329,7 +330,7 @@ class PinocchioModelTpl {
    * @return: joint configuration
    */
   std::tuple<VectorX<S>, bool, Vector6<S>> computeIKCLIK(
-      size_t index, const Vector7<S> &pose, const VectorX<S> &q_init,
+      size_t index, const Pose<S> &pose, const VectorX<S> &q_init,
       const std::vector<bool> &mask, double eps = 1e-5, int max_iter = 1000,
       double dt = 1e-1, double damp = 1e-12);
 
@@ -339,7 +340,7 @@ class PinocchioModelTpl {
    *
    * @param index: index of the link (in the order you passed to the constructor or the
    *    default order)
-   * @param pose: desired pose of the link [x, y, z, qw, qx, qy, qz]
+   * @param pose: desired pose of the link
    * @param q_init: initial joint configuration
    * @param q_min: minimum joint configuration
    * @param q_max: maximum joint configuration
@@ -350,7 +351,7 @@ class PinocchioModelTpl {
    * @return: joint configuration
    */
   std::tuple<VectorX<S>, bool, Vector6<S>> computeIKCLIKJL(
-      size_t index, const Vector7<S> &pose, const VectorX<S> &q_init,
+      size_t index, const Pose<S> &pose, const VectorX<S> &q_init,
       const VectorX<S> &qmin, const VectorX<S> &qmax, double eps = 1e-5,
       int max_iter = 1000, double dt = 1e-1, double damp = 1e-12);
 

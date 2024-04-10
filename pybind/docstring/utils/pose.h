@@ -24,7 +24,12 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-static const char *__doc_mplib_Pose = R"doc(Pose stored as a unit quaternion and a position vector)doc";
+static const char *__doc_mplib_Pose =
+R"doc(Pose stored as a unit quaternion and a position vector
+
+This struct is intended to be used only for interfacing with Python. Internally,
+``Pose`` is converted to and stored as ``Eigen::Isometry3`` which is used by all
+computations.)doc";
 
 static const char *__doc_mplib_Pose_Pose =
 R"doc(
@@ -43,6 +48,22 @@ Constructs a Pose with given position and quaternion
 
 :param p: position, format: (x, y, z)
 :param q: quaternion (can be unnormalized), format: (w, x, y, z))doc";
+
+static const char *__doc_mplib_Pose_Pose_4 =
+R"doc(
+Constructs a Pose from a given ``Eigen::Isometry3`` instance
+
+:param pose: an ``Eigen::Isometry3`` instance)doc";
+
+static const char *__doc_mplib_Pose_distance =
+R"doc(
+Computes the distance between two poses by ``norm(p1.p - p2.p) + min(norm(p1.q -
+p2.q), norm(p1.q + p2.q))`.
+
+The quaternion part has range [0, sqrt(2)].
+
+:param other: the other pose
+:return: the distance between the two poses)doc";
 
 static const char *__doc_mplib_Pose_inverse =
 R"doc(
@@ -66,9 +87,15 @@ static const char *__doc_mplib_Pose_p = R"doc(Position part of the Pose (x, y, z
 
 static const char *__doc_mplib_Pose_q = R"doc(Quaternion part of the Pose (w, x, y, z))doc";
 
+static const char *__doc_mplib_Pose_toIsometry =
+R"doc(
+Converts the Pose to an ``Eigen::Isometry3`` instance
+
+:return: an ``Eigen::Isometry3`` instance)doc";
+
 /* ----- Begin of custom docstring section ----- */
 
-static const char *__doc_mplib_Pose_Pose_4 =
+static const char *__doc_mplib_Pose_Pose_5 =
 R"doc(
 Constructs a Pose with given transformation matrix
 

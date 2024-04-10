@@ -15,9 +15,6 @@ template <typename S>
 using Vector6 = Eigen::Matrix<S, 6, 1>;
 
 template <typename S>
-using Vector7 = Eigen::Matrix<S, 7, 1>;
-
-template <typename S>
 using VectorX = Eigen::Matrix<S, Eigen::Dynamic, 1>;
 
 using Vector3i = Eigen::Vector3i;

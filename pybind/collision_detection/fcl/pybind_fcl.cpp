@@ -10,7 +10,7 @@
 
 #include "docstring/collision_detection/fcl/fcl.h"
 #include "mplib/types.h"
-#include "mplib/utils/conversion.h"
+#include "mplib/utils/pose.h"
 #include "pybind_macros.hpp"
 
 namespace py = pybind11;
@@ -247,25 +247,34 @@ void build_pyfcl(py::module &m) {
            DOC(fcl, OcTree, OcTree, 2));
 
   // Collision Object = Geometry + Transformation
-  // TODO(merge): get_transformation
   auto PyCollisionObject =
       py::class_<CollisionObject, std::shared_ptr<CollisionObject>>(
           m, "CollisionObject", DOC(fcl, CollisionObject));
   PyCollisionObject
       .def(py::init([](const std::shared_ptr<CollisionGeometry> &cgeom,
-                       const Vector3<S> &p, const Vector4<S> &q) {
-             auto rot_mat = Quaternion<S> {q(0), q(1), q(2), q(3)}.matrix();
-             return CollisionObject(cgeom, rot_mat, p);
+                       const Pose<S> &pose) {
+             return CollisionObject(cgeom, pose.toIsometry());
            }),
-           py::arg("collision_geometry"), py::arg("position") = Vector3<S> {0, 0, 0},
-           py::arg("quaternion") = Vector4<S> {1, 0, 0, 0},
+           py::arg("collision_geometry"), py::arg("pose") = Pose<S>(),
            DOC(fcl, CollisionObject, CollisionObject))
       .def("get_collision_geometry", &CollisionObject::collisionGeometry)
-      .def("get_translation", &CollisionObject::getTranslation)
-      .def("get_rotation", &CollisionObject::getRotation)
-      .def("set_transformation", [](CollisionObject &a, const Vector7<S> &pose) {
-        a.setTransform(toIsometry<S>(pose));
-      });
+      .def_property(
+          "pose",
+          [](const CollisionObject &obj) { return Pose<S>(obj.getTransform()); },
+          [](CollisionObject &obj, const Pose<S> &pose) {
+            obj.setTransform(pose.toIsometry());
+          },
+          DOC(fcl, CollisionObject, pose))
+      .def(
+          "set_pose",
+          [](CollisionObject &obj, const Pose<S> &pose) {
+            obj.setTransform(pose.toIsometry());
+          },
+          py::arg("pose"), DOC(fcl, CollisionObject, set_pose))
+      .def(
+          "get_pose",
+          [](const CollisionObject &obj) { return Pose<S>(obj.getTransform()); },
+          DOC(fcl, CollisionObject, get_pose));
 
   /**********    narrowphase    *******/
   auto PyGJKSolverType = py::enum_<GJKSolverType>(m, "GJKSolverType");

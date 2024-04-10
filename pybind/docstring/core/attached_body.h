@@ -85,6 +85,9 @@ Updates the global pose of the attached object using current state)doc";
 
 /* ----- Begin of custom docstring section ----- */
 
+static const char *__doc_mplib_AttachedBodyTpl_pose =
+R"doc(The attached pose (relative pose from attached link to object))doc";
+
 /* ----- End of custom docstring section ----- */
 
 #if defined(__GNUG__)

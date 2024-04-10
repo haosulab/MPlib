@@ -77,15 +77,11 @@ class ArticulatedModel:
             ``False``.
         :param verbose: print debug information. Default: ``False``.
         """
-    def get_base_pose(
-        self,
-    ) -> numpy.ndarray[
-        tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-    ]:
+    def get_base_pose(self) -> Pose:
         """
-        Get the base pose of the robot.
+        Get the base (root) pose of the robot.
 
-        :return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
+        :return: base pose of the robot
         """
     def get_fcl_model(self) -> collision_detection.fcl.FCLModel:
         """
@@ -129,6 +125,12 @@ class ArticulatedModel:
 
         :return: Pinocchio model used for kinematics and dynamics computations
         """
+    def get_pose(self) -> Pose:
+        """
+        Get the base (root) pose of the robot.
+
+        :return: base pose of the robot
+        """
     def get_qpos(
         self,
     ) -> numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]]:
@@ -149,16 +151,12 @@ class ArticulatedModel:
 
         :return: list of link names of the user
         """
-    def set_base_pose(
-        self,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
-    ) -> None:
+    def set_base_pose(self, pose: Pose) -> None:
         """
-        Set the base pose of the robot.
+        Set the base pose of the robot and update all collision links in the
+        ``FCLModel``.
 
-        :param pose: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
+        :param pose: base pose of the robot
         """
     @typing.overload
     def set_move_group(self, end_effector: str) -> None:
@@ -182,13 +180,21 @@ class ArticulatedModel:
 
         @param: name of the articulated model
         """
+    def set_pose(self, pose: Pose) -> None:
+        """
+        Set the base pose of the robot and update all collision links in the
+        ``FCLModel``.
+
+        :param pose: base pose of the robot
+        """
     def set_qpos(
         self,
         qpos: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         full: bool = False,
     ) -> None:
         """
-        Let the planner know the current joint positions.
+        Set the current joint positions and update all collision links in the
+        ``FCLModel``.
 
         :param qpos: current qpos of all active joints or just the move group joints
         :param full: whether to set the full qpos or just the move group qpos. If full
@@ -200,6 +206,34 @@ class ArticulatedModel:
         Update the SRDF file to disable self-collisions.
 
         :param srdf: path to SRDF file, can be relative to the current working directory
+        """
+    @property
+    def base_pose(self) -> Pose:
+        """
+        The base (root) pose of the robot
+        """
+    @base_pose.setter
+    def base_pose(self, arg1: Pose) -> None: ...
+    @property
+    def name(self) -> str:
+        """
+        Name of the articulated model
+        """
+    @name.setter
+    def name(self, arg1: str) -> None: ...
+    @property
+    def pose(self) -> Pose:
+        """
+        The base (root) pose of the robot
+        """
+    @pose.setter
+    def pose(self, arg1: Pose) -> None: ...
+    @property
+    def qpos(
+        self,
+    ) -> numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]]:
+        """
+        Current qpos of all active joints
         """
 
 class AttachedBody:
@@ -217,9 +251,7 @@ class AttachedBody:
         object: collision_detection.fcl.FCLObject,
         attached_articulation: ArticulatedModel,
         attached_link_id: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        pose: Pose,
         touch_links: list[str] = [],
     ) -> None:
         """
@@ -240,7 +272,7 @@ class AttachedBody:
         """
         Gets the articulation this body is attached to
         """
-    def get_global_pose(self) -> ...:
+    def get_global_pose(self) -> Pose:
         """
         Gets the global pose of the attached object
         """
@@ -252,7 +284,7 @@ class AttachedBody:
         """
         Gets the attached object (``FCLObjectPtr``)
         """
-    def get_pose(self) -> ...:
+    def get_pose(self) -> Pose:
         """
         Gets the attached pose (relative pose from attached link to object)
         """
@@ -260,12 +292,7 @@ class AttachedBody:
         """
         Gets the link names that the attached body touches
         """
-    def set_pose(
-        self,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
-    ) -> None:
+    def set_pose(self, pose: Pose) -> None:
         """
         Sets the attached pose (relative pose from attached link to object)
         """
@@ -277,6 +304,13 @@ class AttachedBody:
         """
         Updates the global pose of the attached object using current state
         """
+    @property
+    def pose(self) -> Pose:
+        """
+        The attached pose (relative pose from attached link to object)
+        """
+    @pose.setter
+    def pose(self, arg1: Pose) -> None: ...
 
 class PlanningWorld:
     """
@@ -357,9 +391,7 @@ class PlanningWorld:
         ],
         art_name: str,
         link_id: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        pose: Pose,
     ) -> None:
         """
         Attaches given box to specified link of articulation (auto touch_links)
@@ -370,13 +402,7 @@ class PlanningWorld:
         :param pose: attached pose (relative pose from attached link to object)
         """
     def attach_mesh(
-        self,
-        mesh_path: str,
-        art_name: str,
-        link_id: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        self, mesh_path: str, art_name: str, link_id: int, pose: Pose
     ) -> None:
         """
         Attaches given mesh to specified link of articulation (auto touch_links)
@@ -421,14 +447,7 @@ class PlanningWorld:
         """
     @typing.overload
     def attach_object(
-        self,
-        name: str,
-        art_name: str,
-        link_id: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
-        touch_links: list[str],
+        self, name: str, art_name: str, link_id: int, pose: Pose, touch_links: list[str]
     ) -> None:
         """
         Attaches existing normal object to specified link of articulation at given pose.
@@ -445,15 +464,7 @@ class PlanningWorld:
             planned articulation with given name does not exist
         """
     @typing.overload
-    def attach_object(
-        self,
-        name: str,
-        art_name: str,
-        link_id: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
-    ) -> None:
+    def attach_object(self, name: str, art_name: str, link_id: int, pose: Pose) -> None:
         """
         Attaches existing normal object to specified link of articulation at given pose.
         If the object is not currently attached, automatically sets touch_links as the
@@ -476,9 +487,7 @@ class PlanningWorld:
         p_geom: collision_detection.fcl.CollisionGeometry,
         art_name: str,
         link_id: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        pose: Pose,
         touch_links: list[str],
     ) -> None:
         """
@@ -500,9 +509,7 @@ class PlanningWorld:
         p_geom: collision_detection.fcl.CollisionGeometry,
         art_name: str,
         link_id: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        pose: Pose,
     ) -> None:
         """
         Attaches given object (w/ p_geom) to specified link of articulation at given
@@ -518,13 +525,7 @@ class PlanningWorld:
         :param pose: attached pose (relative pose from attached link to object)
         """
     def attach_sphere(
-        self,
-        radius: float,
-        art_name: str,
-        link_id: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        self, radius: float, art_name: str, link_id: int, pose: Pose
     ) -> None:
         """
         Attaches given sphere to specified link of articulation (auto touch_links)
@@ -733,6 +734,10 @@ class PlanningWorld:
 class Pose:
     """
     Pose stored as a unit quaternion and a position vector
+
+    This struct is intended to be used only for interfacing with Python. Internally,
+    ``Pose`` is converted to and stored as ``Eigen::Isometry3`` which is used by all
+    computations.
     """
     def __getstate__(self) -> tuple: ...
     def __imul__(self, other: Pose) -> Pose:
@@ -791,6 +796,16 @@ class Pose:
         """
     def __repr__(self) -> str: ...
     def __setstate__(self, arg0: tuple) -> None: ...
+    def distance(self, other: Pose) -> float:
+        """
+        Computes the distance between two poses by ``norm(p1.p - p2.p) + min(norm(p1.q -
+        p2.q), norm(p1.q + p2.q))`.
+
+        The quaternion part has range [0, sqrt(2)].
+
+        :param other: the other pose
+        :return: the distance between the two poses
+        """
     def get_p(
         self,
     ) -> numpy.ndarray[

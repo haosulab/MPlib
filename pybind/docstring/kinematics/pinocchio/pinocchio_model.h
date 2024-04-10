@@ -69,7 +69,7 @@ Compute the inverse kinematics using close loop inverse kinematics.
 
 :param index: index of the link (in the order you passed to the constructor or
     the default order)
-:param pose: desired pose of the link [x, y, z, qw, qx, qy, qz]
+:param pose: desired pose of the link
 :param q_init: initial joint configuration
 :param mask: if the value at a given index is ``True``, the joint is *not* used
     in the IK
@@ -86,7 +86,7 @@ the given limits.
 
 :param index: index of the link (in the order you passed to the constructor or
     the default order)
-:param pose: desired pose of the link [x, y, z, qw, qx, qy, qz]
+:param pose: desired pose of the link
 :param q_init: initial joint configuration
 :param q_min: minimum joint configuration
 :param q_max: maximum joint configuration
@@ -275,11 +275,11 @@ Get the name of all the links.
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_getLinkPose =
 R"doc(
-Get the pose of the given link.
+Get the pose of the given link in robot's base (root) frame.
 
 :param index: index of the link (in the order you passed to the constructor or
     the default order)
-:return: pose of the link [x, y, z, qw, qx, qy, qz])doc";
+:return: pose of the link in robot's base (root) frame.)doc";
 
 static const char *__doc_mplib_kinematics_pinocchio_PinocchioModelTpl_getModel =
 R"doc(
