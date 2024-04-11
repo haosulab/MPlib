@@ -54,6 +54,12 @@ void build_pyattached_body(py::module &pymp) {
           },
           py::arg("pose"), DOC(mplib, AttachedBodyTpl, setPose))
       .def(
+          "get_attached_link_global_pose",
+          [](const AttachedBody &body) {
+            return Pose<S>(body.getAttachedLinkGlobalPose());
+          },
+          DOC(mplib, AttachedBodyTpl, getAttachedLinkGlobalPose))
+      .def(
           "get_global_pose",
           [](const AttachedBody &body) { return Pose<S>(body.getGlobalPose()); },
           DOC(mplib, AttachedBodyTpl, getGlobalPose))

@@ -66,6 +66,7 @@ class ArticulatedModelTpl {
    * @param verbose: print debug information. Default: ``false``.
    * @return: a unique_ptr to ArticulatedModel
    */
+  // TODO(merge): remove pair (link name is not needed)
   static std::unique_ptr<ArticulatedModelTpl<S>> createFromURDFString(
       const std::string &urdf_string, const std::string &srdf_string,
       const std::vector<std::pair<std::string, collision_detection::FCLObjectPtr<S>>>

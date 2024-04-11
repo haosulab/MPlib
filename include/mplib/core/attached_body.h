@@ -51,10 +51,10 @@ class AttachedBodyTpl {
   /// @brief Gets the attached object (``FCLObjectPtr``)
   FCLObjectPtr getObject() const { return object_; }
 
-  /// @brief Gets the articulation this body is attached to
+  /// @brief Gets the articulation that this body is attached to
   ArticulatedModelPtr getAttachedArticulation() const { return attached_articulation_; }
 
-  /// @brief Gets the articulation this body is attached to
+  /// @brief Gets the articulation link id that this body is attached to
   int getAttachedLinkId() const { return attached_link_id_; }
 
   /// @brief Gets the attached pose (relative pose from attached link to object)
@@ -63,10 +63,13 @@ class AttachedBodyTpl {
   /// @brief Sets the attached pose (relative pose from attached link to object)
   void setPose(const Isometry3<S> &pose) { pose_ = pose; }
 
-  /// @brief Gets the global pose of the attached object
-  Isometry3<S> getGlobalPose() const {
-    return pinocchio_model_->getLinkPose(attached_link_id_) * pose_;
+  /// @brief Gets the global pose of the articulation link that this body is attached to
+  Isometry3<S> getAttachedLinkGlobalPose() const {
+    return pinocchio_model_->getLinkPose(attached_link_id_);
   }
+
+  /// @brief Gets the global pose of the attached object
+  Isometry3<S> getGlobalPose() const { return getAttachedLinkGlobalPose() * pose_; }
 
   /// @brief Updates the global pose of the attached object using current state
   void updatePose() const;

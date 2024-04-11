@@ -266,11 +266,15 @@ class AttachedBody:
         """
     def get_attached_articulation(self) -> ArticulatedModel:
         """
-        Gets the articulation this body is attached to
+        Gets the articulation that this body is attached to
+        """
+    def get_attached_link_global_pose(self) -> Pose:
+        """
+        Gets the global pose of the articulation link that this body is attached to
         """
     def get_attached_link_id(self) -> int:
         """
-        Gets the articulation this body is attached to
+        Gets the articulation link id that this body is attached to
         """
     def get_global_pose(self) -> Pose:
         """
