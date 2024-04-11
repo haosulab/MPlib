@@ -774,8 +774,18 @@ class Pose:
     ) -> None:
         """
         Constructs a Pose with given transformation matrix
+        (4x4 np.ndarray with np.float64 dtype)
 
-        :param matrix: a 4x4 transformation matrix
+        :param matrix: a 4x4 np.float64 np.ndarray transformation matrix
+        """
+    @typing.overload
+    def __init__(self, obj: typing.Any) -> None:
+        """
+        Constructs a Pose with given Python object that has ``p`` and ``q`` attributes
+        (e.g., ``sapien.Pose``) or a 4x4 np.ndarray transformation matrix.
+
+        :param obj: a Pose-like object with ``p`` and ``q`` attributes or
+            a 4x4 np.ndarray transformation matrix
         """
     @typing.overload
     def __mul__(

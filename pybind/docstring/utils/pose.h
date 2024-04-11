@@ -98,8 +98,17 @@ Converts the Pose to an ``Eigen::Isometry3`` instance
 static const char *__doc_mplib_Pose_Pose_5 =
 R"doc(
 Constructs a Pose with given transformation matrix
+(4x4 np.ndarray with np.float64 dtype)
 
-:param matrix: a 4x4 transformation matrix)doc";
+:param matrix: a 4x4 np.float64 np.ndarray transformation matrix)doc";
+
+static const char *__doc_mplib_Pose_Pose_6 =
+R"doc(
+Constructs a Pose with given Python object that has ``p`` and ``q`` attributes
+(e.g., ``sapien.Pose``) or a 4x4 np.ndarray transformation matrix.
+
+:param obj: a Pose-like object with ``p`` and ``q`` attributes or
+    a 4x4 np.ndarray transformation matrix)doc";
 
 static const char *__doc_mplib_Pose_to_transformation_matrix =
 R"doc(

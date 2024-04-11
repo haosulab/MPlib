@@ -1,6 +1,7 @@
 #include "mplib/utils/pose.h"
 
 #include <memory>
+#include <stdexcept>
 
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
@@ -15,10 +16,14 @@ namespace py = pybind11;
 namespace mplib {
 
 using Matrix4 = Eigen::Matrix<S, 4, 4, Eigen::RowMajor>;
+using pyarray_t = py::array_t<S, py::array::c_style | py::array::forcecast>;
 
 void build_utils_pose(py::module &pymp) {
   auto PyPose =
       py::class_<Pose<S>, std::shared_ptr<Pose<S>>>(pymp, "Pose", DOC(mplib, Pose));
+
+  // Enable implicit conversions on the Python side from any py::object to Pose<S>
+  py::implicitly_convertible<py::object, Pose<S>>();
 
   PyPose.def(py::init<>(), DOC(mplib, Pose, Pose))
       .def(py::init<const Vector3<S> &, const Vector4<S> &>(),
@@ -29,6 +34,37 @@ void build_utils_pose(py::module &pymp) {
                              Quaternion<S>(mat.block<3, 3>(0, 0))};
            }),
            py::arg("matrix"), DOC(mplib, Pose, Pose, 5))
+      .def(py::init([](const py::object &obj) {
+             if (py::hasattr(obj, "p") && py::hasattr(obj, "q")) {
+               auto p = pyarray_t::ensure(obj.attr("p"));
+               auto q = pyarray_t::ensure(obj.attr("q"));
+
+               if (!p || !q)
+                 throw std::runtime_error(
+                     "Failed to convert 'p' and 'q' to numpy arrays");
+
+               if (p.ndim() != 1 || p.size() != 3)
+                 throw std::range_error("'p' must be 1D array of size 3");
+               if (q.ndim() != 1 || q.size() != 4)
+                 throw std::range_error("'q' must be 1D array of size 4");
+
+               return Pose<S>(Vector3<S>(static_cast<S *>(p.request().ptr)),
+                              Vector4<S>(static_cast<S *>(q.request().ptr)));
+             }
+
+             auto mat = pyarray_t::ensure(obj);
+             if (!mat)
+               throw std::runtime_error(
+                   "Unknown object type, cannot contruct a Pose instance from it!");
+
+             if (mat.ndim() != 2 || mat.shape(0) != 4 || mat.shape(1) != 4)
+               throw std::range_error("Input must be 2D array of shape (4, 4)");
+
+             auto eigen_mat = Matrix4(static_cast<S *>(mat.request().ptr));
+             return Pose<S> {eigen_mat.block<3, 1>(0, 3),
+                             Quaternion<S>(eigen_mat.block<3, 3>(0, 0))};
+           }),
+           py::arg("obj"), DOC(mplib, Pose, Pose, 6))
       .def(
           "to_transformation_matrix",
           [](const Pose<S> &pose) {
