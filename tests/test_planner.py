@@ -1,5 +1,6 @@
 import os
 import unittest
+from copy import deepcopy
 
 import numpy as np
 import trimesh
@@ -7,6 +8,7 @@ from transforms3d.quaternions import mat2quat, quat2mat
 
 import mplib
 from mplib import Planner
+from mplib.pymp import Pose
 from mplib.pymp.collision_detection import fcl
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +23,7 @@ PANDA_SPEC = {
 class TestPlanner(unittest.TestCase):
     def setUp(self):
         self.planner = Planner(**PANDA_SPEC)
-        self.target_pose = [0.4, 0.3, 0.12, 0, 1, 0, 0]
+        self.target_pose = Pose([0.4, 0.3, 0.12], [0, 1, 0, 0])
         self.init_qpos = np.array([0, 0.2, 0, -2.6, 0, 3.0, 0.8, 0, 0])
         self.joint_limits = [
             [-2.8973, 2.8973],
@@ -50,7 +52,7 @@ class TestPlanner(unittest.TestCase):
         pos = np.random.uniform(-1, 1, size=3)
         quat = np.random.uniform(0, 1, size=4)
         quat /= np.linalg.norm(quat)
-        pose = np.concatenate([pos, quat])
+        pose = Pose(pos, quat)
         return pose
 
     def test_planning_to_pose(self):
@@ -60,8 +62,8 @@ class TestPlanner(unittest.TestCase):
         self.assertEqual(result_sampling["status"], "Success")
         last_qpos = result_sampling["position"][-1]
         self.planner.robot.set_qpos(last_qpos)
-        self.assertTrue(
-            np.allclose(self.get_end_effector_pose(), self.target_pose, atol=1e-3)
+        self.assertAlmostEqual(
+            self.get_end_effector_pose().distance(self.target_pose), 0, places=3
         )
 
     def test_planning_to_qpos(self):
@@ -85,8 +87,8 @@ class TestPlanner(unittest.TestCase):
         self.assertEqual(result_sampling["status"], "Success")
         last_qpos = result_sampling["position"][-1]
         self.planner.robot.set_qpos(last_qpos)
-        self.assertTrue(
-            np.allclose(self.get_end_effector_pose(), self.target_pose, atol=1e-2)
+        self.assertAlmostEqual(
+            self.get_end_effector_pose().distance(self.target_pose), 0, places=1
         )
 
     def test_wrap_joint_limit(self, tolerance=1e-3):
@@ -136,7 +138,7 @@ class TestPlanner(unittest.TestCase):
         floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
         # create a collision object for the floor, with a 10cm offset in the z direction
         floor_fcl_collision_object = fcl.CollisionObject(
-            floor, [0, 0, -0.1], [1, 0, 0, 0]
+            floor, Pose([0, 0, -0.1], [1, 0, 0, 0])
         )
         # update the planning world with the floor collision object
         self.planner.planning_world.add_normal_object(
@@ -169,8 +171,8 @@ class TestPlanner(unittest.TestCase):
             if status == "Success":
                 for result_qpos in results:
                     self.planner.robot.set_qpos(result_qpos, full=True)
-                    self.assertTrue(
-                        np.allclose(self.get_end_effector_pose(), pose, atol=1e-3)
+                    self.assertAlmostEqual(
+                        self.get_end_effector_pose().distance(pose), 0, places=3
                     )
         self.assertGreaterEqual(num_success, expected_least_num_success)
 
@@ -178,53 +180,42 @@ class TestPlanner(unittest.TestCase):
         floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
         # create a collision object for the floor, with a 10cm offset in the z direction
         floor_fcl_collision_object = fcl.CollisionObject(
-            floor, [0, 0, -0.1], [1, 0, 0, 0]
+            floor, Pose([0, 0, -0.1], [1, 0, 0, 0])
         )
-        status, _ = self.planner.IK([0.4, 0.3, -0.1, 0, 1, 0, 0], self.init_qpos)
+
+        under_floor_target_pose = deepcopy(self.target_pose)
+        under_floor_target_pose.set_p([0.4, 0.3, -0.1])
+        status, _ = self.planner.IK(under_floor_target_pose, self.init_qpos)
         self.assertEqual(status, "Success")
         self.planner.planning_world.add_normal_object(
             "floor", floor_fcl_collision_object
         )
-        status, _ = self.planner.IK([0.4, 0.3, -0.1, 0, 1, 0, 0], self.init_qpos)
+        status, _ = self.planner.IK(under_floor_target_pose, self.init_qpos)
         self.assertNotEqual(status, "Success")
 
     def test_set_base_pose(self):
-        target_pose_tf = np.eye(4)
-        target_pose_tf[:3, 3] = self.target_pose[:3]
-        target_pose_tf[:3, :3] = quat2mat(self.target_pose[3:])
-
         for _ in range(10):
             base_pose = self.sample_pose()
             self.planner.set_base_pose(base_pose)
 
-            quat = base_pose[3:]
-            hom_mat = np.eye(4)
-            hom_mat[:3, :3] = quat2mat(quat)
-            hom_mat[:3, 3] = base_pose[:3]
-            transformed_target_tf = hom_mat @ target_pose_tf
-            transformed_target_pose = np.concatenate([
-                transformed_target_tf[:3, 3],
-                mat2quat(transformed_target_tf[:3, :3]),
-            ])
-
             result_sampling = self.planner.plan_qpos_to_pose(
-                transformed_target_pose, self.init_qpos
+                base_pose * self.target_pose, self.init_qpos
             )
             self.assertEqual(result_sampling["status"], "Success")
             last_qpos_sampling = result_sampling["position"][-1]
             self.planner.robot.set_qpos(last_qpos_sampling)
-            self.assertTrue(
-                np.allclose(self.get_end_effector_pose(), self.target_pose, atol=1e-2)
+            self.assertAlmostEqual(
+                self.get_end_effector_pose().distance(self.target_pose), 0, places=2
             )
 
             result_screw = self.planner.plan_screw(
-                transformed_target_pose, self.init_qpos
+                base_pose * self.target_pose, self.init_qpos
             )
             self.assertEqual(result_screw["status"], "Success")
             last_qpos_screw = result_screw["position"][-1]
             self.planner.robot.set_qpos(last_qpos_screw)
-            self.assertTrue(
-                np.allclose(self.get_end_effector_pose(), self.target_pose, atol=1e-2)
+            self.assertAlmostEqual(
+                self.get_end_effector_pose().distance(self.target_pose), 0, places=1
             )
 
             result_sampling = self.planner.plan_qpos_to_pose(
@@ -243,6 +234,7 @@ class TestPlanner(unittest.TestCase):
     def test_update_point_cloud(self):
         # use screw based planning. first succeeds but after point cloud obstacle fails
         pose = [0.7, 0, 0.12, 0, 1, 0, 0]
+        pose = Pose([0.7, 0, 0.12], [0, 1, 0, 0])
         result_screw = self.planner.plan_screw(pose, self.init_qpos)
         self.assertEqual(result_screw["status"], "Success")
 
@@ -254,14 +246,16 @@ class TestPlanner(unittest.TestCase):
 
     def test_update_attach(self):
         starting_qpos = [0, 0.48, 0, -1.48, 0, 1.96, 0.78]
-        target_pose = [0.4, 0.3, 0.33, 0, 1, 0, 0]
+        target_pose = Pose([0.4, 0.3, 0.33], [0, 1, 0, 0])
         self.add_point_cloud()
 
         result_screw = self.planner.plan_screw(target_pose, starting_qpos)
         self.assertEqual(result_screw["status"], "Success")
 
         # now attach a box to the end effector and we should fail
-        self.planner.update_attached_box([0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0])
+        self.planner.update_attached_box(
+            [0.04, 0.04, 0.12], Pose([0, 0, 0.14], [1, 0, 0, 0])
+        )
 
         result_screw = self.planner.plan_screw(target_pose, starting_qpos)
         self.assertNotEqual(result_screw["status"], "Success")
@@ -289,7 +283,7 @@ class TestPlanner(unittest.TestCase):
         def f(x, out):
             self.planner.robot.set_qpos(x)
             eef_pose = self.get_end_effector_pose()
-            eef_z_axis = quat2mat(eef_pose[3:])[:, 2]
+            eef_z_axis = quat2mat(eef_pose.get_q())[:, 2]
             out[0] = -eef_z_axis[2] - 0.883  # maintain 28 degrees w.r.t. -z axis
 
         return f
@@ -302,31 +296,19 @@ class TestPlanner(unittest.TestCase):
             )
             rot_jac = jac[3:, self.planner.move_group_joint_indices]
             eef_pose = self.get_end_effector_pose()
-            eef_z_axis = quat2mat(eef_pose[3:])[:, 2]
+            eef_z_axis = quat2mat(eef_pose.get_q())[:, 2]
             for i in range(len(self.planner.move_group_joint_indices)):
                 out[i] = np.cross(rot_jac[:, i], eef_z_axis).dot(np.array([0, 0, -1]))
 
         return j
 
     def test_constrained_planning(self, success_percentage=0.3):
-        constrained_init_pose = [
-            0.4,
-            0.3,
-            0.12,
-            0.1710101,
-            -0.9698463,
-            0.0301537,
-            -0.1710101,
-        ]
-        constrained_target_pose = [
-            0.6,
-            0.1,
-            0.44,
-            0.1710101,
-            0.9698463,
-            -0.0301537,
-            -0.1710101,
-        ]
+        constrained_init_pose = Pose(
+            [0.4, 0.3, 0.12], [0.1710101, -0.9698463, 0.0301537, -0.1710101]
+        )
+        constrained_target_pose = Pose(
+            [0.6, 0.1, 0.44], [0.1710101, -0.9698463, 0.0301537, -0.1710101]
+        )
         # first do an ik to find the init_qpos
         status, results = self.planner.IK(constrained_init_pose, self.init_qpos)
         self.assertEqual(status, "Success")

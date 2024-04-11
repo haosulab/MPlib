@@ -6,6 +6,7 @@ import trimesh
 from transforms3d.quaternions import mat2quat, quat2mat
 
 import mplib
+from mplib.pymp import Pose
 from mplib.pymp.collision_detection import fcl
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -70,8 +71,8 @@ class TestArticulation(unittest.TestCase):
 
     def test_get_base_pose(self):
         base_pose = self.robot.get_base_pose()
-        self.assertIsInstance(base_pose, np.ndarray)
-        self.assertTrue(np.allclose(base_pose, np.array([0, 0, 0, 1, 0, 0, 0])))
+        self.assertIsInstance(base_pose, Pose)
+        self.assertEqual(base_pose.distance(Pose()), 0)
 
     def test_get_fcl_model(self):
         fcl_model = self.robot.get_fcl_model()
@@ -133,8 +134,9 @@ class TestArticulation(unittest.TestCase):
     def test_set_base_pose(self):
         pose = np.arange(7) / 10.0
         pose[3:] /= np.linalg.norm(pose[3:])
+        pose = Pose(pose[:3], pose[3:])
         self.robot.set_base_pose(pose)
-        self.assertTrue(np.allclose(self.robot.get_base_pose(), pose))
+        self.assertAlmostEqual(self.robot.get_base_pose().distance(pose), 0, places=3)
 
     def test_update_SRDF(self):
         self.robot.update_SRDF("")  # should not raise error
