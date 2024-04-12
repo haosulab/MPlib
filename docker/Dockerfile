@@ -44,8 +44,8 @@ RUN git clone --single-branch -b v1.9.8 --depth 1 https://github.com/OctoMap/oct
     cmake .. && make -j$(nproc) && make install && \
     rm -rf /workspace/octomap
 
-# v0.6.1 does not work, use newer instead
-RUN git clone --single-branch -b 0.7.0 --depth 1 https://github.com/flexible-collision-library/fcl.git && \
+# Use our fork for Halfspace distance impl & bugfix
+RUN git clone --single-branch -b master --depth 1 https://github.com/haosulab/fcl.git && \
     cd fcl && mkdir build && cd build && \
     cmake .. && make -j$(nproc) && make install && \
     rm -rf /workspace/fcl
