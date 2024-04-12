@@ -342,13 +342,10 @@ class PlanningWorld:
         :param normal_objects: list of collision objects that are not articulated
         :param normal_object_names: name of the normal objects
         """
-    def add_articulation(
-        self, name: str, model: ArticulatedModel, planned: bool = False
-    ) -> None:
+    def add_articulation(self, model: ArticulatedModel, planned: bool = False) -> None:
         """
-        Adds an articulation (ArticulatedModelPtr) with given name to world
+        Adds an articulation (ArticulatedModelPtr) to world
 
-        :param name: name of the articulated model
         :param model: articulated model to be added
         :param planned: whether the articulation is being planned
         """

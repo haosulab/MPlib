@@ -76,8 +76,8 @@ class SapienPlanningWorld(PlanningWorld):
                 verbose=False,
             )
             articulated_model.set_qpos(articulation.qpos)  # update qpos  # type: ignore
-
-            self.add_articulation(self.get_object_name(articulation), articulated_model)
+            articulated_model.name = self.get_object_name(articulation)
+            self.add_articulation(articulated_model)
 
         for articulation in planned_articulations:
             self.set_articulation_planned(self.get_object_name(articulation), True)

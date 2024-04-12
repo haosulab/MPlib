@@ -94,15 +94,12 @@ class PlanningWorldTpl {
   }
 
   /**
-   * Adds an articulation (ArticulatedModelPtr) with given name to world
+   * Adds an articulation (ArticulatedModelPtr) to world
    *
-   * @param name: name of the articulated model
    * @param model: articulated model to be added
    * @param planned: whether the articulation is being planned
    */
-  // TODO(merge): remove name
-  void addArticulation(const std::string &name, const ArticulatedModelPtr &model,
-                       bool planned = false);
+  void addArticulation(const ArticulatedModelPtr &model, bool planned = false);
 
   /**
    * Removes the articulation with given name if exists. Updates acm_

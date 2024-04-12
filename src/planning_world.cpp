@@ -51,12 +51,10 @@ std::vector<ArticulatedModelTplPtr<S>> PlanningWorldTpl<S>::getPlannedArticulati
 }
 
 template <typename S>
-void PlanningWorldTpl<S>::addArticulation(const std::string &name,
-                                          const ArticulatedModelPtr &model,
+void PlanningWorldTpl<S>::addArticulation(const ArticulatedModelPtr &model,
                                           bool planned) {
-  model->setName(name);
-  articulation_map_[name] = model;
-  setArticulationPlanned(name, planned);
+  articulation_map_[model->getName()] = model;
+  setArticulationPlanned(model->getName(), planned);
 }
 
 template <typename S>

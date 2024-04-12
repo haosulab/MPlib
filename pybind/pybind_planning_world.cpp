@@ -45,9 +45,8 @@ void build_pyplanning_world(py::module &pymp) {
            DOC(mplib, PlanningWorldTpl, getArticulation))
       .def("has_articulation", &PlanningWorld::hasArticulation, py::arg("name"),
            DOC(mplib, PlanningWorldTpl, hasArticulation))
-      .def("add_articulation", &PlanningWorld::addArticulation, py::arg("name"),
-           py::arg("model"), py::arg("planned") = false,
-           DOC(mplib, PlanningWorldTpl, addArticulation))
+      .def("add_articulation", &PlanningWorld::addArticulation, py::arg("model"),
+           py::arg("planned") = false, DOC(mplib, PlanningWorldTpl, addArticulation))
       .def("remove_articulation", &PlanningWorld::removeArticulation, py::arg("name"),
            DOC(mplib, PlanningWorldTpl, removeArticulation))
       .def("is_articulation_planned", &PlanningWorld::isArticulationPlanned,

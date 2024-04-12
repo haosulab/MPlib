@@ -45,9 +45,8 @@ Constructs a PlanningWorld with given (planned) articulations and normal objects
 
 static const char *__doc_mplib_PlanningWorldTpl_addArticulation =
 R"doc(
-Adds an articulation (ArticulatedModelPtr) with given name to world
+Adds an articulation (ArticulatedModelPtr) to world
 
-:param name: name of the articulated model
 :param model: articulated model to be added
 :param planned: whether the articulation is being planned)doc";
 
