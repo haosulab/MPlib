@@ -38,6 +38,23 @@ from .srdf_exporter import export_srdf
 from .urdf_exporter import export_kinematic_chain_urdf
 
 
+# TODO(merge): link names?
+def convert_object_name(obj: PhysxArticulation | Entity) -> str:
+    """
+    Constructs a unique name for the corresponding mplib object.
+    This is necessary because mplib objects assume unique names.
+
+    :param obj: a SAPIEN object
+    :return: the unique mplib object name
+    """
+    if isinstance(obj, PhysxArticulation):
+        return f"{obj.name}_{obj.root.entity.per_scene_id}"
+    elif isinstance(obj, Entity):
+        return f"{obj.name}_{obj.per_scene_id}"
+    else:
+        raise NotImplementedError(f"Unknown SAPIEN object type {type(obj)}")
+
+
 class SapienPlanningWorld(PlanningWorld):
     def __init__(
         self,
@@ -76,11 +93,10 @@ class SapienPlanningWorld(PlanningWorld):
                 verbose=False,
             )
             articulated_model.set_qpos(articulation.qpos)  # update qpos  # type: ignore
-            articulated_model.name = self.get_object_name(articulation)
             self.add_articulation(articulated_model)
 
         for articulation in planned_articulations:
-            self.set_articulation_planned(self.get_object_name(articulation), True)
+            self.set_articulation_planned(convert_object_name(articulation), True)
 
         for entity in actors:
             component = entity.find_component_by_type(PhysxRigidBaseComponent)
@@ -103,7 +119,7 @@ class SapienPlanningWorld(PlanningWorld):
             all attached objects
         """
         for articulation in self._sim_scene.get_all_articulations():
-            if art := self.get_articulation(self.get_object_name(articulation)):
+            if art := self.get_articulation(convert_object_name(articulation)):
                 # set_qpos to update poses
                 art.set_qpos(articulation.qpos)  # type: ignore
             else:
@@ -113,7 +129,7 @@ class SapienPlanningWorld(PlanningWorld):
                 )
 
         for entity in self._sim_scene.get_all_actors():
-            object_name = self.get_object_name(entity)
+            object_name = convert_object_name(entity)
 
             # If entity is an attached object
             if attached_body := self.get_attached_object(object_name):
@@ -145,22 +161,6 @@ class SapienPlanningWorld(PlanningWorld):
                     f"Entity {entity.name} not found in PlanningWorld! "
                     "The scene might have changed since last update."
                 )
-
-    @staticmethod
-    def get_object_name(obj: PhysxArticulation | Entity) -> str:
-        """
-        Constructs a unique name for the corresponding mplib object.
-        This is necessary because mplib objects assume unique names.
-
-        :param obj: a SAPIEN object
-        :return: the unique mplib object name
-        """
-        if isinstance(obj, PhysxArticulation):
-            return f"{obj.name}_{obj.root.entity.per_scene_id}"
-        elif isinstance(obj, Entity):
-            return f"{obj.name}_{obj.per_scene_id}"
-        else:
-            raise NotImplementedError(f"Unknown SAPIEN object type {type(obj)}")
 
     @staticmethod
     def convert_physx_component(comp: PhysxRigidBaseComponent) -> FCLObject | None:
@@ -216,7 +216,7 @@ class SapienPlanningWorld(PlanningWorld):
         return FCLObject(
             comp.name
             if isinstance(comp, PhysxArticulationLinkComponent)
-            else SapienPlanningWorld.get_object_name(comp.entity),
+            else convert_object_name(comp.entity),
             comp.entity.pose,  # type: ignore
             shapes,
             shape_poses,

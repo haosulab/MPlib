@@ -160,7 +160,9 @@ def export_joint(joint: PhysxArticulationJoint) -> list[ET.Element]:
 
 
 def export_kinematic_chain_xml(articulation: PhysxArticulation) -> ET.Element:
-    elem_robot = ET.Element("robot", {"name": articulation.name})
+    from .conversion import convert_object_name
+
+    elem_robot = ET.Element("robot", {"name": convert_object_name(articulation)})
     ET.SubElement(elem_robot, "link", {"name": "__world__"})  # root link
 
     for l in articulation.links:
