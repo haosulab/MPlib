@@ -149,12 +149,6 @@ EE1 --> EE2 --> ... --> EEn
 
 :param end_effectors: list of links extending to the end effector)doc";
 
-static const char *__doc_mplib_ArticulatedModelTpl_setName =
-R"doc(
-Set name of the articulated model.
-
-@param: name of the articulated model)doc";
-
 static const char *__doc_mplib_ArticulatedModelTpl_setQpos =
 R"doc(
 Set the current joint positions and update all collision links in the

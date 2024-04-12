@@ -66,6 +66,13 @@ class FCLModelTpl {
       bool verbose = false);
 
   /**
+   * Get name of the articulated model.
+   *
+   * @return: name of the articulated model
+   */
+  const std::string &getName() const { return name_; }
+
+  /**
    * Get the collision objects of the FCL model.
    *
    * @return: all collision objects of the FCL model
@@ -152,6 +159,8 @@ class FCLModelTpl {
 
   void dfsParseTree(const urdf::LinkConstSharedPtr &link,
                     const std::string &parent_link_name);
+
+  std::string name_;
 
   urdf::ModelInterfaceSharedPtr urdf_model_;
   std::string package_dir_;

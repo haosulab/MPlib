@@ -83,13 +83,6 @@ class ArticulatedModelTpl {
   const std::string &getName() const { return name_; }
 
   /**
-   * Set name of the articulated model.
-   *
-   * @param: name of the articulated model
-   */
-  void setName(const std::string &name) { name_ = name; }
-
-  /**
    * Get the underlying Pinocchio model.
    *
    * @return: Pinocchio model used for kinematics and dynamics computations

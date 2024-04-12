@@ -76,6 +76,7 @@ template <typename S>
 void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
                           const std::string &package_dir) {
   urdf_model_ = urdf_model;
+  name_ = urdf_model->getName();
   package_dir_ = package_dir;
   if (not urdf_model_)
     throw std::invalid_argument("The XML stream does not contain a valid URDF model.");

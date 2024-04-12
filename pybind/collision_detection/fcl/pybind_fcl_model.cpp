@@ -42,6 +42,11 @@ void build_pyfcl_model(py::module &m) {
           py::arg("verbose") = false,
           DOC(mplib, collision_detection, fcl, FCLModelTpl, createFromURDFString))
 
+      .def_property_readonly("name", &FCLModel::getName,
+                             DOC(mplib, collision_detection, fcl, FCLModelTpl, name))
+      .def("get_name", &FCLModel::getName,
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, getName))
+
       .def("get_collision_objects", &FCLModel::getCollisionObjects,
            DOC(mplib, collision_detection, fcl, FCLModelTpl, getCollisionObjects))
       .def("get_collision_link_names", &FCLModel::getCollisionLinkNames,

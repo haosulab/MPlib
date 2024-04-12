@@ -27,7 +27,6 @@ PlanningWorldTpl<S>::PlanningWorldTpl(
          "normal_objects and normal_object_names should have the same size");
   // TODO(merge): remove articulation_names and normal_object_names
   for (size_t i = 0; i < articulations.size(); i++) {
-    articulations[i]->setName(articulation_names[i]);
     articulation_map_[articulation_names[i]] = articulations[i];
     planned_articulation_map_[articulation_names[i]] = articulations[i];
   }

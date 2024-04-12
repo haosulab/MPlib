@@ -96,6 +96,12 @@ Get the collision pairs of the FCL model.
     objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled
     collision pairs)doc";
 
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_getName =
+R"doc(
+Get name of the articulated model.
+
+:return: name of the articulated model)doc";
+
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_getUserLinkNames =
 R"doc(
 )doc";
@@ -130,6 +136,9 @@ Update the collision objects of the FCL model.
 :param link_poses: list of link poses in the order of the link order)doc";
 
 /* ----- Begin of custom docstring section ----- */
+
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_name =
+R"doc(Name of the fcl model)doc";
 
 /* ----- End of custom docstring section ----- */
 

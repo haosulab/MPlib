@@ -54,12 +54,10 @@ void build_pyarticulated_model(py::module &pymp) {
           py::arg("verbose") = false,
           DOC(mplib, ArticulatedModelTpl, createFromURDFString))
 
-      .def_property("name", &ArticulatedModel::getName, &ArticulatedModel::setName,
-                    DOC(mplib, ArticulatedModelTpl, name))
+      .def_property_readonly("name", &ArticulatedModel::getName,
+                             DOC(mplib, ArticulatedModelTpl, name))
       .def("get_name", &ArticulatedModel::getName,
            DOC(mplib, ArticulatedModelTpl, getName))
-      .def("set_name", &ArticulatedModel::setName, py::arg("name"),
-           DOC(mplib, ArticulatedModelTpl, setName))
 
       .def("get_pinocchio_model", &ArticulatedModel::getPinocchioModel,
            DOC(mplib, ArticulatedModelTpl, getPinocchioModel))

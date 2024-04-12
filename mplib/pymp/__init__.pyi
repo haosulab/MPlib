@@ -174,12 +174,6 @@ class ArticulatedModel:
 
         :param end_effectors: list of links extending to the end effector
         """
-    def set_name(self, name: str) -> None:
-        """
-        Set name of the articulated model.
-
-        @param: name of the articulated model
-        """
     def set_pose(self, pose: Pose) -> None:
         """
         Set the base pose of the robot and update all collision links in the
@@ -219,8 +213,6 @@ class ArticulatedModel:
         """
         Name of the articulated model
         """
-    @name.setter
-    def name(self, arg1: str) -> None: ...
     @property
     def pose(self) -> Pose:
         """

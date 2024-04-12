@@ -611,6 +611,12 @@ class FCLModel:
             objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled
             collision pairs
         """
+    def get_name(self) -> str:
+        """
+        Get name of the articulated model.
+
+        :return: name of the articulated model
+        """
     def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None:
         """
         Remove collision pairs from SRDF file.
@@ -629,6 +635,11 @@ class FCLModel:
         Update the collision objects of the FCL model.
 
         :param link_poses: list of link poses in the order of the link order
+        """
+    @property
+    def name(self) -> str:
+        """
+        Name of the fcl model
         """
 
 class FCLObject:
