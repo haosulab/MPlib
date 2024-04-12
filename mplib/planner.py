@@ -125,9 +125,7 @@ class Planner:
 
         self.planning_world = PlanningWorld(
             [self.robot],
-            ["robot"],
             kwargs.get("normal_objects", []),
-            kwargs.get("normal_object_names", []),
         )
         self.acm = self.planning_world.get_allowed_collision_matrix()
 

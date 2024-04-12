@@ -57,14 +57,10 @@ class PlanningWorldTpl {
    * Constructs a PlanningWorld with given (planned) articulations and normal objects
    *
    * @param articulations: list of planned articulated models
-   * @param articulation_names: name of the articulated models
    * @param normal_objects: list of collision objects that are not articulated
-   * @param normal_object_names: name of the normal objects
    */
   PlanningWorldTpl(const std::vector<ArticulatedModelPtr> &articulations,
-                   const std::vector<std::string> &articulation_names,
-                   const std::vector<FCLObjectPtr> &normal_objects = {},
-                   const std::vector<std::string> &normal_object_names = {});
+                   const std::vector<FCLObjectPtr> &normal_objects = {});
 
   /// @brief Gets names of all articulations in world (unordered)
   std::vector<std::string> getArticulationNames() const;

@@ -322,17 +322,13 @@ class PlanningWorld:
     def __init__(
         self,
         articulations: list[ArticulatedModel],
-        articulation_names: list[str],
         normal_objects: list[collision_detection.fcl.FCLObject] = [],
-        normal_object_names: list[str] = [],
     ) -> None:
         """
         Constructs a PlanningWorld with given (planned) articulations and normal objects
 
         :param articulations: list of planned articulated models
-        :param articulation_names: name of the articulated models
         :param normal_objects: list of collision objects that are not articulated
-        :param normal_object_names: name of the normal objects
         """
     def add_articulation(self, model: ArticulatedModel, planned: bool = False) -> None:
         """

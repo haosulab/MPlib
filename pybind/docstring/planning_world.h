@@ -39,9 +39,7 @@ R"doc(
 Constructs a PlanningWorld with given (planned) articulations and normal objects
 
 :param articulations: list of planned articulated models
-:param articulation_names: name of the articulated models
-:param normal_objects: list of collision objects that are not articulated
-:param normal_object_names: name of the normal objects)doc";
+:param normal_objects: list of collision objects that are not articulated)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_addArticulation =
 R"doc(

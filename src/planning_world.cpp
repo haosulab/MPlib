@@ -17,21 +17,12 @@ DEFINE_TEMPLATE_PLANNING_WORLD(double);
 template <typename S>
 PlanningWorldTpl<S>::PlanningWorldTpl(
     const std::vector<ArticulatedModelPtr> &articulations,
-    const std::vector<std::string> &articulation_names,
-    const std::vector<FCLObjectPtr> &normal_objects,
-    const std::vector<std::string> &normal_object_names)
+    const std::vector<FCLObjectPtr> &normal_objects)
     : acm_(std::make_shared<AllowedCollisionMatrix>()) {
-  ASSERT(articulations.size() == articulation_names.size(),
-         "articulations and articulation_names should have the same size");
-  ASSERT(normal_objects.size() == normal_object_names.size(),
-         "normal_objects and normal_object_names should have the same size");
-  // TODO(merge): remove articulation_names and normal_object_names
-  for (size_t i = 0; i < articulations.size(); i++) {
-    articulation_map_[articulation_names[i]] = articulations[i];
-    planned_articulation_map_[articulation_names[i]] = articulations[i];
-  }
-  for (size_t i = 0; i < normal_objects.size(); i++)
-    normal_object_map_[normal_object_names[i]] = normal_objects[i];
+  for (const auto &art : articulations)
+    planned_articulation_map_[art->getName()] = articulation_map_[art->getName()] = art;
+  for (const auto &normal_object : normal_objects)
+    normal_object_map_[normal_object->name] = normal_object;
 }
 
 template <typename S>

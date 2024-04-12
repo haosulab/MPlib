@@ -30,11 +30,9 @@ void build_pyplanning_world(py::module &pymp) {
 
   PyPlanningWorld
       .def(py::init<const std::vector<ArticulatedModelPtr> &,
-                    const std::vector<std::string> &, const std::vector<FCLObjectPtr> &,
-                    const std::vector<std::string> &>(),
-           py::arg("articulations"), py::arg("articulation_names"),
+                    const std::vector<FCLObjectPtr> &>(),
+           py::arg("articulations"),
            py::arg("normal_objects") = std::vector<FCLObjectPtr>(),
-           py::arg("normal_object_names") = std::vector<std::string>(),
            DOC(mplib, PlanningWorldTpl, PlanningWorldTpl))
 
       .def("get_articulation_names", &PlanningWorld::getArticulationNames,

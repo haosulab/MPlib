@@ -66,7 +66,7 @@ class SapienPlanningWorld(PlanningWorld):
 
         :param planned_articulations: list of planned articulations.
         """
-        super().__init__([], [])
+        super().__init__([])
         self._sim_scene = sim_scene
 
         articulations: list[PhysxArticulation] = sim_scene.get_all_articulations()
