@@ -157,15 +157,13 @@ class PlanningWorldTpl {
   }
 
   /**
-   * Adds a normal object containing multiple collision objects (``FCLObjectPtr``) with
-   * given name to world
+   * Adds a normal object containing multiple collision objects (``FCLObjectPtr``)
+   * to world
    *
-   * @param name: name of the collision object
-   * @param collision_object: collision object to be added
+   * @param fcl_obj: FCLObject to be added
    */
-  // TODO(merge): remove name
-  void addNormalObject(const std::string &name, const FCLObjectPtr &collision_object) {
-    normal_object_map_[name] = collision_object;
+  void addNormalObject(const FCLObjectPtr &fcl_obj) {
+    normal_object_map_[fcl_obj->name] = fcl_obj;
   }
 
   /**
@@ -174,7 +172,6 @@ class PlanningWorldTpl {
    * @param name: name of the collision object
    * @param collision_object: collision object to be added
    */
-  // TODO(merge): remove name
   void addNormalObject(const std::string &name,
                        const CollisionObjectPtr &collision_object);
 

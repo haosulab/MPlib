@@ -53,11 +53,10 @@ Adds an articulation (ArticulatedModelPtr) with given name to world
 
 static const char *__doc_mplib_PlanningWorldTpl_addNormalObject =
 R"doc(
-Adds a normal object containing multiple collision objects (``FCLObjectPtr``)
-with given name to world
+Adds a normal object containing multiple collision objects (``FCLObjectPtr``) to
+world
 
-:param name: name of the collision object
-:param collision_object: collision object to be added)doc";
+:param fcl_obj: FCLObject to be added)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_addNormalObject_2 =
 R"doc(

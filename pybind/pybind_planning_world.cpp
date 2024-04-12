@@ -63,10 +63,8 @@ void build_pyplanning_world(py::module &pymp) {
       .def("has_normal_object", &PlanningWorld::hasNormalObject, py::arg("name"),
            DOC(mplib, PlanningWorldTpl, hasNormalObject))
       .def("add_normal_object",
-           py::overload_cast<const std::string &, const FCLObjectPtr &>(
-               &PlanningWorld::addNormalObject),
-           py::arg("name"), py::arg("collision_object"),
-           DOC(mplib, PlanningWorldTpl, addNormalObject))
+           py::overload_cast<const FCLObjectPtr &>(&PlanningWorld::addNormalObject),
+           py::arg("fcl_obj"), DOC(mplib, PlanningWorldTpl, addNormalObject))
       .def("add_normal_object",
            py::overload_cast<const std::string &, const CollisionObjectPtr &>(
                &PlanningWorld::addNormalObject),

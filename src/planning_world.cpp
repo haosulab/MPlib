@@ -92,10 +92,10 @@ std::vector<std::string> PlanningWorldTpl<S>::getNormalObjectNames() const {
 template <typename S>
 void PlanningWorldTpl<S>::addNormalObject(const std::string &name,
                                           const CollisionObjectPtr &collision_object) {
-  addNormalObject(name, std::make_shared<FCLObject>(
-                            name, Pose<S>(collision_object->getTransform()),
-                            std::vector<CollisionObjectPtr> {collision_object},
-                            std::vector<Pose<S>> {Pose<S>()}));
+  addNormalObject(
+      std::make_shared<FCLObject>(name, Pose<S>(collision_object->getTransform()),
+                                  std::vector<CollisionObjectPtr> {collision_object},
+                                  std::vector<Pose<S>> {Pose<S>()}));
 }
 
 template <typename S>

@@ -90,10 +90,8 @@ class SapienPlanningWorld(PlanningWorld):
             )
 
             # Convert collision shapes at current global pose
-            self.add_normal_object(
-                self.get_object_name(entity),
-                self.convert_physx_component(component),  # type: ignore
-            )
+            if (fcl_obj := self.convert_physx_component(component)) is not None:  # type: ignore
+                self.add_normal_object(fcl_obj)
 
     def update_from_simulation(self, *, update_attached_object: bool = True) -> None:
         """
@@ -128,15 +126,21 @@ class SapienPlanningWorld(PlanningWorld):
             elif fcl_obj := self.get_normal_object(object_name):
                 # Overwrite the object
                 self.add_normal_object(
-                    object_name,
                     FCLObject(
                         object_name,
                         entity.pose,  # type: ignore
                         fcl_obj.shapes,
                         fcl_obj.shape_poses,
-                    ),
+                    )
                 )
-            else:
+            elif (
+                len(
+                    entity.find_component_by_type(
+                        PhysxRigidBaseComponent
+                    ).collision_shapes  # type: ignore
+                )
+                > 0
+            ):
                 raise RuntimeError(
                     f"Entity {entity.name} not found in PlanningWorld! "
                     "The scene might have changed since last update."
