@@ -225,21 +225,9 @@ void FCLModelTpl<S>::removeCollisionPairsFromSRDFString(
 
 template <typename S>
 void FCLModelTpl<S>::updateCollisionObjects(
-    const std::vector<Vector7<S>> &link_poses) const {
+    const std::vector<Pose<S>> &link_poses) const {
   for (size_t i = 0; i < collision_objects_.size(); i++) {
-    const auto link_pose = toIsometry<S>(link_poses[collision_link_user_indices_[i]]);
-    const auto &fcl_obj = collision_objects_[i];
-    fcl_obj->pose = link_pose;
-    for (size_t j = 0; j < fcl_obj->shapes.size(); j++)
-      fcl_obj->shapes[j]->setTransform(link_pose * fcl_obj->shape_poses[j]);
-  }
-}
-
-template <typename S>
-void FCLModelTpl<S>::updateCollisionObjects(
-    const std::vector<Isometry3<S>> &link_poses) const {
-  for (size_t i = 0; i < collision_objects_.size(); i++) {
-    const auto link_pose = link_poses[collision_link_user_indices_[i]];
+    const auto link_pose = link_poses[collision_link_user_indices_[i]].toIsometry();
     const auto &fcl_obj = collision_objects_[i];
     fcl_obj->pose = link_pose;
     for (size_t j = 0; j < fcl_obj->shapes.size(); j++)

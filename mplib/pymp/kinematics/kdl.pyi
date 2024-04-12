@@ -6,6 +6,8 @@ import typing
 
 import numpy
 
+import mplib.pymp
+
 __all__ = ["KDLModel"]
 M = typing.TypeVar("M", bound=int)
 
@@ -27,9 +29,7 @@ class KDLModel:
         self,
         index: int,
         q_init: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
-        goal_pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        goal_pose: mplib.pymp.Pose,
     ) -> tuple[
         numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]], int
     ]: ...
@@ -37,9 +37,7 @@ class KDLModel:
         self,
         index: int,
         q_init: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
-        goal_pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        goal_pose: mplib.pymp.Pose,
     ) -> tuple[
         numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]], int
     ]: ...
@@ -47,9 +45,7 @@ class KDLModel:
         self,
         index: int,
         q_init: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
-        goal_pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        goal_pose: mplib.pymp.Pose,
         q_min: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         q_max: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
     ) -> tuple[
@@ -60,11 +56,7 @@ class KDLModel:
         self,
         endpoints: list[str],
         q_init: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
-        goal_poses: list[
-            numpy.ndarray[
-                tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-            ]
-        ],
+        goal_poses: list[mplib.pymp.Pose],
         q_min: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         q_max: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
     ) -> tuple[

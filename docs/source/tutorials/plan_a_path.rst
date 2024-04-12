@@ -92,7 +92,7 @@ In this example, we create some boxes inside the simulation like so:
    :start-after: # boxes ankor
    :end-before: # boxes ankor end
 
-We then find the target poses needed to reach the boxes. The poses are specified in [x,y,z,qw,qx,qy,qz]:
+We then find the target poses needed to reach the boxes.
 
 .. literalinclude:: ../../../mplib/examples/demo.py
    :dedent: 0

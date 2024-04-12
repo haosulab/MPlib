@@ -8,6 +8,7 @@ API Reference
    PlanningWorld
    core/ArticulatedModel
    core/AttachedBody
+   utils/pose
    utils/random
 
 .. toctree::

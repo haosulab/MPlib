@@ -40,9 +40,7 @@ class TestFCLModel(unittest.TestCase):
         for i, link_name in enumerate(self.collision_link_names):
             link_idx = self.pinocchio_model.get_link_names().index(link_name)
             link_pose = self.pinocchio_model.get_link_pose(link_idx)
-            self.model.get_collision_objects()[i].shapes[0].set_transformation(
-                link_pose
-            )
+            self.model.get_collision_objects()[i].shapes[0].set_pose(link_pose)
 
     def test_get_collision_objects(self):
         self.assertEqual(
@@ -50,13 +48,9 @@ class TestFCLModel(unittest.TestCase):
         )
         for i, link_name in enumerate(self.collision_link_names):
             pinocchio_idx = self.pinocchio_model.get_link_names().index(link_name)
-            pos = self.model.get_collision_objects()[i].shapes[0].get_translation()
-            quat = mat2quat(
-                self.model.get_collision_objects()[i].shapes[0].get_rotation()
-            )
+            fcl_pose = self.model.get_collision_objects()[i].shapes[0].get_pose()
             pinocchio_pose = self.pinocchio_model.get_link_pose(pinocchio_idx)
-            self.assertTrue(np.allclose(pos, pinocchio_pose[:3]))
-            self.assertAlmostEqual(abs(quat.dot(pinocchio_pose[3:])), 1)
+            self.assertAlmostEqual(fcl_pose.distance(pinocchio_pose), 0, places=3)
 
     def test_remove_collision_pairs_from_srdf(self):
         old_collision_pairs = self.model.get_collision_pairs()

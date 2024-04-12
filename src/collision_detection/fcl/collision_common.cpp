@@ -18,15 +18,17 @@ DEFINE_TEMPLATE_FCL_COMMON(float);
 DEFINE_TEMPLATE_FCL_COMMON(double);
 
 template <typename S>
-FCLObject<S>::FCLObject(const std::string &name, const Isometry3<S> &pose,
-                        const std::vector<fcl::CollisionObjectPtr<S>> &shapes,
-                        const std::vector<Isometry3<S>> &shape_poses)
-    : name(name), pose(pose), shapes(shapes), shape_poses(shape_poses) {
-  ASSERT(shapes.size() == shape_poses.size(),
+FCLObject<S>::FCLObject(const std::string &name_, const Pose<S> &pose_,
+                        const std::vector<fcl::CollisionObjectPtr<S>> &shapes_,
+                        const std::vector<Pose<S>> &shape_poses_)
+    : name(name_), pose(pose_.toIsometry()), shapes(shapes_) {
+  ASSERT(shapes_.size() == shape_poses_.size(),
          "shapes and shape_poses should have the same size");
-  // Update pose of the shapes
-  for (size_t i = 0; i < shapes.size(); i++)
-    shapes[i]->setTransform(pose * shape_poses[i]);
+  for (size_t i = 0; i < shapes_.size(); i++) {
+    shape_poses.push_back(shape_poses_[i].toIsometry());
+    // Update pose of the shapes
+    shapes_[i]->setTransform(pose * shape_poses[i]);
+  }
 }
 
 template <typename S>

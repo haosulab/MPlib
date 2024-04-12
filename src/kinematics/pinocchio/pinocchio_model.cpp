@@ -523,7 +523,7 @@ void PinocchioModelTpl<S>::computeForwardKinematics(const VectorX<S> &qpos) {
 }
 
 template <typename S>
-Vector7<S> PinocchioModelTpl<S>::getLinkPose(size_t index) const {
+Isometry3<S> PinocchioModelTpl<S>::getLinkPose(size_t index) const {
   ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "The link index is out of bound!");
   const auto frame = link_index_user2pinocchio_[index];
@@ -532,21 +532,17 @@ Vector7<S> PinocchioModelTpl<S>::getLinkPose(size_t index) const {
   const auto link2joint = model_.frames[frame].placement;
   const auto joint2world = data_.oMi[parent_joint];
   const auto link2world = joint2world * link2joint;
-  const auto p = link2world.translation();
-  const auto q = Quaternion<S>(link2world.rotation());
-  return Vector7<S> {p.x(), p.y(), p.z(), q.w(), q.x(), q.y(), q.z()};
+  return toIsometry(link2world);
 }
 
 template <typename S>
-Vector7<S> PinocchioModelTpl<S>::getJointPose(size_t index) const {
+Isometry3<S> PinocchioModelTpl<S>::getJointPose(size_t index) const {
   ASSERT(index < static_cast<size_t>(joint_index_user2pinocchio_.size()),
          "The link index is out of bound!");
   const auto frame = joint_index_user2pinocchio_[index];
 
   const auto joint2world = data_.oMi[frame];
-  const auto p = joint2world.translation();
-  const auto q = Quaternion<S>(joint2world.rotation());
-  return Vector7<S> {p.x(), p.y(), p.z(), q.w(), q.x(), q.y(), q.z()};
+  return toIsometry(joint2world);
 }
 
 template <typename S>
@@ -593,7 +589,7 @@ Matrix6X<S> PinocchioModelTpl<S>::computeSingleLinkJacobian(const VectorX<S> &qp
 
 template <typename S>
 std::tuple<VectorX<S>, bool, Vector6<S>> PinocchioModelTpl<S>::computeIKCLIK(
-    size_t index, const Vector7<S> &pose, const VectorX<S> &q_init,
+    size_t index, const Pose<S> &pose, const VectorX<S> &q_init,
     const std::vector<bool> &mask, double eps, int max_iter, double dt, double damp) {
   ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
          "link index out of bound");
@@ -601,11 +597,7 @@ std::tuple<VectorX<S>, bool, Vector6<S>> PinocchioModelTpl<S>::computeIKCLIK(
   const auto jointId = model_.frames[frameId].parent;
   const auto link2joint = model_.frames[frameId].placement;
 
-  pinocchio::SE3Tpl<S> link_pose;
-  link_pose.translation({pose[0], pose[1], pose[2]});
-  link_pose.rotation(
-      Quaternion<S> {pose[3], pose[4], pose[5], pose[6]}.toRotationMatrix());
-
+  const pinocchio::SE3Tpl<S> link_pose {pose.q, pose.p};
   const pinocchio::SE3Tpl<S> joint_pose = link_pose * link2joint.inverse();
   VectorX<S> q = qposUser2Pinocchio(q_init);  // pinocchio::neutral(model);
   Matrix6X<S> J(6, model_.nv);
@@ -648,7 +640,7 @@ std::tuple<VectorX<S>, bool, Vector6<S>> PinocchioModelTpl<S>::computeIKCLIK(
 
 template <typename S>
 std::tuple<VectorX<S>, bool, Vector6<S>> PinocchioModelTpl<S>::computeIKCLIKJL(
-    size_t index, const Vector7<S> &pose, const VectorX<S> &q_init,
+    size_t index, const Pose<S> &pose, const VectorX<S> &q_init,
     const VectorX<S> &q_min, const VectorX<S> &q_max, double eps, int max_iter,
     double dt, double damp) {
   ASSERT(index < static_cast<size_t>(link_index_user2pinocchio_.size()),
@@ -657,11 +649,7 @@ std::tuple<VectorX<S>, bool, Vector6<S>> PinocchioModelTpl<S>::computeIKCLIKJL(
   const auto jointId = model_.frames[frameId].parent;
   const auto link2joint = model_.frames[frameId].placement;
 
-  pinocchio::SE3Tpl<S> link_pose;
-  link_pose.translation({pose[0], pose[1], pose[2]});
-  link_pose.rotation(
-      Quaternion<S> {pose[3], pose[4], pose[5], pose[6]}.toRotationMatrix());
-
+  const pinocchio::SE3Tpl<S> link_pose {pose.q, pose.p};
   const pinocchio::SE3Tpl<S> joint_pose = link_pose * link2joint.inverse();
   VectorX<S> q = qposUser2Pinocchio(q_init);  // pinocchio::neutral(model);
   const VectorX<S> qmin = qposUser2Pinocchio(q_min);

@@ -34,19 +34,11 @@ R"doc(
 
 static const char *__doc_mplib_toIsometry =
 R"doc(
-Converts a pose_vec [px, py, pz, qw, qx, qy, qz] to an Eigen::Isometry3 matrix)doc";
+)doc";
 
 static const char *__doc_mplib_toIsometry_2 =
 R"doc(
 )doc";
-
-static const char *__doc_mplib_toIsometry_3 =
-R"doc(
-)doc";
-
-static const char *__doc_mplib_toPoseVec =
-R"doc(
-Converts an Eigen::Isometry3 matrix to a pose_vec [px, py, pz, qw, qx, qy, qz])doc";
 
 static const char *__doc_mplib_toSE3 =
 R"doc(

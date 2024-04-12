@@ -45,11 +45,15 @@ Construct an attached body for a specified link.
 
 static const char *__doc_mplib_AttachedBodyTpl_getAttachedArticulation =
 R"doc(
-Gets the articulation this body is attached to)doc";
+Gets the articulation that this body is attached to)doc";
+
+static const char *__doc_mplib_AttachedBodyTpl_getAttachedLinkGlobalPose =
+R"doc(
+Gets the global pose of the articulation link that this body is attached to)doc";
 
 static const char *__doc_mplib_AttachedBodyTpl_getAttachedLinkId =
 R"doc(
-Gets the articulation this body is attached to)doc";
+Gets the articulation link id that this body is attached to)doc";
 
 static const char *__doc_mplib_AttachedBodyTpl_getGlobalPose =
 R"doc(
@@ -84,6 +88,9 @@ R"doc(
 Updates the global pose of the attached object using current state)doc";
 
 /* ----- Begin of custom docstring section ----- */
+
+static const char *__doc_mplib_AttachedBodyTpl_pose =
+R"doc(The attached pose (relative pose from attached link to object))doc";
 
 /* ----- End of custom docstring section ----- */
 

@@ -6,6 +6,8 @@ import typing
 
 import numpy
 
+import mplib.pymp
+
 __all__ = ["PinocchioModel"]
 M = typing.TypeVar("M", bound=int)
 N = typing.TypeVar("N", bound=int)
@@ -52,9 +54,7 @@ class PinocchioModel:
     def compute_IK_CLIK(
         self,
         index: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        pose: mplib.pymp.Pose,
         q_init: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         mask: list[bool] = [],
         eps: float = 1e-05,
@@ -73,7 +73,7 @@ class PinocchioModel:
 
         :param index: index of the link (in the order you passed to the constructor or
             the default order)
-        :param pose: desired pose of the link [x, y, z, qw, qx, qy, qz]
+        :param pose: desired pose of the link
         :param q_init: initial joint configuration
         :param mask: if the value at a given index is ``True``, the joint is *not* used
             in the IK
@@ -86,9 +86,7 @@ class PinocchioModel:
     def compute_IK_CLIK_JL(
         self,
         index: int,
-        pose: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
+        pose: mplib.pymp.Pose,
         q_init: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         q_min: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
         q_max: numpy.ndarray[tuple[M, typing.Literal[1]], numpy.dtype[numpy.float64]],
@@ -109,7 +107,7 @@ class PinocchioModel:
 
         :param index: index of the link (in the order you passed to the constructor or
             the default order)
-        :param pose: desired pose of the link [x, y, z, qw, qx, qy, qz]
+        :param pose: desired pose of the link
         :param q_init: initial joint configuration
         :param q_min: minimum joint configuration
         :param q_max: maximum joint configuration
@@ -320,17 +318,13 @@ class PinocchioModel:
             to the constructor or the default order
         :return: name of the links
         """
-    def get_link_pose(
-        self, index: int
-    ) -> numpy.ndarray[
-        tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-    ]:
+    def get_link_pose(self, index: int) -> mplib.pymp.Pose:
         """
-        Get the pose of the given link.
+        Get the pose of the given link in robot's base (root) frame.
 
         :param index: index of the link (in the order you passed to the constructor or
             the default order)
-        :return: pose of the link [x, y, z, qw, qx, qy, qz]
+        :return: pose of the link in robot's base (root) frame.
         """
     def get_random_configuration(
         self,

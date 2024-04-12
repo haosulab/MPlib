@@ -129,12 +129,6 @@ Update the collision objects of the FCL model.
 
 :param link_poses: list of link poses in the order of the link order)doc";
 
-static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_updateCollisionObjects_2 =
-R"doc(
-Update the collision objects of the FCL model.
-
-:param link_poses: list of link poses in the order of the link order)doc";
-
 /* ----- Begin of custom docstring section ----- */
 
 /* ----- End of custom docstring section ----- */

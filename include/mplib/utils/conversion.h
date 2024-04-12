@@ -9,14 +9,6 @@
 
 namespace mplib {
 
-/// Converts an Eigen::Isometry3 matrix to a pose_vec [px, py, pz, qw, qx, qy, qz]
-template <typename S>
-Vector7<S> toPoseVec(const Isometry3<S> &pose);
-
-/// Converts a pose_vec [px, py, pz, qw, qx, qy, qz] to an Eigen::Isometry3 matrix
-template <typename S>
-Isometry3<S> toIsometry(const Vector7<S> &pose_vec);
-
 template <typename S>
 Isometry3<S> toIsometry(const pinocchio::SE3Tpl<S> &T);
 
@@ -37,8 +29,6 @@ pinocchio::InertiaTpl<S> convertInertial(const urdf::InertialSharedPtr &Y);
 
 // Explicit Template Instantiation Declaration =========================================
 #define DECLARE_TEMPLATE_CONVERSION(S)                                       \
-  extern template Vector7<S> toPoseVec<S>(const Isometry3<S> &pose);         \
-  extern template Isometry3<S> toIsometry<S>(const Vector7<S> &pose_vec);    \
   extern template Isometry3<S> toIsometry<S>(const pinocchio::SE3Tpl<S> &T); \
   extern template Isometry3<S> toIsometry<S>(const urdf::Pose &M);           \
   extern template pinocchio::SE3Tpl<S> toSE3<S>(const Isometry3<S> &T);      \

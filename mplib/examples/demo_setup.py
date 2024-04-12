@@ -4,6 +4,7 @@ import sapien.core as sapien
 from sapien.utils.viewer import Viewer
 
 import mplib
+from mplib import Pose
 
 
 class DemoSetup:
@@ -160,12 +161,12 @@ class DemoSetup:
     def close_gripper(self):
         self.set_gripper(0)
 
-    def move_to_pose_with_RRTConnect(self, pose):
+    def move_to_pose_with_RRTConnect(self, pose: Pose):
         """
         Plan and follow a path to a pose using RRTConnect
 
         Args:
-            pose: [x, y, z, qx, qy, qz, qw]
+            pose: mplib.Pose
         """
         # result is a dictionary with keys 'status', 'time', 'position', 'velocity',
         # 'acceleration', 'duration'

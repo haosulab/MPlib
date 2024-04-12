@@ -126,11 +126,11 @@ class TestPinocchioModel(unittest.TestCase):
             self.model.compute_forward_kinematics(qpos - perturbation)
             pose_minus = self.model.get_link_pose(link_idx)
 
-            position_diff = pose_plus[:3] - pose_minus[:3]
+            position_diff = pose_plus.get_p() - pose_minus.get_p()
             jacobian[:3, i] = position_diff / (2 * epsilon)
 
-            orientation_plus = pose_plus[3:]
-            orientation_minus = pose_minus[3:]
+            orientation_plus = pose_plus.get_q()
+            orientation_minus = pose_minus.get_q()
             # get the difference quaternion
             orientation_diff = qmult(orientation_plus, qinverse(orientation_minus))
             # get the axis-angle representation
@@ -138,7 +138,7 @@ class TestPinocchioModel(unittest.TestCase):
             jacobian[3:, i] = angle / (2 * epsilon) * axis
 
             self.model.compute_forward_kinematics(qpos)
-            curr_pos = self.model.get_link_pose(link_idx)[:3]
+            curr_pos = self.model.get_link_pose(link_idx).get_p()
             speed_due_to_rotation = np.cross(jacobian[3:, i], curr_pos)
             jacobian[:3, i] -= speed_due_to_rotation
 

@@ -9,6 +9,7 @@
 
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
+#include "mplib/utils/pose.h"
 
 namespace mplib::kinematics::kdl {
 
@@ -30,19 +31,18 @@ class KDLModelTpl {
   const std::string &getTreeRootName() const { return tree_root_name_; }
 
   std::tuple<VectorX<S>, int> chainIKLMA(size_t index, const VectorX<S> &q0,
-                                         const Vector7<S> &pose) const;
+                                         const Pose<S> &pose) const;
 
   std::tuple<VectorX<S>, int> chainIKNR(size_t index, const VectorX<S> &q0,
-                                        const Vector7<S> &pose) const;
+                                        const Pose<S> &pose) const;
 
   std::tuple<VectorX<S>, int> chainIKNRJL(size_t index, const VectorX<S> &q0,
-                                          const Vector7<S> &pose,
-                                          const VectorX<S> &q_min,
+                                          const Pose<S> &pose, const VectorX<S> &q_min,
                                           const VectorX<S> &q_max) const;
 
   std::tuple<VectorX<S>, int> TreeIKNRJL(const std::vector<std::string> endpoints,
                                          const VectorX<S> &q0,
-                                         const std::vector<Vector7<S>> &poses,
+                                         const std::vector<Pose<S>> &poses,
                                          const VectorX<S> &q_min,
                                          const VectorX<S> &q_max) const;
 

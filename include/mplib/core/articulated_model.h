@@ -9,7 +9,7 @@
 #include "mplib/kinematics/types.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/types.h"
-#include "mplib/utils/conversion.h"
+#include "mplib/utils/pose.h"
 
 namespace mplib {
 
@@ -66,6 +66,7 @@ class ArticulatedModelTpl {
    * @param verbose: print debug information. Default: ``false``.
    * @return: a unique_ptr to ArticulatedModel
    */
+  // TODO(merge): remove pair (link name is not needed)
   static std::unique_ptr<ArticulatedModelTpl<S>> createFromURDFString(
       const std::string &urdf_string, const std::string &srdf_string,
       const std::vector<std::pair<std::string, collision_detection::FCLObjectPtr<S>>>
@@ -176,7 +177,7 @@ class ArticulatedModelTpl {
   const VectorX<S> &getQpos() const { return current_qpos_; }
 
   /**
-   * Let the planner know the current joint positions.
+   * Set the current joint positions and update all collision links in the ``FCLModel``.
    *
    * @param qpos: current qpos of all active joints or just the move group joints
    * @param full: whether to set the full qpos or just the move group qpos.
@@ -186,18 +187,21 @@ class ArticulatedModelTpl {
   void setQpos(const VectorX<S> &qpos, bool full = false);
 
   /**
-   * Get the base pose of the robot.
+   * Get the base (root) pose of the robot.
    *
-   * @return: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
+   * @return: base pose of the robot
    */
-  Vector7<S> getBasePose() const { return toPoseVec<S>(base_pose_); }
+  Pose<S> getBasePose() const { return Pose<S>(base_pose_); }
 
   /**
-   * Set the base pose of the robot.
+   * Set the base pose of the robot and update all collision links in the ``FCLModel``.
    *
-   * @param pose: base pose of the robot in [x, y, z, qw, qx, qy, qz] format
+   * @param pose: base pose of the robot
    */
-  void setBasePose(const Vector7<S> &pose);
+  void setBasePose(const Pose<S> &pose) {
+    base_pose_ = pose.toIsometry();
+    setQpos(current_qpos_, true);  // update all collision links in the fcl_model_
+  }
 
   /**
    * Update the SRDF file to disable self-collisions.

@@ -95,18 +95,18 @@ void build_pyplanning_world(py::module &pymp) {
            DOC(mplib, PlanningWorldTpl, attachObject, 2))
       .def("attach_object",
            py::overload_cast<const std::string &, const std::string &, int,
-                             const Vector7<S> &, const std::vector<std::string> &>(
+                             const Pose<S> &, const std::vector<std::string> &>(
                &PlanningWorld::attachObject),
            py::arg("name"), py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
            py::arg("touch_links"), DOC(mplib, PlanningWorldTpl, attachObject, 3))
       .def("attach_object",
            py::overload_cast<const std::string &, const std::string &, int,
-                             const Vector7<S> &>(&PlanningWorld::attachObject),
+                             const Pose<S> &>(&PlanningWorld::attachObject),
            py::arg("name"), py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
            DOC(mplib, PlanningWorldTpl, attachObject, 4))
       .def("attach_object",
            py::overload_cast<const std::string &, const CollisionGeometryPtr &,
-                             const std::string &, int, const Vector7<S> &,
+                             const std::string &, int, const Pose<S> &,
                              const std::vector<std::string> &>(
                &PlanningWorld::attachObject),
            py::arg("name"), py::arg("p_geom"), py::arg("art_name"), py::arg("link_id"),
@@ -114,7 +114,7 @@ void build_pyplanning_world(py::module &pymp) {
            DOC(mplib, PlanningWorldTpl, attachObject, 5))
       .def("attach_object",
            py::overload_cast<const std::string &, const CollisionGeometryPtr &,
-                             const std::string &, int, const Vector7<S> &>(
+                             const std::string &, int, const Pose<S> &>(
                &PlanningWorld::attachObject),
            py::arg("name"), py::arg("p_geom"), py::arg("art_name"), py::arg("link_id"),
            py::arg("pose"), DOC(mplib, PlanningWorldTpl, attachObject, 6))

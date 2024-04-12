@@ -5,7 +5,6 @@
 #include "mplib/collision_detection/collision_matrix.h"
 #include "mplib/collision_detection/fcl/fcl_utils.h"
 #include "mplib/macros/assert.h"
-#include "mplib/utils/conversion.h"
 
 namespace mplib {
 
@@ -94,9 +93,9 @@ template <typename S>
 void PlanningWorldTpl<S>::addNormalObject(const std::string &name,
                                           const CollisionObjectPtr &collision_object) {
   addNormalObject(name, std::make_shared<FCLObject>(
-                            name, collision_object->getTransform(),
+                            name, Pose<S>(collision_object->getTransform()),
                             std::vector<CollisionObjectPtr> {collision_object},
-                            std::vector<Isometry3<S>> {Isometry3<S>::Identity()}));
+                            std::vector<Pose<S>> {Pose<S>()}));
 }
 
 template <typename S>
@@ -126,10 +125,9 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
                                        const std::vector<std::string> &touch_links) {
   const auto T_world_obj = normal_object_map_.at(name)->pose;
-  const auto T_world_link = toIsometry(
-      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(
-          link_id));
-  attachObject(name, art_name, link_id, toPoseVec(T_world_link.inverse() * T_world_obj),
+  const auto T_world_link =
+      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(link_id);
+  attachObject(name, art_name, link_id, Pose<S>(T_world_link.inverse() * T_world_obj),
                touch_links);
 }
 
@@ -137,23 +135,21 @@ template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id) {
   const auto T_world_obj = normal_object_map_.at(name)->pose;
-  const auto T_world_link = toIsometry(
-      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(
-          link_id));
-  attachObject(name, art_name, link_id,
-               toPoseVec(T_world_link.inverse() * T_world_obj));
+  const auto T_world_link =
+      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(link_id);
+  attachObject(name, art_name, link_id, Pose<S>(T_world_link.inverse() * T_world_obj));
 }
 
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
-                                       const Vector7<S> &pose,
+                                       const Pose<S> &pose,
                                        const std::vector<std::string> &touch_links) {
   auto obj = normal_object_map_.at(name);
   auto nh = attached_body_map_.extract(name);
   auto body =
       std::make_shared<AttachedBody>(name, obj, planned_articulation_map_.at(art_name),
-                                     link_id, toIsometry(pose), touch_links);
+                                     link_id, pose.toIsometry(), touch_links);
   if (!nh.empty()) {
     // Update acm_ to disallow collision between name and previous touch_links
     acm_->removeEntry(name, nh.mapped()->getTouchLinks());
@@ -168,11 +164,11 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
-                                       const Vector7<S> &pose) {
+                                       const Pose<S> &pose) {
   auto obj = normal_object_map_.at(name);
   auto nh = attached_body_map_.extract(name);
   auto body = std::make_shared<AttachedBody>(
-      name, obj, planned_articulation_map_.at(art_name), link_id, toIsometry(pose));
+      name, obj, planned_articulation_map_.at(art_name), link_id, pose.toIsometry());
   if (!nh.empty()) {
     body->setTouchLinks(nh.mapped()->getTouchLinks());
     nh.mapped() = body;
@@ -197,7 +193,7 @@ template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const CollisionGeometryPtr &p_geom,
                                        const std::string &art_name, int link_id,
-                                       const Vector7<S> &pose,
+                                       const Pose<S> &pose,
                                        const std::vector<std::string> &touch_links) {
   removeNormalObject(name);
   addNormalObject(name, std::make_shared<CollisionObject>(p_geom));
@@ -208,7 +204,7 @@ template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const CollisionGeometryPtr &p_geom,
                                        const std::string &art_name, int link_id,
-                                       const Vector7<S> &pose) {
+                                       const Pose<S> &pose) {
   removeNormalObject(name);
   addNormalObject(name, std::make_shared<CollisionObject>(p_geom));
   attachObject(name, art_name, link_id, pose);
@@ -216,7 +212,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
 
 template <typename S>
 void PlanningWorldTpl<S>::attachSphere(S radius, const std::string &art_name,
-                                       int link_id, const Vector7<S> &pose) {
+                                       int link_id, const Pose<S> &pose) {
   // FIXME: Use link_name to avoid changes
   auto name = art_name + "_" + std::to_string(link_id) + "_sphere";
   attachObject(name, std::make_shared<fcl::Sphere<S>>(radius), art_name, link_id, pose);
@@ -224,7 +220,7 @@ void PlanningWorldTpl<S>::attachSphere(S radius, const std::string &art_name,
 
 template <typename S>
 void PlanningWorldTpl<S>::attachBox(const Vector3<S> &size, const std::string &art_name,
-                                    int link_id, const Vector7<S> &pose) {
+                                    int link_id, const Pose<S> &pose) {
   // FIXME: Use link_name to avoid changes
   auto name = art_name + "_" + std::to_string(link_id) + "_box";
   attachObject(name, std::make_shared<fcl::Box<S>>(size), art_name, link_id, pose);
@@ -233,7 +229,7 @@ void PlanningWorldTpl<S>::attachBox(const Vector3<S> &size, const std::string &a
 template <typename S>
 void PlanningWorldTpl<S>::attachMesh(const std::string &mesh_path,
                                      const std::string &art_name, int link_id,
-                                     const Vector7<S> &pose) {
+                                     const Pose<S> &pose) {
   // TODO(merge): Convex mesh?
   // FIXME: Use link_name to avoid changes
   auto name = art_name + "_" + std::to_string(link_id) + "_mesh";
@@ -262,7 +258,7 @@ template <typename S>
 void PlanningWorldTpl<S>::printAttachedBodyPose() const {
   for (const auto &[name, body] : attached_body_map_)
     std::cout << name << " global pose:\n"
-              << body->getGlobalPose().matrix() << std::endl;
+              << Pose<S>(body->getGlobalPose()) << std::endl;
 }
 
 template <typename S>

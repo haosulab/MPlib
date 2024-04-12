@@ -6,6 +6,8 @@ import typing
 
 import numpy
 
+import mplib.pymp
+
 __all__ = [
     "BVHModel",
     "Box",
@@ -224,39 +226,34 @@ class CollisionObject:
     geometry.
     """
     def __init__(
-        self,
-        collision_geometry: CollisionGeometry,
-        position: numpy.ndarray[
-            tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ] = ...,
-        quaternion: numpy.ndarray[
-            tuple[typing.Literal[4], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ] = ...,
+        self, collision_geometry: CollisionGeometry, pose: mplib.pymp.Pose = ...
     ) -> None:
         """
         Construct a collision object with given collision geometry and transformation.
 
         :param collision_geometry: collision geometry of the object
-        :param position: position of the object
-        :param quaternion: quatenion of the object pose in [w, x, y, z] format
+        :param pose: pose of the object
         """
     def get_collision_geometry(self) -> CollisionGeometry: ...
-    def get_rotation(
-        self,
-    ) -> numpy.ndarray[
-        tuple[typing.Literal[3], typing.Literal[3]], numpy.dtype[numpy.float64]
-    ]: ...
-    def get_translation(
-        self,
-    ) -> numpy.ndarray[
-        tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
-    ]: ...
-    def set_transformation(
-        self,
-        arg0: numpy.ndarray[
-            tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-        ],
-    ) -> None: ...
+    def get_pose(self) -> mplib.pymp.Pose:
+        """
+        Gets the current pose of the collision object in world
+
+        :return: The current pose of the collision object
+        """
+    def set_pose(self, pose: mplib.pymp.Pose) -> None:
+        """
+        Sets the pose of the collision object in world
+
+        :param pose: New pose of the collision object
+        """
+    @property
+    def pose(self) -> mplib.pymp.Pose:
+        """
+        Pose of the collision object in world
+        """
+    @pose.setter
+    def pose(self, arg1: mplib.pymp.Pose) -> None: ...
 
 class CollisionRequest:
     def __init__(
@@ -627,14 +624,7 @@ class FCLModel:
 
         :param names: list of link names in the order that you want to set.
         """
-    def update_collision_objects(
-        self,
-        link_poses: list[
-            numpy.ndarray[
-                tuple[typing.Literal[7], typing.Literal[1]], numpy.dtype[numpy.float64]
-            ]
-        ],
-    ) -> None:
+    def update_collision_objects(self, link_poses: list[mplib.pymp.Pose]) -> None:
         """
         Update the collision objects of the FCL model.
 
@@ -652,9 +642,21 @@ class FCLObject:
     https://moveit.picknik.ai/main/api/html/structcollision__detection_1_1FCLObject.html
     https://moveit.picknik.ai/main/api/html/structcollision__detection_1_1World_1_1Object.html
     """
-    @staticmethod
     @typing.overload
-    def __init__(*args, **kwargs) -> None:
+    def __init__(self, name: str) -> None:
+        """
+        Construct a new FCLObject with the given name
+
+        :param name: name of this FCLObject
+        """
+    @typing.overload
+    def __init__(
+        self,
+        name: str,
+        pose: mplib.pymp.Pose,
+        shapes: list[CollisionObject],
+        shape_poses: list[mplib.pymp.Pose],
+    ) -> None:
         """
         Construct a new FCLObject with the given name and shapes
 
@@ -663,25 +665,18 @@ class FCLObject:
         :param shapes: all collision shapes as a vector of ``fcl::CollisionObjectPtr``
         :param shape_poses: relative poses from this FCLObject to each collision shape
         """
-    @typing.overload
-    def __init__(self, name: str) -> None:
-        """
-        Construct a new FCLObject with the given name
-
-        :param name: name of this FCLObject
-        """
     @property
     def name(self) -> str:
         """
         Name of this FCLObject
         """
     @property
-    def pose(self) -> ...:
+    def pose(self) -> mplib.pymp.Pose:
         """
         Pose of this FCLObject. All shapes are relative to this pose
         """
     @property
-    def shape_poses(self) -> list[..., 3, 1, ...]:
+    def shape_poses(self) -> list[mplib.pymp.Pose]:
         """
         Relative poses from this FCLObject to each collision shape
         """
