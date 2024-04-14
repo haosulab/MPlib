@@ -107,7 +107,7 @@ class SapienPlanningWorld(PlanningWorld):
 
             # Convert collision shapes at current global pose
             if (fcl_obj := self.convert_physx_component(component)) is not None:  # type: ignore
-                self.add_normal_object(fcl_obj)
+                self.add_object(fcl_obj)
 
     def update_from_simulation(self, *, update_attached_object: bool = True) -> None:
         """
@@ -139,9 +139,9 @@ class SapienPlanningWorld(PlanningWorld):
                         * entity.pose  # type: ignore
                     )
                 attached_body.update_pose()
-            elif fcl_obj := self.get_normal_object(object_name):
+            elif fcl_obj := self.get_object(object_name):
                 # Overwrite the object
-                self.add_normal_object(
+                self.add_object(
                     FCLObject(
                         object_name,
                         entity.pose,  # type: ignore

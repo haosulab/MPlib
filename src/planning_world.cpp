@@ -17,12 +17,11 @@ DEFINE_TEMPLATE_PLANNING_WORLD(double);
 template <typename S>
 PlanningWorldTpl<S>::PlanningWorldTpl(
     const std::vector<ArticulatedModelPtr> &articulations,
-    const std::vector<FCLObjectPtr> &normal_objects)
+    const std::vector<FCLObjectPtr> &objects)
     : acm_(std::make_shared<AllowedCollisionMatrix>()) {
   for (const auto &art : articulations)
     planned_articulation_map_[art->getName()] = articulation_map_[art->getName()] = art;
-  for (const auto &normal_object : normal_objects)
-    normal_object_map_[normal_object->name] = normal_object;
+  for (const auto &object : objects) object_map_[object->name] = object;
 }
 
 template <typename S>
@@ -71,16 +70,16 @@ void PlanningWorldTpl<S>::setArticulationPlanned(const std::string &name,
 }
 
 template <typename S>
-std::vector<std::string> PlanningWorldTpl<S>::getNormalObjectNames() const {
+std::vector<std::string> PlanningWorldTpl<S>::getObjectNames() const {
   std::vector<std::string> names;
-  for (const auto &pair : normal_object_map_) names.push_back(pair.first);
+  for (const auto &pair : object_map_) names.push_back(pair.first);
   return names;
 }
 
 template <typename S>
-void PlanningWorldTpl<S>::addNormalObject(const std::string &name,
-                                          const CollisionObjectPtr &collision_object) {
-  addNormalObject(
+void PlanningWorldTpl<S>::addObject(const std::string &name,
+                                    const CollisionObjectPtr &collision_object) {
+  addObject(
       std::make_shared<FCLObject>(name, Pose<S>(collision_object->getTransform()),
                                   std::vector<CollisionObjectPtr> {collision_object},
                                   std::vector<Pose<S>> {Pose<S>()}));
@@ -93,13 +92,13 @@ void PlanningWorldTpl<S>::addPointCloud(const std::string &name,
   auto tree = std::make_shared<octomap::OcTree>(resolution);
   for (const auto &row : vertices.rowwise())
     tree->updateNode(octomap::point3d(row(0), row(1), row(2)), true);
-  addNormalObject(
-      name, std::make_shared<CollisionObject>(std::make_shared<fcl::OcTree<S>>(tree)));
+  addObject(name,
+            std::make_shared<CollisionObject>(std::make_shared<fcl::OcTree<S>>(tree)));
 }
 
 template <typename S>
-bool PlanningWorldTpl<S>::removeNormalObject(const std::string &name) {
-  auto nh = normal_object_map_.extract(name);
+bool PlanningWorldTpl<S>::removeObject(const std::string &name) {
+  auto nh = object_map_.extract(name);
   if (nh.empty()) return false;
   attached_body_map_.erase(name);
   // Update acm_
@@ -112,7 +111,7 @@ template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
                                        const std::vector<std::string> &touch_links) {
-  const auto T_world_obj = normal_object_map_.at(name)->pose;
+  const auto T_world_obj = object_map_.at(name)->pose;
   const auto T_world_link =
       planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(link_id);
   attachObject(name, art_name, link_id, Pose<S>(T_world_link.inverse() * T_world_obj),
@@ -122,7 +121,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id) {
-  const auto T_world_obj = normal_object_map_.at(name)->pose;
+  const auto T_world_obj = object_map_.at(name)->pose;
   const auto T_world_link =
       planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(link_id);
   attachObject(name, art_name, link_id, Pose<S>(T_world_link.inverse() * T_world_obj));
@@ -133,7 +132,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
                                        const Pose<S> &pose,
                                        const std::vector<std::string> &touch_links) {
-  auto obj = normal_object_map_.at(name);
+  auto obj = object_map_.at(name);
   auto nh = attached_body_map_.extract(name);
   auto body =
       std::make_shared<AttachedBody>(name, obj, planned_articulation_map_.at(art_name),
@@ -153,7 +152,7 @@ template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
                                        const Pose<S> &pose) {
-  auto obj = normal_object_map_.at(name);
+  auto obj = object_map_.at(name);
   auto nh = attached_body_map_.extract(name);
   auto body = std::make_shared<AttachedBody>(
       name, obj, planned_articulation_map_.at(art_name), link_id, pose.toIsometry());
@@ -183,8 +182,8 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id,
                                        const Pose<S> &pose,
                                        const std::vector<std::string> &touch_links) {
-  removeNormalObject(name);
-  addNormalObject(name, std::make_shared<CollisionObject>(p_geom));
+  removeObject(name);
+  addObject(name, std::make_shared<CollisionObject>(p_geom));
   attachObject(name, art_name, link_id, pose, touch_links);
 }
 
@@ -193,8 +192,8 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const CollisionGeometryPtr &p_geom,
                                        const std::string &art_name, int link_id,
                                        const Pose<S> &pose) {
-  removeNormalObject(name);
-  addNormalObject(name, std::make_shared<CollisionObject>(p_geom));
+  removeObject(name);
+  addObject(name, std::make_shared<CollisionObject>(p_geom));
   attachObject(name, art_name, link_id, pose);
 }
 
@@ -229,7 +228,7 @@ void PlanningWorldTpl<S>::attachMesh(const std::string &mesh_path,
 template <typename S>
 bool PlanningWorldTpl<S>::detachObject(const std::string &name, bool also_remove) {
   if (also_remove) {
-    normal_object_map_.erase(name);
+    object_map_.erase(name);
     // Update acm_
     acm_->removeEntry(name);
     acm_->removeDefaultEntry(name);
@@ -387,7 +386,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
   for (const auto &[name, art] : articulation_map_)
     if (planned_articulation_map_.find(name) == planned_articulation_map_.end())
       unplanned_articulations.push_back(art);
-  for (const auto &[name, obj] : normal_object_map_)
+  for (const auto &[name, obj] : object_map_)
     if (attached_body_map_.find(name) == attached_body_map_.end())
       scene_objects.push_back(obj);
 
@@ -592,7 +591,7 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceOthers(
   for (const auto &[name, art] : articulation_map_)
     if (planned_articulation_map_.find(name) == planned_articulation_map_.end())
       unplanned_articulations.push_back(art);
-  for (const auto &[name, obj] : normal_object_map_)
+  for (const auto &[name, obj] : object_map_)
     if (attached_body_map_.find(name) == attached_body_map_.end())
       scene_objects.push_back(obj);
 

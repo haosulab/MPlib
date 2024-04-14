@@ -31,8 +31,7 @@ void build_pyplanning_world(py::module &pymp) {
   PyPlanningWorld
       .def(py::init<const std::vector<ArticulatedModelPtr> &,
                     const std::vector<FCLObjectPtr> &>(),
-           py::arg("articulations"),
-           py::arg("normal_objects") = std::vector<FCLObjectPtr>(),
+           py::arg("articulations"), py::arg("objects") = std::vector<FCLObjectPtr>(),
            DOC(mplib, PlanningWorldTpl, PlanningWorldTpl))
 
       .def("get_articulation_names", &PlanningWorld::getArticulationNames,
@@ -53,28 +52,28 @@ void build_pyplanning_world(py::module &pymp) {
            py::arg("name"), py::arg("planned"),
            DOC(mplib, PlanningWorldTpl, setArticulationPlanned))
 
-      .def("get_normal_object_names", &PlanningWorld::getNormalObjectNames,
-           DOC(mplib, PlanningWorldTpl, getNormalObjectNames))
-      .def("get_normal_object", &PlanningWorld::getNormalObject, py::arg("name"),
-           DOC(mplib, PlanningWorldTpl, getNormalObject))
-      .def("has_normal_object", &PlanningWorld::hasNormalObject, py::arg("name"),
-           DOC(mplib, PlanningWorldTpl, hasNormalObject))
-      .def("add_normal_object",
-           py::overload_cast<const FCLObjectPtr &>(&PlanningWorld::addNormalObject),
-           py::arg("fcl_obj"), DOC(mplib, PlanningWorldTpl, addNormalObject))
-      .def("add_normal_object",
+      .def("get_object_names", &PlanningWorld::getObjectNames,
+           DOC(mplib, PlanningWorldTpl, getObjectNames))
+      .def("get_object", &PlanningWorld::getObject, py::arg("name"),
+           DOC(mplib, PlanningWorldTpl, getObject))
+      .def("has_object", &PlanningWorld::hasObject, py::arg("name"),
+           DOC(mplib, PlanningWorldTpl, hasObject))
+      .def("add_object",
+           py::overload_cast<const FCLObjectPtr &>(&PlanningWorld::addObject),
+           py::arg("fcl_obj"), DOC(mplib, PlanningWorldTpl, addObject))
+      .def("add_object",
            py::overload_cast<const std::string &, const CollisionObjectPtr &>(
-               &PlanningWorld::addNormalObject),
+               &PlanningWorld::addObject),
            py::arg("name"), py::arg("collision_object"),
-           DOC(mplib, PlanningWorldTpl, addNormalObject, 2))
+           DOC(mplib, PlanningWorldTpl, addObject, 2))
       .def("add_point_cloud", &PlanningWorld::addPointCloud, py::arg("name"),
            py::arg("vertices"), py::arg("resolution") = 0.01,
            DOC(mplib, PlanningWorldTpl, addPointCloud))
-      .def("remove_normal_object", &PlanningWorld::removeNormalObject, py::arg("name"),
-           DOC(mplib, PlanningWorldTpl, removeNormalObject))
+      .def("remove_object", &PlanningWorld::removeObject, py::arg("name"),
+           DOC(mplib, PlanningWorldTpl, removeObject))
 
-      .def("is_normal_object_attached", &PlanningWorld::isNormalObjectAttached,
-           py::arg("name"), DOC(mplib, PlanningWorldTpl, isNormalObjectAttached))
+      .def("is_object_attached", &PlanningWorld::isObjectAttached, py::arg("name"),
+           DOC(mplib, PlanningWorldTpl, isObjectAttached))
       .def("get_attached_object", &PlanningWorld::getAttachedObject, py::arg("name"),
            DOC(mplib, PlanningWorldTpl, getAttachedObject))
       .def("attach_object",

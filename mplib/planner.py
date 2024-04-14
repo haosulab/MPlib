@@ -13,7 +13,7 @@ import toppra.constraint as constraint
 
 from mplib.pymp import ArticulatedModel, PlanningWorld, Pose
 from mplib.pymp.collision_detection import AllowedCollisionMatrix, WorldCollisionResult
-from mplib.pymp.collision_detection.fcl import CollisionGeometry
+from mplib.pymp.collision_detection.fcl import CollisionGeometry, FCLObject
 from mplib.pymp.planning import ompl
 
 
@@ -35,8 +35,8 @@ class Planner:
         user_joint_names: Sequence[str] = [],
         joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
         joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
+        objects: list[FCLObject] = [],  # noqa: B006
         verbose: bool = False,
-        **kwargs,
     ):
         # constructor ankor end
         """
@@ -59,6 +59,7 @@ class Planner:
             which should have the same length as ``self.move_group_joint_indices``
         :param joint_acc_limits: maximum joint accelerations for time parameterization,
             which should have the same length as ``self.move_group_joint_indices``
+        :param objects: list of FCLObject as non-articulated collision objects
         :param verbose: if True, print verbose logs for debugging
         """
         self.urdf = urdf
@@ -123,10 +124,7 @@ class Planner:
             t.startswith("JointModelR") for t in self.joint_types
         ] & (self.joint_limits[:, 1] - self.joint_limits[:, 0] > 2 * np.pi)
 
-        self.planning_world = PlanningWorld(
-            [self.robot],
-            kwargs.get("normal_objects", []),
-        )
+        self.planning_world = PlanningWorld([self.robot], objects)
         self.acm = self.planning_world.get_allowed_collision_matrix()
 
         if self.srdf == "":
@@ -506,10 +504,10 @@ class Planner:
         Removes the point cloud collision object with given name
 
         :param name: name of the point cloud collision object
-        :return: ``True`` if success, ``False`` if normal object with given name doesn't
-            exist
+        :return: ``True`` if success, ``False`` if the non-articulation object
+            with given name does not exist
         """
-        return self.planning_world.remove_normal_object(name)
+        return self.planning_world.remove_object(name)
 
     def update_attached_object(
         self,
@@ -627,9 +625,9 @@ class Planner:
         """
         self.robot.set_base_pose(pose)
 
-    def remove_normal_object(self, name) -> bool:
+    def remove_object(self, name) -> bool:
         """returns true if the object was removed, false if it was not found"""
-        return self.planning_world.remove_normal_object(name)
+        return self.planning_world.remove_object(name)
 
     def plan_qpos_to_qpos(
         self,

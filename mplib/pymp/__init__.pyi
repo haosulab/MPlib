@@ -326,13 +326,13 @@ class PlanningWorld:
     def __init__(
         self,
         articulations: list[ArticulatedModel],
-        normal_objects: list[collision_detection.fcl.FCLObject] = [],
+        objects: list[collision_detection.fcl.FCLObject] = [],
     ) -> None:
         """
-        Constructs a PlanningWorld with given (planned) articulations and normal objects
+        Constructs a PlanningWorld with given (planned) articulations and objects
 
         :param articulations: list of planned articulated models
-        :param normal_objects: list of collision objects that are not articulated
+        :param objects: list of non-articulated collision objects
         """
     def add_articulation(self, model: ArticulatedModel, planned: bool = False) -> None:
         """
@@ -342,19 +342,19 @@ class PlanningWorld:
         :param planned: whether the articulation is being planned
         """
     @typing.overload
-    def add_normal_object(self, fcl_obj: collision_detection.fcl.FCLObject) -> None:
+    def add_object(self, fcl_obj: collision_detection.fcl.FCLObject) -> None:
         """
-        Adds a normal object containing multiple collision objects (``FCLObjectPtr``) to
-        world
+        Adds an non-articulated object containing multiple collision objects
+        (``FCLObjectPtr``) to world
 
         :param fcl_obj: FCLObject to be added
         """
     @typing.overload
-    def add_normal_object(
+    def add_object(
         self, name: str, collision_object: collision_detection.fcl.CollisionObject
     ) -> None:
         """
-        Adds a normal object (``CollisionObjectPtr``) with given name to world
+        Adds an non-articulated object (``CollisionObjectPtr``) with given name to world
 
         :param name: name of the collision object
         :param collision_object: collision object to be added
@@ -407,68 +407,76 @@ class PlanningWorld:
         self, name: str, art_name: str, link_id: int, touch_links: list[str]
     ) -> None:
         """
-        Attaches existing normal object to specified link of articulation at its current
-        pose. If the object is currently attached, disallow collision between the object
-        and previous touch_links. Updates acm_ to allow collisions between attached
-        object and touch_links.
+        Attaches existing non-articulated object to specified link of articulation at
+        its current pose. If the object is currently attached, disallow collision
+        between the object and previous touch_links.
 
-        :param name: normal object name to attach
+        Updates acm_ to allow collisions between attached object and touch_links.
+
+        :param name: name of the non-articulated object to attach
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
         :param touch_links: link names that the attached object touches
-        :raises ValueError: if normal object with given name does not exist or if
-            planned articulation with given name does not exist
+        :raises ValueError: if non-articulated object with given name does not exist or
+            if planned articulation with given name does not exist
         """
     @typing.overload
     def attach_object(self, name: str, art_name: str, link_id: int) -> None:
         """
-        Attaches existing normal object to specified link of articulation at its current
-        pose. If the object is not currently attached, automatically sets touch_links as
-        the name of self links that collide with the object in the current state.
-        Updates acm_ to allow collisions between attached object and touch_links. If the
-        object is already attached, the touch_links of the attached object is preserved
-        and acm_ remains unchanged.
+        Attaches existing non-articulated object to specified link of articulation at
+        its current pose. If the object is not currently attached, automatically sets
+        touch_links as the name of self links that collide with the object in the
+        current state.
 
-        :param name: normal object name to attach
+        Updates acm_ to allow collisions between attached object and touch_links.
+
+        If the object is already attached, the touch_links of the attached object is
+        preserved and acm_ remains unchanged.
+
+        :param name: name of the non-articulated object to attach
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
-        :raises ValueError: if normal object with given name does not exist or if
-            planned articulation with given name does not exist
+        :raises ValueError: if non-articulated object with given name does not exist or
+            if planned articulation with given name does not exist
         """
     @typing.overload
     def attach_object(
         self, name: str, art_name: str, link_id: int, pose: Pose, touch_links: list[str]
     ) -> None:
         """
-        Attaches existing normal object to specified link of articulation at given pose.
-        If the object is currently attached, disallow collision between the object and
-        previous touch_links. Updates acm_ to allow collisions between attached object
-        and touch_links.
+        Attaches existing non-articulated object to specified link of articulation at
+        given pose. If the object is currently attached, disallow collision between the
+        object and previous touch_links.
 
-        :param name: normal object name to attach
+        Updates acm_ to allow collisions between attached object and touch_links.
+
+        :param name: name of the non-articulated object to attach
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
         :param pose: attached pose (relative pose from attached link to object)
         :param touch_links: link names that the attached object touches
-        :raises ValueError: if normal object with given name does not exist or if
-            planned articulation with given name does not exist
+        :raises ValueError: if non-articulated object with given name does not exist or
+            if planned articulation with given name does not exist
         """
     @typing.overload
     def attach_object(self, name: str, art_name: str, link_id: int, pose: Pose) -> None:
         """
-        Attaches existing normal object to specified link of articulation at given pose.
-        If the object is not currently attached, automatically sets touch_links as the
-        name of self links that collide with the object in the current state. Updates
-        acm_ to allow collisions between attached object and touch_links. If the object
-        is already attached, the touch_links of the attached object is preserved and
-        acm_ remains unchanged.
+        Attaches existing non-articulated object to specified link of articulation at
+        given pose. If the object is not currently attached, automatically sets
+        touch_links as the name of self links that collide with the object in the
+        current state.
 
-        :param name: normal object name to attach
+        Updates acm_ to allow collisions between attached object and touch_links.
+
+        If the object is already attached, the touch_links of the attached object is
+        preserved and acm_ remains unchanged.
+
+        :param name: name of the non-articulated object to attach
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
         :param pose: attached pose (relative pose from attached link to object)
-        :raises ValueError: if normal object with given name does not exist or if
-            planned articulation with given name does not exist
+        :raises ValueError: if non-articulated object with given name does not exist or
+            if planned articulation with given name does not exist
         """
     @typing.overload
     def attach_object(
@@ -482,10 +490,10 @@ class PlanningWorld:
     ) -> None:
         """
         Attaches given object (w/ p_geom) to specified link of articulation at given
-        pose. This is done by removing normal object and then adding and attaching
-        object. As a result, all previous acm_ entries with the object are removed
+        pose. This is done by removing the object and then adding and attaching object.
+        As a result, all previous acm_ entries with the object are removed
 
-        :param name: normal object name to attach
+        :param name: name of the non-articulated object to attach
         :param p_geom: pointer to a CollisionGeometry object
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
@@ -503,12 +511,12 @@ class PlanningWorld:
     ) -> None:
         """
         Attaches given object (w/ p_geom) to specified link of articulation at given
-        pose. This is done by removing normal object and then adding and attaching
-        object. As a result, all previous acm_ entries with the object are removed.
+        pose. This is done by removing the object and then adding and attaching object.
+        As a result, all previous acm_ entries with the object are removed.
         Automatically sets touch_links as the name of self links that collide with the
         object in the current state (auto touch_links).
 
-        :param name: normal object name to attach
+        :param name: name of the non-articulated object to attach
         :param p_geom: pointer to a CollisionGeometry object
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
@@ -556,7 +564,7 @@ class PlanningWorld:
         Detaches object with given name. Updates acm_ to disallow collision between the
         object and touch_links.
 
-        :param name: normal object name to detach
+        :param name: name of the non-articulated object to detach
         :param also_remove: whether to also remove object from world
         :return: ``True`` if success, ``False`` if the object with given name is not
             attached
@@ -611,16 +619,16 @@ class PlanningWorld:
         :param name: name of the attached body
         :return: the attached body with given name or ``None`` if not found.
         """
-    def get_normal_object(self, name: str) -> collision_detection.fcl.FCLObject:
+    def get_object(self, name: str) -> collision_detection.fcl.FCLObject:
         """
-        Gets the normal object (``FCLObjectPtr``) with given name
+        Gets the non-articulated object (``FCLObjectPtr``) with given name
 
-        :param name: name of the normal object
-        :return: the normal object with given name or ``None`` if not found.
+        :param name: name of the non-articulated object
+        :return: the object with given name or ``None`` if not found.
         """
-    def get_normal_object_names(self) -> list[str]:
+    def get_object_names(self) -> list[str]:
         """
-        Gets names of all normal objects in world (unordered)
+        Gets names of all objects in world (unordered)
         """
     def get_planned_articulations(self) -> list[ArticulatedModel]:
         """
@@ -633,11 +641,11 @@ class PlanningWorld:
         :param name: name of the articulated model
         :return: ``True`` if exists, ``False`` otherwise.
         """
-    def has_normal_object(self, name: str) -> bool:
+    def has_object(self, name: str) -> bool:
         """
-        Check whether the normal object with given name exists
+        Check whether the non-articulated object with given name exists
 
-        :param name: name of the normal object
+        :param name: name of the non-articulated object
         :return: ``True`` if exists, ``False`` otherwise.
         """
     def is_articulation_planned(self, name: str) -> bool:
@@ -647,11 +655,11 @@ class PlanningWorld:
         :param name: name of the articulated model
         :return: ``True`` if exists, ``False`` otherwise.
         """
-    def is_normal_object_attached(self, name: str) -> bool:
+    def is_object_attached(self, name: str) -> bool:
         """
-        Check whether normal object with given name is attached
+        Check whether the non-articulated object with given name is attached
 
-        :param name: name of the normal object
+        :param name: name of the non-articulated object
         :return: ``True`` if it is attached, ``False`` otherwise.
         """
     def print_attached_body_pose(self) -> None:
@@ -666,14 +674,14 @@ class PlanningWorld:
         :return: ``True`` if success, ``False`` if articulation with given name does not
             exist
         """
-    def remove_normal_object(self, name: str) -> bool:
+    def remove_object(self, name: str) -> bool:
         """
         Removes (and detaches) the collision object with given name if exists. Updates
         acm_
 
         :param name: name of the non-articulated collision object
-        :return: ``True`` if success, ``False`` if normal object with given name does
-            not exist
+        :return: ``True`` if success, ``False`` if the non-articulated object with given
+            name does not exist
         """
     def self_collide(
         self, request: collision_detection.fcl.CollisionRequest = ...
