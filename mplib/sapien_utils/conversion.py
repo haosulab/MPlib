@@ -78,7 +78,7 @@ class SapienPlanningWorld(PlanningWorld):
 
             # Convert all links to FCLObject
             collision_links = [
-                (link.name, fcl_obj)
+                fcl_obj
                 for link in articulation.links
                 if (fcl_obj := self.convert_physx_component(link)) is not None
             ]

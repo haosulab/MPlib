@@ -28,7 +28,7 @@ class ArticulatedModel:
     def create_from_urdf_string(
         urdf_string: str,
         srdf_string: str,
-        collision_links: list[tuple[str, collision_detection.fcl.FCLObject]],
+        collision_links: list[collision_detection.fcl.FCLObject],
         *,
         name: str = None,
         gravity: numpy.ndarray[
@@ -43,9 +43,9 @@ class ArticulatedModel:
 
         :param urdf_string: URDF string (without visual/collision elements for links)
         :param srdf_string: SRDF string (only disable_collisions element)
-        :param collision_links: Vector of collision link names and FCLObjectPtr. Format
-            is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
-            shape's local_pose.
+        :param collision_links: Vector of collision links as FCLObjectPtr. Format is:
+            ``[FCLObjectPtr, ...]``. The collision objects are at the shape's
+            local_pose.
         :param name: name of the articulated model to override URDF robot name attribute
         :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
         :param link_names: list of links that are considered for planning

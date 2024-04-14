@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 #include "mplib/collision_detection/types.h"
@@ -60,8 +59,8 @@ class ArticulatedModelTpl {
    *
    * @param urdf_string: URDF string (without visual/collision elements for links)
    * @param srdf_string: SRDF string (only disable_collisions element)
-   * @param collision_links: Vector of collision link names and FCLObjectPtr.
-   *    Format is: ``[(link_name, FCLObjectPtr), ...]``.
+   * @param collision_links: Vector of collision links as FCLObjectPtr.
+   *    Format is: ``[FCLObjectPtr, ...]``.
    *    The collision objects are at the shape's local_pose.
    * @param name: name of the articulated model to override URDF robot name attribute
    * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
@@ -70,11 +69,9 @@ class ArticulatedModelTpl {
    * @param verbose: print debug information. Default: ``false``.
    * @return: a unique_ptr to ArticulatedModel
    */
-  // TODO(merge): remove pair (link name is not needed)
   static std::unique_ptr<ArticulatedModelTpl<S>> createFromURDFString(
       const std::string &urdf_string, const std::string &srdf_string,
-      const std::vector<std::pair<std::string, collision_detection::FCLObjectPtr<S>>>
-          &collision_links,
+      const std::vector<collision_detection::FCLObjectPtr<S>> &collision_links,
       const std::string_view name = std::string_view {},
       const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
       const std::vector<std::string> &link_names = {},

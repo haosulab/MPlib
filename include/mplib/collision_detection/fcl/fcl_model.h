@@ -54,16 +54,15 @@ class FCLModelTpl {
    * Constructs a FCLModel from URDF string and collision links
    *
    * @param urdf_string: URDF string (without visual/collision elements for links)
-   * @param collision_links: Vector of collision link names and FCLObjectPtr.
-   *    Format is: ``[(link_name, FCLObjectPtr), ...]``.
+   * @param collision_links: Vector of collision links as FCLObjectPtr.
+   *    Format is: ``[FCLObjectPtr, ...]``.
    *    The collision objects are at the shape's local_pose.
    * @param verbose: print debug information. Default: ``false``.
    * @return: a unique_ptr to FCLModel
    */
   static std::unique_ptr<FCLModelTpl<S>> createFromURDFString(
       const std::string &urdf_string,
-      const std::vector<std::pair<std::string, FCLObjectPtr<S>>> &collision_links,
-      bool verbose = false);
+      const std::vector<FCLObjectPtr<S>> &collision_links, bool verbose = false);
 
   /**
    * Get name of the articulated model.

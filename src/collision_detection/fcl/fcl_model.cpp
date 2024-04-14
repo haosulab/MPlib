@@ -42,16 +42,15 @@ FCLModelTpl<S>::FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdf_model,
 
 template <typename S>
 std::unique_ptr<FCLModelTpl<S>> FCLModelTpl<S>::createFromURDFString(
-    const std::string &urdf_string,
-    const std::vector<std::pair<std::string, FCLObjectPtr<S>>> &collision_links,
+    const std::string &urdf_string, const std::vector<FCLObjectPtr<S>> &collision_links,
     bool verbose) {
   auto urdf = urdf::parseURDF(urdf_string);
   // package_dir is not needed since urdf_string contains no visual/collision elements
   auto fcl_model = std::make_unique<FCLModelTpl<S>>(urdf, "", verbose, false);
 
-  for (const auto &[link_name, collision_obj] : collision_links) {
+  for (const auto &collision_obj : collision_links) {
     fcl_model->collision_objects_.push_back(collision_obj);
-    fcl_model->collision_link_names_.push_back(link_name);
+    fcl_model->collision_link_names_.push_back(collision_obj->name);
   }
 
   // TODO: this should not be needed after switching to FCLObject

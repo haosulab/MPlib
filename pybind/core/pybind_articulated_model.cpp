@@ -1,7 +1,6 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 #include <pybind11/eigen.h>
@@ -46,9 +45,8 @@ void build_pyarticulated_model(py::module &pymp) {
       .def_static(
           "create_from_urdf_string",
           [](const std::string &urdf_string, const std::string &srdf_string,
-             const std::vector<std::pair<std::string, FCLObjectPtr>> &collision_links,
-             const char *name, const Vector3<S> &gravity,
-             const std::vector<std::string> &link_names,
+             const std::vector<FCLObjectPtr> &collision_links, const char *name,
+             const Vector3<S> &gravity, const std::vector<std::string> &link_names,
              const std::vector<std::string> &joint_names, bool verbose) {
             std::shared_ptr<ArticulatedModel> articulation =
                 ArticulatedModel::createFromURDFString(

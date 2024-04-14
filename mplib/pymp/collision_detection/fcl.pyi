@@ -555,18 +555,15 @@ class FCLModel:
     """
     @staticmethod
     def create_from_urdf_string(
-        urdf_string: str,
-        collision_links: list[tuple[str, ...]],
-        *,
-        verbose: bool = False,
+        urdf_string: str, collision_links: list[...], *, verbose: bool = False
     ) -> FCLModel:
         """
         Constructs a FCLModel from URDF string and collision links
 
         :param urdf_string: URDF string (without visual/collision elements for links)
-        :param collision_links: Vector of collision link names and FCLObjectPtr. Format
-            is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
-            shape's local_pose.
+        :param collision_links: Vector of collision links as FCLObjectPtr. Format is:
+            ``[FCLObjectPtr, ...]``. The collision objects are at the shape's
+            local_pose.
         :param verbose: print debug information. Default: ``False``.
         :return: a unique_ptr to FCLModel
         """

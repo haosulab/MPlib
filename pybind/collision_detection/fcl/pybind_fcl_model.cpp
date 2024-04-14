@@ -31,9 +31,7 @@ void build_pyfcl_model(py::module &m) {
       .def_static(
           "create_from_urdf_string",
           [](const std::string &urdf_string,
-             const std::vector<std::pair<std::string, FCLObjectPtr<S>>>
-                 &collision_links,
-             bool verbose) {
+             const std::vector<FCLObjectPtr<S>> &collision_links, bool verbose) {
             std::shared_ptr<FCLModel> fcl_model =
                 FCLModel::createFromURDFString(urdf_string, collision_links, verbose);
             return fcl_model;
