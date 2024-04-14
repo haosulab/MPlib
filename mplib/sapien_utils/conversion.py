@@ -195,10 +195,13 @@ class SapienPlanningWorld(PlanningWorld):
                 # FCL Cylinder has z-axis along cylinder height
                 shape_poses[-1] *= Pose(q=euler2quat(0, np.pi / 2, 0))
             elif isinstance(shape, PhysxCollisionShapePlane):
-                raise NotImplementedError(
-                    "Support for Plane collision is not implemented yet in mplib, "
-                    "need fcl::Plane"
-                )
+                # PhysxCollisionShapePlane are actually a halfspace
+                # https://nvidia-omniverse.github.io/PhysX/physx/5.3.1/docs/Geometry.html#planes
+                # PxPlane's Pose determines its normal and offert (normal is +x)
+                n = shape_poses[-1].to_transformation_matrix()[:3, 0]
+                d = n.dot(shape_poses[-1].p)
+                c_geom = Halfspace(n=n, d=d)
+                shape_poses[-1] = Pose()
             elif isinstance(shape, PhysxCollisionShapeSphere):
                 c_geom = Sphere(radius=shape.radius)
             elif isinstance(shape, PhysxCollisionShapeTriangleMesh):
