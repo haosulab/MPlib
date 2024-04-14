@@ -333,7 +333,7 @@ class Planner:
         :param state: all planned articulations qpos state. If None, use current qpos.
         :return: A list of collisions.
         """
-        return self.check_for_collision(self.planning_world.self_collide, state)
+        return self.check_for_collision(self.planning_world.check_self_collision, state)
 
     def check_for_env_collision(
         self,
@@ -345,7 +345,9 @@ class Planner:
         :param state: all planned articulations qpos state. If None, use current qpos.
         :return: A list of collisions.
         """
-        return self.check_for_collision(self.planning_world.collide_with_others, state)
+        return self.check_for_collision(
+            self.planning_world.check_robot_collision, state
+        )
 
     def IK(
         self,
@@ -399,7 +401,7 @@ class Planner:
             if success:
                 # check collision
                 self.planning_world.set_qpos_all(ik_qpos[move_joint_idx])
-                if len(collisions := self.planning_world.collide_full()) > 0:
+                if len(collisions := self.planning_world.check_collision()) > 0:
                     success = False
                     if verbose:
                         for collision in collisions:
@@ -677,7 +679,7 @@ class Planner:
         current_qpos = self.pad_move_group_qpos(current_qpos)
 
         self.robot.set_qpos(current_qpos, True)
-        collisions = self.planning_world.collide_full()
+        collisions = self.planning_world.check_collision()
         if len(collisions) > 0:
             print("Invalid start state!")
             for collision in collisions:
@@ -924,7 +926,7 @@ class Planner:
 
             within_joint_limit = check_joint_limit(current_qpos)
             self.planning_world.set_qpos_all(current_qpos[move_joint_idx])
-            collide = self.planning_world.collide()
+            collide = self.planning_world.is_state_colliding()
 
             if np.linalg.norm(delta_twist) < 1e-4 or collide or not within_joint_limit:
                 return {"status": "screw plan failed"}

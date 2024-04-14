@@ -64,11 +64,11 @@ void build_pyfcl_model(py::module &m) {
            py::arg("link_poses"),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, updateCollisionObjects))
 
-      .def("collide", &FCLModel::collide, py::arg("request") = CollisionRequest(),
-           DOC(mplib, collision_detection, fcl, FCLModelTpl, collide))
-      .def("collide_full", &FCLModel::collideFull,
+      .def("is_state_colliding", &FCLModel::isStateColliding,
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, isStateColliding))
+      .def("check_self_collision", &FCLModel::checkSelfCollision,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, collision_detection, fcl, FCLModelTpl, collideFull));
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkSelfCollision));
 }
 
 }  // namespace mplib::collision_detection::fcl

@@ -21,11 +21,13 @@ MPLIB_CLASS_TEMPLATE_FORWARD(PlanningWorldTpl);
  * Planning world for collision checking
  *
  * Mimicking MoveIt2's ``planning_scene::PlanningScene``,
- * ``collision_detection::World``, ``moveit::core::RobotState``
+ * ``collision_detection::World``, ``moveit::core::RobotState``,
+ * ``collision_detection::CollisionEnv``
  *
  * https://moveit.picknik.ai/main/api/html/classplanning__scene_1_1PlanningScene.html
  * https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1World.html
  * https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1RobotState.html
+ * https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1CollisionEnv.html
  */
 template <typename S>
 class PlanningWorldTpl {
@@ -372,80 +374,98 @@ class PlanningWorldTpl {
   /// @brief Get the current allowed collision matrix
   AllowedCollisionMatrixPtr getAllowedCollisionMatrix() const { return acm_; }
 
-  // TODO(merge): rename collision/distance function name to align with MoveIt2
   /**
-   * Check full collision and return only a boolean indicating collision
+   * Check if the current state is in collision (with the environment or self
+   * collision).
    *
-   * @param request: collision request params.
    * @return: ``true`` if collision exists
    */
-  bool collide(const CollisionRequest &request = CollisionRequest()) const {
-    return collideFull(request).size() > 0;
+  bool isStateColliding() const {
+    return checkCollision(CollisionRequest()).size() > 0;
   }
 
   /**
-   * Check self collision (including planned articulation self-collision,
+   * Check for self collision (including planned articulation self-collision,
    * planned articulation-attach collision, attach-attach collision)
    *
    * @param request: collision request params.
-   * @return: List of WorldCollisionResult objects
+   * @return: List of ``WorldCollisionResult`` objects
    */
-  std::vector<WorldCollisionResult> selfCollide(
+  std::vector<WorldCollisionResult> checkSelfCollision(
       const CollisionRequest &request = CollisionRequest()) const;
+
   /**
-   * Check collision with other scene bodies (planned articulations with
+   * Check collision with other scene bodies in the world (planned articulations with
    * attached objects collide against unplanned articulations and scene objects)
    *
    * @param request: collision request params.
-   * @return: List of WorldCollisionResult objects
+   * @return: List of ``WorldCollisionResult`` objects
    */
-  std::vector<WorldCollisionResult> collideWithOthers(
+  std::vector<WorldCollisionResult> checkRobotCollision(
       const CollisionRequest &request = CollisionRequest()) const;
 
   /**
-   * Check full collision (calls selfCollide() and collideWithOthers())
+   * Check full collision (calls ``checkSelfCollision()`` and ``checkRobotCollision()``)
    *
    * @param request: collision request params.
-   * @return: List of WorldCollisionResult objects
+   * @return: List of ``WorldCollisionResult`` objects
    */
-  std::vector<WorldCollisionResult> collideFull(
+  std::vector<WorldCollisionResult> checkCollision(
       const CollisionRequest &request = CollisionRequest()) const;
 
   /**
-   * Returns the minimum distance-to-collision in current state
+   * The minimum distance to self-collision given the robot in current state.
+   * Calls ``distanceSelf()``.
    *
-   * @param request: distance request params.
-   * @return: minimum distance-to-collision
+   * @return: minimum distance-to-self-collision
    */
-  S distance(const DistanceRequest &request = DistanceRequest()) const {
-    return distanceFull().min_distance;
-  }
+  S distanceToSelfCollision() const { return distanceSelf().min_distance; }
 
   /**
-   * Get the min distance to self-collision given the robot in current state
+   * Get the minimum distance to self-collision given the robot in current state
    *
    * @param request: distance request params.
-   * @return: a WorldDistanceResult object
+   * @return: a ``WorldDistanceResult`` object
    */
   WorldDistanceResult distanceSelf(
       const DistanceRequest &request = DistanceRequest()) const;
 
   /**
-   * Compute the min distance between a robot and the world
+   * The distance between the robot model at current state to the nearest collision
+   * (ignoring self-collisions). Calls ``distanceRobot()``.
+   *
+   * @return: minimum distance-to-robot-collision
+   */
+  S distanceToRobotCollision() const { return distanceRobot().min_distance; }
+
+  /**
+   * Compute the minimum distance-to-collision between a robot and the world
    *
    * @param request: distance request params.
-   * @return: a WorldDistanceResult object
+   * @return: a ``WorldDistanceResult`` object
    */
-  WorldDistanceResult distanceOthers(
+  WorldDistanceResult distanceRobot(
       const DistanceRequest &request = DistanceRequest()) const;
 
   /**
-   * Compute the min distance to collision (calls distanceSelf() and distanceOthers())
+   * Compute the minimum distance-to-all-collision. Calls ``distance()``.
+   *
+   * Note that this is different from MoveIt2's
+   * ``planning_scene::PlanningScene::distanceToCollision()`` where self-collisions are
+   * ignored.
+   *
+   * @return: minimum distance-to-all-collision
+   */
+  S distanceToCollision() const { return distance().min_distance; }
+
+  /**
+   * Compute the minimum distance-to-all-collision (calls ``distanceSelf()`` and
+   * ``distanceRobot()``)
    *
    * @param request: distance request params.
-   * @return: a WorldDistanceResult object
+   * @return: a ``WorldDistanceResult`` object
    */
-  WorldDistanceResult distanceFull(
+  WorldDistanceResult distance(
       const DistanceRequest &request = DistanceRequest()) const;
 
  private:

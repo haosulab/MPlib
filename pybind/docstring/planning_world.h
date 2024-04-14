@@ -28,11 +28,13 @@ static const char *__doc_mplib_PlanningWorldTpl =
 R"doc(Planning world for collision checking
 
 Mimicking MoveIt2's ``planning_scene::PlanningScene``,
-``collision_detection::World``, ``moveit::core::RobotState``
+``collision_detection::World``, ``moveit::core::RobotState``,
+``collision_detection::CollisionEnv``
 
 https://moveit.picknik.ai/main/api/html/classplanning__scene_1_1PlanningScene.html
 https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1World.html
-https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1RobotState.html)doc";
+https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1RobotState.html
+https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1CollisionEnv.html)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_PlanningWorldTpl =
 R"doc(
@@ -192,27 +194,29 @@ Attaches given sphere to specified link of articulation (auto touch_links)
 :param link_id: index of the link of the planned articulation to attach to
 :param pose: attached pose (relative pose from attached link to object))doc";
 
-static const char *__doc_mplib_PlanningWorldTpl_collide =
+static const char *__doc_mplib_PlanningWorldTpl_checkCollision =
 R"doc(
-Check full collision and return only a boolean indicating collision
+Check full collision (calls ``checkSelfCollision()`` and
+``checkRobotCollision()``)
 
 :param request: collision request params.
-:return: ``True`` if collision exists)doc";
+:return: List of ``WorldCollisionResult`` objects)doc";
 
-static const char *__doc_mplib_PlanningWorldTpl_collideFull =
+static const char *__doc_mplib_PlanningWorldTpl_checkRobotCollision =
 R"doc(
-Check full collision (calls selfCollide() and collideWithOthers())
+Check collision with other scene bodies in the world (planned articulations with
+attached objects collide against unplanned articulations and scene objects)
 
 :param request: collision request params.
-:return: List of WorldCollisionResult objects)doc";
+:return: List of ``WorldCollisionResult`` objects)doc";
 
-static const char *__doc_mplib_PlanningWorldTpl_collideWithOthers =
+static const char *__doc_mplib_PlanningWorldTpl_checkSelfCollision =
 R"doc(
-Check collision with other scene bodies (planned articulations with attached
-objects collide against unplanned articulations and scene objects)
+Check for self collision (including planned articulation self-collision, planned
+articulation-attach collision, attach-attach collision)
 
 :param request: collision request params.
-:return: List of WorldCollisionResult objects)doc";
+:return: List of ``WorldCollisionResult`` objects)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_detachObject =
 R"doc(
@@ -226,32 +230,49 @@ object and touch_links.
 
 static const char *__doc_mplib_PlanningWorldTpl_distance =
 R"doc(
-Returns the minimum distance-to-collision in current state
+Compute the minimum distance-to-all-collision (calls ``distanceSelf()`` and
+``distanceRobot()``)
 
 :param request: distance request params.
-:return: minimum distance-to-collision)doc";
+:return: a ``WorldDistanceResult`` object)doc";
 
-static const char *__doc_mplib_PlanningWorldTpl_distanceFull =
+static const char *__doc_mplib_PlanningWorldTpl_distanceRobot =
 R"doc(
-Compute the min distance to collision (calls distanceSelf() and
-distanceOthers())
+Compute the minimum distance-to-collision between a robot and the world
 
 :param request: distance request params.
-:return: a WorldDistanceResult object)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_distanceOthers =
-R"doc(
-Compute the min distance between a robot and the world
-
-:param request: distance request params.
-:return: a WorldDistanceResult object)doc";
+:return: a ``WorldDistanceResult`` object)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_distanceSelf =
 R"doc(
-Get the min distance to self-collision given the robot in current state
+Get the minimum distance to self-collision given the robot in current state
 
 :param request: distance request params.
-:return: a WorldDistanceResult object)doc";
+:return: a ``WorldDistanceResult`` object)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_distanceToCollision =
+R"doc(
+Compute the minimum distance-to-all-collision. Calls ``distance()``.
+
+Note that this is different from MoveIt2's
+``planning_scene::PlanningScene::distanceToCollision()`` where self-collisions
+are ignored.
+
+:return: minimum distance-to-collision)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_distanceToRobotCollision =
+R"doc(
+The distance between the robot model at current state to the nearest collision
+(ignoring self-collisions). Calls ``distanceRobot()``.
+
+:return: minimum distance-to-collision)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_distanceToSelfCollision =
+R"doc(
+The minimum distance to self-collision given the robot in current state. Calls
+``distanceSelf()``.
+
+:return: minimum distance-to-collision)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_getAllowedCollisionMatrix =
 R"doc(
@@ -318,6 +339,13 @@ Check whether the non-articulated object with given name is attached
 :param name: name of the non-articulated object
 :return: ``True`` if it is attached, ``False`` otherwise.)doc";
 
+static const char *__doc_mplib_PlanningWorldTpl_isStateColliding =
+R"doc(
+Check if the current state is in collision (with the environment or self
+collision).
+
+:return: ``True`` if collision exists)doc";
+
 static const char *__doc_mplib_PlanningWorldTpl_printAttachedBodyPose =
 R"doc(
 Prints global pose of all attached bodies)doc";
@@ -338,14 +366,6 @@ acm_
 :param name: name of the non-articulated collision object
 :return: ``True`` if success, ``False`` if the non-articulated object with given
     name does not exist)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_selfCollide =
-R"doc(
-Check self collision (including planned articulation self-collision, planned
-articulation-attach collision, attach-attach collision)
-
-:param request: collision request params.
-:return: List of WorldCollisionResult objects)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_setArticulationPlanned =
 R"doc(

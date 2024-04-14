@@ -49,14 +49,7 @@ Construct an FCL model from URDF and SRDF files.
     ``False``.
 :param verbose: print debug information. Default: ``False``.)doc";
 
-static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_collide =
-R"doc(
-Perform self-collision checking.
-
-:param request: collision request
-:return: ``True`` if any collision pair collides and ``False`` otherwise.)doc";
-
-static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_collideFull =
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkSelfCollision =
 R"doc(
 Perform self-collision checking and returns all found collisions.
 
@@ -105,6 +98,12 @@ Get name of the articulated model.
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_getUserLinkNames =
 R"doc(
 )doc";
+
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_isStateColliding =
+R"doc(
+Perform self-collision checking.
+
+:return: ``True`` if any collision pair collides and ``False`` otherwise.)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_printCollisionPairs =
 R"doc(

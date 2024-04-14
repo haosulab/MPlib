@@ -136,11 +136,9 @@ class FCLModelTpl {
   /**
    * Perform self-collision checking.
    *
-   * @param request: collision request
    * @return: ``true`` if any collision pair collides and ``false`` otherwise.
    */
-  bool collide(
-      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
+  bool isStateColliding() const;
 
   /**
    * Perform self-collision checking and returns all found collisions.
@@ -148,9 +146,8 @@ class FCLModelTpl {
    * @param request: collision request
    * @return: list of CollisionResult for each collision pair
    */
-  std::vector<fcl::CollisionResult<S>> collideFull(
-      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>(
-          1, false, 1, false, true, fcl::GJKSolverType::GST_INDEP, 1e-6)) const;
+  std::vector<fcl::CollisionResult<S>> checkSelfCollision(
+      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
 
  private:
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model,

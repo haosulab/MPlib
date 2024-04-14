@@ -134,29 +134,32 @@ void build_pyplanning_world(py::module &pymp) {
       .def("get_allowed_collision_matrix", &PlanningWorld::getAllowedCollisionMatrix,
            DOC(mplib, PlanningWorldTpl, getAllowedCollisionMatrix))
 
-      .def("collide", &PlanningWorld::collide, py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, collide))
-      .def("self_collide", &PlanningWorld::selfCollide,
+      .def("is_state_colliding", &PlanningWorld::isStateColliding,
+           DOC(mplib, PlanningWorldTpl, isStateColliding))
+      .def("check_self_collision", &PlanningWorld::checkSelfCollision,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, selfCollide))
-      .def("collide_with_others", &PlanningWorld::collideWithOthers,
+           DOC(mplib, PlanningWorldTpl, checkSelfCollision))
+      .def("check_robot_collision", &PlanningWorld::checkRobotCollision,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, collideWithOthers))
-      .def("collide_full", &PlanningWorld::collideFull,
+           DOC(mplib, PlanningWorldTpl, checkRobotCollision))
+      .def("check_collision", &PlanningWorld::checkCollision,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, collideFull))
+           DOC(mplib, PlanningWorldTpl, checkCollision))
 
-      .def("distance", &PlanningWorld::distance, py::arg("request") = DistanceRequest(),
-           DOC(mplib, PlanningWorldTpl, distance))
-      .def("self_distance", &PlanningWorld::distanceSelf,
+      .def("distance_to_self_collision", &PlanningWorld::distanceToSelfCollision,
+           DOC(mplib, PlanningWorldTpl, distanceToSelfCollision))
+      .def("distance_self", &PlanningWorld::distanceSelf,
            py::arg("request") = DistanceRequest(),
            DOC(mplib, PlanningWorldTpl, distanceSelf))
-      .def("distance_with_others", &PlanningWorld::distanceOthers,
+      .def("distance_to_robot_collision", &PlanningWorld::distanceToRobotCollision,
+           DOC(mplib, PlanningWorldTpl, distanceToRobotCollision))
+      .def("distance_robot", &PlanningWorld::distanceRobot,
            py::arg("request") = DistanceRequest(),
-           DOC(mplib, PlanningWorldTpl, distanceOthers))
-      .def("distance_full", &PlanningWorld::distanceFull,
-           py::arg("request") = DistanceRequest(),
-           DOC(mplib, PlanningWorldTpl, distanceFull));
+           DOC(mplib, PlanningWorldTpl, distanceRobot))
+      .def("distance_to_collision", &PlanningWorld::distanceToCollision,
+           DOC(mplib, PlanningWorldTpl, distanceToCollision))
+      .def("distance", &PlanningWorld::distance, py::arg("request") = DistanceRequest(),
+           DOC(mplib, PlanningWorldTpl, distance));
 }
 
 }  // namespace mplib

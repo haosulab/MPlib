@@ -236,7 +236,8 @@ void FCLModelTpl<S>::updateCollisionObjects(
 }
 
 template <typename S>
-bool FCLModelTpl<S>::collide(const fcl::CollisionRequest<S> &request) const {
+bool FCLModelTpl<S>::isStateColliding() const {
+  fcl::CollisionRequest<S> request = fcl::CollisionRequest<S>();
   fcl::CollisionResult<S> result;
   for (const auto &[i, j] : collision_pairs_) {
     collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
@@ -247,7 +248,7 @@ bool FCLModelTpl<S>::collide(const fcl::CollisionRequest<S> &request) const {
 }
 
 template <typename S>
-std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::collideFull(
+std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::checkSelfCollision(
     const fcl::CollisionRequest<S> &request) const {
   // TODO(merge): return only CollisionResult in collision?
   // Result will be returned via the collision result structure

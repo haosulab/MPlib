@@ -164,7 +164,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
     attached_body_map_[name] = body;
     // Set touch_links to the name of self links colliding with object currently
     std::vector<std::string> touch_links;
-    auto collisions = selfCollide();
+    auto collisions = checkSelfCollision();
     for (const auto &collision : collisions)
       if (collision.link_name1 == name)
         touch_links.push_back(collision.link_name2);
@@ -282,7 +282,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::filterCollisions(
 }
 
 template <typename S>
-std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSelfCollision(
     const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret;
   CollisionResult result;
@@ -297,7 +297,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
     auto col_pairs = fcl_model->getCollisionPairs();
 
     // Articulation self-collision
-    auto results = fcl_model->collideFull(request);
+    auto results = fcl_model->checkSelfCollision(request);
     for (size_t i = 0; i < results.size(); i++)
       if (results[i].isCollision()) {
         WorldCollisionResult tmp;
@@ -373,7 +373,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::selfCollide(
 }
 
 template <typename S>
-std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkRobotCollision(
     const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret;
   CollisionResult result;
@@ -471,10 +471,10 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideWithOthers(
 }
 
 template <typename S>
-std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::collideFull(
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkCollision(
     const CollisionRequest &request) const {
-  auto ret1 = selfCollide(request);
-  const auto ret2 = collideWithOthers(request);
+  auto ret1 = checkSelfCollision(request);
+  const auto ret2 = checkRobotCollision(request);
   ret1.insert(ret1.end(), ret2.begin(), ret2.end());
   return ret1;
 }
@@ -578,7 +578,7 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
 }
 
 template <typename S>
-WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceOthers(
+WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceRobot(
     const DistanceRequest &request) const {
   WorldDistanceResult ret;
   DistanceResult result;
@@ -680,10 +680,10 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceOthers(
 }
 
 template <typename S>
-WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceFull(
+WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distance(
     const DistanceRequest &request) const {
   const auto ret1 = distanceSelf(request);
-  const auto ret2 = distanceOthers(request);
+  const auto ret2 = distanceRobot(request);
   return ret1.min_distance < ret2.min_distance ? ret1 : ret2;
 }
 

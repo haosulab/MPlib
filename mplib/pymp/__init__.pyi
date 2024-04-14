@@ -317,11 +317,13 @@ class PlanningWorld:
     Planning world for collision checking
 
     Mimicking MoveIt2's ``planning_scene::PlanningScene``,
-    ``collision_detection::World``, ``moveit::core::RobotState``
+    ``collision_detection::World``, ``moveit::core::RobotState``,
+    ``collision_detection::CollisionEnv``
 
     https://moveit.picknik.ai/main/api/html/classplanning__scene_1_1PlanningScene.html
     https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1World.html
     https://moveit.picknik.ai/main/api/html/classmoveit_1_1core_1_1RobotState.html
+    https://moveit.picknik.ai/main/api/html/classcollision__detection_1_1CollisionEnv.html
     """
     def __init__(
         self,
@@ -533,31 +535,35 @@ class PlanningWorld:
         :param link_id: index of the link of the planned articulation to attach to
         :param pose: attached pose (relative pose from attached link to object)
         """
-    def collide(self, request: collision_detection.fcl.CollisionRequest = ...) -> bool:
-        """
-        Check full collision and return only a boolean indicating collision
-
-        :param request: collision request params.
-        :return: ``True`` if collision exists
-        """
-    def collide_full(
+    def check_collision(
         self, request: collision_detection.fcl.CollisionRequest = ...
     ) -> list[collision_detection.WorldCollisionResult]:
         """
-        Check full collision (calls selfCollide() and collideWithOthers())
+        Check full collision (calls ``checkSelfCollision()`` and
+        ``checkRobotCollision()``)
 
         :param request: collision request params.
-        :return: List of WorldCollisionResult objects
+        :return: List of ``WorldCollisionResult`` objects
         """
-    def collide_with_others(
+    def check_robot_collision(
         self, request: collision_detection.fcl.CollisionRequest = ...
     ) -> list[collision_detection.WorldCollisionResult]:
         """
-        Check collision with other scene bodies (planned articulations with attached
-        objects collide against unplanned articulations and scene objects)
+        Check collision with other scene bodies in the world (planned articulations with
+        attached objects collide against unplanned articulations and scene objects)
 
         :param request: collision request params.
-        :return: List of WorldCollisionResult objects
+        :return: List of ``WorldCollisionResult`` objects
+        """
+    def check_self_collision(
+        self, request: collision_detection.fcl.CollisionRequest = ...
+    ) -> list[collision_detection.WorldCollisionResult]:
+        """
+        Check for self collision (including planned articulation self-collision, planned
+        articulation-attach collision, attach-attach collision)
+
+        :param request: collision request params.
+        :return: List of ``WorldCollisionResult`` objects
         """
     def detach_object(self, name: str, also_remove: bool = False) -> bool:
         """
@@ -569,31 +575,57 @@ class PlanningWorld:
         :return: ``True`` if success, ``False`` if the object with given name is not
             attached
         """
-    def distance(self, request: collision_detection.fcl.DistanceRequest = ...) -> float:
+    def distance(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
         """
-        Returns the minimum distance-to-collision in current state
+        Compute the minimum distance-to-all-collision (calls ``distanceSelf()`` and
+        ``distanceRobot()``)
 
         :param request: distance request params.
+        :return: a ``WorldDistanceResult`` object
+        """
+    def distance_robot(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
+        """
+        Compute the minimum distance-to-collision between a robot and the world
+
+        :param request: distance request params.
+        :return: a ``WorldDistanceResult`` object
+        """
+    def distance_self(
+        self, request: collision_detection.fcl.DistanceRequest = ...
+    ) -> collision_detection.WorldDistanceResult:
+        """
+        Get the minimum distance to self-collision given the robot in current state
+
+        :param request: distance request params.
+        :return: a ``WorldDistanceResult`` object
+        """
+    def distance_to_collision(self) -> float:
+        """
+        Compute the minimum distance-to-all-collision. Calls ``distance()``.
+
+        Note that this is different from MoveIt2's
+        ``planning_scene::PlanningScene::distanceToCollision()`` where self-collisions
+        are ignored.
+
         :return: minimum distance-to-collision
         """
-    def distance_full(
-        self, request: collision_detection.fcl.DistanceRequest = ...
-    ) -> collision_detection.WorldDistanceResult:
+    def distance_to_robot_collision(self) -> float:
         """
-        Compute the min distance to collision (calls distanceSelf() and
-        distanceOthers())
+        The distance between the robot model at current state to the nearest collision
+        (ignoring self-collisions). Calls ``distanceRobot()``.
 
-        :param request: distance request params.
-        :return: a WorldDistanceResult object
+        :return: minimum distance-to-collision
         """
-    def distance_with_others(
-        self, request: collision_detection.fcl.DistanceRequest = ...
-    ) -> collision_detection.WorldDistanceResult:
+    def distance_to_self_collision(self) -> float:
         """
-        Compute the min distance between a robot and the world
+        The minimum distance to self-collision given the robot in current state. Calls
+        ``distanceSelf()``.
 
-        :param request: distance request params.
-        :return: a WorldDistanceResult object
+        :return: minimum distance-to-collision
         """
     def get_allowed_collision_matrix(
         self,
@@ -662,6 +694,13 @@ class PlanningWorld:
         :param name: name of the non-articulated object
         :return: ``True`` if it is attached, ``False`` otherwise.
         """
+    def is_state_colliding(self) -> bool:
+        """
+        Check if the current state is in collision (with the environment or self
+        collision).
+
+        :return: ``True`` if collision exists
+        """
     def print_attached_body_pose(self) -> None:
         """
         Prints global pose of all attached bodies
@@ -682,25 +721,6 @@ class PlanningWorld:
         :param name: name of the non-articulated collision object
         :return: ``True`` if success, ``False`` if the non-articulated object with given
             name does not exist
-        """
-    def self_collide(
-        self, request: collision_detection.fcl.CollisionRequest = ...
-    ) -> list[collision_detection.WorldCollisionResult]:
-        """
-        Check self collision (including planned articulation self-collision, planned
-        articulation-attach collision, attach-attach collision)
-
-        :param request: collision request params.
-        :return: List of WorldCollisionResult objects
-        """
-    def self_distance(
-        self, request: collision_detection.fcl.DistanceRequest = ...
-    ) -> collision_detection.WorldDistanceResult:
-        """
-        Get the min distance to self-collision given the robot in current state
-
-        :param request: distance request params.
-        :return: a WorldDistanceResult object
         """
     def set_articulation_planned(self, name: str, planned: bool) -> None:
         """
