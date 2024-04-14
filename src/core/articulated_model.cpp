@@ -17,6 +17,7 @@ DEFINE_TEMPLATE_ARTICULATED_MODEL(double);
 template <typename S>
 ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
                                             const std::string &srdf_filename,
+                                            const std::string_view name,
                                             const Vector3<S> &gravity,
                                             const std::vector<std::string> &link_names,
                                             const std::vector<std::string> &joint_names,
@@ -26,7 +27,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
       fcl_model_(std::make_shared<collision_detection::FCLModelTpl<S>>(
           urdf_filename, convex, verbose)),
       verbose_(verbose) {
-  name_ = fcl_model_->getName();
+  name_ = name.data() ? name : fcl_model_->getName();
   user_link_names_ =
       link_names.size() == 0 ? pinocchio_model_->getLinkNames(false) : link_names;
   user_joint_names_ =
@@ -45,7 +46,8 @@ std::unique_ptr<ArticulatedModelTpl<S>> ArticulatedModelTpl<S>::createFromURDFSt
     const std::string &urdf_string, const std::string &srdf_string,
     const std::vector<std::pair<std::string, collision_detection::FCLObjectPtr<S>>>
         &collision_links,
-    const Vector3<S> &gravity, const std::vector<std::string> &link_names,
+    const std::string_view name, const Vector3<S> &gravity,
+    const std::vector<std::string> &link_names,
     const std::vector<std::string> &joint_names, bool verbose) {
   auto articulation = std::make_unique<ArticulatedModelTpl<S>>(Secret());
 
@@ -55,7 +57,7 @@ std::unique_ptr<ArticulatedModelTpl<S>> ArticulatedModelTpl<S>::createFromURDFSt
   auto fcl_model = articulation->fcl_model_ =
       collision_detection::FCLModelTpl<S>::createFromURDFString(
           urdf_string, collision_links, verbose);
-  articulation->name_ = fcl_model->getName();
+  articulation->name_ = name.data() ? name : fcl_model->getName();
   articulation->verbose_ = verbose;
 
   auto user_link_names = articulation->user_link_names_ =

@@ -30,6 +30,7 @@ class ArticulatedModel:
         srdf_string: str,
         collision_links: list[tuple[str, collision_detection.fcl.FCLObject]],
         *,
+        name: str = None,
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
         ] = ...,
@@ -45,6 +46,7 @@ class ArticulatedModel:
         :param collision_links: Vector of collision link names and FCLObjectPtr. Format
             is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
             shape's local_pose.
+        :param name: name of the articulated model to override URDF robot name attribute
         :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
         :param link_names: list of links that are considered for planning
         :param joint_names: list of joints that are considered for planning
@@ -56,6 +58,7 @@ class ArticulatedModel:
         urdf_filename: str,
         srdf_filename: str,
         *,
+        name: str = None,
         gravity: numpy.ndarray[
             tuple[typing.Literal[3], typing.Literal[1]], numpy.dtype[numpy.float64]
         ] = ...,
@@ -70,6 +73,7 @@ class ArticulatedModel:
         :param urdf_filename: path to URDF file, can be relative to the current working
             directory
         :param srdf_filename: path to SRDF file, we use it to disable self-collisions
+        :param name: name of the articulated model to override URDF robot name attribute
         :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
         :param link_names: list of links that are considered for planning
         :param joint_names: list of joints that are considered for planning

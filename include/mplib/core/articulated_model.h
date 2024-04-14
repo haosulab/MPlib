@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -33,6 +34,7 @@ class ArticulatedModelTpl {
    * @param urdf_filename: path to URDF file, can be relative to the current working
    *  directory
    * @param srdf_filename: path to SRDF file, we use it to disable self-collisions
+   * @param name: name of the articulated model to override URDF robot name attribute
    * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
    * @param link_names: list of links that are considered for planning
    * @param joint_names: list of joints that are considered for planning
@@ -41,6 +43,7 @@ class ArticulatedModelTpl {
    */
   ArticulatedModelTpl(const std::string &urdf_filename,
                       const std::string &srdf_filename,
+                      const std::string_view name = std::string_view {},
                       const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
                       const std::vector<std::string> &link_names = {},
                       const std::vector<std::string> &joint_names = {},
@@ -60,6 +63,7 @@ class ArticulatedModelTpl {
    * @param collision_links: Vector of collision link names and FCLObjectPtr.
    *    Format is: ``[(link_name, FCLObjectPtr), ...]``.
    *    The collision objects are at the shape's local_pose.
+   * @param name: name of the articulated model to override URDF robot name attribute
    * @param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
    * @param link_names: list of links that are considered for planning
    * @param joint_names: list of joints that are considered for planning
@@ -71,6 +75,7 @@ class ArticulatedModelTpl {
       const std::string &urdf_string, const std::string &srdf_string,
       const std::vector<std::pair<std::string, collision_detection::FCLObjectPtr<S>>>
           &collision_links,
+      const std::string_view name = std::string_view {},
       const Vector3<S> &gravity = Vector3<S> {0, 0, -9.81},
       const std::vector<std::string> &link_names = {},
       const std::vector<std::string> &joint_names = {}, bool verbose = false);

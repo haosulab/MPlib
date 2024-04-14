@@ -35,6 +35,7 @@ Construct an articulated model from URDF and SRDF files.
 :param urdf_filename: path to URDF file, can be relative to the current working
     directory
 :param srdf_filename: path to SRDF file, we use it to disable self-collisions
+:param name: name of the articulated model to override URDF robot name attribute
 :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param link_names: list of links that are considered for planning
 :param joint_names: list of joints that are considered for planning
@@ -56,6 +57,7 @@ Constructs an ArticulatedModel from URDF/SRDF strings and collision links
 :param collision_links: Vector of collision link names and FCLObjectPtr. Format
     is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
     shape's local_pose.
+:param name: name of the articulated model to override URDF robot name attribute
 :param gravity: gravity vector, by default is ``[0, 0, -9.81]`` in -z axis
 :param link_names: list of links that are considered for planning
 :param joint_names: list of joints that are considered for planning
