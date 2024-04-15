@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import os
-import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from typing import Literal, Optional, Sequence
-from xml.dom import minidom
 
 import numpy as np
 import toppra as ta
@@ -12,7 +10,7 @@ import toppra.algorithm as algo
 import toppra.constraint as constraint
 
 from mplib.pymp import ArticulatedModel, PlanningWorld, Pose
-from mplib.pymp.collision_detection import AllowedCollisionMatrix, WorldCollisionResult
+from mplib.pymp.collision_detection import WorldCollisionResult
 from mplib.pymp.collision_detection.fcl import CollisionGeometry, FCLObject
 from mplib.pymp.planning import ompl
 from mplib.urdf_utils import generate_srdf, replace_urdf_package_keyword
