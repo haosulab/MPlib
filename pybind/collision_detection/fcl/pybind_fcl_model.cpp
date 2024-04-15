@@ -87,7 +87,15 @@ void build_pyfcl_model(py::module &m) {
       .def("distance_self", &FCLModel::distanceSelf,
            py::arg("request") = DistanceRequest(),
            py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
-           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceSelf));
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceSelf))
+      .def("distance_to_collision_with", &FCLModel::distanceToCollisionWith,
+           py::arg("other"),
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceToCollisionWith))
+      .def("distance_with", &FCLModel::distanceWith, py::arg("other"),
+           py::arg("request") = DistanceRequest(),
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceWith));
 }
 
 }  // namespace mplib::collision_detection::fcl

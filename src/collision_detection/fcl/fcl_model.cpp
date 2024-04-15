@@ -332,4 +332,30 @@ WorldDistanceResultTpl<S> FCLModelTpl<S>::distanceSelf(
   return ret;
 }
 
+template <typename S>
+WorldDistanceResultTpl<S> FCLModelTpl<S>::distanceWith(
+    const FCLModelTplPtr<S> &other, const DistanceRequest &request,
+    const AllowedCollisionMatrixPtr &acm) const {
+  WorldDistanceResult ret;
+  DistanceResult result;
+
+  for (const auto &col_obj : collision_objects_)
+    for (const auto &col_obj2 : other->collision_objects_)
+      if (auto type = acm->getAllowedCollision(col_obj->name, col_obj2->name);
+          !type || type == collision_detection::AllowedCollision::NEVER) {
+        result.clear();
+        collision_detection::fcl::distance(col_obj, col_obj2, request, result);
+        if (result.min_distance < ret.min_distance) {
+          ret.res = result;
+          ret.min_distance = result.min_distance;
+          ret.distance_type = "self_articulation";
+          ret.object_name1 = name_;
+          ret.object_name2 = other->name_;
+          ret.link_name1 = col_obj->name;
+          ret.link_name2 = col_obj2->name;
+        }
+      }
+  return ret;
+}
+
 }  // namespace mplib::collision_detection::fcl

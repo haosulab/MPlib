@@ -625,6 +625,20 @@ class FCLModel:
         :param acm: allowed collision matrix.
         :return: a ``WorldDistanceResult`` object
         """
+    def distance_to_collision_with(
+        self,
+        other: FCLModel,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> float:
+        """
+        The minimum distance to collision with another ``FCLModel`` given the robot in
+        current state, ignoring the distances between links that are allowed to always
+        collide (as specified by acm).
+
+        :param other: another ``FCLModel`` to get minimum distance-to-collision with
+        :param acm: allowed collision matrix.
+        :return: minimum distance-to-collision with the other ``FCLModel``
+        """
     def distance_to_self_collision(
         self, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
     ) -> float:
@@ -635,6 +649,22 @@ class FCLModel:
 
         :param acm: allowed collision matrix.
         :return: minimum distance-to-self-collision
+        """
+    def distance_with(
+        self,
+        other: FCLModel,
+        request: DistanceRequest = ...,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> mplib.pymp.collision_detection.WorldDistanceResult:
+        """
+        Get the minimum distance to collision with another ``FCLModel`` given the robot
+        in current state, ignoring the distances between links that are allowed to
+        always collide (as specified by acm).
+
+        :param other: another ``FCLModel`` to get minimum distance-to-collision with
+        :param request: distance request.
+        :param acm: allowed collision matrix.
+        :return: a ``WorldDistanceResult`` object
         """
     def get_collision_link_names(self) -> list[str]: ...
     def get_collision_objects(self) -> list[...]:

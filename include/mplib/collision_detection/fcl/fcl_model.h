@@ -217,6 +217,37 @@ class FCLModelTpl {
       const AllowedCollisionMatrixPtr &acm =
           std::make_shared<AllowedCollisionMatrix>()) const;
 
+  /**
+   * The minimum distance to collision with another ``FCLModel`` given the robot in
+   * current state, ignoring the distances between links that are allowed to always
+   * collide (as specified by acm).
+   *
+   * @param other: another ``FCLModel`` to get minimum distance-to-collision with
+   * @param acm: allowed collision matrix.
+   * @return: minimum distance-to-collision with the other ``FCLModel``
+   */
+  S distanceToCollisionWith(const FCLModelTplPtr<S> &other,
+                            const AllowedCollisionMatrixPtr &acm =
+                                std::make_shared<AllowedCollisionMatrix>()) const {
+    return distanceWith(other, DistanceRequest(), acm).min_distance;
+  }
+
+  /**
+   * Get the minimum distance to collision with another ``FCLModel`` given the robot in
+   * current state, ignoring the distances between links that are allowed to always
+   * collide (as specified by acm).
+   *
+   * @param other: another ``FCLModel`` to get minimum distance-to-collision with
+   * @param request: distance request.
+   * @param acm: allowed collision matrix.
+   * @return: a ``WorldDistanceResult`` object
+   */
+  WorldDistanceResult distanceWith(
+      const FCLModelTplPtr<S> &other,
+      const DistanceRequest &request = DistanceRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
+
  private:
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model,
             const std::string &package_dir_);

@@ -428,22 +428,9 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
     // Minimum distance among planned_articulation_map_
     for (const auto &[art_name2, art2] : planned_articulation_map_) {
       if (art_name == art_name2) continue;
-      for (const auto &col_obj : col_objs)
-        for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects())
-          if (auto type = acm_->getAllowedCollision(col_obj->name, col_obj2->name);
-              !type || type == collision_detection::AllowedCollision::NEVER) {
-            result.clear();
-            collision_detection::fcl::distance(col_obj, col_obj2, request, result);
-            if (result.min_distance < ret.min_distance) {
-              ret.res = result;
-              ret.min_distance = result.min_distance;
-              ret.distance_type = "self_articulation";
-              ret.object_name1 = art_name;
-              ret.object_name2 = art_name2;
-              ret.link_name1 = col_obj->name;
-              ret.link_name2 = col_obj2->name;
-            }
-          }
+      if (const auto &tmp = fcl_model->distanceWith(art2->getFCLModel(), request, acm_);
+          tmp.min_distance < ret.min_distance)
+        ret = tmp;
     }
 
     // Articulation minimum distance to attached_body_map_
@@ -515,22 +502,9 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceRobot(
 
     // Minimum distance to unplanned articulation
     for (const auto &art2 : unplanned_articulations)
-      for (const auto &col_obj : col_objs)
-        for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects())
-          if (auto type = acm_->getAllowedCollision(col_obj->name, col_obj2->name);
-              !type || type == collision_detection::AllowedCollision::NEVER) {
-            result.clear();
-            collision_detection::fcl::distance(col_obj, col_obj2, request, result);
-            if (result.min_distance < ret.min_distance) {
-              ret.res = result;
-              ret.min_distance = result.min_distance;
-              ret.distance_type = "articulation_articulation";
-              ret.object_name1 = art_name;
-              ret.object_name2 = art2->getName();
-              ret.link_name1 = col_obj->name;
-              ret.link_name2 = col_obj2->name;
-            }
-          }
+      if (const auto &tmp = fcl_model->distanceWith(art2->getFCLModel(), request, acm_);
+          tmp.min_distance < ret.min_distance)
+        ret = tmp;
 
     // Minimum distance to scene objects
     for (const auto &scene_obj : scene_objects)
