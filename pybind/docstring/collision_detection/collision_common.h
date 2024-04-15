@@ -26,6 +26,14 @@
 
 static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl = R"doc(Result of the collision checking.)doc";
 
+static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_WorldCollisionResultTpl =
+R"doc(
+Default constructor)doc";
+
+static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_WorldCollisionResultTpl_2 =
+R"doc(
+Constructor with all members)doc";
+
 static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_collision_type = R"doc(type of the collision)doc";
 
 static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_link_name1 = R"doc(link name of the first object in collision)doc";
@@ -39,6 +47,14 @@ static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_objec
 static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_res = R"doc(the fcl CollisionResult)doc";
 
 static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl = R"doc(Result of minimum distance-to-collision query.)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_WorldDistanceResultTpl =
+R"doc(
+Default constructor)doc";
+
+static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_WorldDistanceResultTpl_2 =
+R"doc(
+Constructor with all members)doc";
 
 static const char *__doc_mplib_collision_detection_WorldDistanceResultTpl_distance_type = R"doc(type of the distance result)doc";
 

@@ -205,6 +205,24 @@ class WorldCollisionResult:
     """
     Result of the collision checking.
     """
+    @typing.overload
+    def __init__(self) -> None:
+        """
+        Default constructor
+        """
+    @typing.overload
+    def __init__(
+        self,
+        res: ...,
+        collision_type: str,
+        object_name1: str,
+        object_name2: str,
+        link_name1: str,
+        link_name2: str,
+    ) -> None:
+        """
+        Constructor with all members
+        """
     @property
     def collision_type(self) -> str:
         """
@@ -240,6 +258,25 @@ class WorldDistanceResult:
     """
     Result of minimum distance-to-collision query.
     """
+    @typing.overload
+    def __init__(self) -> None:
+        """
+        Default constructor
+        """
+    @typing.overload
+    def __init__(
+        self,
+        res: ...,
+        min_distance: float,
+        distance_type: str,
+        object_name1: str,
+        object_name2: str,
+        link_name1: str,
+        link_name2: str,
+    ) -> None:
+        """
+        Constructor with all members
+        """
     @property
     def distance_type(self) -> str:
         """
