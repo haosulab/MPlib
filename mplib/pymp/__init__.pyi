@@ -394,7 +394,13 @@ class PlanningWorld:
         :param pose: attached pose (relative pose from attached link to object)
         """
     def attach_mesh(
-        self, mesh_path: str, art_name: str, link_id: int, pose: Pose
+        self,
+        mesh_path: str,
+        art_name: str,
+        link_id: int,
+        pose: Pose,
+        *,
+        convex: bool = False,
     ) -> None:
         """
         Attaches given mesh to specified link of articulation (auto touch_links)
@@ -403,6 +409,7 @@ class PlanningWorld:
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
         :param pose: attached pose (relative pose from attached link to object)
+        :param convex: whether to load mesh as a convex mesh. Default: ``False``.
         """
     @typing.overload
     def attach_object(

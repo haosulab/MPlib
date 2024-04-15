@@ -88,7 +88,8 @@ Attaches given mesh to specified link of articulation (auto touch_links)
 :param mesh_path: path to a mesh file
 :param art_name: name of the planned articulation to attach to
 :param link_id: index of the link of the planned articulation to attach to
-:param pose: attached pose (relative pose from attached link to object))doc";
+:param pose: attached pose (relative pose from attached link to object)
+:param convex: whether to load mesh as a convex mesh. Default: ``False``.)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_attachObject =
 R"doc(

@@ -342,9 +342,10 @@ class PlanningWorldTpl {
    * @param art_name: name of the planned articulation to attach to
    * @param link_id: index of the link of the planned articulation to attach to
    * @param pose: attached pose (relative pose from attached link to object)
+   * @param convex: whether to load mesh as a convex mesh. Default: ``false``.
    */
   void attachMesh(const std::string &mesh_path, const std::string &art_name,
-                  int link_id, const Pose<S> &pose);
+                  int link_id, const Pose<S> &pose, bool convex = false);
 
   /**
    * Detaches object with given name.

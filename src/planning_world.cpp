@@ -216,13 +216,19 @@ void PlanningWorldTpl<S>::attachBox(const Vector3<S> &size, const std::string &a
 template <typename S>
 void PlanningWorldTpl<S>::attachMesh(const std::string &mesh_path,
                                      const std::string &art_name, int link_id,
-                                     const Pose<S> &pose) {
-  // TODO(merge): Convex mesh?
+                                     const Pose<S> &pose, bool convex) {
   // FIXME: Use link_name to avoid changes
   auto name = art_name + "_" + std::to_string(link_id) + "_mesh";
-  attachObject(
-      name, collision_detection::fcl::loadMeshAsBVH<S>(mesh_path, Vector3<S> {1, 1, 1}),
-      art_name, link_id, pose);
+  if (convex)
+    attachObject(
+        name,
+        collision_detection::fcl::loadMeshAsConvex<S>(mesh_path, Vector3<S> {1, 1, 1}),
+        art_name, link_id, pose);
+  else
+    attachObject(
+        name,
+        collision_detection::fcl::loadMeshAsBVH<S>(mesh_path, Vector3<S> {1, 1, 1}),
+        art_name, link_id, pose);
 }
 
 template <typename S>

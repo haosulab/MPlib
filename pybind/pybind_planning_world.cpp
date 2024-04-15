@@ -119,8 +119,8 @@ void build_pyplanning_world(py::module &pymp) {
            py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
            DOC(mplib, PlanningWorldTpl, attachBox))
       .def("attach_mesh", &PlanningWorld::attachMesh, py::arg("mesh_path"),
-           py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
-           DOC(mplib, PlanningWorldTpl, attachMesh))
+           py::arg("art_name"), py::arg("link_id"), py::arg("pose"), py::kw_only(),
+           py::arg("convex") = false, DOC(mplib, PlanningWorldTpl, attachMesh))
       .def("detach_object", &PlanningWorld::detachObject, py::arg("name"),
            py::arg("also_remove") = false, DOC(mplib, PlanningWorldTpl, detachObject))
       .def("print_attached_body_pose", &PlanningWorld::printAttachedBodyPose,
