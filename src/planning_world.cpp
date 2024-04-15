@@ -293,23 +293,10 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSelfCollision(
   for (const auto &[art_name, art] : planned_articulation_map_) {
     auto fcl_model = art->getFCLModel();
     auto col_objs = fcl_model->getCollisionObjects();
-    auto col_link_names = fcl_model->getCollisionLinkNames();
-    auto col_pairs = fcl_model->getCollisionPairs();
 
     // Articulation self-collision
-    auto results = fcl_model->checkSelfCollision(request);
-    for (size_t i = 0; i < results.size(); i++)
-      if (results[i].isCollision()) {
-        WorldCollisionResult tmp;
-        auto x = col_pairs[i].first, y = col_pairs[i].second;
-        tmp.res = results[i];
-        tmp.collision_type = "self";
-        tmp.object_name1 = art_name;
-        tmp.object_name2 = art_name;
-        tmp.link_name1 = col_link_names[x];
-        tmp.link_name2 = col_link_names[y];
-        ret.push_back(tmp);
-      }
+    const auto results = fcl_model->checkSelfCollision(request);
+    ret.insert(ret.end(), results.begin(), results.end());
 
     // Collision among planned_articulation_map_
     for (const auto &[art_name2, art2] : planned_articulation_map_) {

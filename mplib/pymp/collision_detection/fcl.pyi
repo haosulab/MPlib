@@ -7,6 +7,7 @@ import typing
 import numpy
 
 import mplib.pymp
+import mplib.pymp.collision_detection
 
 __all__ = [
     "BVHModel",
@@ -579,19 +580,14 @@ class FCLModel:
             ``False``.
         :param verbose: print debug information. Default: ``False``.
         """
-    def collide(self, request: CollisionRequest = ...) -> bool:
+    def check_self_collision(
+        self, request: CollisionRequest = ...
+    ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
         """
-        Perform self-collision checking.
+        Check for self-collision in the current state and returns all found collisions.
 
         :param request: collision request
-        :return: ``True`` if any collision pair collides and ``False`` otherwise.
-        """
-    def collide_full(self, request: CollisionRequest = ...) -> list[CollisionResult]:
-        """
-        Perform self-collision checking and returns all found collisions.
-
-        :param request: collision request
-        :return: list of CollisionResult for each collision pair
+        :return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.
         """
     def get_collision_link_names(self) -> list[str]: ...
     def get_collision_objects(self) -> list[...]:
@@ -613,6 +609,12 @@ class FCLModel:
         Get name of the articulated model.
 
         :return: name of the articulated model
+        """
+    def is_state_colliding(self) -> bool:
+        """
+        Check if the current state is in self-collision
+
+        :return: ``True`` if any collision pair collides and ``False`` otherwise.
         """
     def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None:
         """

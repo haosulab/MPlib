@@ -10,6 +10,7 @@
 #include <urdf_model/types.h>
 #include <urdf_world/types.h>
 
+#include "mplib/collision_detection/collision_common.h"
 #include "mplib/collision_detection/fcl/collision_common.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/utils/pose.h"
@@ -26,6 +27,9 @@ MPLIB_CLASS_TEMPLATE_FORWARD(FCLModelTpl);
  */
 template <typename S>
 class FCLModelTpl {
+  // Common type alias
+  using WorldCollisionResult = WorldCollisionResultTpl<S>;
+
  public:
   /**
    * Construct an FCL model from URDF and SRDF files.
@@ -70,6 +74,13 @@ class FCLModelTpl {
    * @return: name of the articulated model
    */
   const std::string &getName() const { return name_; }
+
+  /**
+   * Set name of the articulated model.
+   *
+   * @param name: name of the articulated model
+   */
+  void setName(const std::string &name) { name_ = name; }
 
   /**
    * Get the collision objects of the FCL model.
@@ -134,19 +145,21 @@ class FCLModelTpl {
   void updateCollisionObjects(const std::vector<Pose<S>> &link_poses) const;
 
   /**
-   * Perform self-collision checking.
+   * Check if the current state is in self-collision
    *
    * @return: ``true`` if any collision pair collides and ``false`` otherwise.
    */
-  bool isStateColliding() const;
+  bool isStateColliding() const {
+    return checkSelfCollision(fcl::CollisionRequest<S>()).size() > 0;
+  }
 
   /**
-   * Perform self-collision checking and returns all found collisions.
+   * Check for self-collision in the current state and returns all found collisions.
    *
    * @param request: collision request
-   * @return: list of CollisionResult for each collision pair
+   * @return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.
    */
-  std::vector<fcl::CollisionResult<S>> checkSelfCollision(
+  std::vector<WorldCollisionResult> checkSelfCollision(
       const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
 
  private:

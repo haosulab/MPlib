@@ -28,6 +28,7 @@ ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
           urdf_filename, convex, verbose)),
       verbose_(verbose) {
   name_ = name.data() ? name : fcl_model_->getName();
+  fcl_model_->setName(name_);
   user_link_names_ =
       link_names.size() == 0 ? pinocchio_model_->getLinkNames(false) : link_names;
   user_joint_names_ =
@@ -57,6 +58,7 @@ std::unique_ptr<ArticulatedModelTpl<S>> ArticulatedModelTpl<S>::createFromURDFSt
       collision_detection::FCLModelTpl<S>::createFromURDFString(
           urdf_string, collision_links, verbose);
   articulation->name_ = name.data() ? name : fcl_model->getName();
+  fcl_model->setName(articulation->name_);
   articulation->verbose_ = verbose;
 
   auto user_link_names = articulation->user_link_names_ =

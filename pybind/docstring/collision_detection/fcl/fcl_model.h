@@ -51,10 +51,10 @@ Construct an FCL model from URDF and SRDF files.
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkSelfCollision =
 R"doc(
-Perform self-collision checking and returns all found collisions.
+Check for self-collision in the current state and returns all found collisions.
 
 :param request: collision request
-:return: list of CollisionResult for each collision pair)doc";
+:return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_createFromURDFString =
 R"doc(
@@ -101,7 +101,7 @@ R"doc(
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_isStateColliding =
 R"doc(
-Perform self-collision checking.
+Check if the current state is in self-collision
 
 :return: ``True`` if any collision pair collides and ``False`` otherwise.)doc";
 
@@ -127,6 +127,12 @@ R"doc(
 Set the link order of the FCL model.
 
 :param names: list of link names in the order that you want to set.)doc";
+
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_setName =
+R"doc(
+Set name of the articulated model.
+
+:param name: name of the articulated model)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_updateCollisionObjects =
 R"doc(

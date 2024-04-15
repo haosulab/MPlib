@@ -236,28 +236,25 @@ void FCLModelTpl<S>::updateCollisionObjects(
 }
 
 template <typename S>
-bool FCLModelTpl<S>::isStateColliding() const {
-  fcl::CollisionRequest<S> request = fcl::CollisionRequest<S>();
-  fcl::CollisionResult<S> result;
-  for (const auto &[i, j] : collision_pairs_) {
-    collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
-                                      request, result);
-    if (result.isCollision()) return true;
-  }
-  return false;
-}
-
-template <typename S>
-std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::checkSelfCollision(
+std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkSelfCollision(
     const fcl::CollisionRequest<S> &request) const {
-  // TODO(merge): return only CollisionResult in collision?
-  // Result will be returned via the collision result structure
-  std::vector<fcl::CollisionResult<S>> ret;
+  std::vector<WorldCollisionResult> ret;
+  fcl::CollisionResult<S> result;
+
   for (const auto &[i, j] : collision_pairs_) {
-    fcl::CollisionResult<S> result;
+    result.clear();
     collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
                                       request, result);
-    ret.push_back(result);
+    if (result.isCollision()) {
+      WorldCollisionResult tmp;
+      tmp.res = result;
+      tmp.collision_type = "self";
+      tmp.object_name1 = name_;
+      tmp.object_name2 = name_;
+      tmp.link_name1 = collision_link_names_[i];
+      tmp.link_name2 = collision_link_names_[j];
+      ret.push_back(tmp);
+    }
   }
   return ret;
 }
