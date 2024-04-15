@@ -51,25 +51,34 @@ Construct an FCL model from URDF and SRDF files.
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkCollisionWith =
 R"doc(
-Check for collision in the current state with another ``FCLModel``.
+Check for collision in the current state with another ``FCLModel``, ignoring the
+distances between links that are allowed to always collide (as specified by
+acm).
 
 :param other: another ``FCLModel`` to check collision with
+:param acm: allowed collision matrix.
 :param request: collision request
 :return: List of ``WorldCollisionResult`` objects. If empty, no collision.)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkCollisionWith_2 =
 R"doc(
-Check for collision in the current state with an ``FCLObject``.
+Check for collision in the current state with an ``FCLObject``, ignoring the
+distances between objects that are allowed to always collide (as specified by
+acm).
 
 :param object: an ``FCLObject`` to check collision with
+:param acm: allowed collision matrix.
 :param request: collision request
 :return: List of ``WorldCollisionResult`` objects. If empty, no collision.)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkSelfCollision =
 R"doc(
-Check for self-collision in the current state and returns all found collisions.
+Check for self-collision in the current state and returns all found collisions,
+ignoring the distances between links that are allowed to always collide (as
+specified by acm).
 
 :param request: collision request
+:param acm: allowed collision matrix.
 :return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_createFromURDFString =
@@ -178,8 +187,10 @@ R"doc(
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_isStateColliding =
 R"doc(
-Check if the current state is in self-collision
+Check if the current state is in self-collision, ignoring the distances between
+links that are allowed to always collide (as specified by acm).
 
+:param acm: allowed collision matrix.
 :return: ``True`` if any collision pair collides and ``False`` otherwise.)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_printCollisionPairs =

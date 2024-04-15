@@ -151,44 +151,63 @@ class FCLModelTpl {
   void updateCollisionObjects(const std::vector<Pose<S>> &link_poses) const;
 
   /**
-   * Check if the current state is in self-collision
+   * Check if the current state is in self-collision,
+   * ignoring the distances between links that are allowed to always collide (as
+   * specified by acm).
    *
+   * @param acm: allowed collision matrix.
    * @return: ``true`` if any collision pair collides and ``false`` otherwise.
    */
-  bool isStateColliding() const {
-    return checkSelfCollision(CollisionRequest()).size() > 0;
+  bool isStateColliding(const AllowedCollisionMatrixPtr &acm =
+                            std::make_shared<AllowedCollisionMatrix>()) const {
+    return checkSelfCollision(CollisionRequest(), acm).size() > 0;
   }
 
   /**
-   * Check for self-collision in the current state and returns all found collisions.
+   * Check for self-collision in the current state and returns all found collisions,
+   * ignoring the distances between links that are allowed to always collide (as
+   * specified by acm).
    *
    * @param request: collision request
+   * @param acm: allowed collision matrix.
    * @return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.
    */
   std::vector<WorldCollisionResult> checkSelfCollision(
-      const CollisionRequest &request = CollisionRequest()) const;
+      const CollisionRequest &request = CollisionRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
 
   /**
-   * Check for collision in the current state with another ``FCLModel``.
+   * Check for collision in the current state with another ``FCLModel``,
+   * ignoring the distances between links that are allowed to always
+   * collide (as specified by acm).
    *
    * @param other: another ``FCLModel`` to check collision with
+   * @param acm: allowed collision matrix.
    * @param request: collision request
    * @return: List of ``WorldCollisionResult`` objects. If empty, no collision.
    */
   std::vector<WorldCollisionResult> checkCollisionWith(
       const FCLModelTplPtr<S> &other,
-      const CollisionRequest &request = CollisionRequest()) const;
+      const CollisionRequest &request = CollisionRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
 
   /**
-   * Check for collision in the current state with an ``FCLObject``.
+   * Check for collision in the current state with an ``FCLObject``,
+   * ignoring the distances between objects that are allowed to always
+   * collide (as specified by acm).
    *
    * @param object: an ``FCLObject`` to check collision with
+   * @param acm: allowed collision matrix.
    * @param request: collision request
    * @return: List of ``WorldCollisionResult`` objects. If empty, no collision.
    */
   std::vector<WorldCollisionResult> checkCollisionWith(
       const FCLObjectPtr<S> &object,
-      const CollisionRequest &request = CollisionRequest()) const;
+      const CollisionRequest &request = CollisionRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
 
   /**
    * The minimum distance to self-collision given the robot in current state,

@@ -486,10 +486,6 @@ class PlanningWorldTpl {
     for (const auto &[name, attached_body] : attached_body_map_)
       attached_body->updatePose();
   }
-
-  /// @brief Filter collisions using acm_
-  std::vector<WorldCollisionResult> filterCollisions(
-      const std::vector<WorldCollisionResult> &collisions) const;
 };
 
 // Common Type Alias ===================================================================

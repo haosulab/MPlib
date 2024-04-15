@@ -582,33 +582,50 @@ class FCLModel:
         """
     @typing.overload
     def check_collision_with(
-        self, other: FCLModel, request: CollisionRequest = ...
+        self,
+        other: FCLModel,
+        request: CollisionRequest = ...,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
         """
-        Check for collision in the current state with another ``FCLModel``.
+        Check for collision in the current state with another ``FCLModel``, ignoring the
+        distances between links that are allowed to always collide (as specified by
+        acm).
 
         :param other: another ``FCLModel`` to check collision with
+        :param acm: allowed collision matrix.
         :param request: collision request
         :return: List of ``WorldCollisionResult`` objects. If empty, no collision.
         """
     @typing.overload
     def check_collision_with(
-        self, object: ..., request: CollisionRequest = ...
+        self,
+        object: ...,
+        request: CollisionRequest = ...,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
         """
-        Check for collision in the current state with an ``FCLObject``.
+        Check for collision in the current state with an ``FCLObject``, ignoring the
+        distances between objects that are allowed to always collide (as specified by
+        acm).
 
         :param object: an ``FCLObject`` to check collision with
+        :param acm: allowed collision matrix.
         :param request: collision request
         :return: List of ``WorldCollisionResult`` objects. If empty, no collision.
         """
     def check_self_collision(
-        self, request: CollisionRequest = ...
+        self,
+        request: CollisionRequest = ...,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
         """
-        Check for self-collision in the current state and returns all found collisions.
+        Check for self-collision in the current state and returns all found collisions,
+        ignoring the distances between links that are allowed to always collide (as
+        specified by acm).
 
         :param request: collision request
+        :param acm: allowed collision matrix.
         :return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.
         """
     def distance_self(
@@ -721,10 +738,14 @@ class FCLModel:
 
         :return: name of the articulated model
         """
-    def is_state_colliding(self) -> bool:
+    def is_state_colliding(
+        self, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
+    ) -> bool:
         """
-        Check if the current state is in self-collision
+        Check if the current state is in self-collision, ignoring the distances between
+        links that are allowed to always collide (as specified by acm).
 
+        :param acm: allowed collision matrix.
         :return: ``True`` if any collision pair collides and ``False`` otherwise.
         """
     def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None:

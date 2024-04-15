@@ -237,46 +237,25 @@ void FCLModelTpl<S>::updateCollisionObjects(
 
 template <typename S>
 std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkSelfCollision(
-    const CollisionRequest &request) const {
+    const CollisionRequest &request, const AllowedCollisionMatrixPtr &acm) const {
   std::vector<WorldCollisionResult> ret;
   CollisionResult result;
 
-  for (const auto &[i, j] : collision_pairs_) {
-    result.clear();
-    collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
-                                      request, result);
-    if (result.isCollision()) {
-      WorldCollisionResult tmp;
-      tmp.res = result;
-      tmp.collision_type = "self";
-      tmp.object_name1 = name_;
-      tmp.object_name2 = name_;
-      tmp.link_name1 = collision_link_names_[i];
-      tmp.link_name2 = collision_link_names_[j];
-      ret.push_back(tmp);
-    }
-  }
-  return ret;
-}
-
-template <typename S>
-std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
-    const FCLModelTplPtr<S> &other, const CollisionRequest &request) const {
-  std::vector<WorldCollisionResult> ret;
-  CollisionResult result;
-
-  for (const auto &col_obj : collision_objects_)
-    for (const auto &col_obj2 : other->collision_objects_) {
+  for (const auto &[i, j] : collision_pairs_)
+    if (auto type = acm->getAllowedCollision(collision_link_names_[i],
+                                             collision_link_names_[j]);
+        !type || type == collision_detection::AllowedCollision::NEVER) {
       result.clear();
-      collision_detection::fcl::collide(col_obj, col_obj2, request, result);
+      collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
+                                        request, result);
       if (result.isCollision()) {
         WorldCollisionResult tmp;
         tmp.res = result;
-        tmp.collision_type = "self_articulation";
+        tmp.collision_type = "self";
         tmp.object_name1 = name_;
-        tmp.object_name2 = other->name_;
-        tmp.link_name1 = col_obj->name;
-        tmp.link_name2 = col_obj2->name;
+        tmp.object_name2 = name_;
+        tmp.link_name1 = collision_link_names_[i];
+        tmp.link_name2 = collision_link_names_[j];
         ret.push_back(tmp);
       }
     }
@@ -285,24 +264,54 @@ std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
 
 template <typename S>
 std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
-    const FCLObjectPtr<S> &object, const CollisionRequest &request) const {
+    const FCLModelTplPtr<S> &other, const CollisionRequest &request,
+    const AllowedCollisionMatrixPtr &acm) const {
   std::vector<WorldCollisionResult> ret;
   CollisionResult result;
 
-  for (const auto &col_obj : collision_objects_) {
-    result.clear();
-    collision_detection::fcl::collide(col_obj, object, request, result);
-    if (result.isCollision()) {
-      WorldCollisionResult tmp;
-      tmp.res = result;
-      tmp.collision_type = "self_object";
-      tmp.object_name1 = name_;
-      tmp.object_name2 = object->name;
-      tmp.link_name1 = col_obj->name;
-      tmp.link_name2 = object->name;
-      ret.push_back(tmp);
+  for (const auto &col_obj : collision_objects_)
+    for (const auto &col_obj2 : other->collision_objects_)
+      if (auto type = acm->getAllowedCollision(col_obj->name, col_obj2->name);
+          !type || type == collision_detection::AllowedCollision::NEVER) {
+        result.clear();
+        collision_detection::fcl::collide(col_obj, col_obj2, request, result);
+        if (result.isCollision()) {
+          WorldCollisionResult tmp;
+          tmp.res = result;
+          tmp.collision_type = "self_articulation";
+          tmp.object_name1 = name_;
+          tmp.object_name2 = other->name_;
+          tmp.link_name1 = col_obj->name;
+          tmp.link_name2 = col_obj2->name;
+          ret.push_back(tmp);
+        }
+      }
+  return ret;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
+    const FCLObjectPtr<S> &object, const CollisionRequest &request,
+    const AllowedCollisionMatrixPtr &acm) const {
+  std::vector<WorldCollisionResult> ret;
+  CollisionResult result;
+
+  for (const auto &col_obj : collision_objects_)
+    if (auto type = acm->getAllowedCollision(col_obj->name, object->name);
+        !type || type == collision_detection::AllowedCollision::NEVER) {
+      result.clear();
+      collision_detection::fcl::collide(col_obj, object, request, result);
+      if (result.isCollision()) {
+        WorldCollisionResult tmp;
+        tmp.res = result;
+        tmp.collision_type = "self_object";
+        tmp.object_name1 = name_;
+        tmp.object_name2 = object->name;
+        tmp.link_name1 = col_obj->name;
+        tmp.link_name2 = object->name;
+        ret.push_back(tmp);
+      }
     }
-  }
   return ret;
 }
 

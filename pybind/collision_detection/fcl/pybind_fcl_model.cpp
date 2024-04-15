@@ -66,19 +66,25 @@ void build_pyfcl_model(py::module &m) {
            DOC(mplib, collision_detection, fcl, FCLModelTpl, updateCollisionObjects))
 
       .def("is_state_colliding", &FCLModel::isStateColliding,
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, isStateColliding))
       .def("check_self_collision", &FCLModel::checkSelfCollision,
            py::arg("request") = CollisionRequest(),
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, checkSelfCollision))
       .def("check_collision_with",
-           py::overload_cast<const FCLModelPtr &, const CollisionRequest &>(
+           py::overload_cast<const FCLModelPtr &, const CollisionRequest &,
+                             const AllowedCollisionMatrixPtr &>(
                &FCLModel::checkCollisionWith, py::const_),
            py::arg("other"), py::arg("request") = CollisionRequest(),
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, checkCollisionWith))
       .def("check_collision_with",
-           py::overload_cast<const FCLObjectPtr<S> &, const CollisionRequest &>(
+           py::overload_cast<const FCLObjectPtr<S> &, const CollisionRequest &,
+                             const AllowedCollisionMatrixPtr &>(
                &FCLModel::checkCollisionWith, py::const_),
            py::arg("object"), py::arg("request") = CollisionRequest(),
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, checkCollisionWith, 2))
 
       .def("distance_to_self_collision", &FCLModel::distanceToSelfCollision,
