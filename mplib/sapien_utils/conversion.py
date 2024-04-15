@@ -20,6 +20,12 @@ from transforms3d.euler import euler2quat
 
 from ..planner import Planner
 from ..pymp import ArticulatedModel, PlanningWorld, Pose
+from ..pymp.collision_detection import (
+    AllowedCollision,
+    AllowedCollisionMatrix,
+    WorldCollisionResult,
+    WorldDistanceResult,
+)
 from ..pymp.collision_detection.fcl import (
     Box,
     BVHModel,
@@ -27,6 +33,7 @@ from ..pymp.collision_detection.fcl import (
     CollisionObject,
     Convex,
     Cylinder,
+    FCLModel,
     FCLObject,
     Halfspace,
     Sphere,
@@ -38,7 +45,7 @@ from .srdf_exporter import export_srdf
 from .urdf_exporter import export_kinematic_chain_urdf
 
 
-# TODO(merge): link names?
+# TODO: link names?
 def convert_object_name(obj: PhysxArticulation | Entity) -> str:
     """
     Constructs a unique name for the corresponding mplib object.
@@ -161,6 +168,124 @@ class SapienPlanningWorld(PlanningWorld):
                     f"Entity {entity.name} not found in PlanningWorld! "
                     "The scene might have changed since last update."
                 )
+
+    def check_collision_between(
+        self,
+        obj_A: PhysxArticulation | Entity,
+        obj_B: PhysxArticulation | Entity,
+        *,
+        acm: AllowedCollisionMatrix = AllowedCollisionMatrix(),  # noqa: B008
+    ) -> list[WorldCollisionResult]:
+        """
+        Check collision between two objects,
+        which can either be a PhysxArticulation or an Entity.
+
+        :param obj_A: object A to check for collision.
+        :param obj_B: object B to check for collision.
+        :param acm: allowed collision matrix.
+        :return: a list of WorldCollisionResult. Empty if there's no collision.
+        """
+        col_obj_A = self._get_collision_obj(obj_A)
+        col_obj_B = self._get_collision_obj(obj_B)
+
+        if isinstance(obj_A, PhysxArticulation):  # A is articulation, B is anything
+            assert isinstance(col_obj_A, FCLModel), f"Wrong type: {type(col_obj_A)}"
+            return col_obj_A.check_collision_with(col_obj_B, acm=acm)
+        elif isinstance(obj_B, PhysxArticulation):  # A is object, B is articulation
+            assert isinstance(col_obj_B, FCLModel), f"Wrong type: {type(col_obj_B)}"
+            return col_obj_B.check_collision_with(col_obj_A, acm=acm)
+        elif isinstance(obj_B, Entity):  # A is object, B is object
+            assert isinstance(col_obj_A, FCLObject) and isinstance(
+                col_obj_B, FCLObject
+            ), f"Wrong type: col_obj_A={type(col_obj_A)}, col_obj_B={type(col_obj_B)}"
+            if (
+                acm_type := acm.get_allowed_collision(col_obj_A.name, col_obj_B.name)
+            ) is None or acm_type == AllowedCollision.NEVER:
+                result = collide(col_obj_A, col_obj_B)
+                if result.is_collision():
+                    return [
+                        WorldCollisionResult(
+                            result,
+                            "object_object",
+                            col_obj_A.name,
+                            col_obj_B.name,
+                            col_obj_A.name,
+                            col_obj_B.name,
+                        )
+                    ]
+            return []
+        else:
+            raise NotImplementedError(f"obj_A={obj_A}, obj_B={obj_B}")
+
+    def distance_between(
+        self,
+        obj_A: PhysxArticulation | Entity,
+        obj_B: PhysxArticulation | Entity,
+        *,
+        acm: AllowedCollisionMatrix = AllowedCollisionMatrix(),  # noqa: B008
+        return_distance_only: bool = True,
+    ) -> WorldDistanceResult | float:
+        """
+        Check distance-to-collision between two objects,
+        which can either be a PhysxArticulation or an Entity.
+
+        :param obj_A: object A to check for collision.
+        :param obj_B: object B to check for collision.
+        :param acm: allowed collision matrix.
+        :param return_distance_only: if True, return distance only.
+        :return: a WorldDistanceResult or a float if return_distance_only==True.
+        """
+        col_obj_A = self._get_collision_obj(obj_A)
+        col_obj_B = self._get_collision_obj(obj_B)
+        ret = WorldDistanceResult()
+
+        if isinstance(obj_A, PhysxArticulation):  # A is articulation, B is anything
+            assert isinstance(col_obj_A, FCLModel), f"Wrong type: {type(col_obj_A)}"
+            ret = col_obj_A.distance_with(col_obj_B, acm=acm)
+        elif isinstance(obj_B, PhysxArticulation):  # A is object, B is articulation
+            assert isinstance(col_obj_B, FCLModel), f"Wrong type: {type(col_obj_B)}"
+            ret = col_obj_B.distance_with(col_obj_A, acm=acm)
+        elif isinstance(obj_B, Entity):  # A is object, B is object
+            assert isinstance(col_obj_A, FCLObject) and isinstance(
+                col_obj_B, FCLObject
+            ), f"Wrong type: col_obj_A={type(col_obj_A)}, col_obj_B={type(col_obj_B)}"
+            if (
+                acm_type := acm.get_allowed_collision(col_obj_A.name, col_obj_B.name)
+            ) is None or acm_type == AllowedCollision.NEVER:
+                result = distance(col_obj_A, col_obj_B)
+                ret = WorldDistanceResult(
+                    result,
+                    result.min_distance,
+                    "object_object",
+                    col_obj_A.name,
+                    col_obj_B.name,
+                    col_obj_A.name,
+                    col_obj_B.name,
+                )
+        else:
+            raise NotImplementedError(f"obj_A={obj_A}, obj_B={obj_B}")
+
+        return ret.min_distance if return_distance_only else ret
+
+    def _get_collision_obj(
+        self,
+        obj: PhysxArticulation | Entity,
+    ) -> FCLModel | FCLObject | None:
+        """Helper function to get mplib collision object from sapien object"""
+        if isinstance(obj, PhysxArticulation) and (
+            articulation := self.get_articulation(convert_object_name(obj))
+        ):
+            return articulation.get_fcl_model()
+        elif isinstance(obj, Entity) and (
+            fcl_obj := self.get_object(convert_object_name(obj))
+        ):
+            return fcl_obj
+        else:
+            raise RuntimeError(
+                f"Unknown SAPIEN object type: {type(obj)} or "
+                f"Object {obj.name} not found in PlanningWorld "
+                "(The scene might have changed since last update)"
+            )
 
     @staticmethod
     def convert_physx_component(comp: PhysxRigidBaseComponent) -> FCLObject | None:
