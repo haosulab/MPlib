@@ -258,21 +258,21 @@ Note that this is different from MoveIt2's
 ``planning_scene::PlanningScene::distanceToCollision()`` where self-collisions
 are ignored.
 
-:return: minimum distance-to-collision)doc";
+:return: minimum distance-to-all-collision)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_distanceToRobotCollision =
 R"doc(
 The distance between the robot model at current state to the nearest collision
 (ignoring self-collisions). Calls ``distanceRobot()``.
 
-:return: minimum distance-to-collision)doc";
+:return: minimum distance-to-robot-collision)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_distanceToSelfCollision =
 R"doc(
 The minimum distance to self-collision given the robot in current state. Calls
 ``distanceSelf()``.
 
-:return: minimum distance-to-collision)doc";
+:return: minimum distance-to-self-collision)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_getAllowedCollisionMatrix =
 R"doc(

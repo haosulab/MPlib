@@ -611,21 +611,21 @@ class PlanningWorld:
         ``planning_scene::PlanningScene::distanceToCollision()`` where self-collisions
         are ignored.
 
-        :return: minimum distance-to-collision
+        :return: minimum distance-to-all-collision
         """
     def distance_to_robot_collision(self) -> float:
         """
         The distance between the robot model at current state to the nearest collision
         (ignoring self-collisions). Calls ``distanceRobot()``.
 
-        :return: minimum distance-to-collision
+        :return: minimum distance-to-robot-collision
         """
     def distance_to_self_collision(self) -> float:
         """
         The minimum distance to self-collision given the robot in current state. Calls
         ``distanceSelf()``.
 
-        :return: minimum distance-to-collision
+        :return: minimum distance-to-self-collision
         """
     def get_allowed_collision_matrix(
         self,

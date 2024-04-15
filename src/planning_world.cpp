@@ -419,26 +419,11 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
   for (const auto &[art_name, art] : planned_articulation_map_) {
     auto fcl_model = art->getFCLModel();
     auto col_objs = fcl_model->getCollisionObjects();
-    auto col_link_names = fcl_model->getCollisionLinkNames();
-    auto col_pairs = fcl_model->getCollisionPairs();
 
-    // TODO(merge): add FCLModel::distanceSelf() method
     // Articulation minimum distance to self-collision
-    for (const auto &[x, y] : col_pairs)
-      if (auto type = acm_->getAllowedCollision(col_link_names[x], col_link_names[y]);
-          !type || type == collision_detection::AllowedCollision::NEVER) {
-        result.clear();
-        collision_detection::fcl::distance(col_objs[x], col_objs[y], request, result);
-        if (result.min_distance < ret.min_distance) {
-          ret.res = result;
-          ret.min_distance = result.min_distance;
-          ret.distance_type = "self";
-          ret.object_name1 = art_name;
-          ret.object_name2 = art_name;
-          ret.link_name1 = col_link_names[x];
-          ret.link_name2 = col_link_names[y];
-        }
-      }
+    if (const auto &tmp = fcl_model->distanceSelf(request, acm_);
+        tmp.min_distance < ret.min_distance)
+      ret = tmp;
 
     // Minimum distance among planned_articulation_map_
     for (const auto &[art_name2, art2] : planned_articulation_map_) {

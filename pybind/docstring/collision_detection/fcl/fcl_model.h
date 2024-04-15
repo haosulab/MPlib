@@ -83,6 +83,25 @@ Constructs a FCLModel from URDF string and collision links
 :param verbose: print debug information. Default: ``False``.
 :return: a unique_ptr to FCLModel)doc";
 
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_distanceSelf =
+R"doc(
+Get the minimum distance to self-collision given the robot in current state,
+ignoring the distances between links that are allowed to always collide (as
+specified by acm).
+
+:param request: distance request.
+:param acm: allowed collision matrix.
+:return: a ``WorldDistanceResult`` object)doc";
+
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_distanceToSelfCollision =
+R"doc(
+The minimum distance to self-collision given the robot in current state,
+ignoring the distances between links that are allowed to always collide (as
+specified by acm). Calls ``distanceSelf()``.
+
+:param acm: allowed collision matrix.
+:return: minimum distance-to-self-collision)doc";
+
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_getCollisionLinkNames =
 R"doc(
 )doc";

@@ -11,6 +11,7 @@
 #include <urdf_world/types.h>
 
 #include "mplib/collision_detection/collision_common.h"
+#include "mplib/collision_detection/collision_matrix.h"
 #include "mplib/collision_detection/fcl/collision_common.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/utils/pose.h"
@@ -30,7 +31,10 @@ class FCLModelTpl {
   // Common type alias
   using CollisionRequest = fcl::CollisionRequest<S>;
   using CollisionResult = fcl::CollisionResult<S>;
+  using DistanceRequest = fcl::DistanceRequest<S>;
+  using DistanceResult = fcl::DistanceResult<S>;
   using WorldCollisionResult = WorldCollisionResultTpl<S>;
+  using WorldDistanceResult = WorldDistanceResultTpl<S>;
 
  public:
   /**
@@ -185,6 +189,33 @@ class FCLModelTpl {
   std::vector<WorldCollisionResult> checkCollisionWith(
       const FCLObjectPtr<S> &object,
       const CollisionRequest &request = CollisionRequest()) const;
+
+  /**
+   * The minimum distance to self-collision given the robot in current state,
+   * ignoring the distances between links that are allowed to always collide (as
+   * specified by acm). Calls ``distanceSelf()``.
+   *
+   * @param acm: allowed collision matrix.
+   * @return: minimum distance-to-self-collision
+   */
+  S distanceToSelfCollision(const AllowedCollisionMatrixPtr &acm =
+                                std::make_shared<AllowedCollisionMatrix>()) const {
+    return distanceSelf(DistanceRequest(), acm).min_distance;
+  }
+
+  /**
+   * Get the minimum distance to self-collision given the robot in current state,
+   * ignoring the distances between links that are allowed to always collide (as
+   * specified by acm).
+   *
+   * @param request: distance request.
+   * @param acm: allowed collision matrix.
+   * @return: a ``WorldDistanceResult`` object
+   */
+  WorldDistanceResult distanceSelf(
+      const DistanceRequest &request = DistanceRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
 
  private:
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model,

@@ -611,6 +611,31 @@ class FCLModel:
         :param request: collision request
         :return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.
         """
+    def distance_self(
+        self,
+        request: DistanceRequest = ...,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> mplib.pymp.collision_detection.WorldDistanceResult:
+        """
+        Get the minimum distance to self-collision given the robot in current state,
+        ignoring the distances between links that are allowed to always collide (as
+        specified by acm).
+
+        :param request: distance request.
+        :param acm: allowed collision matrix.
+        :return: a ``WorldDistanceResult`` object
+        """
+    def distance_to_self_collision(
+        self, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
+    ) -> float:
+        """
+        The minimum distance to self-collision given the robot in current state,
+        ignoring the distances between links that are allowed to always collide (as
+        specified by acm). Calls ``distanceSelf()``.
+
+        :param acm: allowed collision matrix.
+        :return: minimum distance-to-self-collision
+        """
     def get_collision_link_names(self) -> list[str]: ...
     def get_collision_objects(self) -> list[...]:
         """

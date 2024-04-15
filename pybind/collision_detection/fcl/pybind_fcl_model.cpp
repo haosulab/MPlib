@@ -19,6 +19,7 @@ using FCLModel = FCLModelTpl<S>;
 using FCLModelPtr = FCLModelTplPtr<S>;
 
 using CollisionRequest = fcl::CollisionRequest<S>;
+using DistanceRequest = fcl::DistanceRequest<S>;
 
 void build_pyfcl_model(py::module &m) {
   auto PyFCLModel = py::class_<FCLModel, std::shared_ptr<FCLModel>>(
@@ -78,7 +79,15 @@ void build_pyfcl_model(py::module &m) {
            py::overload_cast<const FCLObjectPtr<S> &, const CollisionRequest &>(
                &FCLModel::checkCollisionWith, py::const_),
            py::arg("object"), py::arg("request") = CollisionRequest(),
-           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkCollisionWith, 2));
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkCollisionWith, 2))
+
+      .def("distance_to_self_collision", &FCLModel::distanceToSelfCollision,
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceToSelfCollision))
+      .def("distance_self", &FCLModel::distanceSelf,
+           py::arg("request") = DistanceRequest(),
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceSelf));
 }
 
 }  // namespace mplib::collision_detection::fcl

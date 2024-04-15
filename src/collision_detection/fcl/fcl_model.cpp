@@ -306,4 +306,30 @@ std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
   return ret;
 }
 
+template <typename S>
+WorldDistanceResultTpl<S> FCLModelTpl<S>::distanceSelf(
+    const DistanceRequest &request, const AllowedCollisionMatrixPtr &acm) const {
+  WorldDistanceResult ret;
+  DistanceResult result;
+
+  for (const auto &[i, j] : collision_pairs_)
+    if (auto type = acm->getAllowedCollision(collision_link_names_[i],
+                                             collision_link_names_[j]);
+        !type || type == collision_detection::AllowedCollision::NEVER) {
+      result.clear();
+      collision_detection::fcl::distance(collision_objects_[i], collision_objects_[j],
+                                         request, result);
+      if (result.min_distance < ret.min_distance) {
+        ret.res = result;
+        ret.min_distance = result.min_distance;
+        ret.distance_type = "self";
+        ret.object_name1 = name_;
+        ret.object_name2 = name_;
+        ret.link_name1 = collision_link_names_[i];
+        ret.link_name2 = collision_link_names_[j];
+      }
+    }
+  return ret;
+}
+
 }  // namespace mplib::collision_detection::fcl
