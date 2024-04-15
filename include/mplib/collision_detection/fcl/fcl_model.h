@@ -162,6 +162,17 @@ class FCLModelTpl {
   std::vector<WorldCollisionResult> checkSelfCollision(
       const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
 
+  /**
+   * Check for collision in the current state with another ``FCLModel``.
+   *
+   * @param other: another ``FCLModel`` to check collision with
+   * @param request: collision request
+   * @return: List of ``WorldCollisionResult`` objects. If empty, no collision.
+   */
+  std::vector<WorldCollisionResult> checkCollisionWith(
+      const FCLModelTplPtr<S> &other,
+      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
+
  private:
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model,
             const std::string &package_dir_);

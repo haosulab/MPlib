@@ -49,6 +49,14 @@ Construct an FCL model from URDF and SRDF files.
     ``False``.
 :param verbose: print debug information. Default: ``False``.)doc";
 
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkCollisionWith =
+R"doc(
+Check for collision in the current state with another ``FCLModel``.
+
+:param other: another ``FCLModel`` to check collision with
+:param request: collision request
+:return: List of ``WorldCollisionResult`` objects. If empty, no collision.)doc";
+
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkSelfCollision =
 R"doc(
 Check for self-collision in the current state and returns all found collisions.

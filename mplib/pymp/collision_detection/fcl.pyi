@@ -580,6 +580,16 @@ class FCLModel:
             ``False``.
         :param verbose: print debug information. Default: ``False``.
         """
+    def check_collision_with(
+        self, other: FCLModel, request: CollisionRequest = ...
+    ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
+        """
+        Check for collision in the current state with another ``FCLModel``.
+
+        :param other: another ``FCLModel`` to check collision with
+        :param request: collision request
+        :return: List of ``WorldCollisionResult`` objects. If empty, no collision.
+        """
     def check_self_collision(
         self, request: CollisionRequest = ...
     ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:

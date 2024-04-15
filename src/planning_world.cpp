@@ -300,22 +300,9 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSelfCollision(
 
     // Collision among planned_articulation_map_
     for (const auto &[art_name2, art2] : planned_articulation_map_) {
-      if (art_name == art_name2) break;
-      for (const auto &col_obj : col_objs)
-        for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects()) {
-          result.clear();
-          collision_detection::fcl::collide(col_obj, col_obj2, request, result);
-          if (result.isCollision()) {
-            WorldCollisionResult tmp;
-            tmp.res = result;
-            tmp.collision_type = "self_articulation";
-            tmp.object_name1 = art_name;
-            tmp.object_name2 = art_name2;
-            tmp.link_name1 = col_obj->name;
-            tmp.link_name2 = col_obj2->name;
-            ret.push_back(tmp);
-          }
-        }
+      if (art_name == art_name2) continue;
+      const auto results = fcl_model->checkCollisionWith(art2->getFCLModel(), request);
+      ret.insert(ret.end(), results.begin(), results.end());
     }
 
     // Articulation collide with attached_body_map_
@@ -383,22 +370,10 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkRobotCollision
     auto col_objs = fcl_model->getCollisionObjects();
 
     // Collision with unplanned articulation
-    for (const auto &art2 : unplanned_articulations)
-      for (const auto &col_obj : col_objs)
-        for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects()) {
-          result.clear();
-          collision_detection::fcl::collide(col_obj, col_obj2, request, result);
-          if (result.isCollision()) {
-            WorldCollisionResult tmp;
-            tmp.res = result;
-            tmp.collision_type = "articulation_articulation";
-            tmp.object_name1 = art_name;
-            tmp.object_name2 = art2->getName();
-            tmp.link_name1 = col_obj->name;
-            tmp.link_name2 = col_obj2->name;
-            ret.push_back(tmp);
-          }
-        }
+    for (const auto &art2 : unplanned_articulations) {
+      const auto results = fcl_model->checkCollisionWith(art2->getFCLModel(), request);
+      ret.insert(ret.end(), results.begin(), results.end());
+    }
 
     // Collision with scene objects
     for (const auto &scene_obj : scene_objects)
@@ -501,7 +476,7 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
 
     // Minimum distance among planned_articulation_map_
     for (const auto &[art_name2, art2] : planned_articulation_map_) {
-      if (art_name == art_name2) break;
+      if (art_name == art_name2) continue;
       for (const auto &col_obj : col_objs)
         for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects())
           if (auto type = acm_->getAllowedCollision(col_obj->name, col_obj2->name);

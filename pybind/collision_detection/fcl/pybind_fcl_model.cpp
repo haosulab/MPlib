@@ -68,7 +68,10 @@ void build_pyfcl_model(py::module &m) {
            DOC(mplib, collision_detection, fcl, FCLModelTpl, isStateColliding))
       .def("check_self_collision", &FCLModel::checkSelfCollision,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkSelfCollision));
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkSelfCollision))
+      .def("check_collision_with", &FCLModel::checkCollisionWith, py::arg("other"),
+           py::arg("request") = CollisionRequest(),
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkCollisionWith));
 }
 
 }  // namespace mplib::collision_detection::fcl

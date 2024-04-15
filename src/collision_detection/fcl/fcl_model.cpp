@@ -259,4 +259,28 @@ std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkSelfCollision(
   return ret;
 }
 
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
+    const FCLModelTplPtr<S> &other, const fcl::CollisionRequest<S> &request) const {
+  std::vector<WorldCollisionResult> ret;
+  fcl::CollisionResult<S> result;
+
+  for (const auto &col_obj : collision_objects_)
+    for (const auto &col_obj2 : other->collision_objects_) {
+      result.clear();
+      collision_detection::fcl::collide(col_obj, col_obj2, request, result);
+      if (result.isCollision()) {
+        WorldCollisionResult tmp;
+        tmp.res = result;
+        tmp.collision_type = "self_articulation";
+        tmp.object_name1 = name_;
+        tmp.object_name2 = other->name_;
+        tmp.link_name1 = col_obj->name;
+        tmp.link_name2 = col_obj2->name;
+        ret.push_back(tmp);
+      }
+    }
+  return ret;
+}
+
 }  // namespace mplib::collision_detection::fcl
