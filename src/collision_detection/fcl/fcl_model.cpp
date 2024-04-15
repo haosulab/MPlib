@@ -237,9 +237,9 @@ void FCLModelTpl<S>::updateCollisionObjects(
 
 template <typename S>
 std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkSelfCollision(
-    const fcl::CollisionRequest<S> &request) const {
+    const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret;
-  fcl::CollisionResult<S> result;
+  CollisionResult result;
 
   for (const auto &[i, j] : collision_pairs_) {
     result.clear();
@@ -261,9 +261,9 @@ std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkSelfCollision(
 
 template <typename S>
 std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
-    const FCLModelTplPtr<S> &other, const fcl::CollisionRequest<S> &request) const {
+    const FCLModelTplPtr<S> &other, const CollisionRequest &request) const {
   std::vector<WorldCollisionResult> ret;
-  fcl::CollisionResult<S> result;
+  CollisionResult result;
 
   for (const auto &col_obj : collision_objects_)
     for (const auto &col_obj2 : other->collision_objects_) {
@@ -280,6 +280,29 @@ std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
         ret.push_back(tmp);
       }
     }
+  return ret;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
+    const FCLObjectPtr<S> &object, const CollisionRequest &request) const {
+  std::vector<WorldCollisionResult> ret;
+  CollisionResult result;
+
+  for (const auto &col_obj : collision_objects_) {
+    result.clear();
+    collision_detection::fcl::collide(col_obj, object, request, result);
+    if (result.isCollision()) {
+      WorldCollisionResult tmp;
+      tmp.res = result;
+      tmp.collision_type = "self_object";
+      tmp.object_name1 = name_;
+      tmp.object_name2 = object->name;
+      tmp.link_name1 = col_obj->name;
+      tmp.link_name2 = object->name;
+      ret.push_back(tmp);
+    }
+  }
   return ret;
 }
 

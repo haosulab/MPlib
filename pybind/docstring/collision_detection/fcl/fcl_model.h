@@ -57,6 +57,14 @@ Check for collision in the current state with another ``FCLModel``.
 :param request: collision request
 :return: List of ``WorldCollisionResult`` objects. If empty, no collision.)doc";
 
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkCollisionWith_2 =
+R"doc(
+Check for collision in the current state with an ``FCLObject``.
+
+:param object: an ``FCLObject`` to check collision with
+:param request: collision request
+:return: List of ``WorldCollisionResult`` objects. If empty, no collision.)doc";
+
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_checkSelfCollision =
 R"doc(
 Check for self-collision in the current state and returns all found collisions.

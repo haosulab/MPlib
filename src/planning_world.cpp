@@ -292,8 +292,6 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSelfCollision(
   // Collision involving planned articulation
   for (const auto &[art_name, art] : planned_articulation_map_) {
     auto fcl_model = art->getFCLModel();
-    auto col_objs = fcl_model->getCollisionObjects();
-
     // Articulation self-collision
     const auto results = fcl_model->checkSelfCollision(request);
     ret.insert(ret.end(), results.begin(), results.end());
@@ -306,23 +304,12 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSelfCollision(
     }
 
     // Articulation collide with attached_body_map_
-    for (const auto &[attached_body_name, attached_body] : attached_body_map_) {
-      const auto attached_obj = attached_body->getObject();
-      for (const auto &col_obj : col_objs) {
-        result.clear();
-        collision_detection::fcl::collide(attached_obj, col_obj, request, result);
-        if (result.isCollision()) {
-          WorldCollisionResult tmp;
-          tmp.res = result;
-          tmp.collision_type = "self_attach";
-          tmp.object_name1 = art_name;
-          tmp.object_name2 = attached_body_name;
-          tmp.link_name1 = col_obj->name;
-          tmp.link_name2 = attached_body_name;
-          ret.push_back(tmp);
-        }
+    for (const auto &[attached_body_name, attached_body] : attached_body_map_)
+      for (auto &result :
+           fcl_model->checkCollisionWith(attached_body->getObject(), request)) {
+        result.collision_type = "self_attached";
+        ret.push_back(result);
       }
-    }
   }
 
   // Collision among attached_body_map_
@@ -335,7 +322,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSelfCollision(
         auto name1 = it->first, name2 = it2->first;
         WorldCollisionResult tmp;
         tmp.res = result;
-        tmp.collision_type = "attach_attach";
+        tmp.collision_type = "attached_attached";
         tmp.object_name1 = name1;
         tmp.object_name2 = name2;
         tmp.link_name1 = name1;
@@ -367,8 +354,6 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkRobotCollision
   // Collision involving planned articulation
   for (const auto &[art_name, art] : planned_articulation_map_) {
     auto fcl_model = art->getFCLModel();
-    auto col_objs = fcl_model->getCollisionObjects();
-
     // Collision with unplanned articulation
     for (const auto &art2 : unplanned_articulations) {
       const auto results = fcl_model->checkCollisionWith(art2->getFCLModel(), request);
@@ -377,19 +362,9 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkRobotCollision
 
     // Collision with scene objects
     for (const auto &scene_obj : scene_objects)
-      for (const auto &col_obj : col_objs) {
-        result.clear();
-        collision_detection::fcl::collide(col_obj, scene_obj, request, result);
-        if (result.isCollision()) {
-          WorldCollisionResult tmp;
-          tmp.res = result;
-          tmp.collision_type = "articulation_sceneobject";
-          tmp.object_name1 = art_name;
-          tmp.object_name2 = scene_obj->name;
-          tmp.link_name1 = col_obj->name;
-          tmp.link_name2 = scene_obj->name;
-          ret.push_back(tmp);
-        }
+      for (auto &result : fcl_model->checkCollisionWith(scene_obj, request)) {
+        result.collision_type = "self_sceneobject";
+        ret.push_back(result);
       }
   }
 
@@ -398,19 +373,10 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkRobotCollision
     const auto attached_obj = attached_body->getObject();
     // Collision with unplanned articulation
     for (const auto &art2 : unplanned_articulations)
-      for (const auto &col_obj2 : art2->getFCLModel()->getCollisionObjects()) {
-        result.clear();
-        collision_detection::fcl::collide(attached_obj, col_obj2, request, result);
-        if (result.isCollision()) {
-          WorldCollisionResult tmp;
-          tmp.res = result;
-          tmp.collision_type = "attach_articulation";
-          tmp.object_name1 = attached_body_name;
-          tmp.object_name2 = art2->getName();
-          tmp.link_name1 = attached_body_name;
-          tmp.link_name2 = col_obj2->name;
-          ret.push_back(tmp);
-        }
+      for (auto &result :
+           art2->getFCLModel()->checkCollisionWith(attached_obj, request)) {
+        result.collision_type = "attached_articulation";
+        ret.push_back(result);
       }
 
     // Collision with scene objects
@@ -420,7 +386,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkRobotCollision
       if (result.isCollision()) {
         WorldCollisionResult tmp;
         tmp.res = result;
-        tmp.collision_type = "attach_sceneobject";
+        tmp.collision_type = "attached_sceneobject";
         tmp.object_name1 = attached_body_name;
         tmp.object_name2 = scene_obj->name;
         tmp.link_name1 = attached_body_name;

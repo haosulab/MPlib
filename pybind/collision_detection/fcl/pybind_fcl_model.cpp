@@ -1,6 +1,5 @@
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include <pybind11/eigen.h>
@@ -17,6 +16,7 @@ namespace py = pybind11;
 namespace mplib::collision_detection::fcl {
 
 using FCLModel = FCLModelTpl<S>;
+using FCLModelPtr = FCLModelTplPtr<S>;
 
 using CollisionRequest = fcl::CollisionRequest<S>;
 
@@ -69,9 +69,16 @@ void build_pyfcl_model(py::module &m) {
       .def("check_self_collision", &FCLModel::checkSelfCollision,
            py::arg("request") = CollisionRequest(),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, checkSelfCollision))
-      .def("check_collision_with", &FCLModel::checkCollisionWith, py::arg("other"),
-           py::arg("request") = CollisionRequest(),
-           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkCollisionWith));
+      .def("check_collision_with",
+           py::overload_cast<const FCLModelPtr &, const CollisionRequest &>(
+               &FCLModel::checkCollisionWith, py::const_),
+           py::arg("other"), py::arg("request") = CollisionRequest(),
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkCollisionWith))
+      .def("check_collision_with",
+           py::overload_cast<const FCLObjectPtr<S> &, const CollisionRequest &>(
+               &FCLModel::checkCollisionWith, py::const_),
+           py::arg("object"), py::arg("request") = CollisionRequest(),
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, checkCollisionWith, 2));
 }
 
 }  // namespace mplib::collision_detection::fcl

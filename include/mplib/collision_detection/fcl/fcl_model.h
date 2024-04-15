@@ -28,6 +28,8 @@ MPLIB_CLASS_TEMPLATE_FORWARD(FCLModelTpl);
 template <typename S>
 class FCLModelTpl {
   // Common type alias
+  using CollisionRequest = fcl::CollisionRequest<S>;
+  using CollisionResult = fcl::CollisionResult<S>;
   using WorldCollisionResult = WorldCollisionResultTpl<S>;
 
  public:
@@ -150,7 +152,7 @@ class FCLModelTpl {
    * @return: ``true`` if any collision pair collides and ``false`` otherwise.
    */
   bool isStateColliding() const {
-    return checkSelfCollision(fcl::CollisionRequest<S>()).size() > 0;
+    return checkSelfCollision(CollisionRequest()).size() > 0;
   }
 
   /**
@@ -160,7 +162,7 @@ class FCLModelTpl {
    * @return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.
    */
   std::vector<WorldCollisionResult> checkSelfCollision(
-      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
+      const CollisionRequest &request = CollisionRequest()) const;
 
   /**
    * Check for collision in the current state with another ``FCLModel``.
@@ -171,7 +173,18 @@ class FCLModelTpl {
    */
   std::vector<WorldCollisionResult> checkCollisionWith(
       const FCLModelTplPtr<S> &other,
-      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
+      const CollisionRequest &request = CollisionRequest()) const;
+
+  /**
+   * Check for collision in the current state with an ``FCLObject``.
+   *
+   * @param object: an ``FCLObject`` to check collision with
+   * @param request: collision request
+   * @return: List of ``WorldCollisionResult`` objects. If empty, no collision.
+   */
+  std::vector<WorldCollisionResult> checkCollisionWith(
+      const FCLObjectPtr<S> &object,
+      const CollisionRequest &request = CollisionRequest()) const;
 
  private:
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model,
