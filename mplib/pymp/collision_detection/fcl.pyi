@@ -585,6 +585,7 @@ class FCLModel:
         self,
         other: FCLModel,
         request: CollisionRequest = ...,
+        *,
         acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
         """
@@ -602,6 +603,7 @@ class FCLModel:
         self,
         object: ...,
         request: CollisionRequest = ...,
+        *,
         acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
         """
@@ -617,6 +619,7 @@ class FCLModel:
     def check_self_collision(
         self,
         request: CollisionRequest = ...,
+        *,
         acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
         """
@@ -631,6 +634,7 @@ class FCLModel:
     def distance_self(
         self,
         request: DistanceRequest = ...,
+        *,
         acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> mplib.pymp.collision_detection.WorldDistanceResult:
         """
@@ -646,6 +650,7 @@ class FCLModel:
     def distance_to_collision_with(
         self,
         other: FCLModel,
+        *,
         acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> float:
         """
@@ -661,6 +666,7 @@ class FCLModel:
     def distance_to_collision_with(
         self,
         object: ...,
+        *,
         acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> float:
         """
@@ -673,7 +679,7 @@ class FCLModel:
         :return: minimum distance-to-collision with the ``FCLObject``
         """
     def distance_to_self_collision(
-        self, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
+        self, *, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
     ) -> float:
         """
         The minimum distance to self-collision given the robot in current state,
@@ -688,6 +694,7 @@ class FCLModel:
         self,
         other: FCLModel,
         request: DistanceRequest = ...,
+        *,
         acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> mplib.pymp.collision_detection.WorldDistanceResult:
         """
@@ -705,6 +712,7 @@ class FCLModel:
         self,
         object: ...,
         request: DistanceRequest = ...,
+        *,
         acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
     ) -> mplib.pymp.collision_detection.WorldDistanceResult:
         """
@@ -739,7 +747,7 @@ class FCLModel:
         :return: name of the articulated model
         """
     def is_state_colliding(
-        self, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
+        self, *, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
     ) -> bool:
         """
         Check if the current state is in self-collision, ignoring the distances between
