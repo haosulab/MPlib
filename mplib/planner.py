@@ -520,7 +520,7 @@ class Planner:
         """returns true if the object was removed, false if it was not found"""
         return self.planning_world.remove_object(name)
 
-    def plan_qpos_to_qpos(
+    def plan_qpos(
         self,
         goal_qposes: list[np.ndarray],
         current_qpos: np.ndarray,
@@ -617,7 +617,7 @@ class Planner:
         """Converts goal pose from T_world_goal to T_base_goal"""
         return self.robot.get_base_pose().inv() * goal_pose
 
-    def plan_qpos_to_pose(
+    def plan_pose(
         self,
         goal_pose: Pose,
         current_qpos: np.ndarray,
@@ -675,7 +675,7 @@ class Planner:
             for i in range(len(goal_qpos)):  # type: ignore
                 print(goal_qpos[i])  # type: ignore
 
-        return self.plan_qpos_to_qpos(
+        return self.plan_qpos(
             goal_qpos,  # type: ignore
             current_qpos,
             time_step=time_step,
@@ -708,7 +708,7 @@ class Planner:
         Args:
             goal_pose: pose of the goal
             current_qpos: current joint configuration (either full or move_group joints)
-            qpos_step: size of the random step for RRT
+            qpos_step: size of the random step
             time_step: time step for the discretization
             wrt_world: if True, interpret the target pose with respect to the
                 world frame instead of the base frame
