@@ -15,6 +15,7 @@ from mplib.pymp import ArticulatedModel, PlanningWorld, Pose
 from mplib.pymp.collision_detection import AllowedCollisionMatrix, WorldCollisionResult
 from mplib.pymp.collision_detection.fcl import CollisionGeometry, FCLObject
 from mplib.pymp.planning import ompl
+from mplib.urdf_utils import generate_srdf, replace_urdf_package_keyword
 
 
 class Planner:
@@ -28,8 +29,8 @@ class Planner:
         urdf: str,
         move_group: str,
         *,
-        srdf: str = "",
-        package_keyword_replacement: str = "",
+        srdf: Optional[str] = None,
+        new_package_keyword: str = "",
         use_convex: bool = False,
         user_link_names: Sequence[str] = [],
         user_joint_names: Sequence[str] = [],
@@ -48,7 +49,7 @@ class Planner:
         :param urdf: Unified Robot Description Format file.
         :param move_group: target link to move, usually the end-effector.
         :param srdf: Semantic Robot Description Format file.
-        :param package_keyword_replacement: replace ``package://`` keyword in URDF
+        :param new_package_keyword: the string to replace 'package://' keyword
         :param use_convex: if True, load collision mesh as convex mesh.
             If mesh is not convex, a ``RuntimeError`` will be raised.
         :param user_link_names: names of links, the order matters.
@@ -62,23 +63,27 @@ class Planner:
         :param objects: list of FCLObject as non-articulated collision objects
         :param verbose: if True, print verbose logs for debugging
         """
-        self.urdf = urdf
-        self.srdf = srdf
-        if self.srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
-            self.srdf = urdf.replace(".urdf", ".srdf")
-            print(f"No SRDF file provided but found {self.srdf}")
+        self.urdf, self.srdf = urdf, srdf
+        if self.srdf is None:
+            if os.path.exists(srdf := urdf.replace(".urdf", ".srdf")):
+                print(f"No SRDF file provided but found {self.srdf}")
+                self.srdf = srdf
+            else:
+                self.srdf = generate_srdf(self.urdf, new_package_keyword, verbose=True)
 
         # replace package:// keyword if exists
-        urdf = self.replace_package_keyword(package_keyword_replacement)
+        self.urdf = replace_urdf_package_keyword(self.urdf, new_package_keyword)
 
         self.robot = ArticulatedModel(
-            self.urdf,
-            self.srdf,
+            str(self.urdf),
+            str(self.srdf),
             link_names=user_link_names,  # type: ignore
             joint_names=user_joint_names,  # type: ignore
             convex=use_convex,
             verbose=verbose,
         )
+        # Remove the temporary URDF file from replace_urdf_package_keyword()
+        self.urdf.unlink()
         self.pinocchio_model = self.robot.get_pinocchio_model()
         self.user_link_names = self.pinocchio_model.get_link_names()
         self.user_joint_names = self.pinocchio_model.get_joint_names()
@@ -127,123 +132,7 @@ class Planner:
         self.planning_world = PlanningWorld([self.robot], objects)
         self.acm = self.planning_world.get_allowed_collision_matrix()
 
-        if self.srdf == "":
-            self.generate_collision_pair()
-            self.robot.update_SRDF(self.srdf)
-
         self.planner = ompl.OMPLPlanner(world=self.planning_world)
-
-    def replace_package_keyword(self, package_keyword_replacement: str):
-        # TODO(merge): fix file writing
-        # TODO(merge): convert to staticmethod
-        """
-        some ROS URDF files use package:// keyword to refer the package dir
-        replace it with the given string (default is empty)
-
-        Args:
-            package_keyword_replacement: the string to replace 'package://' keyword
-        """
-        rtn_urdf = self.urdf
-        with open(self.urdf) as in_f:
-            content = in_f.read()
-            if "package://" in content:
-                rtn_urdf = self.urdf.replace(".urdf", "_package_keyword_replaced.urdf")
-                content = content.replace("package://", package_keyword_replacement)
-                if not os.path.exists(rtn_urdf):
-                    with open(rtn_urdf, "w") as out_f:
-                        out_f.write(content)
-        return rtn_urdf
-
-    def generate_collision_pair(self, num_samples=100000):
-        # TODO(merge): convert to staticmethod
-        """
-        We read the srdf file to get the link pairs that should not collide.
-        If not provided, we need to randomly sample configurations
-        to find the link pairs that will always collide.
-
-        :param num_samples: number of samples to find the link that will always collide
-        """
-        print(
-            "Since no SRDF file is provided. We will first detect link pairs that will"
-            " always collide. This may take several minutes."
-        )
-
-        root = ET.Element("robot")
-        robot_name = self.urdf.split("/")[-1].split(".")[0]
-        root.set("name", robot_name)
-        self.srdf = self.urdf.replace(".urdf", ".srdf")
-
-        acm = AllowedCollisionMatrix()
-
-        # 1. disable adjacent link pairs
-        for link1, link2 in self.pinocchio_model.get_adjacent_links():
-            print(f"Ignore collision pair: ({link1}, {link2}), reason: Adjacent")
-            acm.set_entry(link1, link2, True)
-            _ = ET.SubElement(
-                root,
-                "disable_collisions",
-                attrib={"link1": link1, "link2": link2, "reason": "Adjacent"},
-            )
-
-        # 2. disable all-zeros qpos (default) collision
-        self.robot.set_qpos(np.zeros(len(self.user_joint_names)), True)
-        for collision in self.check_for_self_collision():
-            link1, link2 = collision.link_name1, collision.link_name2
-            if acm.get_entry(link1, link2) is not None:  # already ignored
-                continue
-            print(
-                f"Ignore collision pair: ({link1}, {link2}), "
-                "reason: Default (collides at all-zeros qpos)"
-            )
-            acm.set_entry(link1, link2, True)
-            _ = ET.SubElement(
-                root,
-                "disable_collisions",
-                attrib={"link1": link1, "link2": link2, "reason": "Default"},
-            )
-
-        # 3. disable collision pairs that always collide and never collide via sampling
-        n_links = len(self.user_link_names)
-        collision_cnt = np.zeros((n_links, n_links), dtype=int)
-        for _ in range(num_samples):
-            self.robot.set_qpos(self.pinocchio_model.get_random_configuration(), True)
-            for collision in self.check_for_self_collision():
-                u = self.link_name_2_idx[collision.link_name1]
-                v = self.link_name_2_idx[collision.link_name2]
-                collision_cnt[u][v] += 1
-
-        for i, link1 in enumerate(self.user_link_names):
-            for j in range(i + 1, n_links):
-                link2 = self.user_link_names[j]
-                if acm.get_entry(link1, link2) is not None:  # already ignored
-                    continue
-                if (cnt := (collision_cnt[i][j] + collision_cnt[j][i])) == num_samples:
-                    print(
-                        f"Ignore collision pair: ({link1}, {link2}), "
-                        "reason: Always collide"
-                    )
-                    _ = ET.SubElement(
-                        root,
-                        "disable_collisions",
-                        attrib={"link1": link1, "link2": link2, "reason": "Always"},
-                    )
-                elif cnt == 0:
-                    print(
-                        f"Ignore collision pair: ({link1}, {link2}), "
-                        "reason: Never collide"
-                    )
-                    _ = ET.SubElement(
-                        root,
-                        "disable_collisions",
-                        attrib={"link1": link1, "link2": link2, "reason": "Never"},
-                    )
-
-        # Save SRDF
-        with open(self.srdf, "w") as srdf_file:
-            srdf_file.write(
-                minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
-            )
-        print(f"Saving the SRDF file to {self.srdf}")
 
     def wrap_joint_limit(self, qpos: np.ndarray) -> bool:
         """
