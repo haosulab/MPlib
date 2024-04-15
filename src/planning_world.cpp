@@ -299,8 +299,10 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSelfCollision(
     // Collision among planned_articulation_map_
     for (const auto &[art_name2, art2] : planned_articulation_map_) {
       if (art_name == art_name2) continue;
-      const auto results = fcl_model->checkCollisionWith(art2->getFCLModel(), request);
-      ret.insert(ret.end(), results.begin(), results.end());
+      for (auto &result : fcl_model->checkCollisionWith(art2->getFCLModel(), request)) {
+        result.collision_type = "self_self";
+        ret.push_back(result);
+      }
     }
 
     // Articulation collide with attached_body_map_
@@ -427,8 +429,10 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distanceSelf(
     for (const auto &[art_name2, art2] : planned_articulation_map_) {
       if (art_name == art_name2) continue;
       if (const auto &tmp = fcl_model->distanceWith(art2->getFCLModel(), request, acm_);
-          tmp.min_distance < ret.min_distance)
+          tmp.min_distance < ret.min_distance) {
         ret = tmp;
+        ret.distance_type = "self_self";
+      }
     }
 
     // Articulation minimum distance to attached_body_map_
