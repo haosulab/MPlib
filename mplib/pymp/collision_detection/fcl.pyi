@@ -625,6 +625,7 @@ class FCLModel:
         :param acm: allowed collision matrix.
         :return: a ``WorldDistanceResult`` object
         """
+    @typing.overload
     def distance_to_collision_with(
         self,
         other: FCLModel,
@@ -639,6 +640,21 @@ class FCLModel:
         :param acm: allowed collision matrix.
         :return: minimum distance-to-collision with the other ``FCLModel``
         """
+    @typing.overload
+    def distance_to_collision_with(
+        self,
+        object: ...,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> float:
+        """
+        The minimum distance to collision with an ``FCLObject`` given the robot in
+        current state, ignoring the distances between objects that are allowed to always
+        collide (as specified by acm).
+
+        :param object: an ``FCLObject`` to get minimum distance-to-collision with
+        :param acm: allowed collision matrix.
+        :return: minimum distance-to-collision with the ``FCLObject``
+        """
     def distance_to_self_collision(
         self, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
     ) -> float:
@@ -650,6 +666,7 @@ class FCLModel:
         :param acm: allowed collision matrix.
         :return: minimum distance-to-self-collision
         """
+    @typing.overload
     def distance_with(
         self,
         other: FCLModel,
@@ -662,6 +679,23 @@ class FCLModel:
         always collide (as specified by acm).
 
         :param other: another ``FCLModel`` to get minimum distance-to-collision with
+        :param request: distance request.
+        :param acm: allowed collision matrix.
+        :return: a ``WorldDistanceResult`` object
+        """
+    @typing.overload
+    def distance_with(
+        self,
+        object: ...,
+        request: DistanceRequest = ...,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> mplib.pymp.collision_detection.WorldDistanceResult:
+        """
+        Get the minimum distance to collision with an ``FCLObject`` given the robot in
+        current state, ignoring the distances between objects that are allowed to always
+        collide (as specified by acm).
+
+        :param object: an ``FCLObject`` to get minimum distance-to-collision with
         :param request: distance request.
         :param acm: allowed collision matrix.
         :return: a ``WorldDistanceResult`` object

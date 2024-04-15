@@ -103,6 +103,16 @@ collide (as specified by acm).
 :param acm: allowed collision matrix.
 :return: minimum distance-to-collision with the other ``FCLModel``)doc";
 
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_distanceToCollisionWith_2 =
+R"doc(
+The minimum distance to collision with an ``FCLObject`` given the robot in
+current state, ignoring the distances between objects that are allowed to always
+collide (as specified by acm).
+
+:param object: an ``FCLObject`` to get minimum distance-to-collision with
+:param acm: allowed collision matrix.
+:return: minimum distance-to-collision with the ``FCLObject``)doc";
+
 static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_distanceToSelfCollision =
 R"doc(
 The minimum distance to self-collision given the robot in current state,
@@ -119,6 +129,17 @@ in current state, ignoring the distances between links that are allowed to
 always collide (as specified by acm).
 
 :param other: another ``FCLModel`` to get minimum distance-to-collision with
+:param request: distance request.
+:param acm: allowed collision matrix.
+:return: a ``WorldDistanceResult`` object)doc";
+
+static const char *__doc_mplib_collision_detection_fcl_FCLModelTpl_distanceWith_2 =
+R"doc(
+Get the minimum distance to collision with an ``FCLObject`` given the robot in
+current state, ignoring the distances between objects that are allowed to always
+collide (as specified by acm).
+
+:param object: an ``FCLObject`` to get minimum distance-to-collision with
 :param request: distance request.
 :param acm: allowed collision matrix.
 :return: a ``WorldDistanceResult`` object)doc";

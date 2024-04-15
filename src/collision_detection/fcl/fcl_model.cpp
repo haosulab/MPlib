@@ -358,4 +358,29 @@ WorldDistanceResultTpl<S> FCLModelTpl<S>::distanceWith(
   return ret;
 }
 
+template <typename S>
+WorldDistanceResultTpl<S> FCLModelTpl<S>::distanceWith(
+    const FCLObjectPtr<S> &object, const DistanceRequest &request,
+    const AllowedCollisionMatrixPtr &acm) const {
+  WorldDistanceResult ret;
+  DistanceResult result;
+
+  for (const auto &col_obj : collision_objects_)
+    if (auto type = acm->getAllowedCollision(col_obj->name, object->name);
+        !type || type == collision_detection::AllowedCollision::NEVER) {
+      result.clear();
+      collision_detection::fcl::distance(col_obj, object, request, result);
+      if (result.min_distance < ret.min_distance) {
+        ret.res = result;
+        ret.min_distance = result.min_distance;
+        ret.distance_type = "self_object";
+        ret.object_name1 = name_;
+        ret.object_name2 = object->name;
+        ret.link_name1 = col_obj->name;
+        ret.link_name2 = object->name;
+      }
+    }
+  return ret;
+}
+
 }  // namespace mplib::collision_detection::fcl

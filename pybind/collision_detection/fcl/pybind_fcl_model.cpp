@@ -88,14 +88,33 @@ void build_pyfcl_model(py::module &m) {
            py::arg("request") = DistanceRequest(),
            py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceSelf))
-      .def("distance_to_collision_with", &FCLModel::distanceToCollisionWith,
+      .def("distance_to_collision_with",
+           py::overload_cast<const FCLModelPtr &, const AllowedCollisionMatrixPtr &>(
+               &FCLModel::distanceToCollisionWith, py::const_),
            py::arg("other"),
            py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
            DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceToCollisionWith))
-      .def("distance_with", &FCLModel::distanceWith, py::arg("other"),
-           py::arg("request") = DistanceRequest(),
+      .def("distance_with",
+           py::overload_cast<const FCLModelPtr &, const DistanceRequest &,
+                             const AllowedCollisionMatrixPtr &>(&FCLModel::distanceWith,
+                                                                py::const_),
+           py::arg("other"), py::arg("request") = DistanceRequest(),
            py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
-           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceWith));
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceWith))
+      .def(
+          "distance_to_collision_with",
+          py::overload_cast<const FCLObjectPtr<S> &, const AllowedCollisionMatrixPtr &>(
+              &FCLModel::distanceToCollisionWith, py::const_),
+          py::arg("object"),
+          py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
+          DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceToCollisionWith, 2))
+      .def("distance_with",
+           py::overload_cast<const FCLObjectPtr<S> &, const DistanceRequest &,
+                             const AllowedCollisionMatrixPtr &>(&FCLModel::distanceWith,
+                                                                py::const_),
+           py::arg("object"), py::arg("request") = DistanceRequest(),
+           py::arg("acm") = std::make_shared<AllowedCollisionMatrix>(),
+           DOC(mplib, collision_detection, fcl, FCLModelTpl, distanceWith, 2));
 }
 
 }  // namespace mplib::collision_detection::fcl
