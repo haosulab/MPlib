@@ -666,19 +666,6 @@ class Planner:
         # we need to take only the move_group joints when planning
         # idx = self.move_group_joint_indices
 
-        # TODO(merge): verify this
-        ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
-        if ik_status != "Success":
-            return {"status": ik_status}
-
-        if verbose:
-            print("IK results:")
-            for i in range(len(goal_qpos)):  # type: ignore
-                print(goal_qpos[i])  # type: ignore
-
-        # goal_qpos_ = [goal_qpos[i][move_joint_idx] for i in range(len(goal_qpos))]
-        self.robot.set_qpos(current_qpos, True)
-
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
             return {"status": ik_status}
