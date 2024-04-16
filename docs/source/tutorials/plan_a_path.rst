@@ -19,18 +19,18 @@ In this tutorial, we will talk about how to plan paths for the agent. As shown i
 Plan with sampling-based algorithms
 --------------------------------------
 
-``mplib`` supports state-of-the-art sampling-based motion planning algorithms by leveraging `OMPL <https://github.com/ompl/ompl>`_. You can call ``planner.plan_qpos_to_pose()`` to plan a path for moving the ``move_group`` link to a target pose: 
+``mplib`` supports state-of-the-art sampling-based motion planning algorithms by leveraging `OMPL <https://github.com/ompl/ompl>`_. You can call ``planner.plan_pose()`` to plan a path for moving the ``move_group`` link to a target pose: 
 
 .. literalinclude:: ../../../mplib/examples/demo_setup.py
    :dedent: 0
-   :start-after: # plan_qpos_to_pose ankor
-   :end-before: # plan_qpos_to_pose ankor end
+   :start-after: # plan_pose ankor
+   :end-before: # plan_pose ankor end
 
-Specifically, ``planner.plan_qpos_to_pose()`` takes two required arguments as input. The first one is the target pose of the ``move_group`` link. It's a 7-dim list, where the first three elements describe the position part, and the remaining four elements describe the quaternion (wxyz) for the rotation part. **Note that the pose is relative to the world frame**. Normally, the base link of the robot is the world frame unless you have called ``set_base_pose(new_pose)`` in on the planner. You can also temporarily plan w.r.t. the robot base by passing in ``wrt_world=False``.
+Specifically, ``planner.plan_pose()`` takes two required arguments as input. The first one is the target pose of the ``move_group`` link. It's a 7-dim list, where the first three elements describe the position part, and the remaining four elements describe the quaternion (wxyz) for the rotation part. **Note that the pose is relative to the world frame**. Normally, the base link of the robot is the world frame unless you have called ``set_base_pose(new_pose)`` in on the planner. You can also temporarily plan w.r.t. the robot base by passing in ``wrt_world=False``.
 
-The second argument is the current joint positions of all the active joints (not just all the active joints in the movegroup). The ``planner.plan_qpos_to_pose()`` function first solves the inverse kinematics to get the joint positions for the target pose. It then calls the RRTConnect algorithm to find a path in the joint space. Finally, it simplifies the path and parameterizes the path to generate time, velocity, and acceleration information.
+The second argument is the current joint positions of all the active joints (not just all the active joints in the movegroup). The ``planner.plan_pose()`` function first solves the inverse kinematics to get the joint positions for the target pose. It then calls the RRTConnect algorithm to find a path in the joint space. Finally, it simplifies the path and parameterizes the path to generate time, velocity, and acceleration information.
 
-``planner.plan_qpos_to_pose()`` returns a dict which includes:   
+``planner.plan_pose()`` returns a dict which includes:   
 
 - ``status``: a string indicates the status:
 
@@ -44,14 +44,14 @@ The second argument is the current joint positions of all the active joints (not
 - ``acceleration``: a NumPy array of shape :math:`(n \times m)` describing the joint accelerations of the waypoints. 
 
 
-``planner.plan_qpos_to_pose()`` also takes other optional arguments with default values:
+``planner.plan_pose()`` also takes other optional arguments with default values:
 
-.. automethod:: mplib.planner.Planner.plan_qpos_to_pose
+.. automethod:: mplib.Planner.plan_pose
    :no-index:
 
 Follow a path
 --------------------------------------
-``plan_qpos_to_pose()`` outputs a time-parameterized path, and we need to drive the robot to follow the path. In this demo, we use ``sapien`` to simulate and drive the robot.
+``plan_pose()`` outputs a time-parameterized path, and we need to drive the robot to follow the path. In this demo, we use ``sapien`` to simulate and drive the robot.
 
 .. literalinclude:: ../../../mplib/examples/demo_setup.py
    :dedent: 0
@@ -72,14 +72,14 @@ Compared to the sampling-based algorithms, planning with screw motion has the fo
 - `straighter` path: there is no guarantee for sampling-based algorithms to generate `straight` paths even it's a simple lifting task since it connects states in the joint space. In contrast, the returned path by the exponential coordinates and the Jacobian matrix can sometimes be more reasonable. See the above figures for comparison. 
 
 
-You can call ``planner.plan_screw()`` to plan a path with screw motion. Similar to ``planner.plan_qpos_to_pose()``, it also takes two required arguments: target pose and current joint positions, and returns a dict containing the same set of elements. 
+You can call ``planner.plan_screw()`` to plan a path with screw motion. Similar to ``planner.plan_pose()``, it also takes two required arguments: target pose and current joint positions, and returns a dict containing the same set of elements. 
 
 .. literalinclude:: ../../../mplib/planner.py
    :dedent: 0
    :start-after: # plan_screw ankor
    :end-before: # plan_screw ankor end
 
-However, planning with screw motion only succeeds when there is no collision during the planning since it can not detour or replan. We thus recommend use ``planner.plan_screw()`` for some simple tasks or combined with ``planner.plan_qpos_to_pose()``. As shown in the code, we first try ``planner.plan_screw()``, if it fails (e.g., collision during the planning), we then turn to the sampling-based algorithms. Other arguments are the same with ``planner.plan_qpos_to_pose()``.
+However, planning with screw motion only succeeds when there is no collision during the planning since it can not detour or replan. We thus recommend use ``planner.plan_screw()`` for some simple tasks or combined with ``planner.plan_pose()``. As shown in the code, we first try ``planner.plan_screw()``, if it fails (e.g., collision during the planning), we then turn to the sampling-based algorithms. Other arguments are the same with ``planner.plan_pose()``.
 
 
 Move the boxes

@@ -255,12 +255,14 @@ class Planner:
         :param mask: qpos mask to disable IK sampling, (ndof,) bool np.ndarray.
         :param n_init_qpos: number of random initial configurations to sample.
         :param threshold: distance threshold for marking sampled IK as success.
-                          distance is position error norm + quaternion error norm.
+            distance is position error norm + quaternion error norm.
         :param return_closest: whether to return the qpos that is closest to start_qpos,
-                               considering equivalent joint values.
+            considering equivalent joint values.
         :param verbose: whether to print collision info if any collision exists.
         :return: (status, q_goals)
+
             status: IK status, "Success" if succeeded.
+
             q_goals: list of sampled IK qpos, (ndof,) np.floating np.ndarray.
                 IK is successful if q_goals is not None.
                 If return_closest, q_goals is np.ndarray if successful
