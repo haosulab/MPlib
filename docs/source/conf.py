@@ -11,12 +11,13 @@ import re
 project = "mplib"
 author = "Minghua Liu, Jiayuan Gu, Kolin Guo, Xinsong Lin"
 copyright = f"2021-2024, {author}. All rights reserved."
-release = "+git.".join(
-    re.findall(
-        "^v(.*)-[0-9]+-g(.*)",
-        os.popen("git describe --abbrev=8 --tags --match v*").read().strip(),
-    )[0]
-)  # tag-commithash
+git_describe_ret = os.popen("git describe --abbrev=8 --tags --match v*").read().strip()
+if "-" in git_describe_ret:  # commit after a tag
+    release = "+git.".join(
+        re.findall("^v(.*)-[0-9]+-g(.*)", git_describe_ret)[0]
+    )  # tag-commithash
+else:
+    release = git_describe_ret[1:]
 version = release
 
 # -- General configuration ---------------------------------------------------
