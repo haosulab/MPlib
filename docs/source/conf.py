@@ -35,6 +35,7 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = []
+maximum_signature_line_length = 88  # limit maximum method/function signature length
 
 
 # -- Options for HTML output -------------------------------------------------
