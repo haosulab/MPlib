@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+from mplib.collision_detection import fcl
 from mplib.examples.demo_setup import DemoSetup
-from mplib.pymp.collision_detection import fcl
 
 
 class DetectCollisionDemo(DemoSetup):

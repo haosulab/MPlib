@@ -3,8 +3,8 @@ import sys
 import numpy as np
 import sapien.core as sapien
 
+from mplib.collision_detection import fcl
 from mplib.examples.demo_setup import DemoSetup
-from mplib.pymp.collision_detection import fcl
 
 
 class PlanningDemo(DemoSetup):
@@ -114,7 +114,7 @@ class PlanningDemo(DemoSetup):
             print("IK failed")
             sys.exit(1)
         # now fix base and plan a path to the goal
-        result = self.planner.plan_qpos_to_qpos(
+        result = self.planner.plan_qpos(
             goal_qposes,
             self.robot.get_qpos(),
             time_step=1 / 250,
@@ -134,7 +134,7 @@ class PlanningDemo(DemoSetup):
             print("IK failed")
             sys.exit(1)
         # now fix arm joints and plan a path to the goal
-        result = self.planner.plan_qpos_to_qpos(
+        result = self.planner.plan_qpos(
             goal_qposes,
             self.robot.get_qpos(),
             time_step=1 / 250,

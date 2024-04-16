@@ -108,7 +108,7 @@ class ConstrainedPlanningDemo(DemoSetup):
             "with constraint. all movements roughly maintain 15 degrees w.r.t. -z axis"
         )
         for pose in poses:
-            result = self.planner.plan_qpos_to_pose(
+            result = self.planner.plan_pose(
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,
@@ -127,7 +127,7 @@ class ConstrainedPlanningDemo(DemoSetup):
             " almost upside down"
         )
         for pose in poses:
-            result = self.planner.plan_qpos_to_pose(
+            result = self.planner.plan_pose(
                 pose,
                 self.robot.get_qpos(),
                 time_step=1 / 250,

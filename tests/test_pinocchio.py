@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 from transforms3d.quaternions import qinverse, qmult, quat2axangle
 
-from mplib.pymp.kinematics.pinocchio import PinocchioModel
+from mplib.kinematics.pinocchio import PinocchioModel
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
 

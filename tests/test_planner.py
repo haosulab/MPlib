@@ -6,10 +6,8 @@ import numpy as np
 import trimesh
 from transforms3d.quaternions import mat2quat, quat2mat
 
-import mplib
-from mplib import Planner
-from mplib.pymp import Pose
-from mplib.pymp.collision_detection import fcl
+from mplib import Planner, Pose
+from mplib.collision_detection import fcl
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -56,9 +54,7 @@ class TestPlanner(unittest.TestCase):
         return pose
 
     def test_planning_to_pose(self):
-        result_sampling = self.planner.plan_qpos_to_pose(
-            self.target_pose, self.init_qpos
-        )
+        result_sampling = self.planner.plan_pose(self.target_pose, self.init_qpos)
         self.assertEqual(result_sampling["status"], "Success")
         last_qpos = result_sampling["position"][-1]
         self.planner.robot.set_qpos(last_qpos)
@@ -71,9 +67,7 @@ class TestPlanner(unittest.TestCase):
         expected_least_num_success = 5
         for _ in range(10):
             target_qpos = self.sample_qpos()[:7]
-            result_sampling = self.planner.plan_qpos_to_qpos(
-                [target_qpos], self.init_qpos
-            )
+            result_sampling = self.planner.plan_qpos([target_qpos], self.init_qpos)
             # might not always be a valid pose, so check if the planner succeeded
             if result_sampling["status"] == "Success":
                 num_success += 1
@@ -198,7 +192,7 @@ class TestPlanner(unittest.TestCase):
             base_pose = self.sample_pose()
             self.planner.set_base_pose(base_pose)
 
-            result_sampling = self.planner.plan_qpos_to_pose(
+            result_sampling = self.planner.plan_pose(
                 base_pose * self.target_pose, self.init_qpos
             )
             self.assertEqual(result_sampling["status"], "Success")
@@ -218,7 +212,7 @@ class TestPlanner(unittest.TestCase):
                 self.get_end_effector_pose().distance(self.target_pose), 0, places=1
             )
 
-            result_sampling = self.planner.plan_qpos_to_pose(
+            result_sampling = self.planner.plan_pose(
                 self.target_pose, self.init_qpos, wrt_world=False
             )
             self.assertEqual(result_sampling["status"], "Success")
@@ -265,7 +259,7 @@ class TestPlanner(unittest.TestCase):
         for _ in range(10):
             qpos = self.sample_qpos()
             fixed_joints = np.random.choice(range(7), 2, replace=False)
-            result = self.planner.plan_qpos_to_qpos(
+            result = self.planner.plan_qpos(
                 [qpos], self.init_qpos, fixed_joint_indices=fixed_joints
             )
             if result["status"] == "Success":
@@ -324,7 +318,7 @@ class TestPlanner(unittest.TestCase):
         total_count = 0
         for _ in range(20):
             self.planner.robot.set_qpos(init_qpos, full=True)
-            result = self.planner.plan_qpos_to_pose(
+            result = self.planner.plan_pose(
                 constrained_target_pose,
                 init_qpos,
                 constraint_function=self.make_f(),

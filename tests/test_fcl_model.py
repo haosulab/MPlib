@@ -4,8 +4,8 @@ import unittest
 import numpy as np
 from transforms3d.quaternions import mat2quat
 
-from mplib.pymp.collision_detection.fcl import FCLModel
-from mplib.pymp.kinematics.pinocchio import PinocchioModel
+from mplib.collision_detection.fcl import FCLModel
+from mplib.kinematics.pinocchio import PinocchioModel
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
 
