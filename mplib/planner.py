@@ -9,11 +9,11 @@ import toppra as ta
 import toppra.algorithm as algo
 import toppra.constraint as constraint
 
-from mplib.pymp import ArticulatedModel, PlanningWorld, Pose
-from mplib.pymp.collision_detection import WorldCollisionResult
-from mplib.pymp.collision_detection.fcl import CollisionGeometry, FCLObject
-from mplib.pymp.planning import ompl
-from mplib.urdf_utils import generate_srdf, replace_urdf_package_keyword
+from .collision_detection import WorldCollisionResult
+from .collision_detection.fcl import CollisionGeometry, FCLObject
+from .planning.ompl import FixedJoint, OMPLPlanner
+from .pymp import ArticulatedModel, PlanningWorld, Pose
+from .urdf_utils import generate_srdf, replace_urdf_package_keyword
 
 
 class Planner:
@@ -130,7 +130,7 @@ class Planner:
         self.planning_world = PlanningWorld([self.robot], objects)
         self.acm = self.planning_world.get_allowed_collision_matrix()
 
-        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+        self.planner = OMPLPlanner(world=self.planning_world)
 
     def wrap_joint_limit(self, qpos: np.ndarray) -> bool:
         """
@@ -578,7 +578,7 @@ class Planner:
 
         fixed_joints = set()
         for joint_idx in fixed_joint_indices:
-            fixed_joints.add(ompl.FixedJoint(0, joint_idx, current_qpos[joint_idx]))
+            fixed_joints.add(FixedJoint(0, joint_idx, current_qpos[joint_idx]))
 
         assert len(current_qpos[move_joint_idx]) == len(goal_qpos_[0])
         status, path = self.planner.plan(

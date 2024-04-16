@@ -1,7 +1,7 @@
 ``ArticulatedModel``
 -------------------------
 
-.. autoclass:: mplib.pymp.ArticulatedModel
+.. autoclass:: mplib.ArticulatedModel
    :members:
    :undoc-members:
    :show-inheritance:

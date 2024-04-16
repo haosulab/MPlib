@@ -1,7 +1,7 @@
 ``Planner``
 -------------
 
-.. automodule:: mplib.planner
+.. autoclass:: mplib.Planner
    :members:
    :undoc-members:
    :show-inheritance:

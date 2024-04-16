@@ -6,8 +6,8 @@ from xml.dom import minidom
 
 import numpy as np
 
-from mplib.pymp import ArticulatedModel
-from mplib.pymp.collision_detection import AllowedCollisionMatrix
+from .collision_detection import AllowedCollisionMatrix
+from .pymp import ArticulatedModel
 
 
 def compute_default_collisions(

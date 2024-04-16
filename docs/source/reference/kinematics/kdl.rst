@@ -1,7 +1,7 @@
 kdl
 -------
 
-.. automodule:: mplib.pymp.kinematics.kdl
+.. automodule:: mplib.kinematics.kdl
   :members:
   :undoc-members:
   :show-inheritance:

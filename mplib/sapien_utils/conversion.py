@@ -18,15 +18,14 @@ from sapien.physx import (
 )
 from transforms3d.euler import euler2quat
 
-from ..planner import Planner
-from ..pymp import ArticulatedModel, PlanningWorld, Pose
-from ..pymp.collision_detection import (
+from .. import ArticulatedModel, PlanningWorld, Pose
+from ..collision_detection import (
     AllowedCollision,
     AllowedCollisionMatrix,
     WorldCollisionResult,
     WorldDistanceResult,
 )
-from ..pymp.collision_detection.fcl import (
+from ..collision_detection.fcl import (
     Box,
     BVHModel,
     Capsule,
@@ -40,7 +39,8 @@ from ..pymp.collision_detection.fcl import (
     collide,
     distance,
 )
-from ..pymp.planning import ompl
+from ..planner import Planner
+from ..planning.ompl import OMPLPlanner
 from .srdf_exporter import export_srdf
 from .urdf_exporter import export_kinematic_chain_urdf
 
@@ -69,7 +69,7 @@ class SapienPlanningWorld(PlanningWorld):
         planned_articulations: list[PhysxArticulation] = [],  # noqa: B006
     ):
         """
-        Creates an mplib.pymp.planning_world.PlanningWorld from a sapien.Scene.
+        Creates an mplib.PlanningWorld from a sapien.Scene.
 
         :param planned_articulations: list of planned articulations.
         """
@@ -419,7 +419,7 @@ class SapienPlanner(Planner):
             t.startswith("JointModelR") for t in self.joint_types
         ] & (self.joint_limits[:, 1] - self.joint_limits[:, 0] > 2 * np.pi)
 
-        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+        self.planner = OMPLPlanner(world=self.planning_world)
 
     def update_from_simulation(self, *, update_attached_object: bool = True) -> None:
         """

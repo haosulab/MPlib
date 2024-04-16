@@ -1,7 +1,7 @@
 collision_detection
 ------------------------------------------
 
-.. automodule:: mplib.pymp.collision_detection
+.. automodule:: mplib.collision_detection
    :members:
    :undoc-members:
    :show-inheritance:
