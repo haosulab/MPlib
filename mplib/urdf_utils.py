@@ -1,7 +1,5 @@
-import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional
 from xml.dom import minidom
 
 import numpy as np
@@ -115,30 +113,23 @@ def compute_default_collisions(
 def replace_urdf_package_keyword(
     urdf_path: str | Path,
     new_package_keyword: str = "",
-    *,
-    save_path: Optional[str | Path] = None,
 ) -> Path:
     """
     Some ROS URDF files use package:// keyword to refer the package dir.
     Replace it with the given string (default is empty)
 
     :param urdf_path: Path to a Unified Robot Description Format file.
-    :param new_package_keyword: the string to replace 'package://' keyword
-    :param save_path: Path to save the modified URDF file.
-        If ``None``, create a temporary file.
+    :param new_package_keyword: the string to replace ``package://`` keyword
     :return: Path to the modified URDF file
     """
-    if save_path is None:
-        _, save_path = tempfile.mkstemp(suffix=".urdf")
-    save_path = Path(save_path)
-    if not (save_dir := save_path.parent).is_dir():
-        save_dir.mkdir(parents=True)
-
-    with Path(urdf_path).open("r") as in_f:
+    urdf_path = Path(urdf_path)
+    with urdf_path.open("r") as in_f:
         if "package://" in (content := in_f.read()):
-            with save_path.open("w") as out_f:
+            # Create a new URDF file
+            urdf_path = urdf_path.with_name(urdf_path.stem + "_mplib.urdf")
+            with urdf_path.open("w") as out_f:
                 out_f.write(content.replace("package://", new_package_keyword))
-    return save_path
+    return urdf_path
 
 
 def generate_srdf(
@@ -146,17 +137,14 @@ def generate_srdf(
     new_package_keyword: str = "",
     *,
     num_samples=100000,
-    save_path: Optional[str | Path] = None,
     verbose=False,
 ) -> Path:
     """
     Generate SRDF from URDF similar to MoveIt2's setup assistant.
 
     :param urdf_path: Path to a Unified Robot Description Format file.
-    :param new_package_keyword: the string to replace 'package://' keyword
+    :param new_package_keyword: the string to replace ``package://`` keyword
     :param num_samples: number of samples to find the link that will always collide
-    :param save_path: Path to save the generated SRDF file.
-        If ``None``, create a temporary file.
     :param verbose: print debug info
     :return: Path to the generated SRDF file
     """
@@ -170,19 +158,12 @@ def generate_srdf(
         robot, num_samples=num_samples, verbose=verbose
     )
 
-    if save_path is None:
-        _, save_path = tempfile.mkstemp(suffix=".srdf")
-    save_path = Path(save_path)
-    if not (save_dir := save_path.parent).is_dir():
-        save_dir.mkdir(parents=True)
-
-    # Save SRDF
+    # Create a new SRDF file and save
+    save_path = urdf_path.with_name(urdf_path.stem + "_mplib.srdf")
     with save_path.open("w") as f:
         f.write(srdf_str)
 
     if verbose:
         print(f"Saved the SRDF file to {save_path}")
 
-    # Remove the temporary URDF file from replace_urdf_package_keyword()
-    urdf_path.unlink()
     return save_path

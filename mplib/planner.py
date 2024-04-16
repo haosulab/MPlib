@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 from collections.abc import Callable
+from pathlib import Path
 from typing import Literal, Optional, Sequence
 
 import numpy as np
@@ -24,10 +24,10 @@ class Planner:
     # constructor ankor
     def __init__(
         self,
-        urdf: str,
+        urdf: str | Path,
         move_group: str,
         *,
-        srdf: Optional[str] = None,
+        srdf: Optional[str | Path] = None,
         new_package_keyword: str = "",
         use_convex: bool = False,
         user_link_names: Sequence[str] = [],
@@ -47,7 +47,7 @@ class Planner:
         :param urdf: Unified Robot Description Format file.
         :param move_group: target link to move, usually the end-effector.
         :param srdf: Semantic Robot Description Format file.
-        :param new_package_keyword: the string to replace 'package://' keyword
+        :param new_package_keyword: the string to replace ``package://`` keyword
         :param use_convex: if True, load collision mesh as convex mesh.
             If mesh is not convex, a ``RuntimeError`` will be raised.
         :param user_link_names: names of links, the order matters.
@@ -61,10 +61,12 @@ class Planner:
         :param objects: list of FCLObject as non-articulated collision objects
         :param verbose: if True, print verbose logs for debugging
         """
-        self.urdf, self.srdf = urdf, srdf
-        if self.srdf is None:
-            if os.path.exists(srdf := urdf.replace(".urdf", ".srdf")):
-                print(f"No SRDF file provided but found {self.srdf}")
+        self.urdf = Path(urdf)
+        if srdf is None:
+            if (srdf := self.urdf.with_suffix(".srdf")).is_file() or (
+                srdf := self.urdf.with_name(self.urdf.stem + "_mplib.srdf")
+            ).is_file():
+                print(f"No SRDF file provided but found {srdf}")
                 self.srdf = srdf
             else:
                 self.srdf = generate_srdf(self.urdf, new_package_keyword, verbose=True)
@@ -80,8 +82,6 @@ class Planner:
             convex=use_convex,
             verbose=verbose,
         )
-        # Remove the temporary URDF file from replace_urdf_package_keyword()
-        self.urdf.unlink()
         self.pinocchio_model = self.robot.get_pinocchio_model()
         self.user_link_names = self.pinocchio_model.get_link_names()
         self.user_joint_names = self.pinocchio_model.get_joint_names()
