@@ -11,6 +11,7 @@ API Reference
    utils/pose
    utils/random
    urdf_utils
+   sapien_utils
 
 .. toctree::
    :maxdepth: 3
