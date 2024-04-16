@@ -131,13 +131,9 @@ class TestPlanner(unittest.TestCase):
     def test_env_collision(self):
         floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
         # create a collision object for the floor, with a 10cm offset in the z direction
-        floor_fcl_collision_object = fcl.CollisionObject(
-            floor, Pose([0, 0, -0.1], [1, 0, 0, 0])
-        )
+        floor_fcl_collision_object = fcl.CollisionObject(floor, Pose(p=[0, 0, -0.1]))
         # update the planning world with the floor collision object
-        self.planner.planning_world.add_normal_object(
-            "floor", floor_fcl_collision_object
-        )
+        self.planner.planning_world.add_object("floor", floor_fcl_collision_object)
 
         env_collision_qpos = [
             0,
@@ -151,7 +147,7 @@ class TestPlanner(unittest.TestCase):
         self.assertTrue(self.planner.check_for_env_collision(env_collision_qpos))
 
         # remove the floor and check for env-collision returns no collision
-        self.planner.remove_normal_object("floor")
+        self.planner.remove_object("floor")
         self.assertFalse(self.planner.check_for_env_collision(env_collision_qpos))
 
     def test_IK(self):
@@ -173,17 +169,13 @@ class TestPlanner(unittest.TestCase):
         # now put down a floor and check that the robot can't reach the pose
         floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
         # create a collision object for the floor, with a 10cm offset in the z direction
-        floor_fcl_collision_object = fcl.CollisionObject(
-            floor, Pose([0, 0, -0.1], [1, 0, 0, 0])
-        )
+        floor_fcl_collision_object = fcl.CollisionObject(floor, Pose(p=[0, 0, -0.1]))
 
         under_floor_target_pose = deepcopy(self.target_pose)
         under_floor_target_pose.set_p([0.4, 0.3, -0.1])
         status, _ = self.planner.IK(under_floor_target_pose, self.init_qpos)
         self.assertEqual(status, "Success")
-        self.planner.planning_world.add_normal_object(
-            "floor", floor_fcl_collision_object
-        )
+        self.planner.planning_world.add_object("floor", floor_fcl_collision_object)
         status, _ = self.planner.IK(under_floor_target_pose, self.init_qpos)
         self.assertNotEqual(status, "Success")
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from mplib import Pose
 from mplib.collision_detection import fcl
 from mplib.examples.demo_setup import DemoSetup
 
@@ -45,13 +46,9 @@ class DetectCollisionDemo(DemoSetup):
         # floor ankor
         floor = fcl.Box([2, 2, 0.1])  # create a 2 x 2 x 0.1m box
         # create a collision object for the floor, with a 10cm offset in the z direction
-        floor_fcl_collision_object = fcl.CollisionObject(
-            floor, [0, 0, -0.1], [1, 0, 0, 0]
-        )
+        floor_fcl_collision_object = fcl.CollisionObject(floor, Pose(p=[0, 0, -0.1]))
         # update the planning world with the floor collision object
-        self.planner.planning_world.add_normal_object(
-            "floor", floor_fcl_collision_object
-        )
+        self.planner.planning_world.add_object("floor", floor_fcl_collision_object)
         # floor ankor end
         print("\n----- self-collision-free qpos -----")
         # if the joint qpos does not include the gripper joints,

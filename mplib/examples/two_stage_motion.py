@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import sapien.core as sapien
 
+from mplib import Pose
 from mplib.collision_detection import fcl
 from mplib.examples.demo_setup import DemoSetup
 
@@ -159,10 +160,8 @@ class PlanningDemo(DemoSetup):
         self.add_point_cloud()
         # also add the target as a collision object so we don't hit it
         fcl_red_cube = fcl.Box([0.04, 0.04, 0.14])
-        collision_object = fcl.CollisionObject(
-            fcl_red_cube, [0.7, 0, 0.07], [1, 0, 0, 0]
-        )
-        self.planner.planning_world.add_normal_object("target", collision_object)
+        collision_object = fcl.CollisionObject(fcl_red_cube, Pose(p=[0.7, 0, 0.07]))
+        self.planner.planning_world.add_object("target", collision_object)
 
         # go above the target
         pickup_pose[2] += 0.2
@@ -170,7 +169,7 @@ class PlanningDemo(DemoSetup):
         # pickup ankor end
         self.open_gripper()
         # move down to pick
-        self.planner.planning_world.remove_normal_object(
+        self.planner.planning_world.remove_object(
             "target"
         )  # remove the object so we don't report collision
         pickup_pose[2] -= 0.12
@@ -182,7 +181,7 @@ class PlanningDemo(DemoSetup):
         self.planner.robot.set_qpos(self.robot.get_qpos(), True)
 
         # add the attached box to the planning world
-        self.planner.update_attached_box([0.04, 0.04, 0.12], [0, 0, 0.14, 1, 0, 0, 0])
+        self.planner.update_attached_box([0.04, 0.04, 0.12], Pose(p=[0, 0, 0.14]))
 
         pickup_pose[2] += 0.12
         result = self.plan_without_base(pickup_pose, has_attach=True)

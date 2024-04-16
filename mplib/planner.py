@@ -67,9 +67,9 @@ class Planner:
                 srdf := self.urdf.with_name(self.urdf.stem + "_mplib.srdf")
             ).is_file():
                 print(f"No SRDF file provided but found {srdf}")
-                self.srdf = srdf
             else:
-                self.srdf = generate_srdf(self.urdf, new_package_keyword, verbose=True)
+                srdf = generate_srdf(urdf, new_package_keyword, verbose=True)
+        self.srdf = srdf
 
         # replace package:// keyword if exists
         self.urdf = replace_urdf_package_keyword(self.urdf, new_package_keyword)

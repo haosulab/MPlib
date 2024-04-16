@@ -19,7 +19,7 @@ The optional `link_names` and `joint_names` parameters used to order the joints 
    :language: python
    :start-after: # pickup ankor
    :end-before: # pickup ankor end
-   :emphasize-lines: 14
+   :emphasize-lines: 12
 
 Notice we have abstracted away how to decouple this motion into two stages. Here is the function definition:
 
@@ -27,6 +27,6 @@ Notice we have abstracted away how to decouple this motion into two stages. Here
    :language: python
    :start-after: # move_in_two_stage ankor
    :end-before: # move_in_two_stage ankor end
-   :emphasize-lines: 18
+   :emphasize-lines: 16
 
 The highlighted line is how we ignore the arm joints during planning. We ignore joints 2-9, keeping only joint 0 and 1 active. We then do the same thing except the joints fixed are 0 and 1, and the active joints are 2-9.
