@@ -42,16 +42,15 @@ FCLModelTpl<S>::FCLModelTpl(const urdf::ModelInterfaceSharedPtr &urdf_model,
 
 template <typename S>
 std::unique_ptr<FCLModelTpl<S>> FCLModelTpl<S>::createFromURDFString(
-    const std::string &urdf_string,
-    const std::vector<std::pair<std::string, FCLObjectPtr<S>>> &collision_links,
+    const std::string &urdf_string, const std::vector<FCLObjectPtr<S>> &collision_links,
     bool verbose) {
   auto urdf = urdf::parseURDF(urdf_string);
   // package_dir is not needed since urdf_string contains no visual/collision elements
   auto fcl_model = std::make_unique<FCLModelTpl<S>>(urdf, "", verbose, false);
 
-  for (const auto &[link_name, collision_obj] : collision_links) {
+  for (const auto &collision_obj : collision_links) {
     fcl_model->collision_objects_.push_back(collision_obj);
-    fcl_model->collision_link_names_.push_back(link_name);
+    fcl_model->collision_link_names_.push_back(collision_obj->name);
   }
 
   // TODO: this should not be needed after switching to FCLObject
@@ -76,6 +75,7 @@ template <typename S>
 void FCLModelTpl<S>::init(const urdf::ModelInterfaceSharedPtr &urdf_model,
                           const std::string &package_dir) {
   urdf_model_ = urdf_model;
+  name_ = urdf_model->getName();
   package_dir_ = package_dir;
   if (not urdf_model_)
     throw std::invalid_argument("The XML stream does not contain a valid URDF model.");
@@ -236,28 +236,159 @@ void FCLModelTpl<S>::updateCollisionObjects(
 }
 
 template <typename S>
-bool FCLModelTpl<S>::collide(const fcl::CollisionRequest<S> &request) const {
-  fcl::CollisionResult<S> result;
-  for (const auto &[i, j] : collision_pairs_) {
-    collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
-                                      request, result);
-    if (result.isCollision()) return true;
-  }
-  return false;
+std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkSelfCollision(
+    const CollisionRequest &request, const AllowedCollisionMatrixPtr &acm) const {
+  std::vector<WorldCollisionResult> ret;
+  CollisionResult result;
+
+  for (const auto &[i, j] : collision_pairs_)
+    if (auto type = acm->getAllowedCollision(collision_link_names_[i],
+                                             collision_link_names_[j]);
+        !type || type == collision_detection::AllowedCollision::NEVER) {
+      result.clear();
+      collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
+                                        request, result);
+      if (result.isCollision()) {
+        WorldCollisionResult tmp;
+        tmp.res = result;
+        tmp.collision_type = "self";
+        tmp.object_name1 = name_;
+        tmp.object_name2 = name_;
+        tmp.link_name1 = collision_link_names_[i];
+        tmp.link_name2 = collision_link_names_[j];
+        ret.push_back(tmp);
+      }
+    }
+  return ret;
 }
 
 template <typename S>
-std::vector<fcl::CollisionResult<S>> FCLModelTpl<S>::collideFull(
-    const fcl::CollisionRequest<S> &request) const {
-  // TODO(merge): return only CollisionResult in collision?
-  // Result will be returned via the collision result structure
-  std::vector<fcl::CollisionResult<S>> ret;
-  for (const auto &[i, j] : collision_pairs_) {
-    fcl::CollisionResult<S> result;
-    collision_detection::fcl::collide(collision_objects_[i], collision_objects_[j],
-                                      request, result);
-    ret.push_back(result);
-  }
+std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
+    const FCLModelTplPtr<S> &other, const CollisionRequest &request,
+    const AllowedCollisionMatrixPtr &acm) const {
+  std::vector<WorldCollisionResult> ret;
+  CollisionResult result;
+
+  for (const auto &col_obj : collision_objects_)
+    for (const auto &col_obj2 : other->collision_objects_)
+      if (auto type = acm->getAllowedCollision(col_obj->name, col_obj2->name);
+          !type || type == collision_detection::AllowedCollision::NEVER) {
+        result.clear();
+        collision_detection::fcl::collide(col_obj, col_obj2, request, result);
+        if (result.isCollision()) {
+          WorldCollisionResult tmp;
+          tmp.res = result;
+          tmp.collision_type = "self_articulation";
+          tmp.object_name1 = name_;
+          tmp.object_name2 = other->name_;
+          tmp.link_name1 = col_obj->name;
+          tmp.link_name2 = col_obj2->name;
+          ret.push_back(tmp);
+        }
+      }
+  return ret;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> FCLModelTpl<S>::checkCollisionWith(
+    const FCLObjectPtr<S> &object, const CollisionRequest &request,
+    const AllowedCollisionMatrixPtr &acm) const {
+  std::vector<WorldCollisionResult> ret;
+  CollisionResult result;
+
+  for (const auto &col_obj : collision_objects_)
+    if (auto type = acm->getAllowedCollision(col_obj->name, object->name);
+        !type || type == collision_detection::AllowedCollision::NEVER) {
+      result.clear();
+      collision_detection::fcl::collide(col_obj, object, request, result);
+      if (result.isCollision()) {
+        WorldCollisionResult tmp;
+        tmp.res = result;
+        tmp.collision_type = "self_object";
+        tmp.object_name1 = name_;
+        tmp.object_name2 = object->name;
+        tmp.link_name1 = col_obj->name;
+        tmp.link_name2 = object->name;
+        ret.push_back(tmp);
+      }
+    }
+  return ret;
+}
+
+template <typename S>
+WorldDistanceResultTpl<S> FCLModelTpl<S>::distanceSelf(
+    const DistanceRequest &request, const AllowedCollisionMatrixPtr &acm) const {
+  WorldDistanceResult ret;
+  DistanceResult result;
+
+  for (const auto &[i, j] : collision_pairs_)
+    if (auto type = acm->getAllowedCollision(collision_link_names_[i],
+                                             collision_link_names_[j]);
+        !type || type == collision_detection::AllowedCollision::NEVER) {
+      result.clear();
+      collision_detection::fcl::distance(collision_objects_[i], collision_objects_[j],
+                                         request, result);
+      if (result.min_distance < ret.min_distance) {
+        ret.res = result;
+        ret.min_distance = result.min_distance;
+        ret.distance_type = "self";
+        ret.object_name1 = name_;
+        ret.object_name2 = name_;
+        ret.link_name1 = collision_link_names_[i];
+        ret.link_name2 = collision_link_names_[j];
+      }
+    }
+  return ret;
+}
+
+template <typename S>
+WorldDistanceResultTpl<S> FCLModelTpl<S>::distanceWith(
+    const FCLModelTplPtr<S> &other, const DistanceRequest &request,
+    const AllowedCollisionMatrixPtr &acm) const {
+  WorldDistanceResult ret;
+  DistanceResult result;
+
+  for (const auto &col_obj : collision_objects_)
+    for (const auto &col_obj2 : other->collision_objects_)
+      if (auto type = acm->getAllowedCollision(col_obj->name, col_obj2->name);
+          !type || type == collision_detection::AllowedCollision::NEVER) {
+        result.clear();
+        collision_detection::fcl::distance(col_obj, col_obj2, request, result);
+        if (result.min_distance < ret.min_distance) {
+          ret.res = result;
+          ret.min_distance = result.min_distance;
+          ret.distance_type = "self_articulation";
+          ret.object_name1 = name_;
+          ret.object_name2 = other->name_;
+          ret.link_name1 = col_obj->name;
+          ret.link_name2 = col_obj2->name;
+        }
+      }
+  return ret;
+}
+
+template <typename S>
+WorldDistanceResultTpl<S> FCLModelTpl<S>::distanceWith(
+    const FCLObjectPtr<S> &object, const DistanceRequest &request,
+    const AllowedCollisionMatrixPtr &acm) const {
+  WorldDistanceResult ret;
+  DistanceResult result;
+
+  for (const auto &col_obj : collision_objects_)
+    if (auto type = acm->getAllowedCollision(col_obj->name, object->name);
+        !type || type == collision_detection::AllowedCollision::NEVER) {
+      result.clear();
+      collision_detection::fcl::distance(col_obj, object, request, result);
+      if (result.min_distance < ret.min_distance) {
+        ret.res = result;
+        ret.min_distance = result.min_distance;
+        ret.distance_type = "self_object";
+        ret.object_name1 = name_;
+        ret.object_name2 = object->name;
+        ret.link_name1 = col_obj->name;
+        ret.link_name2 = object->name;
+      }
+    }
   return ret;
 }
 

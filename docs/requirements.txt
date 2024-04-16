@@ -2,3 +2,4 @@ myst-parser
 furo
 sphinx-copybutton
 sphinxext-opengraph
+sapien~=3.0.0.dev

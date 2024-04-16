@@ -1,6 +1,6 @@
 #include <memory>
 #include <string>
-#include <utility>
+#include <string_view>
 #include <vector>
 
 #include <pybind11/eigen.h>
@@ -25,11 +25,18 @@ void build_pyarticulated_model(py::module &pymp) {
           pymp, "ArticulatedModel", DOC(mplib, ArticulatedModelTpl));
 
   PyArticulatedModel
-      .def(py::init<const std::string &, const std::string &, const Vector3<S> &,
-                    const std::vector<std::string> &, const std::vector<std::string> &,
-                    bool, bool>(),
+      .def(py::init([](const std::string &urdf_filename,
+                       const std::string &srdf_filename, const char *name,
+                       const Vector3<S> &gravity,
+                       const std::vector<std::string> &link_names,
+                       const std::vector<std::string> &joint_names, bool convex,
+                       bool verbose) {
+             return ArticulatedModel(urdf_filename, srdf_filename,
+                                     name ? name : std::string_view {}, gravity,
+                                     link_names, joint_names, convex, verbose);
+           }),
            py::arg("urdf_filename"), py::arg("srdf_filename"), py::kw_only(),
-           py::arg("gravity") = Vector3<S> {0, 0, -9.81},
+           py::arg("name") = nullptr, py::arg("gravity") = Vector3<S> {0, 0, -9.81},
            py::arg("link_names") = std::vector<std::string>(),
            py::arg("joint_names") = std::vector<std::string>(),
            py::arg("convex") = false, py::arg("verbose") = false,
@@ -38,28 +45,28 @@ void build_pyarticulated_model(py::module &pymp) {
       .def_static(
           "create_from_urdf_string",
           [](const std::string &urdf_string, const std::string &srdf_string,
-             const std::vector<std::pair<std::string, FCLObjectPtr>> &collision_links,
+             const std::vector<FCLObjectPtr> &collision_links, const char *name,
              const Vector3<S> &gravity, const std::vector<std::string> &link_names,
              const std::vector<std::string> &joint_names, bool verbose) {
             std::shared_ptr<ArticulatedModel> articulation =
                 ArticulatedModel::createFromURDFString(
-                    urdf_string, srdf_string, collision_links, gravity, link_names,
-                    joint_names, verbose);
+                    urdf_string, srdf_string, collision_links,
+                    name ? name : std::string_view {}, gravity, link_names, joint_names,
+                    verbose);
             return articulation;
           },
           py::arg("urdf_string"), py::arg("srdf_string"), py::arg("collision_links"),
-          py::kw_only(), py::arg("gravity") = Vector3<S> {0, 0, -9.81},
+          py::kw_only(), py::arg("name") = nullptr,
+          py::arg("gravity") = Vector3<S> {0, 0, -9.81},
           py::arg("link_names") = std::vector<std::string>(),
           py::arg("joint_names") = std::vector<std::string>(),
           py::arg("verbose") = false,
           DOC(mplib, ArticulatedModelTpl, createFromURDFString))
 
-      .def_property("name", &ArticulatedModel::getName, &ArticulatedModel::setName,
-                    DOC(mplib, ArticulatedModelTpl, name))
+      .def_property_readonly("name", &ArticulatedModel::getName,
+                             DOC(mplib, ArticulatedModelTpl, name))
       .def("get_name", &ArticulatedModel::getName,
            DOC(mplib, ArticulatedModelTpl, getName))
-      .def("set_name", &ArticulatedModel::setName, py::arg("name"),
-           DOC(mplib, ArticulatedModelTpl, setName))
 
       .def("get_pinocchio_model", &ArticulatedModel::getPinocchioModel,
            DOC(mplib, ArticulatedModelTpl, getPinocchioModel))

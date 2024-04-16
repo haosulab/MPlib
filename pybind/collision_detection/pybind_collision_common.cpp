@@ -10,6 +10,8 @@ namespace py = pybind11;
 
 namespace mplib::collision_detection {
 
+using CollisionResult = ::fcl::CollisionResult<S>;
+using DistanceResult = ::fcl::DistanceResult<S>;
 using WorldCollisionResult = WorldCollisionResultTpl<S>;
 using WorldDistanceResult = WorldDistanceResultTpl<S>;
 
@@ -19,6 +21,14 @@ void build_pycollision_common(py::module &m) {
           m, "WorldCollisionResult",
           DOC(mplib, collision_detection, WorldCollisionResultTpl));
   PyWorldCollisionResult
+      .def(py::init<>(), DOC(mplib, collision_detection, WorldCollisionResultTpl,
+                             WorldCollisionResultTpl))
+      .def(py::init<const CollisionResult &, const std::string &, const std::string &,
+                    const std::string &, const std::string &, const std::string &>(),
+           py::arg("res"), py::arg("collision_type"), py::arg("object_name1"),
+           py::arg("object_name2"), py::arg("link_name1"), py::arg("link_name2"),
+           DOC(mplib, collision_detection, WorldCollisionResultTpl,
+               WorldCollisionResultTpl, 2))
       .def_readonly("res", &WorldCollisionResult::res,
                     DOC(mplib, collision_detection, WorldCollisionResultTpl, res))
       .def_readonly(
@@ -42,6 +52,15 @@ void build_pycollision_common(py::module &m) {
           m, "WorldDistanceResult",
           DOC(mplib, collision_detection, WorldDistanceResultTpl));
   PyWorldDistanceResult
+      .def(py::init<>(), DOC(mplib, collision_detection, WorldDistanceResultTpl,
+                             WorldDistanceResultTpl))
+      .def(py::init<const DistanceResult &, S, const std::string &, const std::string &,
+                    const std::string &, const std::string &, const std::string &>(),
+           py::arg("res"), py::arg("min_distance"), py::arg("distance_type"),
+           py::arg("object_name1"), py::arg("object_name2"), py::arg("link_name1"),
+           py::arg("link_name2"),
+           DOC(mplib, collision_detection, WorldDistanceResultTpl,
+               WorldDistanceResultTpl, 2))
       .def_readonly("res", &WorldDistanceResult::res,
                     DOC(mplib, collision_detection, WorldDistanceResultTpl, res))
       .def_readonly(

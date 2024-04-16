@@ -12,8 +12,11 @@ services:
     command:
       - >-
         python3 -m pip install ./wheelhouse/mplib*.whl
-        && rm -rf ./docs/build
-        && sphinx-autobuild ./docs/source/ ./docs/build/html/
+        && apt update && apt install -y libx11-6
+        && python3 -m pip install sapien~=3.0.0.dev
+        && cd ./docs
+        && rm -rf ./build
+        && sphinx-autobuild ./source/ ./build/html/
     image: kolinguo/sphinx
     build:
       network: host
@@ -27,4 +30,5 @@ services:
         COPY ./requirements.txt /tmp
         RUN python3 -m pip install -r /tmp/requirements.txt \
           && rm -r /tmp/*
+        RUN python3 -m pip install sphinx-autobuild watchfiles
         RUN git config --global --add safe.directory /MPlib

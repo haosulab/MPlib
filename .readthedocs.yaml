@@ -4,6 +4,8 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.10"
+  apt_packages:
+    - libx11-6
   jobs:
     post_install:
       - python docs/get_wheel_artifact.py haosulab/MPlib --py cp310 --wait-sec 600

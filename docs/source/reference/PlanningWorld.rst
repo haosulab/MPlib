@@ -1,7 +1,4 @@
 ``PlanningWorld``
 -------------------
 
-.. autoclass:: mplib.pymp.PlanningWorld
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autoclass:: mplib.PlanningWorld

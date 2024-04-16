@@ -43,7 +43,9 @@ def export_srdf_xml(articulation: PhysxArticulation) -> ET.Element:
     <disable_collisions link1="panda_link5" link2="panda_link6" reason="Adjacent"/>
     <disable_collisions link1="panda_link5" link2="panda_link7" reason="Default"/>
     """
-    elem_robot = ET.Element("robot", {"name": articulation.name})
+    from .conversion import convert_object_name
+
+    elem_robot = ET.Element("robot", {"name": convert_object_name(articulation)})
 
     # Get all links with collision shapes
     colliding_links = [l for l in articulation.links if len(l.collision_shapes) > 0]

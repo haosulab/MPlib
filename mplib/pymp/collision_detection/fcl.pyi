@@ -7,6 +7,7 @@ import typing
 import numpy
 
 import mplib.pymp
+import mplib.pymp.collision_detection
 
 __all__ = [
     "BVHModel",
@@ -555,18 +556,15 @@ class FCLModel:
     """
     @staticmethod
     def create_from_urdf_string(
-        urdf_string: str,
-        collision_links: list[tuple[str, ...]],
-        *,
-        verbose: bool = False,
+        urdf_string: str, collision_links: list[...], *, verbose: bool = False
     ) -> FCLModel:
         """
         Constructs a FCLModel from URDF string and collision links
 
         :param urdf_string: URDF string (without visual/collision elements for links)
-        :param collision_links: Vector of collision link names and FCLObjectPtr. Format
-            is: ``[(link_name, FCLObjectPtr), ...]``. The collision objects are at the
-            shape's local_pose.
+        :param collision_links: Vector of collision links as FCLObjectPtr. Format is:
+            ``[FCLObjectPtr, ...]``. The collision objects are at the shape's
+            local_pose.
         :param verbose: print debug information. Default: ``False``.
         :return: a unique_ptr to FCLModel
         """
@@ -582,19 +580,150 @@ class FCLModel:
             ``False``.
         :param verbose: print debug information. Default: ``False``.
         """
-    def collide(self, request: CollisionRequest = ...) -> bool:
+    @typing.overload
+    def check_collision_with(
+        self,
+        other: FCLModel,
+        request: CollisionRequest = ...,
+        *,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
         """
-        Perform self-collision checking.
+        Check for collision in the current state with another ``FCLModel``, ignoring the
+        distances between links that are allowed to always collide (as specified by
+        acm).
+
+        :param other: another ``FCLModel`` to check collision with
+        :param acm: allowed collision matrix.
+        :param request: collision request
+        :return: List of ``WorldCollisionResult`` objects. If empty, no collision.
+        """
+    @typing.overload
+    def check_collision_with(
+        self,
+        object: ...,
+        request: CollisionRequest = ...,
+        *,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
+        """
+        Check for collision in the current state with an ``FCLObject``, ignoring the
+        distances between objects that are allowed to always collide (as specified by
+        acm).
+
+        :param object: an ``FCLObject`` to check collision with
+        :param acm: allowed collision matrix.
+        :param request: collision request
+        :return: List of ``WorldCollisionResult`` objects. If empty, no collision.
+        """
+    def check_self_collision(
+        self,
+        request: CollisionRequest = ...,
+        *,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> list[mplib.pymp.collision_detection.WorldCollisionResult]:
+        """
+        Check for self-collision in the current state and returns all found collisions,
+        ignoring the distances between links that are allowed to always collide (as
+        specified by acm).
 
         :param request: collision request
-        :return: ``True`` if any collision pair collides and ``False`` otherwise.
+        :param acm: allowed collision matrix.
+        :return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.
         """
-    def collide_full(self, request: CollisionRequest = ...) -> list[CollisionResult]:
+    def distance_self(
+        self,
+        request: DistanceRequest = ...,
+        *,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> mplib.pymp.collision_detection.WorldDistanceResult:
         """
-        Perform self-collision checking and returns all found collisions.
+        Get the minimum distance to self-collision given the robot in current state,
+        ignoring the distances between links that are allowed to always collide (as
+        specified by acm).
 
-        :param request: collision request
-        :return: list of CollisionResult for each collision pair
+        :param request: distance request.
+        :param acm: allowed collision matrix.
+        :return: a ``WorldDistanceResult`` object
+        """
+    @typing.overload
+    def distance_to_collision_with(
+        self,
+        other: FCLModel,
+        *,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> float:
+        """
+        The minimum distance to collision with another ``FCLModel`` given the robot in
+        current state, ignoring the distances between links that are allowed to always
+        collide (as specified by acm).
+
+        :param other: another ``FCLModel`` to get minimum distance-to-collision with
+        :param acm: allowed collision matrix.
+        :return: minimum distance-to-collision with the other ``FCLModel``
+        """
+    @typing.overload
+    def distance_to_collision_with(
+        self,
+        object: ...,
+        *,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> float:
+        """
+        The minimum distance to collision with an ``FCLObject`` given the robot in
+        current state, ignoring the distances between objects that are allowed to always
+        collide (as specified by acm).
+
+        :param object: an ``FCLObject`` to get minimum distance-to-collision with
+        :param acm: allowed collision matrix.
+        :return: minimum distance-to-collision with the ``FCLObject``
+        """
+    def distance_to_self_collision(
+        self, *, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
+    ) -> float:
+        """
+        The minimum distance to self-collision given the robot in current state,
+        ignoring the distances between links that are allowed to always collide (as
+        specified by acm). Calls ``distanceSelf()``.
+
+        :param acm: allowed collision matrix.
+        :return: minimum distance-to-self-collision
+        """
+    @typing.overload
+    def distance_with(
+        self,
+        other: FCLModel,
+        request: DistanceRequest = ...,
+        *,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> mplib.pymp.collision_detection.WorldDistanceResult:
+        """
+        Get the minimum distance to collision with another ``FCLModel`` given the robot
+        in current state, ignoring the distances between links that are allowed to
+        always collide (as specified by acm).
+
+        :param other: another ``FCLModel`` to get minimum distance-to-collision with
+        :param request: distance request.
+        :param acm: allowed collision matrix.
+        :return: a ``WorldDistanceResult`` object
+        """
+    @typing.overload
+    def distance_with(
+        self,
+        object: ...,
+        request: DistanceRequest = ...,
+        *,
+        acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...,
+    ) -> mplib.pymp.collision_detection.WorldDistanceResult:
+        """
+        Get the minimum distance to collision with an ``FCLObject`` given the robot in
+        current state, ignoring the distances between objects that are allowed to always
+        collide (as specified by acm).
+
+        :param object: an ``FCLObject`` to get minimum distance-to-collision with
+        :param request: distance request.
+        :param acm: allowed collision matrix.
+        :return: a ``WorldDistanceResult`` object
         """
     def get_collision_link_names(self) -> list[str]: ...
     def get_collision_objects(self) -> list[...]:
@@ -610,6 +739,22 @@ class FCLModel:
         :return: collision pairs of the FCL model. If the FCL model has N collision
             objects, the collision pairs is a list of N*(N-1)/2 pairs minus the disabled
             collision pairs
+        """
+    def get_name(self) -> str:
+        """
+        Get name of the articulated model.
+
+        :return: name of the articulated model
+        """
+    def is_state_colliding(
+        self, *, acm: mplib.pymp.collision_detection.AllowedCollisionMatrix = ...
+    ) -> bool:
+        """
+        Check if the current state is in self-collision, ignoring the distances between
+        links that are allowed to always collide (as specified by acm).
+
+        :param acm: allowed collision matrix.
+        :return: ``True`` if any collision pair collides and ``False`` otherwise.
         """
     def remove_collision_pairs_from_srdf(self, srdf_filename: str) -> None:
         """
@@ -629,6 +774,11 @@ class FCLModel:
         Update the collision objects of the FCL model.
 
         :param link_poses: list of link poses in the order of the link order
+        """
+    @property
+    def name(self) -> str:
+        """
+        Name of the fcl model
         """
 
 class FCLObject:

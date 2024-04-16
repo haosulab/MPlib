@@ -34,14 +34,6 @@ One way to model the environment and avoid collision is through point clouds. Th
 
 ``planner.update_point_cloud()`` takes two arguments. The first one is a NumPy array of shape :math:`(n \times 3)`, which describes the coordinates of the points. **The coordinates should be represented in the world frame**. The second (optional) argument is ``resolution``, which describes the resolution of each point. This can be used to create a buffer around the collision object.
 
-After adding the point cloud, we can avoid collisions between the robot and the point cloud by setting ``use_point_cloud`` to be True. Both ``planner.plan_qpos_to_pose()`` and ``planner.plan_screw()`` support this flag:
-
-.. literalinclude:: ../../../mplib/examples/demo_setup.py
-   :dedent: 0
-   :start-after: # plan_qpos_to_pose ankor
-   :end-before: # plan_qpos_to_pose ankor end
-   :emphasize-lines: 5
-
 You don't need to provide the point cloud for each ``planner.plan()`` or ``planner.plan_screw()`` call. You can use  ``planner.update_point_cloud()`` to update the point cloud once it's changed.
 
 .. note::
@@ -62,7 +54,7 @@ As shown in the above figure (middle one), after adding the point cloud of the b
 - ``pose``: a list with seven elements indicates the relative pose from the box to the attached link. The first three elements describe the position part, and the remaining four elements describe the quaternion (wxyz) for the rotation part.
 - ``link_id = -1``: optional, an integer indicates the id of the link that the box is attached to. The link id is determined by the ``user_link_names`` (during Configuration), and starts from 0. The default value -1 indicates the ``move_group`` link.
 
-After adding the attached box, we can avoid collisions between the attached box and the point cloud by setting both ``use_point_cloud`` and ``use_attach`` to be True. Both ``planner.plan_qpos_to_pose()`` and ``planner.plan_screw()`` support the flags.
+After adding the attached box, we can avoid collisions between the attached box and the point cloud by setting both ``use_point_cloud`` and ``use_attach`` to be True. Both ``planner.plan_pose()`` and ``planner.plan_screw()`` support the flags.
 
 You can use  ``planner.update_attached_box()`` again to update the box once it's changed.
 

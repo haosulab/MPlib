@@ -10,6 +10,8 @@
 #include <urdf_model/types.h>
 #include <urdf_world/types.h>
 
+#include "mplib/collision_detection/collision_common.h"
+#include "mplib/collision_detection/collision_matrix.h"
 #include "mplib/collision_detection/fcl/collision_common.h"
 #include "mplib/macros/class_forward.h"
 #include "mplib/utils/pose.h"
@@ -26,6 +28,14 @@ MPLIB_CLASS_TEMPLATE_FORWARD(FCLModelTpl);
  */
 template <typename S>
 class FCLModelTpl {
+  // Common type alias
+  using CollisionRequest = fcl::CollisionRequest<S>;
+  using CollisionResult = fcl::CollisionResult<S>;
+  using DistanceRequest = fcl::DistanceRequest<S>;
+  using DistanceResult = fcl::DistanceResult<S>;
+  using WorldCollisionResult = WorldCollisionResultTpl<S>;
+  using WorldDistanceResult = WorldDistanceResultTpl<S>;
+
  public:
   /**
    * Construct an FCL model from URDF and SRDF files.
@@ -54,16 +64,29 @@ class FCLModelTpl {
    * Constructs a FCLModel from URDF string and collision links
    *
    * @param urdf_string: URDF string (without visual/collision elements for links)
-   * @param collision_links: Vector of collision link names and FCLObjectPtr.
-   *    Format is: ``[(link_name, FCLObjectPtr), ...]``.
+   * @param collision_links: Vector of collision links as FCLObjectPtr.
+   *    Format is: ``[FCLObjectPtr, ...]``.
    *    The collision objects are at the shape's local_pose.
    * @param verbose: print debug information. Default: ``false``.
    * @return: a unique_ptr to FCLModel
    */
   static std::unique_ptr<FCLModelTpl<S>> createFromURDFString(
       const std::string &urdf_string,
-      const std::vector<std::pair<std::string, FCLObjectPtr<S>>> &collision_links,
-      bool verbose = false);
+      const std::vector<FCLObjectPtr<S>> &collision_links, bool verbose = false);
+
+  /**
+   * Get name of the articulated model.
+   *
+   * @return: name of the articulated model
+   */
+  const std::string &getName() const { return name_; }
+
+  /**
+   * Set name of the articulated model.
+   *
+   * @param name: name of the articulated model
+   */
+  void setName(const std::string &name) { name_ = name; }
 
   /**
    * Get the collision objects of the FCL model.
@@ -128,23 +151,151 @@ class FCLModelTpl {
   void updateCollisionObjects(const std::vector<Pose<S>> &link_poses) const;
 
   /**
-   * Perform self-collision checking.
+   * Check if the current state is in self-collision,
+   * ignoring the distances between links that are allowed to always collide (as
+   * specified by acm).
    *
-   * @param request: collision request
+   * @param acm: allowed collision matrix.
    * @return: ``true`` if any collision pair collides and ``false`` otherwise.
    */
-  bool collide(
-      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>()) const;
+  bool isStateColliding(const AllowedCollisionMatrixPtr &acm =
+                            std::make_shared<AllowedCollisionMatrix>()) const {
+    return checkSelfCollision(CollisionRequest(), acm).size() > 0;
+  }
 
   /**
-   * Perform self-collision checking and returns all found collisions.
+   * Check for self-collision in the current state and returns all found collisions,
+   * ignoring the distances between links that are allowed to always collide (as
+   * specified by acm).
    *
    * @param request: collision request
-   * @return: list of CollisionResult for each collision pair
+   * @param acm: allowed collision matrix.
+   * @return: List of ``WorldCollisionResult`` objects. If empty, no self-collision.
    */
-  std::vector<fcl::CollisionResult<S>> collideFull(
-      const fcl::CollisionRequest<S> &request = fcl::CollisionRequest<S>(
-          1, false, 1, false, true, fcl::GJKSolverType::GST_INDEP, 1e-6)) const;
+  std::vector<WorldCollisionResult> checkSelfCollision(
+      const CollisionRequest &request = CollisionRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
+
+  /**
+   * Check for collision in the current state with another ``FCLModel``,
+   * ignoring the distances between links that are allowed to always
+   * collide (as specified by acm).
+   *
+   * @param other: another ``FCLModel`` to check collision with
+   * @param acm: allowed collision matrix.
+   * @param request: collision request
+   * @return: List of ``WorldCollisionResult`` objects. If empty, no collision.
+   */
+  std::vector<WorldCollisionResult> checkCollisionWith(
+      const FCLModelTplPtr<S> &other,
+      const CollisionRequest &request = CollisionRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
+
+  /**
+   * Check for collision in the current state with an ``FCLObject``,
+   * ignoring the distances between objects that are allowed to always
+   * collide (as specified by acm).
+   *
+   * @param object: an ``FCLObject`` to check collision with
+   * @param acm: allowed collision matrix.
+   * @param request: collision request
+   * @return: List of ``WorldCollisionResult`` objects. If empty, no collision.
+   */
+  std::vector<WorldCollisionResult> checkCollisionWith(
+      const FCLObjectPtr<S> &object,
+      const CollisionRequest &request = CollisionRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
+
+  /**
+   * The minimum distance to self-collision given the robot in current state,
+   * ignoring the distances between links that are allowed to always collide (as
+   * specified by acm). Calls ``distanceSelf()``.
+   *
+   * @param acm: allowed collision matrix.
+   * @return: minimum distance-to-self-collision
+   */
+  S distanceToSelfCollision(const AllowedCollisionMatrixPtr &acm =
+                                std::make_shared<AllowedCollisionMatrix>()) const {
+    return distanceSelf(DistanceRequest(), acm).min_distance;
+  }
+
+  /**
+   * Get the minimum distance to self-collision given the robot in current state,
+   * ignoring the distances between links that are allowed to always collide (as
+   * specified by acm).
+   *
+   * @param request: distance request.
+   * @param acm: allowed collision matrix.
+   * @return: a ``WorldDistanceResult`` object
+   */
+  WorldDistanceResult distanceSelf(
+      const DistanceRequest &request = DistanceRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
+
+  /**
+   * The minimum distance to collision with another ``FCLModel`` given the robot in
+   * current state, ignoring the distances between links that are allowed to always
+   * collide (as specified by acm).
+   *
+   * @param other: another ``FCLModel`` to get minimum distance-to-collision with
+   * @param acm: allowed collision matrix.
+   * @return: minimum distance-to-collision with the other ``FCLModel``
+   */
+  S distanceToCollisionWith(const FCLModelTplPtr<S> &other,
+                            const AllowedCollisionMatrixPtr &acm =
+                                std::make_shared<AllowedCollisionMatrix>()) const {
+    return distanceWith(other, DistanceRequest(), acm).min_distance;
+  }
+
+  /**
+   * Get the minimum distance to collision with another ``FCLModel`` given the robot in
+   * current state, ignoring the distances between links that are allowed to always
+   * collide (as specified by acm).
+   *
+   * @param other: another ``FCLModel`` to get minimum distance-to-collision with
+   * @param request: distance request.
+   * @param acm: allowed collision matrix.
+   * @return: a ``WorldDistanceResult`` object
+   */
+  WorldDistanceResult distanceWith(
+      const FCLModelTplPtr<S> &other,
+      const DistanceRequest &request = DistanceRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
+
+  /**
+   * The minimum distance to collision with an ``FCLObject`` given the robot in
+   * current state, ignoring the distances between objects that are allowed to always
+   * collide (as specified by acm).
+   *
+   * @param object: an ``FCLObject`` to get minimum distance-to-collision with
+   * @param acm: allowed collision matrix.
+   * @return: minimum distance-to-collision with the ``FCLObject``
+   */
+  S distanceToCollisionWith(const FCLObjectPtr<S> &object,
+                            const AllowedCollisionMatrixPtr &acm =
+                                std::make_shared<AllowedCollisionMatrix>()) const {
+    return distanceWith(object, DistanceRequest(), acm).min_distance;
+  }
+
+  /**
+   * Get the minimum distance to collision with an ``FCLObject`` given the robot in
+   * current state, ignoring the distances between objects that are allowed to always
+   * collide (as specified by acm).
+   *
+   * @param object: an ``FCLObject`` to get minimum distance-to-collision with
+   * @param request: distance request.
+   * @param acm: allowed collision matrix.
+   * @return: a ``WorldDistanceResult`` object
+   */
+  WorldDistanceResult distanceWith(
+      const FCLObjectPtr<S> &object, const DistanceRequest &request = DistanceRequest(),
+      const AllowedCollisionMatrixPtr &acm =
+          std::make_shared<AllowedCollisionMatrix>()) const;
 
  private:
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model,
@@ -152,6 +303,8 @@ class FCLModelTpl {
 
   void dfsParseTree(const urdf::LinkConstSharedPtr &link,
                     const std::string &parent_link_name);
+
+  std::string name_;
 
   urdf::ModelInterfaceSharedPtr urdf_model_;
   std::string package_dir_;

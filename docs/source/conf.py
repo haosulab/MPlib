@@ -36,6 +36,17 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = []
 
+maximum_signature_line_length = 88  # limit maximum method/function signature length
+autodoc_preserve_defaults = True
+autodoc_default_options = {
+    "members": True,
+    "member-order": "bysource",
+    "inherited-members": True,
+    "show-inheritance": True,
+    "undoc-members": True,
+    "special-members": "__init__",
+}
+
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

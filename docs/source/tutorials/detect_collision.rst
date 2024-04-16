@@ -22,7 +22,7 @@ We will also create a floor as one of the collision objects to demonstrate the `
     :start-after: # floor ankor
     :end-before: # floor ankor end
 
-Note that we call floor a "normal" object because it is not an articulated object. The function to add a normal object to the planning world is `set_normal_object`. This can also be used to update the pose of the object or change it our entirely.
+Note that we call floor an object because it is not an articulated object. The function to add an object to the planning world is `add_object`. This can also be used to update the pose of the object or change it our entirely.
 
 Collision Time!
 ---------------

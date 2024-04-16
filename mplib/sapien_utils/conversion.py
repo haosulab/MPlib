@@ -18,24 +18,48 @@ from sapien.physx import (
 )
 from transforms3d.euler import euler2quat
 
-from ..planner import Planner
-from ..pymp import ArticulatedModel, PlanningWorld, Pose
-from ..pymp.collision_detection.fcl import (
+from .. import ArticulatedModel, PlanningWorld, Pose
+from ..collision_detection import (
+    AllowedCollision,
+    AllowedCollisionMatrix,
+    WorldCollisionResult,
+    WorldDistanceResult,
+)
+from ..collision_detection.fcl import (
     Box,
     BVHModel,
     Capsule,
     CollisionObject,
     Convex,
     Cylinder,
+    FCLModel,
     FCLObject,
     Halfspace,
     Sphere,
     collide,
     distance,
 )
-from ..pymp.planning import ompl
+from ..planner import Planner
+from ..planning.ompl import OMPLPlanner
 from .srdf_exporter import export_srdf
 from .urdf_exporter import export_kinematic_chain_urdf
+
+
+# TODO: link names?
+def convert_object_name(obj: PhysxArticulation | Entity) -> str:
+    """
+    Constructs a unique name for the corresponding mplib object.
+    This is necessary because mplib objects assume unique names.
+
+    :param obj: a SAPIEN object
+    :return: the unique mplib object name
+    """
+    if isinstance(obj, PhysxArticulation):
+        return f"{obj.name}_{obj.root.entity.per_scene_id}"
+    elif isinstance(obj, Entity):
+        return f"{obj.name}_{obj.per_scene_id}"
+    else:
+        raise NotImplementedError(f"Unknown SAPIEN object type {type(obj)}")
 
 
 class SapienPlanningWorld(PlanningWorld):
@@ -45,11 +69,11 @@ class SapienPlanningWorld(PlanningWorld):
         planned_articulations: list[PhysxArticulation] = [],  # noqa: B006
     ):
         """
-        Creates an mplib.pymp.planning_world.PlanningWorld from a sapien.Scene.
+        Creates an mplib.PlanningWorld from a sapien.Scene.
 
         :param planned_articulations: list of planned articulations.
         """
-        super().__init__([], [])
+        super().__init__([])
         self._sim_scene = sim_scene
 
         articulations: list[PhysxArticulation] = sim_scene.get_all_articulations()
@@ -61,7 +85,7 @@ class SapienPlanningWorld(PlanningWorld):
 
             # Convert all links to FCLObject
             collision_links = [
-                (link.name, fcl_obj)
+                fcl_obj
                 for link in articulation.links
                 if (fcl_obj := self.convert_physx_component(link)) is not None
             ]
@@ -76,11 +100,10 @@ class SapienPlanningWorld(PlanningWorld):
                 verbose=False,
             )
             articulated_model.set_qpos(articulation.qpos)  # update qpos  # type: ignore
-
-            self.add_articulation(self.get_object_name(articulation), articulated_model)
+            self.add_articulation(articulated_model)
 
         for articulation in planned_articulations:
-            self.set_articulation_planned(self.get_object_name(articulation), True)
+            self.set_articulation_planned(convert_object_name(articulation), True)
 
         for entity in actors:
             component = entity.find_component_by_type(PhysxRigidBaseComponent)
@@ -90,10 +113,8 @@ class SapienPlanningWorld(PlanningWorld):
             )
 
             # Convert collision shapes at current global pose
-            self.add_normal_object(
-                self.get_object_name(entity),
-                self.convert_physx_component(component),  # type: ignore
-            )
+            if (fcl_obj := self.convert_physx_component(component)) is not None:  # type: ignore
+                self.add_object(fcl_obj)
 
     def update_from_simulation(self, *, update_attached_object: bool = True) -> None:
         """
@@ -105,7 +126,7 @@ class SapienPlanningWorld(PlanningWorld):
             all attached objects
         """
         for articulation in self._sim_scene.get_all_articulations():
-            if art := self.get_articulation(self.get_object_name(articulation)):
+            if art := self.get_articulation(convert_object_name(articulation)):
                 # set_qpos to update poses
                 art.set_qpos(articulation.qpos)  # type: ignore
             else:
@@ -115,7 +136,7 @@ class SapienPlanningWorld(PlanningWorld):
                 )
 
         for entity in self._sim_scene.get_all_actors():
-            object_name = self.get_object_name(entity)
+            object_name = convert_object_name(entity)
 
             # If entity is an attached object
             if attached_body := self.get_attached_object(object_name):
@@ -125,38 +146,146 @@ class SapienPlanningWorld(PlanningWorld):
                         * entity.pose  # type: ignore
                     )
                 attached_body.update_pose()
-            elif fcl_obj := self.get_normal_object(object_name):
+            elif fcl_obj := self.get_object(object_name):
                 # Overwrite the object
-                self.add_normal_object(
-                    object_name,
+                self.add_object(
                     FCLObject(
                         object_name,
                         entity.pose,  # type: ignore
                         fcl_obj.shapes,
                         fcl_obj.shape_poses,
-                    ),
+                    )
                 )
-            else:
+            elif (
+                len(
+                    entity.find_component_by_type(
+                        PhysxRigidBaseComponent
+                    ).collision_shapes  # type: ignore
+                )
+                > 0
+            ):
                 raise RuntimeError(
                     f"Entity {entity.name} not found in PlanningWorld! "
                     "The scene might have changed since last update."
                 )
 
-    @staticmethod
-    def get_object_name(obj: PhysxArticulation | Entity) -> str:
+    def check_collision_between(
+        self,
+        obj_A: PhysxArticulation | Entity,
+        obj_B: PhysxArticulation | Entity,
+        *,
+        acm: AllowedCollisionMatrix = AllowedCollisionMatrix(),  # noqa: B008
+    ) -> list[WorldCollisionResult]:
         """
-        Constructs a unique name for the corresponding mplib object.
-        This is necessary because mplib objects assume unique names.
+        Check collision between two objects,
+        which can either be a PhysxArticulation or an Entity.
 
-        :param obj: a SAPIEN object
-        :return: the unique mplib object name
+        :param obj_A: object A to check for collision.
+        :param obj_B: object B to check for collision.
+        :param acm: allowed collision matrix.
+        :return: a list of WorldCollisionResult. Empty if there's no collision.
         """
-        if isinstance(obj, PhysxArticulation):
-            return f"{obj.name}_{obj.root.entity.per_scene_id}"
-        elif isinstance(obj, Entity):
-            return f"{obj.name}_{obj.per_scene_id}"
+        col_obj_A = self._get_collision_obj(obj_A)
+        col_obj_B = self._get_collision_obj(obj_B)
+
+        if isinstance(obj_A, PhysxArticulation):  # A is articulation, B is anything
+            assert isinstance(col_obj_A, FCLModel), f"Wrong type: {type(col_obj_A)}"
+            return col_obj_A.check_collision_with(col_obj_B, acm=acm)
+        elif isinstance(obj_B, PhysxArticulation):  # A is object, B is articulation
+            assert isinstance(col_obj_B, FCLModel), f"Wrong type: {type(col_obj_B)}"
+            return col_obj_B.check_collision_with(col_obj_A, acm=acm)
+        elif isinstance(obj_B, Entity):  # A is object, B is object
+            assert isinstance(col_obj_A, FCLObject) and isinstance(
+                col_obj_B, FCLObject
+            ), f"Wrong type: col_obj_A={type(col_obj_A)}, col_obj_B={type(col_obj_B)}"
+            if (
+                acm_type := acm.get_allowed_collision(col_obj_A.name, col_obj_B.name)
+            ) is None or acm_type == AllowedCollision.NEVER:
+                result = collide(col_obj_A, col_obj_B)
+                if result.is_collision():
+                    return [
+                        WorldCollisionResult(
+                            result,
+                            "object_object",
+                            col_obj_A.name,
+                            col_obj_B.name,
+                            col_obj_A.name,
+                            col_obj_B.name,
+                        )
+                    ]
+            return []
         else:
-            raise NotImplementedError(f"Unknown SAPIEN object type {type(obj)}")
+            raise NotImplementedError(f"obj_A={obj_A}, obj_B={obj_B}")
+
+    def distance_between(
+        self,
+        obj_A: PhysxArticulation | Entity,
+        obj_B: PhysxArticulation | Entity,
+        *,
+        acm: AllowedCollisionMatrix = AllowedCollisionMatrix(),  # noqa: B008
+        return_distance_only: bool = True,
+    ) -> WorldDistanceResult | float:
+        """
+        Check distance-to-collision between two objects,
+        which can either be a PhysxArticulation or an Entity.
+
+        :param obj_A: object A to check for collision.
+        :param obj_B: object B to check for collision.
+        :param acm: allowed collision matrix.
+        :param return_distance_only: if True, return distance only.
+        :return: a WorldDistanceResult or a float if return_distance_only==True.
+        """
+        col_obj_A = self._get_collision_obj(obj_A)
+        col_obj_B = self._get_collision_obj(obj_B)
+        ret = WorldDistanceResult()
+
+        if isinstance(obj_A, PhysxArticulation):  # A is articulation, B is anything
+            assert isinstance(col_obj_A, FCLModel), f"Wrong type: {type(col_obj_A)}"
+            ret = col_obj_A.distance_with(col_obj_B, acm=acm)
+        elif isinstance(obj_B, PhysxArticulation):  # A is object, B is articulation
+            assert isinstance(col_obj_B, FCLModel), f"Wrong type: {type(col_obj_B)}"
+            ret = col_obj_B.distance_with(col_obj_A, acm=acm)
+        elif isinstance(obj_B, Entity):  # A is object, B is object
+            assert isinstance(col_obj_A, FCLObject) and isinstance(
+                col_obj_B, FCLObject
+            ), f"Wrong type: col_obj_A={type(col_obj_A)}, col_obj_B={type(col_obj_B)}"
+            if (
+                acm_type := acm.get_allowed_collision(col_obj_A.name, col_obj_B.name)
+            ) is None or acm_type == AllowedCollision.NEVER:
+                result = distance(col_obj_A, col_obj_B)
+                ret = WorldDistanceResult(
+                    result,
+                    result.min_distance,
+                    "object_object",
+                    col_obj_A.name,
+                    col_obj_B.name,
+                    col_obj_A.name,
+                    col_obj_B.name,
+                )
+        else:
+            raise NotImplementedError(f"obj_A={obj_A}, obj_B={obj_B}")
+
+        return ret.min_distance if return_distance_only else ret
+
+    def _get_collision_obj(
+        self,
+        obj: PhysxArticulation | Entity,
+    ) -> FCLModel | FCLObject | None:
+        """Helper function to get mplib collision object from sapien object"""
+        if isinstance(obj, PhysxArticulation) and (
+            articulation := self.get_articulation(convert_object_name(obj))
+        ):
+            return articulation.get_fcl_model()
+        elif isinstance(obj, Entity) and (
+            fcl_obj := self.get_object(convert_object_name(obj))
+        ):
+            return fcl_obj
+        else:
+            raise RuntimeError(
+                f"Unknown SAPIEN object type: {type(obj)} or "
+                f"Object {obj.name} not found in PlanningWorld "
+                "(The scene might have changed since last update)"
+            )
 
     @staticmethod
     def convert_physx_component(comp: PhysxRigidBaseComponent) -> FCLObject | None:
@@ -191,10 +320,13 @@ class SapienPlanningWorld(PlanningWorld):
                 # FCL Cylinder has z-axis along cylinder height
                 shape_poses[-1] *= Pose(q=euler2quat(0, np.pi / 2, 0))
             elif isinstance(shape, PhysxCollisionShapePlane):
-                raise NotImplementedError(
-                    "Support for Plane collision is not implemented yet in mplib, "
-                    "need fcl::Plane"
-                )
+                # PhysxCollisionShapePlane are actually a halfspace
+                # https://nvidia-omniverse.github.io/PhysX/physx/5.3.1/docs/Geometry.html#planes
+                # PxPlane's Pose determines its normal and offert (normal is +x)
+                n = shape_poses[-1].to_transformation_matrix()[:3, 0]
+                d = n.dot(shape_poses[-1].p)
+                c_geom = Halfspace(n=n, d=d)
+                shape_poses[-1] = Pose()
             elif isinstance(shape, PhysxCollisionShapeSphere):
                 c_geom = Sphere(radius=shape.radius)
             elif isinstance(shape, PhysxCollisionShapeTriangleMesh):
@@ -212,7 +344,7 @@ class SapienPlanningWorld(PlanningWorld):
         return FCLObject(
             comp.name
             if isinstance(comp, PhysxArticulationLinkComponent)
-            else SapienPlanningWorld.get_object_name(comp.entity),
+            else convert_object_name(comp.entity),
             comp.entity.pose,  # type: ignore
             shapes,
             shape_poses,
@@ -287,7 +419,7 @@ class SapienPlanner(Planner):
             t.startswith("JointModelR") for t in self.joint_types
         ] & (self.joint_limits[:, 1] - self.joint_limits[:, 0] > 2 * np.pi)
 
-        self.planner = ompl.OMPLPlanner(world=self.planning_world)
+        self.planner = OMPLPlanner(world=self.planning_world)
 
     def update_from_simulation(self, *, update_attached_object: bool = True) -> None:
         """

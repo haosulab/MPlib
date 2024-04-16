@@ -2,12 +2,11 @@ import os
 import unittest
 
 import numpy as np
-import trimesh
 from transforms3d.quaternions import mat2quat, quat2mat
 
-import mplib
-from mplib.pymp import Pose
-from mplib.pymp.collision_detection import fcl
+from mplib import ArticulatedModel, Pose
+from mplib.collision_detection import fcl
+from mplib.kinematics.pinocchio import PinocchioModel
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -46,7 +45,7 @@ ALL_JOINTS = [
 
 class TestArticulation(unittest.TestCase):
     def setUp(self):
-        self.robot = mplib.ArticulatedModel(
+        self.robot = ArticulatedModel(
             PANDA_SPEC["urdf"],
             PANDA_SPEC["srdf"],
             link_names=[],
@@ -109,9 +108,7 @@ class TestArticulation(unittest.TestCase):
 
     def test_get_pinocchio_model(self):
         pinocchio_model = self.robot.get_pinocchio_model()
-        self.assertIsInstance(
-            pinocchio_model, mplib.pymp.kinematics.pinocchio.PinocchioModel
-        )
+        self.assertIsInstance(pinocchio_model, PinocchioModel)
 
     def test_get_qpos(self):
         qpos = self.robot.get_qpos()

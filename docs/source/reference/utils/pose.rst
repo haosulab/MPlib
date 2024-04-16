@@ -1,7 +1,4 @@
 ``Pose``
 -------------------------
 
-.. autoclass:: mplib.pymp.Pose
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autoclass:: mplib.Pose

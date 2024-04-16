@@ -1,10 +1,7 @@
 collision_detection
 ------------------------------------------
 
-.. automodule:: mplib.pymp.collision_detection
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. automodule:: mplib.collision_detection
 
 .. toctree::
    :maxdepth: 2

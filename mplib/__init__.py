@@ -1,13 +1,11 @@
 from importlib.metadata import version
 
-from mplib.planner import Planner
-from mplib.pymp import (
+from .planner import Planner
+from .pymp import (
     ArticulatedModel,
+    AttachedBody,
     PlanningWorld,
     Pose,
-    collision_detection,
-    kinematics,
-    planning,
     set_global_seed,
 )
 

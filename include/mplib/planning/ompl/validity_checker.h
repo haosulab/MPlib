@@ -25,7 +25,7 @@ class ValidityCheckerTpl : public ob::StateValidityChecker {
 
   bool _isValid(const VectorX<S> &state) const {
     world_->setQposAll(addFixedJoints(fixed_joints_, state));
-    return !world_->collide();
+    return !world_->isStateColliding();
   }
 
   bool isValid(const ob::State *state_raw) const {

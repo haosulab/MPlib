@@ -30,11 +30,8 @@ void build_pyplanning_world(py::module &pymp) {
 
   PyPlanningWorld
       .def(py::init<const std::vector<ArticulatedModelPtr> &,
-                    const std::vector<std::string> &, const std::vector<FCLObjectPtr> &,
-                    const std::vector<std::string> &>(),
-           py::arg("articulations"), py::arg("articulation_names"),
-           py::arg("normal_objects") = std::vector<FCLObjectPtr>(),
-           py::arg("normal_object_names") = std::vector<std::string>(),
+                    const std::vector<FCLObjectPtr> &>(),
+           py::arg("articulations"), py::arg("objects") = std::vector<FCLObjectPtr>(),
            DOC(mplib, PlanningWorldTpl, PlanningWorldTpl))
 
       .def("get_articulation_names", &PlanningWorld::getArticulationNames,
@@ -45,9 +42,8 @@ void build_pyplanning_world(py::module &pymp) {
            DOC(mplib, PlanningWorldTpl, getArticulation))
       .def("has_articulation", &PlanningWorld::hasArticulation, py::arg("name"),
            DOC(mplib, PlanningWorldTpl, hasArticulation))
-      .def("add_articulation", &PlanningWorld::addArticulation, py::arg("name"),
-           py::arg("model"), py::arg("planned") = false,
-           DOC(mplib, PlanningWorldTpl, addArticulation))
+      .def("add_articulation", &PlanningWorld::addArticulation, py::arg("model"),
+           py::arg("planned") = false, DOC(mplib, PlanningWorldTpl, addArticulation))
       .def("remove_articulation", &PlanningWorld::removeArticulation, py::arg("name"),
            DOC(mplib, PlanningWorldTpl, removeArticulation))
       .def("is_articulation_planned", &PlanningWorld::isArticulationPlanned,
@@ -56,30 +52,28 @@ void build_pyplanning_world(py::module &pymp) {
            py::arg("name"), py::arg("planned"),
            DOC(mplib, PlanningWorldTpl, setArticulationPlanned))
 
-      .def("get_normal_object_names", &PlanningWorld::getNormalObjectNames,
-           DOC(mplib, PlanningWorldTpl, getNormalObjectNames))
-      .def("get_normal_object", &PlanningWorld::getNormalObject, py::arg("name"),
-           DOC(mplib, PlanningWorldTpl, getNormalObject))
-      .def("has_normal_object", &PlanningWorld::hasNormalObject, py::arg("name"),
-           DOC(mplib, PlanningWorldTpl, hasNormalObject))
-      .def("add_normal_object",
-           py::overload_cast<const std::string &, const FCLObjectPtr &>(
-               &PlanningWorld::addNormalObject),
-           py::arg("name"), py::arg("collision_object"),
-           DOC(mplib, PlanningWorldTpl, addNormalObject))
-      .def("add_normal_object",
+      .def("get_object_names", &PlanningWorld::getObjectNames,
+           DOC(mplib, PlanningWorldTpl, getObjectNames))
+      .def("get_object", &PlanningWorld::getObject, py::arg("name"),
+           DOC(mplib, PlanningWorldTpl, getObject))
+      .def("has_object", &PlanningWorld::hasObject, py::arg("name"),
+           DOC(mplib, PlanningWorldTpl, hasObject))
+      .def("add_object",
+           py::overload_cast<const FCLObjectPtr &>(&PlanningWorld::addObject),
+           py::arg("fcl_obj"), DOC(mplib, PlanningWorldTpl, addObject))
+      .def("add_object",
            py::overload_cast<const std::string &, const CollisionObjectPtr &>(
-               &PlanningWorld::addNormalObject),
+               &PlanningWorld::addObject),
            py::arg("name"), py::arg("collision_object"),
-           DOC(mplib, PlanningWorldTpl, addNormalObject, 2))
+           DOC(mplib, PlanningWorldTpl, addObject, 2))
       .def("add_point_cloud", &PlanningWorld::addPointCloud, py::arg("name"),
            py::arg("vertices"), py::arg("resolution") = 0.01,
            DOC(mplib, PlanningWorldTpl, addPointCloud))
-      .def("remove_normal_object", &PlanningWorld::removeNormalObject, py::arg("name"),
-           DOC(mplib, PlanningWorldTpl, removeNormalObject))
+      .def("remove_object", &PlanningWorld::removeObject, py::arg("name"),
+           DOC(mplib, PlanningWorldTpl, removeObject))
 
-      .def("is_normal_object_attached", &PlanningWorld::isNormalObjectAttached,
-           py::arg("name"), DOC(mplib, PlanningWorldTpl, isNormalObjectAttached))
+      .def("is_object_attached", &PlanningWorld::isObjectAttached, py::arg("name"),
+           DOC(mplib, PlanningWorldTpl, isObjectAttached))
       .def("get_attached_object", &PlanningWorld::getAttachedObject, py::arg("name"),
            DOC(mplib, PlanningWorldTpl, getAttachedObject))
       .def("attach_object",
@@ -125,8 +119,8 @@ void build_pyplanning_world(py::module &pymp) {
            py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
            DOC(mplib, PlanningWorldTpl, attachBox))
       .def("attach_mesh", &PlanningWorld::attachMesh, py::arg("mesh_path"),
-           py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
-           DOC(mplib, PlanningWorldTpl, attachMesh))
+           py::arg("art_name"), py::arg("link_id"), py::arg("pose"), py::kw_only(),
+           py::arg("convex") = false, DOC(mplib, PlanningWorldTpl, attachMesh))
       .def("detach_object", &PlanningWorld::detachObject, py::arg("name"),
            py::arg("also_remove") = false, DOC(mplib, PlanningWorldTpl, detachObject))
       .def("print_attached_body_pose", &PlanningWorld::printAttachedBodyPose,
@@ -140,29 +134,32 @@ void build_pyplanning_world(py::module &pymp) {
       .def("get_allowed_collision_matrix", &PlanningWorld::getAllowedCollisionMatrix,
            DOC(mplib, PlanningWorldTpl, getAllowedCollisionMatrix))
 
-      .def("collide", &PlanningWorld::collide, py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, collide))
-      .def("self_collide", &PlanningWorld::selfCollide,
+      .def("is_state_colliding", &PlanningWorld::isStateColliding,
+           DOC(mplib, PlanningWorldTpl, isStateColliding))
+      .def("check_self_collision", &PlanningWorld::checkSelfCollision,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, selfCollide))
-      .def("collide_with_others", &PlanningWorld::collideWithOthers,
+           DOC(mplib, PlanningWorldTpl, checkSelfCollision))
+      .def("check_robot_collision", &PlanningWorld::checkRobotCollision,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, collideWithOthers))
-      .def("collide_full", &PlanningWorld::collideFull,
+           DOC(mplib, PlanningWorldTpl, checkRobotCollision))
+      .def("check_collision", &PlanningWorld::checkCollision,
            py::arg("request") = CollisionRequest(),
-           DOC(mplib, PlanningWorldTpl, collideFull))
+           DOC(mplib, PlanningWorldTpl, checkCollision))
 
-      .def("distance", &PlanningWorld::distance, py::arg("request") = DistanceRequest(),
-           DOC(mplib, PlanningWorldTpl, distance))
-      .def("self_distance", &PlanningWorld::distanceSelf,
+      .def("distance_to_self_collision", &PlanningWorld::distanceToSelfCollision,
+           DOC(mplib, PlanningWorldTpl, distanceToSelfCollision))
+      .def("distance_self", &PlanningWorld::distanceSelf,
            py::arg("request") = DistanceRequest(),
            DOC(mplib, PlanningWorldTpl, distanceSelf))
-      .def("distance_with_others", &PlanningWorld::distanceOthers,
+      .def("distance_to_robot_collision", &PlanningWorld::distanceToRobotCollision,
+           DOC(mplib, PlanningWorldTpl, distanceToRobotCollision))
+      .def("distance_robot", &PlanningWorld::distanceRobot,
            py::arg("request") = DistanceRequest(),
-           DOC(mplib, PlanningWorldTpl, distanceOthers))
-      .def("distance_full", &PlanningWorld::distanceFull,
-           py::arg("request") = DistanceRequest(),
-           DOC(mplib, PlanningWorldTpl, distanceFull));
+           DOC(mplib, PlanningWorldTpl, distanceRobot))
+      .def("distance_to_collision", &PlanningWorld::distanceToCollision,
+           DOC(mplib, PlanningWorldTpl, distanceToCollision))
+      .def("distance", &PlanningWorld::distance, py::arg("request") = DistanceRequest(),
+           DOC(mplib, PlanningWorldTpl, distance));
 }
 
 }  // namespace mplib

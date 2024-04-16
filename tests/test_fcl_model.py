@@ -4,8 +4,8 @@ import unittest
 import numpy as np
 from transforms3d.quaternions import mat2quat
 
-from mplib.pymp.collision_detection.fcl import FCLModel
-from mplib.pymp.kinematics.pinocchio import PinocchioModel
+from mplib.collision_detection.fcl import FCLModel
+from mplib.kinematics.pinocchio import PinocchioModel
 
 FILE_ABS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -60,15 +60,11 @@ class TestFCLModel(unittest.TestCase):
             self.assertIn(pair, old_collision_pairs)
 
     def test_collision(self):
-        collisions = self.model.collide_full()
+        collisions = self.model.check_self_collision()
         self.assertGreater(len(collisions), 0)
-        # some of them are collisions
-        is_collision = [collision.is_collision() for collision in collisions]
-        self.assertTrue(any(is_collision))
         self.model.remove_collision_pairs_from_srdf(PANDA_SPEC["srdf"])
-        collisions = self.model.collide_full()
-        is_collision = [collision.is_collision() for collision in collisions]
-        self.assertFalse(any(is_collision))
+        collisions = self.model.check_self_collision()
+        self.assertEqual(len(collisions), 0)
 
 
 if __name__ == "__main__":

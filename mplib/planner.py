@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-import os
-import xml.etree.ElementTree as ET
 from collections.abc import Callable
+from pathlib import Path
 from typing import Literal, Optional, Sequence
-from xml.dom import minidom
 
 import numpy as np
 import toppra as ta
 import toppra.algorithm as algo
 import toppra.constraint as constraint
 
-from mplib.pymp import ArticulatedModel, PlanningWorld, Pose
-from mplib.pymp.collision_detection import AllowedCollisionMatrix, WorldCollisionResult
-from mplib.pymp.collision_detection.fcl import CollisionGeometry
-from mplib.pymp.planning import ompl
+from .collision_detection import WorldCollisionResult
+from .collision_detection.fcl import CollisionGeometry, FCLObject
+from .planning.ompl import FixedJoint, OMPLPlanner
+from .pymp import ArticulatedModel, PlanningWorld, Pose
+from .urdf_utils import generate_srdf, replace_urdf_package_keyword
 
 
 class Planner:
@@ -25,18 +24,18 @@ class Planner:
     # constructor ankor
     def __init__(
         self,
-        urdf: str,
+        urdf: str | Path,
         move_group: str,
         *,
-        srdf: str = "",
-        package_keyword_replacement: str = "",
+        srdf: Optional[str | Path] = None,
+        new_package_keyword: str = "",
         use_convex: bool = False,
         user_link_names: Sequence[str] = [],
         user_joint_names: Sequence[str] = [],
         joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
         joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
+        objects: list[FCLObject] = [],  # noqa: B006
         verbose: bool = False,
-        **kwargs,
     ):
         # constructor ankor end
         """
@@ -48,7 +47,7 @@ class Planner:
         :param urdf: Unified Robot Description Format file.
         :param move_group: target link to move, usually the end-effector.
         :param srdf: Semantic Robot Description Format file.
-        :param package_keyword_replacement: replace ``package://`` keyword in URDF
+        :param new_package_keyword: the string to replace ``package://`` keyword
         :param use_convex: if True, load collision mesh as convex mesh.
             If mesh is not convex, a ``RuntimeError`` will be raised.
         :param user_link_names: names of links, the order matters.
@@ -59,20 +58,25 @@ class Planner:
             which should have the same length as ``self.move_group_joint_indices``
         :param joint_acc_limits: maximum joint accelerations for time parameterization,
             which should have the same length as ``self.move_group_joint_indices``
+        :param objects: list of FCLObject as non-articulated collision objects
         :param verbose: if True, print verbose logs for debugging
         """
-        self.urdf = urdf
+        self.urdf = Path(urdf)
+        if srdf is None:
+            if (srdf := self.urdf.with_suffix(".srdf")).is_file() or (
+                srdf := self.urdf.with_name(self.urdf.stem + "_mplib.srdf")
+            ).is_file():
+                print(f"No SRDF file provided but found {srdf}")
+            else:
+                srdf = generate_srdf(urdf, new_package_keyword, verbose=True)
         self.srdf = srdf
-        if self.srdf == "" and os.path.exists(urdf.replace(".urdf", ".srdf")):
-            self.srdf = urdf.replace(".urdf", ".srdf")
-            print(f"No SRDF file provided but found {self.srdf}")
 
         # replace package:// keyword if exists
-        urdf = self.replace_package_keyword(package_keyword_replacement)
+        self.urdf = replace_urdf_package_keyword(self.urdf, new_package_keyword)
 
         self.robot = ArticulatedModel(
-            self.urdf,
-            self.srdf,
+            str(self.urdf),
+            str(self.srdf),
             link_names=user_link_names,  # type: ignore
             joint_names=user_joint_names,  # type: ignore
             convex=use_convex,
@@ -123,131 +127,10 @@ class Planner:
             t.startswith("JointModelR") for t in self.joint_types
         ] & (self.joint_limits[:, 1] - self.joint_limits[:, 0] > 2 * np.pi)
 
-        self.planning_world = PlanningWorld(
-            [self.robot],
-            ["robot"],
-            kwargs.get("normal_objects", []),
-            kwargs.get("normal_object_names", []),
-        )
+        self.planning_world = PlanningWorld([self.robot], objects)
         self.acm = self.planning_world.get_allowed_collision_matrix()
 
-        if self.srdf == "":
-            self.generate_collision_pair()
-            self.robot.update_SRDF(self.srdf)
-
-        self.planner = ompl.OMPLPlanner(world=self.planning_world)
-
-    def replace_package_keyword(self, package_keyword_replacement: str):
-        # TODO(merge): fix file writing
-        # TODO(merge): convert to staticmethod
-        """
-        some ROS URDF files use package:// keyword to refer the package dir
-        replace it with the given string (default is empty)
-
-        Args:
-            package_keyword_replacement: the string to replace 'package://' keyword
-        """
-        rtn_urdf = self.urdf
-        with open(self.urdf) as in_f:
-            content = in_f.read()
-            if "package://" in content:
-                rtn_urdf = self.urdf.replace(".urdf", "_package_keyword_replaced.urdf")
-                content = content.replace("package://", package_keyword_replacement)
-                if not os.path.exists(rtn_urdf):
-                    with open(rtn_urdf, "w") as out_f:
-                        out_f.write(content)
-        return rtn_urdf
-
-    def generate_collision_pair(self, num_samples=100000):
-        # TODO(merge): convert to staticmethod
-        """
-        We read the srdf file to get the link pairs that should not collide.
-        If not provided, we need to randomly sample configurations
-        to find the link pairs that will always collide.
-
-        :param num_samples: number of samples to find the link that will always collide
-        """
-        print(
-            "Since no SRDF file is provided. We will first detect link pairs that will"
-            " always collide. This may take several minutes."
-        )
-
-        root = ET.Element("robot")
-        robot_name = self.urdf.split("/")[-1].split(".")[0]
-        root.set("name", robot_name)
-        self.srdf = self.urdf.replace(".urdf", ".srdf")
-
-        acm = AllowedCollisionMatrix()
-
-        # 1. disable adjacent link pairs
-        for link1, link2 in self.pinocchio_model.get_adjacent_links():
-            print(f"Ignore collision pair: ({link1}, {link2}), reason: Adjacent")
-            acm.set_entry(link1, link2, True)
-            _ = ET.SubElement(
-                root,
-                "disable_collisions",
-                attrib={"link1": link1, "link2": link2, "reason": "Adjacent"},
-            )
-
-        # 2. disable all-zeros qpos (default) collision
-        self.robot.set_qpos(np.zeros(len(self.user_joint_names)), True)
-        for collision in self.check_for_self_collision():
-            link1, link2 = collision.link_name1, collision.link_name2
-            if acm.get_entry(link1, link2) is not None:  # already ignored
-                continue
-            print(
-                f"Ignore collision pair: ({link1}, {link2}), "
-                "reason: Default (collides at all-zeros qpos)"
-            )
-            acm.set_entry(link1, link2, True)
-            _ = ET.SubElement(
-                root,
-                "disable_collisions",
-                attrib={"link1": link1, "link2": link2, "reason": "Default"},
-            )
-
-        # 3. disable collision pairs that always collide and never collide via sampling
-        n_links = len(self.user_link_names)
-        collision_cnt = np.zeros((n_links, n_links), dtype=int)
-        for _ in range(num_samples):
-            self.robot.set_qpos(self.pinocchio_model.get_random_configuration(), True)
-            for collision in self.check_for_self_collision():
-                u = self.link_name_2_idx[collision.link_name1]
-                v = self.link_name_2_idx[collision.link_name2]
-                collision_cnt[u][v] += 1
-
-        for i, link1 in enumerate(self.user_link_names):
-            for j in range(i + 1, n_links):
-                link2 = self.user_link_names[j]
-                if acm.get_entry(link1, link2) is not None:  # already ignored
-                    continue
-                if (cnt := (collision_cnt[i][j] + collision_cnt[j][i])) == num_samples:
-                    print(
-                        f"Ignore collision pair: ({link1}, {link2}), "
-                        "reason: Always collide"
-                    )
-                    _ = ET.SubElement(
-                        root,
-                        "disable_collisions",
-                        attrib={"link1": link1, "link2": link2, "reason": "Always"},
-                    )
-                elif cnt == 0:
-                    print(
-                        f"Ignore collision pair: ({link1}, {link2}), "
-                        "reason: Never collide"
-                    )
-                    _ = ET.SubElement(
-                        root,
-                        "disable_collisions",
-                        attrib={"link1": link1, "link2": link2, "reason": "Never"},
-                    )
-
-        # Save SRDF
-        with open(self.srdf, "w") as srdf_file:
-            srdf_file.write(
-                minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
-            )
-        print(f"Saving the SRDF file to {self.srdf}")
+        self.planner = OMPLPlanner(world=self.planning_world)
 
     def wrap_joint_limit(self, qpos: np.ndarray) -> bool:
         """
@@ -337,7 +220,7 @@ class Planner:
         :param state: all planned articulations qpos state. If None, use current qpos.
         :return: A list of collisions.
         """
-        return self.check_for_collision(self.planning_world.self_collide, state)
+        return self.check_for_collision(self.planning_world.check_self_collision, state)
 
     def check_for_env_collision(
         self,
@@ -349,7 +232,9 @@ class Planner:
         :param state: all planned articulations qpos state. If None, use current qpos.
         :return: A list of collisions.
         """
-        return self.check_for_collision(self.planning_world.collide_with_others, state)
+        return self.check_for_collision(
+            self.planning_world.check_robot_collision, state
+        )
 
     def IK(
         self,
@@ -370,12 +255,14 @@ class Planner:
         :param mask: qpos mask to disable IK sampling, (ndof,) bool np.ndarray.
         :param n_init_qpos: number of random initial configurations to sample.
         :param threshold: distance threshold for marking sampled IK as success.
-                          distance is position error norm + quaternion error norm.
+            distance is position error norm + quaternion error norm.
         :param return_closest: whether to return the qpos that is closest to start_qpos,
-                               considering equivalent joint values.
+            considering equivalent joint values.
         :param verbose: whether to print collision info if any collision exists.
         :return: (status, q_goals)
+
             status: IK status, "Success" if succeeded.
+
             q_goals: list of sampled IK qpos, (ndof,) np.floating np.ndarray.
                 IK is successful if q_goals is not None.
                 If return_closest, q_goals is np.ndarray if successful
@@ -403,7 +290,7 @@ class Planner:
             if success:
                 # check collision
                 self.planning_world.set_qpos_all(ik_qpos[move_joint_idx])
-                if len(collisions := self.planning_world.collide_full()) > 0:
+                if len(collisions := self.planning_world.check_collision()) > 0:
                     success = False
                     if verbose:
                         for collision in collisions:
@@ -508,10 +395,10 @@ class Planner:
         Removes the point cloud collision object with given name
 
         :param name: name of the point cloud collision object
-        :return: ``True`` if success, ``False`` if normal object with given name doesn't
-            exist
+        :return: ``True`` if success, ``False`` if the non-articulation object
+            with given name does not exist
         """
-        return self.planning_world.remove_normal_object(name)
+        return self.planning_world.remove_object(name)
 
     def update_attached_object(
         self,
@@ -629,11 +516,11 @@ class Planner:
         """
         self.robot.set_base_pose(pose)
 
-    def remove_normal_object(self, name) -> bool:
+    def remove_object(self, name) -> bool:
         """returns true if the object was removed, false if it was not found"""
-        return self.planning_world.remove_normal_object(name)
+        return self.planning_world.remove_object(name)
 
-    def plan_qpos_to_qpos(
+    def plan_qpos(
         self,
         goal_qposes: list[np.ndarray],
         current_qpos: np.ndarray,
@@ -681,7 +568,7 @@ class Planner:
         current_qpos = self.pad_move_group_qpos(current_qpos)
 
         self.robot.set_qpos(current_qpos, True)
-        collisions = self.planning_world.collide_full()
+        collisions = self.planning_world.check_collision()
         if len(collisions) > 0:
             print("Invalid start state!")
             for collision in collisions:
@@ -693,7 +580,7 @@ class Planner:
 
         fixed_joints = set()
         for joint_idx in fixed_joint_indices:
-            fixed_joints.add(ompl.FixedJoint(0, joint_idx, current_qpos[joint_idx]))
+            fixed_joints.add(FixedJoint(0, joint_idx, current_qpos[joint_idx]))
 
         assert len(current_qpos[move_joint_idx]) == len(goal_qpos_[0])
         status, path = self.planner.plan(
@@ -730,7 +617,7 @@ class Planner:
         """Converts goal pose from T_world_goal to T_base_goal"""
         return self.robot.get_base_pose().inv() * goal_pose
 
-    def plan_qpos_to_pose(
+    def plan_pose(
         self,
         goal_pose: Pose,
         current_qpos: np.ndarray,
@@ -779,7 +666,6 @@ class Planner:
         # we need to take only the move_group joints when planning
         # idx = self.move_group_joint_indices
 
-        # TODO(merge): verify this
         ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
         if ik_status != "Success":
             return {"status": ik_status}
@@ -789,19 +675,7 @@ class Planner:
             for i in range(len(goal_qpos)):  # type: ignore
                 print(goal_qpos[i])  # type: ignore
 
-        # goal_qpos_ = [goal_qpos[i][move_joint_idx] for i in range(len(goal_qpos))]
-        self.robot.set_qpos(current_qpos, True)
-
-        ik_status, goal_qpos = self.IK(goal_pose, current_qpos, mask)
-        if ik_status != "Success":
-            return {"status": ik_status}
-
-        if verbose:
-            print("IK results:")
-            for i in range(len(goal_qpos)):  # type: ignore
-                print(goal_qpos[i])  # type: ignore
-
-        return self.plan_qpos_to_qpos(
+        return self.plan_qpos(
             goal_qpos,  # type: ignore
             current_qpos,
             time_step=time_step,
@@ -834,7 +708,7 @@ class Planner:
         Args:
             goal_pose: pose of the goal
             current_qpos: current joint configuration (either full or move_group joints)
-            qpos_step: size of the random step for RRT
+            qpos_step: size of the random step
             time_step: time step for the discretization
             wrt_world: if True, interpret the target pose with respect to the
                 world frame instead of the base frame
@@ -928,7 +802,7 @@ class Planner:
 
             within_joint_limit = check_joint_limit(current_qpos)
             self.planning_world.set_qpos_all(current_qpos[move_joint_idx])
-            collide = self.planning_world.collide()
+            collide = self.planning_world.is_state_colliding()
 
             if np.linalg.norm(delta_twist) < 1e-4 or collide or not within_joint_limit:
                 return {"status": "screw plan failed"}
