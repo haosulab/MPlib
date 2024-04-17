@@ -75,7 +75,12 @@ void build_utils_pose(py::module &pymp) {
           },
           DOC(mplib, Pose, to_transformation_matrix))
 
-      .def_readwrite("p", &Pose<S>::p, DOC(mplib, Pose, p))
+      // def_readwrite is shorthand for def_property, but the default getter/setter
+      // functions have const args https://stackoverflow.com/a/57927899
+      // note that another crucial step is to specify the return type of the lambda
+      .def_property(
+          "p", [](Pose<S> &pose) -> Vector3<S> & { return pose.p; },
+          [](Pose<S> &pose, const Vector3<S> &p) { pose.p = p; }, DOC(mplib, Pose, p))
       .def(
           "set_p", [](Pose<S> &pose, const Vector3<S> &p) { pose.p = p; }, py::arg("p"),
           DOC(mplib, Pose, set_p))
