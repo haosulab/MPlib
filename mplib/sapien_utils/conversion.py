@@ -128,7 +128,7 @@ class SapienPlanningWorld(PlanningWorld):
         for articulation in self._sim_scene.get_all_articulations():
             if art := self.get_articulation(convert_object_name(articulation)):
                 # set_qpos to update poses
-                art.set_qpos(articulation.qpos)  # type: ignore
+                art.set_qpos(articulation.qpos, full=True)  # type: ignore
             else:
                 raise RuntimeError(
                     f"Articulation {articulation.name} not found in PlanningWorld! "
@@ -401,6 +401,14 @@ class SapienPlanner(Planner):
         self.joint_vel_limits = joint_vel_limits
         self.joint_acc_limits = joint_acc_limits
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
+
+        # finally disable the collision between the root of the robot and ground_1
+        root_link_name = self.user_link_names[0]
+        for other_link in self.planning_world.get_object_names():
+            if other_link.startswith("ground_"):
+                self.planning_world.get_allowed_collision_matrix().set_entry(
+                    other_link, root_link_name, True
+                )
 
         assert (
             len(self.joint_vel_limits)

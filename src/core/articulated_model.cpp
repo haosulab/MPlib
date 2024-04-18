@@ -71,6 +71,7 @@ std::unique_ptr<ArticulatedModelTpl<S>> ArticulatedModelTpl<S>::createFromURDFSt
   fcl_model->removeCollisionPairsFromSRDFString(srdf_string);
   articulation->current_qpos_ = VectorX<S>::Constant(pinocchio_model->getModel().nv, 0);
   articulation->setMoveGroup(user_link_names);
+  articulation->setBasePose(Pose<S>());
 
   return articulation;
 }
