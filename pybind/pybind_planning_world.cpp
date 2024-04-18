@@ -112,6 +112,8 @@ void build_pyplanning_world(py::module &pymp) {
                &PlanningWorld::attachObject),
            py::arg("name"), py::arg("p_geom"), py::arg("art_name"), py::arg("link_id"),
            py::arg("pose"), DOC(mplib, PlanningWorldTpl, attachObject, 6))
+      .def("attach_currently_touching_object",
+           &PlanningWorld::attachCurrentlyTouchingObject, py::arg("art_name"))
       .def("attach_sphere", &PlanningWorld::attachSphere, py::arg("radius"),
            py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
            DOC(mplib, PlanningWorldTpl, attachSphere))
@@ -123,6 +125,7 @@ void build_pyplanning_world(py::module &pymp) {
            py::arg("convex") = false, DOC(mplib, PlanningWorldTpl, attachMesh))
       .def("detach_object", &PlanningWorld::detachObject, py::arg("name"),
            py::arg("also_remove") = false, DOC(mplib, PlanningWorldTpl, detachObject))
+      .def("detach_all_objects", &PlanningWorld::detachAllObjects)
       .def("print_attached_body_pose", &PlanningWorld::printAttachedBodyPose,
            DOC(mplib, PlanningWorldTpl, printAttachedBodyPose))
 

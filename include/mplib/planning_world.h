@@ -314,6 +314,13 @@ class PlanningWorldTpl {
                     const std::string &art_name, int link_id, const Pose<S> &pose);
 
   /**
+   * Attaches the object the articulation is currently touching
+   * 
+   * @param art_name name of the planned articulation to attach to
+   */
+  void attachCurrentlyTouchingObject(const std::string &art_name);
+
+  /**
    * Attaches given sphere to specified link of articulation (auto touch_links)
    *
    * @param radius: sphere radius
@@ -357,6 +364,15 @@ class PlanningWorldTpl {
    *  attached
    */
   bool detachObject(const std::string &name, bool also_remove = false);
+
+  /**
+   * Detaches all attached objects. Updates acm_ to disallow collision between
+   * the object and touch_links.
+   *
+   * @param also_remove: whether to also remove objects from world
+   * @return: ``true`` if success, ``false`` if there are no attached objects
+   */
+  bool detachAllObjects(bool also_remove = false);
 
   /// @brief Prints global pose of all attached bodies
   void printAttachedBodyPose() const;

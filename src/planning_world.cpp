@@ -165,11 +165,12 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
     // Set touch_links to the name of self links colliding with object currently
     std::vector<std::string> touch_links;
     auto collisions = checkSelfCollision();
-    for (const auto &collision : collisions)
+    for (const auto &collision : collisions) {
       if (collision.link_name1 == name)
         touch_links.push_back(collision.link_name2);
       else if (collision.link_name2 == name)
         touch_links.push_back(collision.link_name1);
+    }
     body->setTouchLinks(touch_links);
     // Update acm_ to allow collision between name and touch_links
     acm_->setEntry(name, touch_links, true);
@@ -195,6 +196,25 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
   removeObject(name);
   addObject(name, std::make_shared<CollisionObject>(p_geom));
   attachObject(name, art_name, link_id, pose);
+}
+
+template <typename S>
+void PlanningWorldTpl<S>::attachCurrentlyTouchingObject(const std::string &art_name) {
+  // do an environment collision
+  auto collisions = checkRobotCollision(CollisionRequest());
+  const auto &link_names =
+      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkNames();
+  for (const auto &collision : collisions) {
+    if (collision.object_name1 == art_name) {
+      // get the index of the link inside link_names, which is a vector
+      int link_id = std::distance(
+          link_names.begin(),
+          std::find(link_names.begin(), link_names.end(), collision.link_name1));
+      if (link_id == static_cast<int>(link_names.size())) continue;
+      // attach the touching object
+      attachObject(collision.object_name2, art_name, link_id);
+    }
+  }
 }
 
 template <typename S>
@@ -245,6 +265,16 @@ bool PlanningWorldTpl<S>::detachObject(const std::string &name, bool also_remove
   // Update acm_ to disallow collision between name and touch_links
   acm_->removeEntry(name, nh.mapped()->getTouchLinks());
   return true;
+}
+
+template <typename S>
+bool PlanningWorldTpl<S>::detachAllObjects(bool also_remove) {
+  bool rtn = !attached_body_map_.empty();
+  std::vector<std::string> names;
+  for (auto it = attached_body_map_.begin(); it != attached_body_map_.end(); ++it)
+    names.push_back(it->first);
+  for (const auto &name : names) detachObject(name, also_remove);
+  return rtn;
 }
 
 template <typename S>
