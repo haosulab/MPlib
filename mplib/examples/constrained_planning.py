@@ -3,6 +3,7 @@
 import numpy as np
 import transforms3d
 
+from mplib import Pose
 from mplib.examples.demo_setup import DemoSetup
 
 
@@ -36,7 +37,7 @@ class ConstrainedPlanningDemo(DemoSetup):
         """Helper function for constraint"""
         ee_idx = self.planner.link_name_2_idx[self.planner.move_group]
         ee_pose = self.planner.robot.get_pinocchio_model().get_link_pose(ee_idx)
-        mat = transforms3d.quaternions.quat2mat(ee_pose[3:])
+        mat = transforms3d.quaternions.quat2mat(ee_pose.q)
         return mat[:, 2]
 
     def make_f(self):
@@ -94,9 +95,9 @@ class ConstrainedPlanningDemo(DemoSetup):
         self.planner.robot.set_qpos(starting_qpos[:7])
         # all these poses are constrain compatible (roughly 15 degrees w.r.t. -z axis)
         poses = [
-            [-0.4, -0.3, 0.28, 0.0704682, -0.5356872, 0.8342834, 0.1097478],
-            [0.6, 0.1, 0.44, 0.0704682, -0.5356872, -0.8342834, -0.1097478],
-            [0, -0.3, 0.5, 0.1304237, -0.9914583, 0, 0],
+            Pose([-0.4, -0.3, 0.28], [0.0704682, -0.5356872, 0.8342834, 0.1097478]),
+            Pose([0.6, 0.1, 0.44], [0.0704682, -0.5356872, -0.8342834, -0.1097478]),
+            Pose([0, -0.3, 0.5], [0.1304237, -0.9914583, 0, 0]),
         ]
 
         # add some point cloud to make the planning more challenging

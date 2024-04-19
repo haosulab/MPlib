@@ -117,7 +117,7 @@ class PlanningDemo(DemoSetup):
         self.open_gripper()
         delivery_pose.p[2] += 0.12
         if use_attach:
-            ret = self.planner.planning_world.detach_all_objects(False)
+            ret = self.planner.planning_world.detach_all_objects()
             assert ret, "object is not attached"
         self.move_to_pose(delivery_pose, with_screw)
 
