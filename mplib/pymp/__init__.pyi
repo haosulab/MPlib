@@ -572,6 +572,14 @@ class PlanningWorld:
         :param request: collision request params.
         :return: List of ``WorldCollisionResult`` objects
         """
+    def detach_all_objects(self, also_remove: bool = False) -> bool:
+        """
+        Detaches all attached objects. Updates acm_ to disallow collision between the
+        object and touch_links.
+
+        :param also_remove: whether to also remove objects from world
+        :return: ``True`` if success, ``False`` if there are no attached objects
+        """
     def detach_object(self, name: str, also_remove: bool = False) -> bool:
         """
         Detaches object with given name. Updates acm_ to disallow collision between the

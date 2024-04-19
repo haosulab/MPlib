@@ -112,9 +112,6 @@ void build_pyplanning_world(py::module &pymp) {
                &PlanningWorld::attachObject),
            py::arg("name"), py::arg("p_geom"), py::arg("art_name"), py::arg("link_id"),
            py::arg("pose"), DOC(mplib, PlanningWorldTpl, attachObject, 6))
-      .def("attach_currently_touching_object",
-           &PlanningWorld::attachCurrentlyTouchingObject, py::arg("art_name"),
-           DOC(mplib, PlanningWorldTpl, attachCurrentlyTouchingObject))
       .def("attach_sphere", &PlanningWorld::attachSphere, py::arg("radius"),
            py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
            DOC(mplib, PlanningWorldTpl, attachSphere))

@@ -219,6 +219,14 @@ articulation-attach collision, attach-attach collision)
 :param request: collision request params.
 :return: List of ``WorldCollisionResult`` objects)doc";
 
+static const char *__doc_mplib_PlanningWorldTpl_detachAllObjects =
+R"doc(
+Detaches all attached objects. Updates acm_ to disallow collision between the
+object and touch_links.
+
+:param also_remove: whether to also remove objects from world
+:return: ``True`` if success, ``False`` if there are no attached objects)doc";
+
 static const char *__doc_mplib_PlanningWorldTpl_detachObject =
 R"doc(
 Detaches object with given name. Updates acm_ to disallow collision between the
