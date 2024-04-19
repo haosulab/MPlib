@@ -177,22 +177,22 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
 
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
-                                       const CollisionGeometryPtr &p_geom,
+                                       const CollisionGeometryPtr &obj_geom,
                                        const std::string &art_name, int link_id,
                                        const Pose<S> &pose,
                                        const std::vector<std::string> &touch_links) {
   removeObject(name);
-  addObject(name, std::make_shared<CollisionObject>(p_geom));
+  addObject(name, std::make_shared<CollisionObject>(obj_geom));
   attachObject(name, art_name, link_id, pose, touch_links);
 }
 
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
-                                       const CollisionGeometryPtr &p_geom,
+                                       const CollisionGeometryPtr &obj_geom,
                                        const std::string &art_name, int link_id,
                                        const Pose<S> &pose) {
   removeObject(name);
-  addObject(name, std::make_shared<CollisionObject>(p_geom));
+  addObject(name, std::make_shared<CollisionObject>(obj_geom));
   attachObject(name, art_name, link_id, pose);
 }
 

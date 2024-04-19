@@ -287,13 +287,13 @@ class PlanningWorldTpl {
    * As a result, all previous ``acm_`` entries with the object are removed
    *
    * @param name: name of the non-articulated object to attach
-   * @param p_geom: pointer to a CollisionGeometry object
+   * @param obj_geom: pointer to a CollisionGeometry object
    * @param art_name: name of the planned articulation to attach to
    * @param link_id: index of the link of the planned articulation to attach to
    * @param pose: attached pose (relative pose from attached link to object)
    * @param touch_links: link names that the attached object touches
    */
-  void attachObject(const std::string &name, const CollisionGeometryPtr &p_geom,
+  void attachObject(const std::string &name, const CollisionGeometryPtr &obj_geom,
                     const std::string &art_name, int link_id, const Pose<S> &pose,
                     const std::vector<std::string> &touch_links);
 
@@ -305,12 +305,12 @@ class PlanningWorldTpl {
    * that collide with the object in the current state (auto touch_links).
    *
    * @param name: name of the non-articulated object to attach
-   * @param p_geom: pointer to a CollisionGeometry object
+   * @param obj_geom: pointer to a CollisionGeometry object
    * @param art_name: name of the planned articulation to attach to
    * @param link_id: index of the link of the planned articulation to attach to
    * @param pose: attached pose (relative pose from attached link to object)
    */
-  void attachObject(const std::string &name, const CollisionGeometryPtr &p_geom,
+  void attachObject(const std::string &name, const CollisionGeometryPtr &obj_geom,
                     const std::string &art_name, int link_id, const Pose<S> &pose);
 
   /**

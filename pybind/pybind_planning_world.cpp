@@ -103,15 +103,16 @@ void build_pyplanning_world(py::module &pymp) {
                              const std::string &, int, const Pose<S> &,
                              const std::vector<std::string> &>(
                &PlanningWorld::attachObject),
-           py::arg("name"), py::arg("p_geom"), py::arg("art_name"), py::arg("link_id"),
-           py::arg("pose"), py::arg("touch_links"),
+           py::arg("name"), py::arg("obj_geom"), py::arg("art_name"),
+           py::arg("link_id"), py::arg("pose"), py::arg("touch_links"),
            DOC(mplib, PlanningWorldTpl, attachObject, 5))
       .def("attach_object",
            py::overload_cast<const std::string &, const CollisionGeometryPtr &,
                              const std::string &, int, const Pose<S> &>(
                &PlanningWorld::attachObject),
-           py::arg("name"), py::arg("p_geom"), py::arg("art_name"), py::arg("link_id"),
-           py::arg("pose"), DOC(mplib, PlanningWorldTpl, attachObject, 6))
+           py::arg("name"), py::arg("obj_geom"), py::arg("art_name"),
+           py::arg("link_id"), py::arg("pose"),
+           DOC(mplib, PlanningWorldTpl, attachObject, 6))
       .def("attach_sphere", &PlanningWorld::attachSphere, py::arg("radius"),
            py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
            DOC(mplib, PlanningWorldTpl, attachSphere))
