@@ -97,7 +97,7 @@ Attaches existing non-articulated object to specified link of articulation at
 its current pose. If the object is currently attached, disallow collision
 between the object and previous touch_links.
 
-Updates acm_ to allow collisions between attached object and touch_links.
+Updates ``acm_`` to allow collisions between attached object and touch_links.
 
 :param name: name of the non-articulated object to attach
 :param art_name: name of the planned articulation to attach to
@@ -113,10 +113,10 @@ its current pose. If the object is not currently attached, automatically sets
 touch_links as the name of self links that collide with the object in the
 current state.
 
-Updates acm_ to allow collisions between attached object and touch_links.
+Updates ``acm_`` to allow collisions between attached object and touch_links.
 
 If the object is already attached, the touch_links of the attached object is
-preserved and acm_ remains unchanged.
+preserved and ``acm_`` remains unchanged.
 
 :param name: name of the non-articulated object to attach
 :param art_name: name of the planned articulation to attach to
@@ -130,7 +130,7 @@ Attaches existing non-articulated object to specified link of articulation at
 given pose. If the object is currently attached, disallow collision between the
 object and previous touch_links.
 
-Updates acm_ to allow collisions between attached object and touch_links.
+Updates ``acm_`` to allow collisions between attached object and touch_links.
 
 :param name: name of the non-articulated object to attach
 :param art_name: name of the planned articulation to attach to
@@ -147,10 +147,10 @@ given pose. If the object is not currently attached, automatically sets
 touch_links as the name of self links that collide with the object in the
 current state.
 
-Updates acm_ to allow collisions between attached object and touch_links.
+Updates ``acm_`` to allow collisions between attached object and touch_links.
 
 If the object is already attached, the touch_links of the attached object is
-preserved and acm_ remains unchanged.
+preserved and ``acm_`` remains unchanged.
 
 :param name: name of the non-articulated object to attach
 :param art_name: name of the planned articulation to attach to
@@ -163,7 +163,7 @@ static const char *__doc_mplib_PlanningWorldTpl_attachObject_5 =
 R"doc(
 Attaches given object (w/ p_geom) to specified link of articulation at given
 pose. This is done by removing the object and then adding and attaching object.
-As a result, all previous acm_ entries with the object are removed
+As a result, all previous ``acm_`` entries with the object are removed
 
 :param name: name of the non-articulated object to attach
 :param p_geom: pointer to a CollisionGeometry object
@@ -176,7 +176,7 @@ static const char *__doc_mplib_PlanningWorldTpl_attachObject_6 =
 R"doc(
 Attaches given object (w/ p_geom) to specified link of articulation at given
 pose. This is done by removing the object and then adding and attaching object.
-As a result, all previous acm_ entries with the object are removed.
+As a result, all previous ``acm_`` entries with the object are removed.
 Automatically sets touch_links as the name of self links that collide with the
 object in the current state (auto touch_links).
 
@@ -221,16 +221,16 @@ articulation-attach collision, attach-attach collision)
 
 static const char *__doc_mplib_PlanningWorldTpl_detachAllObjects =
 R"doc(
-Detaches all attached objects. Updates acm_ to disallow collision between the
-object and touch_links.
+Detaches all attached objects. Updates ``acm_`` to disallow collision between
+the object and touch_links.
 
 :param also_remove: whether to also remove objects from world
 :return: ``True`` if success, ``False`` if there are no attached objects)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_detachObject =
 R"doc(
-Detaches object with given name. Updates acm_ to disallow collision between the
-object and touch_links.
+Detaches object with given name. Updates ``acm_`` to disallow collision between
+the object and touch_links.
 
 :param name: name of the non-articulated object to detach
 :param also_remove: whether to also remove object from world
@@ -361,7 +361,7 @@ Prints global pose of all attached bodies)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_removeArticulation =
 R"doc(
-Removes the articulation with given name if exists. Updates acm_
+Removes the articulation with given name if exists. Updates ``acm_``
 
 :param name: name of the articulated model
 :return: ``True`` if success, ``False`` if articulation with given name does not
@@ -370,7 +370,7 @@ Removes the articulation with given name if exists. Updates acm_
 static const char *__doc_mplib_PlanningWorldTpl_removeObject =
 R"doc(
 Removes (and detaches) the collision object with given name if exists. Updates
-acm_
+``acm_``
 
 :param name: name of the non-articulated collision object
 :return: ``True`` if success, ``False`` if the non-articulated object with given
