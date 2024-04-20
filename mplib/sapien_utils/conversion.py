@@ -29,6 +29,7 @@ from ..collision_detection.fcl import (
     Box,
     BVHModel,
     Capsule,
+    CollisionGeometry,
     CollisionObject,
     Convex,
     Cylinder,
@@ -286,6 +287,100 @@ class SapienPlanningWorld(PlanningWorld):
                 f"Object {obj.name} not found in PlanningWorld "
                 "(The scene might have changed since last update)"
             )
+
+    def attach_object(  # type: ignore
+        self,
+        obj: Entity | str,
+        articulation: PhysxArticulation | str,
+        link: PhysxArticulationLinkComponent | int,
+        *,
+        pose: Optional[Pose] = None,
+        touch_links: Optional[list[PhysxArticulationLinkComponent | str]] = None,
+        obj_geom: Optional[CollisionGeometry] = None,
+    ) -> None:
+        """
+        Attaches given non-articulated object to the specified link of articulation.
+
+        Updates ``acm_`` to allow collisions between attached object and touch_links.
+
+        :param obj: the non-articulated object (or its name) to attach
+        :param articulation: the planned articulation (or its name) to attach to
+        :param link: the link of the planned articulation (or its index) to attach to
+        :param pose: attached pose (relative pose from attached link to object).
+            If ``None``, attach the object at its current pose.
+        :param touch_links: links (or their names) that the attached object touches.
+            When ``None``,
+
+            * if the object is not currently attached, touch_links are set to the name
+            of articulation links that collide with the object in the current state.
+
+            * if the object is already attached, touch_links of the attached object
+            is preserved and ``acm_`` remains unchanged.
+        :param obj_geom: a CollisionGeometry object representing the attached object.
+            If not ``None``, pose must be not ``None``.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.attach_object()</span>
+            </code>
+            methods</a></summary>
+        .. automethod:: mplib.PlanningWorld.attach_object
+        .. raw:: html
+            </details>
+        """
+        kwargs = {"name": obj, "art_name": articulation, "link_id": link}
+        if pose is not None:
+            kwargs["pose"] = pose
+        if touch_links is not None:
+            kwargs["touch_links"] = [
+                l.name if isinstance(l, PhysxArticulationLinkComponent) else l
+                for l in touch_links  # noqa: E741
+            ]
+        if obj_geom is not None:
+            kwargs["obj_geom"] = obj_geom
+
+        if isinstance(obj, Entity):
+            kwargs["name"] = convert_object_name(obj)
+        if isinstance(articulation, PhysxArticulation):
+            kwargs["art_name"] = articulation = convert_object_name(articulation)
+        if isinstance(link, PhysxArticulationLinkComponent):
+            kwargs["link_id"] = (
+                self.get_articulation(articulation)
+                .get_pinocchio_model()
+                .get_link_names()
+                .index(link.name)
+            )
+
+        super().attach_object(**kwargs)
+
+    def detach_object(self, obj: Entity | str, also_remove: bool = False) -> bool:  # type: ignore
+        """
+        Detaches the given object.
+
+        Updates ``acm_`` to disallow collision between the object and touch_links.
+
+        :param obj: the non-articulated object (or its name) to detach
+        :param also_remove: whether to also remove the object from PlanningWorld
+        :return: ``True`` if success, ``False`` if the given object is not attached.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.detach_object()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.detach_object
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        return super().detach_object(obj, also_remove=also_remove)
 
     @staticmethod
     def convert_physx_component(comp: PhysxRigidBaseComponent) -> FCLObject | None:
