@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Sequence
+from typing import Literal, Optional, Sequence
 
 import numpy as np
 from sapien import Entity, Scene
@@ -288,13 +288,148 @@ class SapienPlanningWorld(PlanningWorld):
                 "(The scene might have changed since last update)"
             )
 
+    @staticmethod
+    def convert_physx_component(comp: PhysxRigidBaseComponent) -> FCLObject | None:
+        """
+        Converts a SAPIEN physx.PhysxRigidBaseComponent to an FCLObject.
+        All shapes in the returned FCLObject are already set at their world poses.
+
+        :param comp: a SAPIEN physx.PhysxRigidBaseComponent.
+        :return: an FCLObject containing all collision shapes in the Physx component.
+            If the component has no collision shapes, return ``None``.
+        """
+        shapes: list[CollisionObject] = []
+        shape_poses: list[Pose] = []
+        for shape in comp.collision_shapes:
+            shape_poses.append(shape.local_pose)  # type: ignore
+
+            if isinstance(shape, PhysxCollisionShapeBox):
+                c_geom = Box(side=shape.half_size * 2)
+            elif isinstance(shape, PhysxCollisionShapeCapsule):
+                c_geom = Capsule(radius=shape.radius, lz=shape.half_length * 2)
+                # NOTE: physx Capsule has x-axis along capsule height
+                # FCL Capsule has z-axis along capsule height
+                shape_poses[-1] *= Pose(q=euler2quat(0, np.pi / 2, 0))
+            elif isinstance(shape, PhysxCollisionShapeConvexMesh):
+                assert np.allclose(
+                    shape.scale, 1.0
+                ), f"Not unit scale {shape.scale}, need to rescale vertices?"
+                c_geom = Convex(vertices=shape.vertices, faces=shape.triangles)
+            elif isinstance(shape, PhysxCollisionShapeCylinder):
+                c_geom = Cylinder(radius=shape.radius, lz=shape.half_length * 2)
+                # NOTE: physx Cylinder has x-axis along cylinder height
+                # FCL Cylinder has z-axis along cylinder height
+                shape_poses[-1] *= Pose(q=euler2quat(0, np.pi / 2, 0))
+            elif isinstance(shape, PhysxCollisionShapePlane):
+                # PhysxCollisionShapePlane are actually a halfspace
+                # https://nvidia-omniverse.github.io/PhysX/physx/5.3.1/docs/Geometry.html#planes
+                # PxPlane's Pose determines its normal and offert (normal is +x)
+                n = shape_poses[-1].to_transformation_matrix()[:3, 0]
+                d = n.dot(shape_poses[-1].p)
+                c_geom = Halfspace(n=n, d=d)
+                shape_poses[-1] = Pose()
+            elif isinstance(shape, PhysxCollisionShapeSphere):
+                c_geom = Sphere(radius=shape.radius)
+            elif isinstance(shape, PhysxCollisionShapeTriangleMesh):
+                c_geom = BVHModel()
+                c_geom.begin_model()
+                c_geom.add_sub_model(vertices=shape.vertices, faces=shape.triangles)  # type: ignore
+                c_geom.end_model()
+            else:
+                raise TypeError(f"Unknown shape type: {type(shape)}")
+            shapes.append(CollisionObject(c_geom))
+
+        if len(shapes) == 0:
+            return None
+
+        return FCLObject(
+            comp.name
+            if isinstance(comp, PhysxArticulationLinkComponent)
+            else convert_object_name(comp.entity),
+            comp.entity.pose,  # type: ignore
+            shapes,
+            shape_poses,
+        )
+
+    # ----- Overloaded PlanningWorld methods to accept SAPIEN objects ----- #
+    def is_articulation_planned(self, articulation: PhysxArticulation | str) -> bool:  # type: ignore
+        """
+        Check whether the given articulation is being planned
+
+        :param articulation: the articulation (or its name) to check
+        :return: ``True`` if the articulation is being planned, ``False`` otherwise.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.is_articulation_planned()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.is_articulation_planned
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        return super().is_articulation_planned(articulation)
+
+    def set_articulation_planned(  # type: ignore
+        self, articulation: PhysxArticulation | str, planned: bool
+    ) -> None:
+        """
+        Sets the given articulation as being planned or not
+
+        :param articulation: the articulation (or its name)
+        :param planned: whether the articulation should be planned
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.set_articulation_planned()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.set_articulation_planned
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        super().set_articulation_planned(articulation, planned)
+
+    def is_object_attached(self, obj: Entity | str) -> bool:  # type: ignore
+        """
+        Check whether the given non-articulated object is attached
+
+        :param obj: the non-articulated object (or its name) to check
+        :return: ``True`` if the articulation is attached, ``False`` otherwise.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.is_object_attached()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.is_object_attached
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        return super().is_object_attached(obj)
+
     def attach_object(  # type: ignore
         self,
         obj: Entity | str,
         articulation: PhysxArticulation | str,
         link: PhysxArticulationLinkComponent | int,
-        *,
         pose: Optional[Pose] = None,
+        *,
         touch_links: Optional[list[PhysxArticulationLinkComponent | str]] = None,
         obj_geom: Optional[CollisionGeometry] = None,
     ) -> None:
@@ -382,68 +517,123 @@ class SapienPlanningWorld(PlanningWorld):
             obj = convert_object_name(obj)
         return super().detach_object(obj, also_remove=also_remove)
 
-    @staticmethod
-    def convert_physx_component(comp: PhysxRigidBaseComponent) -> FCLObject | None:
+    def attach_sphere(  # type: ignore
+        self,
+        radius: float,
+        articulation: PhysxArticulation | str,
+        link: PhysxArticulationLinkComponent | int,
+        pose: Pose,
+    ) -> None:
         """
-        Converts a SAPIEN physx.PhysxRigidBaseComponent to an FCLObject.
-        All shapes in the returned FCLObject are already set at their world poses.
+        Attaches given sphere to specified link of articulation (auto touch_links)
 
-        :param comp: a SAPIEN physx.PhysxRigidBaseComponent.
-        :return: an FCLObject containing all collision shapes in the Physx component.
-            If the component has no collision shapes, return ``None``.
+        :param radius: sphere radius
+        :param articulation: the planned articulation (or its name) to attach to
+        :param link: the link of the planned articulation (or its index) to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.attach_sphere()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.attach_sphere
+        .. raw:: html
+            </details>
         """
-        shapes: list[CollisionObject] = []
-        shape_poses: list[Pose] = []
-        for shape in comp.collision_shapes:
-            shape_poses.append(shape.local_pose)  # type: ignore
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        if isinstance(link, PhysxArticulationLinkComponent):
+            link = (
+                self.get_articulation(articulation)
+                .get_pinocchio_model()
+                .get_link_names()
+                .index(link.name)
+            )
+        super().attach_sphere(radius, articulation, link, pose)
 
-            if isinstance(shape, PhysxCollisionShapeBox):
-                c_geom = Box(side=shape.half_size * 2)
-            elif isinstance(shape, PhysxCollisionShapeCapsule):
-                c_geom = Capsule(radius=shape.radius, lz=shape.half_length * 2)
-                # NOTE: physx Capsule has x-axis along capsule height
-                # FCL Capsule has z-axis along capsule height
-                shape_poses[-1] *= Pose(q=euler2quat(0, np.pi / 2, 0))
-            elif isinstance(shape, PhysxCollisionShapeConvexMesh):
-                assert np.allclose(
-                    shape.scale, 1.0
-                ), f"Not unit scale {shape.scale}, need to rescale vertices?"
-                c_geom = Convex(vertices=shape.vertices, faces=shape.triangles)
-            elif isinstance(shape, PhysxCollisionShapeCylinder):
-                c_geom = Cylinder(radius=shape.radius, lz=shape.half_length * 2)
-                # NOTE: physx Cylinder has x-axis along cylinder height
-                # FCL Cylinder has z-axis along cylinder height
-                shape_poses[-1] *= Pose(q=euler2quat(0, np.pi / 2, 0))
-            elif isinstance(shape, PhysxCollisionShapePlane):
-                # PhysxCollisionShapePlane are actually a halfspace
-                # https://nvidia-omniverse.github.io/PhysX/physx/5.3.1/docs/Geometry.html#planes
-                # PxPlane's Pose determines its normal and offert (normal is +x)
-                n = shape_poses[-1].to_transformation_matrix()[:3, 0]
-                d = n.dot(shape_poses[-1].p)
-                c_geom = Halfspace(n=n, d=d)
-                shape_poses[-1] = Pose()
-            elif isinstance(shape, PhysxCollisionShapeSphere):
-                c_geom = Sphere(radius=shape.radius)
-            elif isinstance(shape, PhysxCollisionShapeTriangleMesh):
-                c_geom = BVHModel()
-                c_geom.begin_model()
-                c_geom.add_sub_model(vertices=shape.vertices, faces=shape.triangles)  # type: ignore
-                c_geom.end_model()
-            else:
-                raise TypeError(f"Unknown shape type: {type(shape)}")
-            shapes.append(CollisionObject(c_geom))
+    def attach_box(  # type: ignore
+        self,
+        size: Sequence[float]
+        | np.ndarray[tuple[Literal[3], Literal[1]], np.dtype[np.floating]],
+        articulation: PhysxArticulation | str,
+        link: PhysxArticulationLinkComponent | int,
+        pose: Pose,
+    ) -> None:
+        """
+        Attaches given box to specified link of articulation (auto touch_links)
 
-        if len(shapes) == 0:
-            return None
+        :param size: box side length
+        :param articulation: the planned articulation (or its name) to attach to
+        :param link: the link of the planned articulation (or its index) to attach to
+        :param pose: attached pose (relative pose from attached link to object)
 
-        return FCLObject(
-            comp.name
-            if isinstance(comp, PhysxArticulationLinkComponent)
-            else convert_object_name(comp.entity),
-            comp.entity.pose,  # type: ignore
-            shapes,
-            shape_poses,
-        )
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.attach_box()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.attach_box
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        if isinstance(link, PhysxArticulationLinkComponent):
+            link = (
+                self.get_articulation(articulation)
+                .get_pinocchio_model()
+                .get_link_names()
+                .index(link.name)
+            )
+        super().attach_box(size, articulation, link, pose)  # type: ignore
+
+    def attach_mesh(  # type: ignore
+        self,
+        mesh_path: str,
+        articulation: PhysxArticulation | str,
+        link: PhysxArticulationLinkComponent | int,
+        pose: Pose,
+        *,
+        convex: bool = False,
+    ) -> None:
+        """
+        Attaches given mesh to specified link of articulation (auto touch_links)
+
+        :param mesh_path: path to a mesh file
+        :param articulation: the planned articulation (or its name) to attach to
+        :param link: the link of the planned articulation (or its index) to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+        :param convex: whether to load mesh as a convex mesh. Default: ``False``.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.attach_mesh()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.attach_mesh
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        if isinstance(link, PhysxArticulationLinkComponent):
+            link = (
+                self.get_articulation(articulation)
+                .get_pinocchio_model()
+                .get_link_names()
+                .index(link.name)
+            )
+        super().attach_mesh(mesh_path, articulation, link, pose, convex=convex)
 
 
 class SapienPlanner(Planner):
