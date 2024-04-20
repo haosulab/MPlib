@@ -497,12 +497,15 @@ class SapienPlanner(Planner):
         self.joint_acc_limits = joint_acc_limits
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
 
-        # finally disable the collision between the root of the robot and ground_1
-        root_link_name = self.user_link_names[0]
-        for other_link in self.planning_world.get_object_names():
-            if other_link.startswith("ground_"):
-                self.planning_world.get_allowed_collision_matrix().set_entry(
-                    other_link, root_link_name, True
+        # do a robot env collision check and warn if there is a collision
+        collisions = self.planning_world.check_robot_collision()
+        if len(collisions):
+            for collision in collisions:
+                print(
+                    f"\033[93mRobot's {collision.link_name1} collides with "
+                    f"{collision.link_name2} of {collision.object_name2} in initial "
+                    f"state. Use planner.planning_world.get_allowed_collision_matrix() "
+                    f"to disable collisions if planning fails\033[0m"
                 )
 
         assert (

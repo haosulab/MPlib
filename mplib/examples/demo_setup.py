@@ -171,7 +171,6 @@ class DemoSetup:
         # result is a dictionary with keys 'status', 'time', 'position', 'velocity',
         # 'acceleration', 'duration'
         # plan_pose ankor
-        print("plan_pose")
         result = self.planner.plan_pose(pose, self.robot.get_qpos(), time_step=1 / 250)
         # plan_pose ankor end
         if result["status"] != "Success":

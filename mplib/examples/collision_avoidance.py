@@ -39,8 +39,8 @@ class PlanningDemo(DemoSetup):
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.06])
         builder.add_box_visual(half_size=[0.02, 0.02, 0.06], material=[1, 0, 0])
-        red_cube = builder.build(name="red_cube")
-        red_cube.set_pose(sapien.Pose([0.7, 0, 0.06]))
+        self.red_cube = builder.build(name="red_cube")
+        self.red_cube.set_pose(sapien.Pose([0.7, 0, 0.06]))
 
         # green box is the landing pad on which we want to place the red box
         builder = self.scene.create_actor_builder()
@@ -58,6 +58,10 @@ class PlanningDemo(DemoSetup):
 
         planning_world = SapienPlanningWorld(self.scene, [self.robot])
         self.planner = SapienPlanner(planning_world, "panda_hand")
+        # disable collision between the base and the ground
+        self.planner.planning_world.get_allowed_collision_matrix().set_entry(
+            "panda_link0", "ground_1", True
+        )
 
     def demo(self, with_screw=True, use_attach=True):
         """
@@ -81,8 +85,8 @@ class PlanningDemo(DemoSetup):
 
         # use_attach ankor
         if use_attach:
-            art_name = self.planner.planning_world.get_articulation_names()[0]
-            self.planner.planning_world.attach_currently_touching_object(art_name)
+            idx = self.planner.user_link_names.index("panda_hand")
+            self.planner.planning_world.attach_object(self.red_cube, self.robot, idx)
         # use_attach ankor end
 
         # move to the delivery pose
