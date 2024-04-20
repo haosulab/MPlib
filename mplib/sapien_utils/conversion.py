@@ -368,6 +368,7 @@ class SapienPlanningWorld(PlanningWorld):
             </code>
             method</a></summary>
         .. automethod:: mplib.PlanningWorld.is_articulation_planned
+           :no-index:
         .. raw:: html
             </details>
         """
@@ -393,6 +394,7 @@ class SapienPlanningWorld(PlanningWorld):
             </code>
             method</a></summary>
         .. automethod:: mplib.PlanningWorld.set_articulation_planned
+           :no-index:
         .. raw:: html
             </details>
         """
@@ -416,6 +418,7 @@ class SapienPlanningWorld(PlanningWorld):
             </code>
             method</a></summary>
         .. automethod:: mplib.PlanningWorld.is_object_attached
+           :no-index:
         .. raw:: html
             </details>
         """
@@ -463,6 +466,7 @@ class SapienPlanningWorld(PlanningWorld):
             </code>
             methods</a></summary>
         .. automethod:: mplib.PlanningWorld.attach_object
+           :no-index:
         .. raw:: html
             </details>
         """
@@ -510,6 +514,7 @@ class SapienPlanningWorld(PlanningWorld):
             </code>
             method</a></summary>
         .. automethod:: mplib.PlanningWorld.detach_object
+           :no-index:
         .. raw:: html
             </details>
         """
@@ -541,6 +546,7 @@ class SapienPlanningWorld(PlanningWorld):
             </code>
             method</a></summary>
         .. automethod:: mplib.PlanningWorld.attach_sphere
+           :no-index:
         .. raw:: html
             </details>
         """
@@ -580,6 +586,7 @@ class SapienPlanningWorld(PlanningWorld):
             </code>
             method</a></summary>
         .. automethod:: mplib.PlanningWorld.attach_box
+           :no-index:
         .. raw:: html
             </details>
         """
@@ -621,6 +628,7 @@ class SapienPlanningWorld(PlanningWorld):
             </code>
             method</a></summary>
         .. automethod:: mplib.PlanningWorld.attach_mesh
+           :no-index:
         .. raw:: html
             </details>
         """
