@@ -58,28 +58,6 @@ class PlanningDemo(DemoSetup):
 
         planning_world = SapienPlanningWorld(self.scene, [self.robot])
         self.planner = SapienPlanner(planning_world, "panda_hand")
-        # self.planner.IK(
-        #     goal_pose=Pose([0.7, 0, 0.32], [0, 1, 0, 0]),
-        #     start_qpos=np.array([0, 0.19, 0.0, -2.61, 0.0, 2.94, 0.78, 0, 0]),
-        #     verbose=True,
-        # )
-        # # self.setup_planner(
-        # #     urdf_path="./data/panda/panda.urdf", srdf_path="./data/panda/panda.srdf"
-        # # )
-        # # self.planner.robot.set_qpos(init_qpos, full=True)
-        # # for obj in self.planner.robot.get_fcl_model().get_collision_objects():
-        # #     print(obj.name, obj.pose)
-        # # for i, link in enumerate(
-        # #     self.planner.robot.get_pinocchio_model().get_link_names()
-        # # ):
-        # #     print(link, self.planner.robot.get_pinocchio_model().get_link_pose(i))
-        # # for obj in self.planner2.robot.get_fcl_model().get_collision_objects():
-        # #     print(obj.name, obj.pose)
-        # # for i, link in enumerate(
-        # #     self.planner2.robot.get_pinocchio_model().get_link_names()
-        # # ):
-        # #     print(link, self.planner2.robot.get_pinocchio_model().get_link_pose(i))
-        # exit(0)
 
     def demo(self, with_screw=True, use_attach=True):
         """
