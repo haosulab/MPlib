@@ -352,6 +352,77 @@ class SapienPlanningWorld(PlanningWorld):
         )
 
     # ----- Overloaded PlanningWorld methods to accept SAPIEN objects ----- #
+    def is_articulation_planned(self, articulation: PhysxArticulation | str) -> bool:  # type: ignore
+        """
+        Check whether the given articulation is being planned
+
+        :param articulation: the articulation (or its name) to check
+        :return: ``True`` if the articulation is being planned, ``False`` otherwise.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.is_articulation_planned()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.is_articulation_planned
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        return super().is_articulation_planned(articulation)
+
+    def set_articulation_planned(  # type: ignore
+        self, articulation: PhysxArticulation | str, planned: bool
+    ) -> None:
+        """
+        Sets the given articulation as being planned or not
+
+        :param articulation: the articulation (or its name)
+        :param planned: whether the articulation should be planned
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.set_articulation_planned()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.set_articulation_planned
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        super().set_articulation_planned(articulation, planned)
+
+    def is_object_attached(self, obj: Entity | str) -> bool:  # type: ignore
+        """
+        Check whether the given non-articulated object is attached
+
+        :param obj: the non-articulated object (or its name) to check
+        :return: ``True`` if the articulation is attached, ``False`` otherwise.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.is_object_attached()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.is_object_attached
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        return super().is_object_attached(obj)
+
     def attach_object(  # type: ignore
         self,
         obj: Entity | str,
