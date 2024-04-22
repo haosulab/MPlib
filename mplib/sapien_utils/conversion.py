@@ -46,6 +46,9 @@ from ..planning.ompl import OMPLPlanner
 from .srdf_exporter import export_srdf
 from .urdf_exporter import export_kinematic_chain_urdf
 
+YELLOW_COLOR = "\033[93m"
+RESET_COLOR = "\033[0m"
+
 
 # TODO: link names?
 def convert_object_name(obj: PhysxArticulation | Entity) -> str:
@@ -167,9 +170,9 @@ class SapienPlanningWorld(PlanningWorld):
                 > 0
             ):
                 warnings.warn(
-                    f"Entity {entity.name} not found in PlanningWorld! "
+                    YELLOW_COLOR + f"Entity {entity.name} not found in PlanningWorld! "
                     "The scene might have changed since last update. "
-                    "Use PlanningWorld.add_object() to add the object.",
+                    "Use PlanningWorld.add_object() to add the object." + RESET_COLOR,
                     stacklevel=2,
                 )
 
@@ -802,11 +805,12 @@ class SapienPlanner(Planner):
         collisions = self.planning_world.check_robot_collision()
         if len(collisions):
             for collision in collisions:
-                print(
-                    f"\033[93mRobot's {collision.link_name1} collides with "
+                warnings.warn(
+                    YELLOW_COLOR + f"Robot's {collision.link_name1} collides with "
                     f"{collision.link_name2} of {collision.object_name2} in initial "
                     f"state. Use planner.planning_world.get_allowed_collision_matrix() "
-                    f"to disable collisions if planning fails\033[0m"
+                    f"to disable collisions if planning fails" + RESET_COLOR,
+                    stacklevel=2,
                 )
 
         assert (
