@@ -453,8 +453,15 @@ class SapienPlanningWorld(PlanningWorld):
             </details>
         """
         if isinstance(obj, Entity):
-            obj = self.convert_physx_component(obj)
-        if obj is not None:
+            component = obj.find_component_by_type(PhysxRigidBaseComponent)
+            assert component is not None, (
+                f"No PhysxRigidBaseComponent found in {obj.name}: " f"{obj.components=}"
+            )
+
+            # Convert collision shapes at current global pose
+            if (fcl_obj := self.convert_physx_component(component)) is not None:  # type: ignore
+                self.add_object(fcl_obj)
+        else:
             super().add_object(obj)
 
     def remove_object(self, obj: Entity | str) -> None:
@@ -722,7 +729,10 @@ class SapienPlanningWorld(PlanningWorld):
         super().attach_mesh(mesh_path, articulation, link, pose, convex=convex)
 
     def set_allowed_collision(
-        self, obj1: Entity | str, obj2: Entity | str, allowed: bool
+        self,
+        obj1: Entity | PhysxArticulationLinkComponent | str,
+        obj2: Entity | PhysxArticulationLinkComponent | str,
+        allowed: bool,
     ) -> None:
         """
         Set allowed collision between two objects.
@@ -745,8 +755,12 @@ class SapienPlanningWorld(PlanningWorld):
         """
         if isinstance(obj1, Entity):
             obj1 = convert_object_name(obj1)
+        elif isinstance(obj1, PhysxArticulationLinkComponent):
+            obj1 = obj1.name
         if isinstance(obj2, Entity):
             obj2 = convert_object_name(obj2)
+        elif isinstance(obj2, PhysxArticulationLinkComponent):
+            obj2 = obj2.name
         super().set_allowed_collision(obj1, obj2, allowed)
 
 
