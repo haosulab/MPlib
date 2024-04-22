@@ -385,6 +385,18 @@ class PlanningWorldTpl {
   AllowedCollisionMatrixPtr getAllowedCollisionMatrix() const { return acm_; }
 
   /**
+   * Set the allowed collision. For more comprehensive API, please get the
+   * ``AllowedCollisionMatrix`` object and use its methods.
+   *
+   * @param name1: name of the first object
+   * @param name2: name of the second object
+   */
+  void setAllowedCollision(const std::string &name1, const std::string &name2,
+                           bool allowed) {
+    acm_->setEntry(name1, name2, allowed);
+  }
+
+  /**
    * Check if the current state is in collision (with the environment or self
    * collision).
    *

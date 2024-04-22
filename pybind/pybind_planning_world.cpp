@@ -137,6 +137,9 @@ void build_pyplanning_world(py::module &pymp) {
 
       .def("get_allowed_collision_matrix", &PlanningWorld::getAllowedCollisionMatrix,
            DOC(mplib, PlanningWorldTpl, getAllowedCollisionMatrix))
+      .def("set_allowed_collision", &PlanningWorld::setAllowedCollision,
+           py::arg("name1"), py::arg("name2"), py::arg("allowed"),
+           DOC(mplib, PlanningWorldTpl, setAllowedCollision))
 
       .def("is_state_colliding", &PlanningWorld::isStateColliding,
            DOC(mplib, PlanningWorldTpl, isStateColliding))

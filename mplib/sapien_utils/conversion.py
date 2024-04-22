@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Literal, Optional, Sequence
 
 import numpy as np
@@ -165,9 +166,11 @@ class SapienPlanningWorld(PlanningWorld):
                 )
                 > 0
             ):
-                raise RuntimeError(
+                warnings.warn(
                     f"Entity {entity.name} not found in PlanningWorld! "
-                    "The scene might have changed since last update."
+                    "The scene might have changed since last update. "
+                    "Use PlanningWorld.add_object() to add the object.",
+                    stacklevel=2,
                 )
 
     def check_collision_between(
@@ -401,6 +404,78 @@ class SapienPlanningWorld(PlanningWorld):
         if isinstance(articulation, PhysxArticulation):
             articulation = convert_object_name(articulation)
         super().set_articulation_planned(articulation, planned)
+
+    def has_object(self, obj: Entity | str) -> bool:
+        """
+        Check whether the given non-articulated object exists.
+
+        :param obj: the object (or its name) to check
+
+        :return: ``True`` if the object exists, ``False`` otherwise.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.has_object()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.has_object
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        return super().has_object(obj)
+
+    def add_object(self, obj: FCLObject | Entity) -> None:
+        """
+        Adds a non-articulated object to the PlanningWorld.
+
+        :param obj: the non-articulated object to add
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.add_object()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.add_object
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = self.convert_physx_component(obj)
+        if obj is not None:
+            super().add_object(obj)
+
+    def remove_object(self, obj: Entity | str) -> None:
+        """
+        Removes a non-articulated object from the PlanningWorld.
+
+        :param obj: the non-articulated object (or its name) to remove
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.remove_object()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.remove_object
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        super().remove_object(obj)
 
     def is_object_attached(self, obj: Entity | str) -> bool:  # type: ignore
         """
@@ -642,6 +717,34 @@ class SapienPlanningWorld(PlanningWorld):
                 .index(link.name)
             )
         super().attach_mesh(mesh_path, articulation, link, pose, convex=convex)
+
+    def set_allowed_collision(
+        self, obj1: Entity | str, obj2: Entity | str, allowed: bool
+    ) -> None:
+        """
+        Set allowed collision between two objects.
+
+        :param obj1: the first object (or its name)
+        :param obj2: the second object (or its name)
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.set_allowed_collision()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.set_allowed_collision
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj1, Entity):
+            obj1 = convert_object_name(obj1)
+        if isinstance(obj2, Entity):
+            obj2 = convert_object_name(obj2)
+        super().set_allowed_collision(obj1, obj2, allowed)
 
 
 class SapienPlanner(Planner):
