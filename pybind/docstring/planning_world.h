@@ -287,6 +287,14 @@ static const char *__doc_mplib_PlanningWorldTpl_getAllowedCollisionMatrix =
 R"doc(
 Get the current allowed collision matrix)doc";
 
+static const char *__doc_mplib_PlanningWorldTpl_setAllowedCollision =
+R"doc(
+Set the allowed collision. For more comprehensive API, please get the
+``AllowedCollisionMatrix`` object and use its methods.
+
+:param name1: name of the first object
+:param name2: name of the second object)doc";
+
 static const char *__doc_mplib_PlanningWorldTpl_getArticulation =
 R"doc(
 Gets the articulation (ArticulatedModelPtr) with given name
