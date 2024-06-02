@@ -67,21 +67,21 @@ def export_srdf_xml(articulation: PhysxArticulation) -> ET.Element:
 
             shapes1 = link1.collision_shapes
             shapes2 = link2.collision_shapes
-            # TODO: multiple collision shapes
-            assert len(shapes1) == 1, (
-                f"Should only have 1 collision shape, got {len(shapes1)} shapes for "
-                f"entity '{link1.entity.name}'"
-            )
-            assert len(shapes2) == 1, (
-                f"Should only have 1 collision shape, got {len(shapes2)} shapes for "
-                f"entity '{link2.entity.name}'"
-            )
-            shape1 = shapes1[0]
-            shape2 = shapes2[0]
 
-            if not check_collision_group(
-                shape1.collision_groups, shape2.collision_groups
-            ):
+            enabled_collisions = {
+                check_collision_group(shape1.collision_groups, shape2.collision_groups)
+                for shape1 in shapes1
+                for shape2 in shapes2
+            }
+            if len(enabled_collisions) > 1:
+                raise RuntimeError(
+                    "collision_groups of all collision_shapes must be the same for any"
+                    " link, found violating links: "
+                    f"{link1.name}(id={link1.entity.per_scene_id}) "
+                    f"{link2.name}(id={link2.entity.per_scene_id})"
+                )
+
+            if not enabled_collisions.pop():
                 ET.SubElement(
                     elem_robot,
                     "disable_collisions",
