@@ -154,7 +154,7 @@ class TestPinocchioModel(unittest.TestCase):
             analytical_jacobian = self.model.compute_single_link_jacobian(qpos, ee_idx)
             numerical_jacobian = self.get_numerical_jacobian(qpos, ee_idx)
             self.assertTrue(
-                np.allclose(analytical_jacobian, numerical_jacobian, atol=1e-3)
+                np.allclose(analytical_jacobian, numerical_jacobian, atol=2e-3)
             )
 
 

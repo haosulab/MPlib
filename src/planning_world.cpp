@@ -164,8 +164,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
     attached_body_map_[name] = body;
     // Set touch_links to the name of self links colliding with object currently
     std::vector<std::string> touch_links;
-    auto collisions = checkSelfCollision();
-    for (const auto &collision : collisions)
+    for (const auto &collision : checkSelfCollision())
       if (collision.link_name1 == name)
         touch_links.push_back(collision.link_name2);
       else if (collision.link_name2 == name)
@@ -178,22 +177,22 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
 
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
-                                       const CollisionGeometryPtr &p_geom,
+                                       const CollisionGeometryPtr &obj_geom,
                                        const std::string &art_name, int link_id,
                                        const Pose<S> &pose,
                                        const std::vector<std::string> &touch_links) {
   removeObject(name);
-  addObject(name, std::make_shared<CollisionObject>(p_geom));
+  addObject(name, std::make_shared<CollisionObject>(obj_geom));
   attachObject(name, art_name, link_id, pose, touch_links);
 }
 
 template <typename S>
 void PlanningWorldTpl<S>::attachObject(const std::string &name,
-                                       const CollisionGeometryPtr &p_geom,
+                                       const CollisionGeometryPtr &obj_geom,
                                        const std::string &art_name, int link_id,
                                        const Pose<S> &pose) {
   removeObject(name);
-  addObject(name, std::make_shared<CollisionObject>(p_geom));
+  addObject(name, std::make_shared<CollisionObject>(obj_geom));
   attachObject(name, art_name, link_id, pose);
 }
 
@@ -244,6 +243,15 @@ bool PlanningWorldTpl<S>::detachObject(const std::string &name, bool also_remove
   if (nh.empty()) return false;
   // Update acm_ to disallow collision between name and touch_links
   acm_->removeEntry(name, nh.mapped()->getTouchLinks());
+  return true;
+}
+
+template <typename S>
+bool PlanningWorldTpl<S>::detachAllObjects(bool also_remove) {
+  if (attached_body_map_.empty()) return false;
+  std::vector<std::string> names;
+  for (const auto &pair : attached_body_map_) names.push_back(pair.first);
+  for (const auto &name : names) detachObject(name, also_remove);
   return true;
 }
 

@@ -103,15 +103,16 @@ void build_pyplanning_world(py::module &pymp) {
                              const std::string &, int, const Pose<S> &,
                              const std::vector<std::string> &>(
                &PlanningWorld::attachObject),
-           py::arg("name"), py::arg("p_geom"), py::arg("art_name"), py::arg("link_id"),
-           py::arg("pose"), py::arg("touch_links"),
+           py::arg("name"), py::arg("obj_geom"), py::arg("art_name"),
+           py::arg("link_id"), py::arg("pose"), py::arg("touch_links"),
            DOC(mplib, PlanningWorldTpl, attachObject, 5))
       .def("attach_object",
            py::overload_cast<const std::string &, const CollisionGeometryPtr &,
                              const std::string &, int, const Pose<S> &>(
                &PlanningWorld::attachObject),
-           py::arg("name"), py::arg("p_geom"), py::arg("art_name"), py::arg("link_id"),
-           py::arg("pose"), DOC(mplib, PlanningWorldTpl, attachObject, 6))
+           py::arg("name"), py::arg("obj_geom"), py::arg("art_name"),
+           py::arg("link_id"), py::arg("pose"),
+           DOC(mplib, PlanningWorldTpl, attachObject, 6))
       .def("attach_sphere", &PlanningWorld::attachSphere, py::arg("radius"),
            py::arg("art_name"), py::arg("link_id"), py::arg("pose"),
            DOC(mplib, PlanningWorldTpl, attachSphere))
@@ -123,6 +124,9 @@ void build_pyplanning_world(py::module &pymp) {
            py::arg("convex") = false, DOC(mplib, PlanningWorldTpl, attachMesh))
       .def("detach_object", &PlanningWorld::detachObject, py::arg("name"),
            py::arg("also_remove") = false, DOC(mplib, PlanningWorldTpl, detachObject))
+      .def("detach_all_objects", &PlanningWorld::detachAllObjects,
+           py::arg("also_remove") = false,
+           DOC(mplib, PlanningWorldTpl, detachAllObjects))
       .def("print_attached_body_pose", &PlanningWorld::printAttachedBodyPose,
            DOC(mplib, PlanningWorldTpl, printAttachedBodyPose))
 
@@ -133,6 +137,9 @@ void build_pyplanning_world(py::module &pymp) {
 
       .def("get_allowed_collision_matrix", &PlanningWorld::getAllowedCollisionMatrix,
            DOC(mplib, PlanningWorldTpl, getAllowedCollisionMatrix))
+      .def("set_allowed_collision", &PlanningWorld::setAllowedCollision,
+           py::arg("name1"), py::arg("name2"), py::arg("allowed"),
+           DOC(mplib, PlanningWorldTpl, setAllowedCollision))
 
       .def("is_state_colliding", &PlanningWorld::isStateColliding,
            DOC(mplib, PlanningWorldTpl, isStateColliding))
