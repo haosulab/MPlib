@@ -378,6 +378,41 @@ class Planner:
         qdds_sample = jnt_traj(ts_sample, 2)
         return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration  # type: ignore
 
+    def TOPP_SD(self, path, duration, step=0.1, verbose=False):
+        """
+        Path Parameterization with desired duration (in seconds)
+        Args:
+            path: numpy array of shape (n, dof)
+            duration: desired duration of the path in seconds
+            step: step size for the discretization
+            verbose: if True, will print the log of TOPPRA
+        """
+
+        N_samples = path.shape[0]
+        dof = path.shape[1]
+        assert dof == len(self.joint_vel_limits)
+        assert dof == len(self.joint_acc_limits)
+        ss = np.linspace(0, 1, N_samples)
+        path = ta.SplineInterpolator(ss, path)
+        pc_vel = constraint.JointVelocityConstraint(self.joint_vel_limits)
+        pc_acc = constraint.JointAccelerationConstraint(self.joint_acc_limits)
+        instance = algo.TOPPRAsd(
+            [pc_vel, pc_acc], path, parametrizer="ParametrizeConstAccel"
+        )
+        instance.set_desired_duration(duration)
+        jnt_traj = instance.compute_trajectory()
+        if jnt_traj is None:
+            if verbose:
+                print(instance.problem_data)
+                print(instance.problem_data.K)
+                instance.inspect()
+            raise RuntimeError("Fail to parameterize path")
+        ts_sample = np.linspace(0, jnt_traj.duration, int(jnt_traj.duration / step))  # type: ignore
+        qs_sample = jnt_traj(ts_sample)
+        qds_sample = jnt_traj(ts_sample, 1)
+        qdds_sample = jnt_traj(ts_sample, 2)
+        return ts_sample, qs_sample, qds_sample, qdds_sample, jnt_traj.duration  # type: ignore
+
     # TODO: change method name to align with PlanningWorld API?
     def update_point_cloud(self, points, resolution=1e-3, name="scene_pcd"):
         """
