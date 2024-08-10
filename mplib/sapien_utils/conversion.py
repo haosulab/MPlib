@@ -300,7 +300,7 @@ class SapienPlanningWorld(PlanningWorld):
         shapes: list[CollisionObject] = []
         shape_poses: list[Pose] = []
         for shape in comp.collision_shapes:
-            shape_poses.append(shape.local_pose)  # type: ignore
+            shape_poses.append(Pose(shape.local_pose))  # type: ignore
 
             if isinstance(shape, PhysxCollisionShapeBox):
                 c_geom = Box(side=shape.half_size * 2)
