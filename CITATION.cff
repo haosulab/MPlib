@@ -1,0 +1,44 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: 'MPlib: a Lightweight Motion Planning Library'
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Runlin (Kolin)
+    family-names: Guo
+    email: ruguo@ucsd.edu
+    affiliation: UC San Diego
+  - given-names: Xinsong
+    family-names: Lin
+    email: x8lin@ucsd.edu
+    affiliation: UC San Diego
+  - given-names: Minghua
+    family-names: Liu
+    email: minghua@ucsd.edu
+    affiliation: UC San Diego
+  - given-names: Jiayuan
+    family-names: Gu
+    email: jigu@ucsd.edu
+    affiliation: UC San Diego
+  - given-names: Hao
+    family-names: Su
+    email: haosu@ucsd.edu
+    affiliation: UC San Diego
+repository-code: 'https://github.com/haosulab/MPlib'
+url: 'https://motion-planning-lib.readthedocs.io/latest/'
+abstract: >-
+  MPlib is a lightweight python package for motion planning,
+  which is decoupled from ROS and is easy to set up.
+
+  With a few lines of python code, one can achieve most of
+  the motion planning functionalities in robot manipulation.
+keywords:
+  - robotics
+  - motion planning
+  - kinematics
+  - collision checking
+license: MIT
