@@ -99,6 +99,7 @@ class SapienPlanningWorld(PlanningWorld):
                 joint_names=[j.name for j in articulation.active_joints],
                 verbose=False,
             )
+            articulated_model.set_base_pose(articulation.root_pose)  # type: ignore
             articulated_model.set_qpos(
                 articulation.qpos,  # type: ignore
                 full=True,
@@ -130,6 +131,7 @@ class SapienPlanningWorld(PlanningWorld):
         """
         for articulation in self._sim_scene.get_all_articulations():
             if art := self.get_articulation(convert_object_name(articulation)):
+                art.set_base_pose(articulation.root_pose)  # type: ignore
                 # set_qpos to update poses
                 art.set_qpos(articulation.qpos, full=True)  # type: ignore
             else:
