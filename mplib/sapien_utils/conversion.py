@@ -99,7 +99,10 @@ class SapienPlanningWorld(PlanningWorld):
                 joint_names=[j.name for j in articulation.active_joints],
                 verbose=False,
             )
-            articulated_model.set_qpos(articulation.qpos)  # update qpos  # type: ignore
+            articulated_model.set_qpos(
+                articulation.qpos,  # type: ignore
+                full=True,
+            )  # update qpos
             self.add_articulation(articulated_model)
 
         for articulation in planned_articulations:
@@ -128,7 +131,7 @@ class SapienPlanningWorld(PlanningWorld):
         for articulation in self._sim_scene.get_all_articulations():
             if art := self.get_articulation(convert_object_name(articulation)):
                 # set_qpos to update poses
-                art.set_qpos(articulation.qpos)  # type: ignore
+                art.set_qpos(articulation.qpos, full=True)  # type: ignore
             else:
                 raise RuntimeError(
                     f"Articulation {articulation.name} not found in PlanningWorld! "
