@@ -348,7 +348,7 @@ class Planner:
             q_goals = q_goals[np.linalg.norm(q_goals - start_qpos, axis=1).argmin()]
         return status, q_goals
 
-    def TOPP(self, path, step=0.1, verbose=False):
+    def TOPP(self, path, step=0.1, verbose=False, duration=None):
         """
         Time-Optimal Path Parameterization
 
@@ -356,6 +356,9 @@ class Planner:
             path: numpy array of shape (n, dof)
             step: step size for the discretization
             verbose: if True, will print the log of TOPPRA
+            duration: desired duration of the path in seconds. If None, retunrs
+                time-optimal path. Otherwise, returns path parameterized with
+                the desired duration.
         """
 
         N_samples = path.shape[0]
@@ -366,9 +369,15 @@ class Planner:
         path = ta.SplineInterpolator(ss, path)
         pc_vel = constraint.JointVelocityConstraint(self.joint_vel_limits)
         pc_acc = constraint.JointAccelerationConstraint(self.joint_acc_limits)
-        instance = algo.TOPPRA(
-            [pc_vel, pc_acc], path, parametrizer="ParametrizeConstAccel"
-        )
+        if duration is None:
+            instance = algo.TOPPRA(
+                [pc_vel, pc_acc], path, parametrizer="ParametrizeConstAccel"
+            )
+        else:
+            instance = algo.TOPPRAsd(
+                [pc_vel, pc_acc], path, parametrizer="ParametrizeConstAccel"
+            )
+            instance.set_desired_duration(duration)
         jnt_traj = instance.compute_trajectory()
         if jnt_traj is None:
             raise RuntimeError("Fail to parameterize path")
