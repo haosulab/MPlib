@@ -82,7 +82,7 @@ class DetectCollisionDemo(DemoSetup):
         print(status, path)
 
         print("\n----- no more env-collision after removing the floor -----")
-        self.planner.remove_normal_object("floor")
+        self.planner.remove_object("floor")
         self.print_collisions(self.planner.check_for_env_collision(env_collision_qpos))
         # end ankor
 

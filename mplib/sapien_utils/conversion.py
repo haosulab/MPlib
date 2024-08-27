@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Optional, Sequence
+import warnings
+from typing import Literal, Optional, Sequence
 
 import numpy as np
 from sapien import Entity, Scene
@@ -29,6 +30,7 @@ from ..collision_detection.fcl import (
     Box,
     BVHModel,
     Capsule,
+    CollisionGeometry,
     CollisionObject,
     Convex,
     Cylinder,
@@ -43,6 +45,9 @@ from ..planner import Planner
 from ..planning.ompl import OMPLPlanner
 from .srdf_exporter import export_srdf
 from .urdf_exporter import export_kinematic_chain_urdf
+
+YELLOW_COLOR = "\033[93m"
+RESET_COLOR = "\033[0m"
 
 
 # TODO: link names?
@@ -169,9 +174,11 @@ class SapienPlanningWorld(PlanningWorld):
                 )
                 > 0
             ):
-                raise RuntimeError(
-                    f"Entity {entity.name} not found in PlanningWorld! "
-                    "The scene might have changed since last update."
+                warnings.warn(
+                    YELLOW_COLOR + f"Entity {entity.name} not found in PlanningWorld! "
+                    "The scene might have changed since last update. "
+                    "Use PlanningWorld.add_object() to add the object." + RESET_COLOR,
+                    stacklevel=2,
                 )
 
     def check_collision_between(
@@ -355,6 +362,412 @@ class SapienPlanningWorld(PlanningWorld):
             shape_poses,
         )
 
+    # ----- Overloaded PlanningWorld methods to accept SAPIEN objects ----- #
+    def is_articulation_planned(self, articulation: PhysxArticulation | str) -> bool:  # type: ignore
+        """
+        Check whether the given articulation is being planned
+
+        :param articulation: the articulation (or its name) to check
+        :return: ``True`` if the articulation is being planned, ``False`` otherwise.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.is_articulation_planned()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.is_articulation_planned
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        return super().is_articulation_planned(articulation)
+
+    def set_articulation_planned(  # type: ignore
+        self, articulation: PhysxArticulation | str, planned: bool
+    ) -> None:
+        """
+        Sets the given articulation as being planned or not
+
+        :param articulation: the articulation (or its name)
+        :param planned: whether the articulation should be planned
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.set_articulation_planned()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.set_articulation_planned
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        super().set_articulation_planned(articulation, planned)
+
+    def has_object(self, obj: Entity | str) -> bool:
+        """
+        Check whether the given non-articulated object exists.
+
+        :param obj: the object (or its name) to check
+
+        :return: ``True`` if the object exists, ``False`` otherwise.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.has_object()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.has_object
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        return super().has_object(obj)
+
+    def add_object(self, obj: FCLObject | Entity) -> None:
+        """
+        Adds a non-articulated object to the PlanningWorld.
+
+        :param obj: the non-articulated object to add
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.add_object()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.add_object
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            component = obj.find_component_by_type(PhysxRigidBaseComponent)
+            assert component is not None, (
+                f"No PhysxRigidBaseComponent found in {obj.name}: " f"{obj.components=}"
+            )
+
+            # Convert collision shapes at current global pose
+            if (fcl_obj := self.convert_physx_component(component)) is not None:  # type: ignore
+                self.add_object(fcl_obj)
+        else:
+            super().add_object(obj)
+
+    def remove_object(self, obj: Entity | str) -> None:
+        """
+        Removes a non-articulated object from the PlanningWorld.
+
+        :param obj: the non-articulated object (or its name) to remove
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.remove_object()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.remove_object
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        super().remove_object(obj)
+
+    def is_object_attached(self, obj: Entity | str) -> bool:  # type: ignore
+        """
+        Check whether the given non-articulated object is attached
+
+        :param obj: the non-articulated object (or its name) to check
+        :return: ``True`` if the articulation is attached, ``False`` otherwise.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.is_object_attached()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.is_object_attached
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        return super().is_object_attached(obj)
+
+    def attach_object(  # type: ignore
+        self,
+        obj: Entity | str,
+        articulation: PhysxArticulation | str,
+        link: PhysxArticulationLinkComponent | int,
+        pose: Optional[Pose] = None,
+        *,
+        touch_links: Optional[list[PhysxArticulationLinkComponent | str]] = None,
+        obj_geom: Optional[CollisionGeometry] = None,
+    ) -> None:
+        """
+        Attaches given non-articulated object to the specified link of articulation.
+
+        Updates ``acm_`` to allow collisions between attached object and touch_links.
+
+        :param obj: the non-articulated object (or its name) to attach
+        :param articulation: the planned articulation (or its name) to attach to
+        :param link: the link of the planned articulation (or its index) to attach to
+        :param pose: attached pose (relative pose from attached link to object).
+            If ``None``, attach the object at its current pose.
+        :param touch_links: links (or their names) that the attached object touches.
+            When ``None``,
+
+            * if the object is not currently attached, touch_links are set to the name
+            of articulation links that collide with the object in the current state.
+
+            * if the object is already attached, touch_links of the attached object
+            is preserved and ``acm_`` remains unchanged.
+        :param obj_geom: a CollisionGeometry object representing the attached object.
+            If not ``None``, pose must be not ``None``.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.attach_object()</span>
+            </code>
+            methods</a></summary>
+        .. automethod:: mplib.PlanningWorld.attach_object
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        kwargs = {"name": obj, "art_name": articulation, "link_id": link}
+        if pose is not None:
+            kwargs["pose"] = pose
+        if touch_links is not None:
+            kwargs["touch_links"] = [
+                l.name if isinstance(l, PhysxArticulationLinkComponent) else l
+                for l in touch_links  # noqa: E741
+            ]
+        if obj_geom is not None:
+            kwargs["obj_geom"] = obj_geom
+
+        if isinstance(obj, Entity):
+            kwargs["name"] = convert_object_name(obj)
+        if isinstance(articulation, PhysxArticulation):
+            kwargs["art_name"] = articulation = convert_object_name(articulation)
+        if isinstance(link, PhysxArticulationLinkComponent):
+            kwargs["link_id"] = (
+                self.get_articulation(articulation)
+                .get_pinocchio_model()
+                .get_link_names()
+                .index(link.name)
+            )
+
+        super().attach_object(**kwargs)
+
+    def detach_object(self, obj: Entity | str, also_remove: bool = False) -> bool:  # type: ignore
+        """
+        Detaches the given object.
+
+        Updates ``acm_`` to disallow collision between the object and touch_links.
+
+        :param obj: the non-articulated object (or its name) to detach
+        :param also_remove: whether to also remove the object from PlanningWorld
+        :return: ``True`` if success, ``False`` if the given object is not attached.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.detach_object()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.detach_object
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj, Entity):
+            obj = convert_object_name(obj)
+        return super().detach_object(obj, also_remove=also_remove)
+
+    def attach_sphere(  # type: ignore
+        self,
+        radius: float,
+        articulation: PhysxArticulation | str,
+        link: PhysxArticulationLinkComponent | int,
+        pose: Pose,
+    ) -> None:
+        """
+        Attaches given sphere to specified link of articulation (auto touch_links)
+
+        :param radius: sphere radius
+        :param articulation: the planned articulation (or its name) to attach to
+        :param link: the link of the planned articulation (or its index) to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.attach_sphere()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.attach_sphere
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        if isinstance(link, PhysxArticulationLinkComponent):
+            link = (
+                self.get_articulation(articulation)
+                .get_pinocchio_model()
+                .get_link_names()
+                .index(link.name)
+            )
+        super().attach_sphere(radius, articulation, link, pose)
+
+    def attach_box(  # type: ignore
+        self,
+        size: Sequence[float]
+        | np.ndarray[tuple[Literal[3], Literal[1]], np.dtype[np.floating]],
+        articulation: PhysxArticulation | str,
+        link: PhysxArticulationLinkComponent | int,
+        pose: Pose,
+    ) -> None:
+        """
+        Attaches given box to specified link of articulation (auto touch_links)
+
+        :param size: box side length
+        :param articulation: the planned articulation (or its name) to attach to
+        :param link: the link of the planned articulation (or its index) to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.attach_box()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.attach_box
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        if isinstance(link, PhysxArticulationLinkComponent):
+            link = (
+                self.get_articulation(articulation)
+                .get_pinocchio_model()
+                .get_link_names()
+                .index(link.name)
+            )
+        super().attach_box(size, articulation, link, pose)  # type: ignore
+
+    def attach_mesh(  # type: ignore
+        self,
+        mesh_path: str,
+        articulation: PhysxArticulation | str,
+        link: PhysxArticulationLinkComponent | int,
+        pose: Pose,
+        *,
+        convex: bool = False,
+    ) -> None:
+        """
+        Attaches given mesh to specified link of articulation (auto touch_links)
+
+        :param mesh_path: path to a mesh file
+        :param articulation: the planned articulation (or its name) to attach to
+        :param link: the link of the planned articulation (or its index) to attach to
+        :param pose: attached pose (relative pose from attached link to object)
+        :param convex: whether to load mesh as a convex mesh. Default: ``False``.
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.attach_mesh()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.attach_mesh
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(articulation, PhysxArticulation):
+            articulation = convert_object_name(articulation)
+        if isinstance(link, PhysxArticulationLinkComponent):
+            link = (
+                self.get_articulation(articulation)
+                .get_pinocchio_model()
+                .get_link_names()
+                .index(link.name)
+            )
+        super().attach_mesh(mesh_path, articulation, link, pose, convex=convex)
+
+    def set_allowed_collision(
+        self,
+        obj1: Entity | PhysxArticulationLinkComponent | str,
+        obj2: Entity | PhysxArticulationLinkComponent | str,
+        allowed: bool,
+    ) -> None:
+        """
+        Set allowed collision between two objects.
+
+        :param obj1: the first object (or its name)
+        :param obj2: the second object (or its name)
+
+        .. raw:: html
+
+            <details>
+            <summary><a>Overloaded
+            <code class="docutils literal notranslate">
+            <span class="pre">PlanningWorld.set_allowed_collision()</span>
+            </code>
+            method</a></summary>
+        .. automethod:: mplib.PlanningWorld.set_allowed_collision
+           :no-index:
+        .. raw:: html
+            </details>
+        """
+        if isinstance(obj1, Entity):
+            obj1 = convert_object_name(obj1)
+        elif isinstance(obj1, PhysxArticulationLinkComponent):
+            obj1 = obj1.name
+        if isinstance(obj2, Entity):
+            obj2 = convert_object_name(obj2)
+        elif isinstance(obj2, PhysxArticulationLinkComponent):
+            obj2 = obj2.name
+        super().set_allowed_collision(obj1, obj2, allowed)
+
 
 class SapienPlanner(Planner):
     def __init__(
@@ -406,6 +819,18 @@ class SapienPlanner(Planner):
         self.joint_vel_limits = joint_vel_limits
         self.joint_acc_limits = joint_acc_limits
         self.move_group_link_id = self.link_name_2_idx[self.move_group]
+
+        # do a robot env collision check and warn if there is a collision
+        collisions = self.planning_world.check_robot_collision()
+        if len(collisions):
+            for collision in collisions:
+                warnings.warn(
+                    YELLOW_COLOR + f"Robot's {collision.link_name1} collides with "
+                    f"{collision.link_name2} of {collision.object_name2} in initial "
+                    f"state. Use planner.planning_world.get_allowed_collision_matrix() "
+                    f"to disable collisions if planning fails" + RESET_COLOR,
+                    stacklevel=2,
+                )
 
         assert (
             len(self.joint_vel_limits)

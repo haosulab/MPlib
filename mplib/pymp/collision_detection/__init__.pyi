@@ -77,7 +77,7 @@ class AllowedCollisionMatrix:
         """
     def get_all_entry_names(self) -> list[str]:
         """
-        Get sorted names of all existing elements (including default_entries_)
+        Get sorted names of all existing elements (including ``default_entries_``)
         """
     def get_allowed_collision(self, name1: str, name2: str) -> AllowedCollision | None:
         """

@@ -154,8 +154,7 @@ class AllowedCollisionMatrix {
   void clear();
 
   /**
-   * Get sorted names of all existing elements (including
-   * default_entries_)
+   * Get sorted names of all existing elements (including ``default_entries_``)
    */
   std::vector<std::string> getAllEntryNames() const;
 

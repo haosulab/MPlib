@@ -154,8 +154,8 @@ class PlanningDemo(DemoSetup):
         first by moving the base only and then the arm only
         """
         # pickup ankor
-        pickup_pose = [0.7, 0, 0.12, 0, 1, 0, 0]
-        delivery_pose = [0.4, 0.3, 0.13, 0, 1, 0, 0]
+        pickup_pose = Pose([0.7, 0, 0.12], [0, 1, 0, 0])
+        delivery_pose = Pose([0.4, 0.3, 0.13], [0, 1, 0, 0])
 
         self.add_point_cloud()
         # also add the target as a collision object so we don't hit it
@@ -164,7 +164,7 @@ class PlanningDemo(DemoSetup):
         self.planner.planning_world.add_object("target", collision_object)
 
         # go above the target
-        pickup_pose[2] += 0.2
+        pickup_pose.p[2] += 0.2
         self.move_in_two_stage(pickup_pose)
         # pickup ankor end
         self.open_gripper()
@@ -172,7 +172,7 @@ class PlanningDemo(DemoSetup):
         self.planner.planning_world.remove_object(
             "target"
         )  # remove the object so we don't report collision
-        pickup_pose[2] -= 0.12
+        pickup_pose.p[2] -= 0.12
         result = self.plan_without_base(pickup_pose)
         self.follow_path(result)
         self.close_gripper()
@@ -183,17 +183,17 @@ class PlanningDemo(DemoSetup):
         # add the attached box to the planning world
         self.planner.update_attached_box([0.04, 0.04, 0.12], Pose(p=[0, 0, 0.14]))
 
-        pickup_pose[2] += 0.12
+        pickup_pose.p[2] += 0.12
         result = self.plan_without_base(pickup_pose, has_attach=True)
         self.follow_path(result)
-        delivery_pose[2] += 0.2
+        delivery_pose.p[2] += 0.2
         # now go to the drop off in two stages
         self.move_in_two_stage(delivery_pose, has_attach=True)
-        delivery_pose[2] -= 0.12
+        delivery_pose.p[2] -= 0.12
         result = self.plan_without_base(delivery_pose, has_attach=True)
         self.follow_path(result)
         self.open_gripper()
-        delivery_pose[2] += 0.12
+        delivery_pose.p[2] += 0.12
         result = self.plan_without_base(delivery_pose)
         self.follow_path(result)
 

@@ -420,7 +420,7 @@ class PlanningWorld:
         its current pose. If the object is currently attached, disallow collision
         between the object and previous touch_links.
 
-        Updates acm_ to allow collisions between attached object and touch_links.
+        Updates ``acm_`` to allow collisions between attached object and touch_links.
 
         :param name: name of the non-articulated object to attach
         :param art_name: name of the planned articulation to attach to
@@ -437,10 +437,10 @@ class PlanningWorld:
         touch_links as the name of self links that collide with the object in the
         current state.
 
-        Updates acm_ to allow collisions between attached object and touch_links.
+        Updates ``acm_`` to allow collisions between attached object and touch_links.
 
         If the object is already attached, the touch_links of the attached object is
-        preserved and acm_ remains unchanged.
+        preserved and ``acm_`` remains unchanged.
 
         :param name: name of the non-articulated object to attach
         :param art_name: name of the planned articulation to attach to
@@ -457,7 +457,7 @@ class PlanningWorld:
         given pose. If the object is currently attached, disallow collision between the
         object and previous touch_links.
 
-        Updates acm_ to allow collisions between attached object and touch_links.
+        Updates ``acm_`` to allow collisions between attached object and touch_links.
 
         :param name: name of the non-articulated object to attach
         :param art_name: name of the planned articulation to attach to
@@ -475,10 +475,10 @@ class PlanningWorld:
         touch_links as the name of self links that collide with the object in the
         current state.
 
-        Updates acm_ to allow collisions between attached object and touch_links.
+        Updates ``acm_`` to allow collisions between attached object and touch_links.
 
         If the object is already attached, the touch_links of the attached object is
-        preserved and acm_ remains unchanged.
+        preserved and ``acm_`` remains unchanged.
 
         :param name: name of the non-articulated object to attach
         :param art_name: name of the planned articulation to attach to
@@ -491,7 +491,7 @@ class PlanningWorld:
     def attach_object(
         self,
         name: str,
-        p_geom: collision_detection.fcl.CollisionGeometry,
+        obj_geom: collision_detection.fcl.CollisionGeometry,
         art_name: str,
         link_id: int,
         pose: Pose,
@@ -500,10 +500,10 @@ class PlanningWorld:
         """
         Attaches given object (w/ p_geom) to specified link of articulation at given
         pose. This is done by removing the object and then adding and attaching object.
-        As a result, all previous acm_ entries with the object are removed
+        As a result, all previous ``acm_`` entries with the object are removed
 
         :param name: name of the non-articulated object to attach
-        :param p_geom: pointer to a CollisionGeometry object
+        :param obj_geom: pointer to a CollisionGeometry object
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
         :param pose: attached pose (relative pose from attached link to object)
@@ -513,7 +513,7 @@ class PlanningWorld:
     def attach_object(
         self,
         name: str,
-        p_geom: collision_detection.fcl.CollisionGeometry,
+        obj_geom: collision_detection.fcl.CollisionGeometry,
         art_name: str,
         link_id: int,
         pose: Pose,
@@ -521,12 +521,12 @@ class PlanningWorld:
         """
         Attaches given object (w/ p_geom) to specified link of articulation at given
         pose. This is done by removing the object and then adding and attaching object.
-        As a result, all previous acm_ entries with the object are removed.
+        As a result, all previous ``acm_`` entries with the object are removed.
         Automatically sets touch_links as the name of self links that collide with the
         object in the current state (auto touch_links).
 
         :param name: name of the non-articulated object to attach
-        :param p_geom: pointer to a CollisionGeometry object
+        :param obj_geom: pointer to a CollisionGeometry object
         :param art_name: name of the planned articulation to attach to
         :param link_id: index of the link of the planned articulation to attach to
         :param pose: attached pose (relative pose from attached link to object)
@@ -572,10 +572,18 @@ class PlanningWorld:
         :param request: collision request params.
         :return: List of ``WorldCollisionResult`` objects
         """
+    def detach_all_objects(self, also_remove: bool = False) -> bool:
+        """
+        Detaches all attached objects. Updates ``acm_`` to disallow collision between
+        the object and touch_links.
+
+        :param also_remove: whether to also remove objects from world
+        :return: ``True`` if success, ``False`` if there are no attached objects
+        """
     def detach_object(self, name: str, also_remove: bool = False) -> bool:
         """
-        Detaches object with given name. Updates acm_ to disallow collision between the
-        object and touch_links.
+        Detaches object with given name. Updates ``acm_`` to disallow collision between
+        the object and touch_links.
 
         :param name: name of the non-articulated object to detach
         :param also_remove: whether to also remove object from world
@@ -714,7 +722,7 @@ class PlanningWorld:
         """
     def remove_articulation(self, name: str) -> bool:
         """
-        Removes the articulation with given name if exists. Updates acm_
+        Removes the articulation with given name if exists. Updates ``acm_``
 
         :param name: name of the articulated model
         :return: ``True`` if success, ``False`` if articulation with given name does not
@@ -723,7 +731,7 @@ class PlanningWorld:
     def remove_object(self, name: str) -> bool:
         """
         Removes (and detaches) the collision object with given name if exists. Updates
-        acm_
+        ``acm_``
 
         :param name: name of the non-articulated collision object
         :return: ``True`` if success, ``False`` if the non-articulated object with given

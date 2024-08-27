@@ -1,5 +1,6 @@
 import sapien.core as sapien
 
+from mplib import Pose
 from mplib.examples.demo_setup import DemoSetup
 
 
@@ -36,19 +37,19 @@ class PlanningDemo(DemoSetup):
         # boxes ankor
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.06])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.06])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.06], material=[1, 0, 0])
         red_cube = builder.build(name="red_cube")
         red_cube.set_pose(sapien.Pose([0.4, 0.3, 0.06]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.04])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.04])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.04], material=[0, 1, 0])
         green_cube = builder.build(name="green_cube")
         green_cube.set_pose(sapien.Pose([0.2, -0.3, 0.04]))
 
         builder = self.scene.create_actor_builder()
         builder.add_box_collision(half_size=[0.02, 0.02, 0.07])
-        builder.add_box_visual(half_size=[0.02, 0.02, 0.07])
+        builder.add_box_visual(half_size=[0.02, 0.02, 0.07], material=[0, 0, 1])
         blue_cube = builder.build(name="blue_cube")
         blue_cube.set_pose(sapien.Pose([0.6, 0.1, 0.07]))
         # boxes ankor end
@@ -61,28 +62,28 @@ class PlanningDemo(DemoSetup):
         """
         # target poses ankor
         poses = [
-            [0.4, 0.3, 0.12, 0, 1, 0, 0],
-            [0.2, -0.3, 0.08, 0, 1, 0, 0],
-            [0.6, 0.1, 0.14, 0, 1, 0, 0],
+            Pose([0.4, 0.3, 0.12], [0, 1, 0, 0]),
+            Pose([0.2, -0.3, 0.08], [0, 1, 0, 0]),
+            Pose([0.6, 0.1, 0.14], [0, 1, 0, 0]),
         ]
         # target poses ankor end
         # execute motion ankor
         for i in range(3):
             pose = poses[i]
-            pose[2] += 0.2
+            pose.p[2] += 0.2
             self.move_to_pose(pose)
             self.open_gripper()
-            pose[2] -= 0.12
+            pose.p[2] -= 0.12
             self.move_to_pose(pose)
             self.close_gripper()
-            pose[2] += 0.12
+            pose.p[2] += 0.12
             self.move_to_pose(pose)
-            pose[0] += 0.1
+            pose.p[0] += 0.1
             self.move_to_pose(pose)
-            pose[2] -= 0.12
+            pose.p[2] -= 0.12
             self.move_to_pose(pose)
             self.open_gripper()
-            pose[2] += 0.12
+            pose.p[2] += 0.12
             self.move_to_pose(pose)
         # execute motion ankor end
 

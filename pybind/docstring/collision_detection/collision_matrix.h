@@ -46,7 +46,7 @@ Clear all data in the allowed collision matrix)doc";
 
 static const char *__doc_mplib_collision_detection_AllowedCollisionMatrix_getAllEntryNames =
 R"doc(
-Get sorted names of all existing elements (including default_entries_))doc";
+Get sorted names of all existing elements (including ``default_entries_``))doc";
 
 static const char *__doc_mplib_collision_detection_AllowedCollisionMatrix_getAllowedCollision =
 R"doc(
