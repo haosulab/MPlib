@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Literal, Optional, Sequence
+from typing import Literal, Optional, Sequence, Union
 
 import numpy as np
 import toppra as ta
@@ -24,16 +24,16 @@ class Planner:
     # constructor ankor
     def __init__(
         self,
-        urdf: str | Path,
+        urdf: Union[str, Path],
         move_group: str,
         *,
-        srdf: Optional[str | Path] = None,
+        srdf: Union[str, Path, None] = None,
         new_package_keyword: str = "",
         use_convex: bool = False,
         user_link_names: Sequence[str] = [],
         user_joint_names: Sequence[str] = [],
-        joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
-        joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
+        joint_vel_limits: Union[Sequence[float], np.ndarray, None] = None,
+        joint_acc_limits: Union[Sequence[float], np.ndarray, None] = None,
         objects: list[FCLObject] = [],  # noqa: B006
         verbose: bool = False,
     ):
@@ -240,13 +240,13 @@ class Planner:
         self,
         goal_pose: Pose,
         start_qpos: np.ndarray,
-        mask: Optional[Sequence[bool] | np.ndarray] = None,
+        mask: Union[Sequence[bool], np.ndarray, None] = None,
         *,
         n_init_qpos: int = 20,
         threshold: float = 1e-3,
         return_closest: bool = False,
         verbose: bool = False,
-    ) -> tuple[str, list[np.ndarray] | np.ndarray | None]:
+    ) -> tuple[str, Union[list[np.ndarray], np.ndarray, None]]:
         """
         Compute inverse kinematics
 
@@ -460,8 +460,10 @@ class Planner:
 
     def update_attached_box(
         self,
-        size: Sequence[float]
-        | np.ndarray[tuple[Literal[3], Literal[1]], np.dtype[np.floating]],
+        size: Union[
+            Sequence[float],
+            np.ndarray[tuple[Literal[3], Literal[1]], np.dtype[np.floating]],
+        ],
         pose: Pose,
         art_name=None,
         link_id=-1,
@@ -544,7 +546,7 @@ class Planner:
         constraint_jacobian: Optional[Callable[[np.ndarray, np.ndarray], None]] = None,
         constraint_tolerance: float = 1e-3,
         verbose: bool = False,
-    ) -> dict[str, str | np.ndarray | np.float64]:
+    ) -> dict[str, Union[str, np.ndarray, np.float64]]:
         """
         Plan a path from a specified joint position to a goal pose
 
@@ -630,7 +632,7 @@ class Planner:
         self,
         goal_pose: Pose,
         current_qpos: np.ndarray,
-        mask: Optional[list[bool] | np.ndarray] = None,
+        mask: Union[list[bool], np.ndarray, None] = None,
         *,
         time_step: float = 0.1,
         rrt_range: float = 0.1,
@@ -642,7 +644,7 @@ class Planner:
         constraint_jacobian: Optional[Callable] = None,
         constraint_tolerance: float = 1e-3,
         verbose: bool = False,
-    ) -> dict[str, str | np.ndarray | np.float64]:
+    ) -> dict[str, Union[str, np.ndarray, np.float64]]:
         """
         plan from a start configuration to a goal pose of the end-effector
 
@@ -708,7 +710,7 @@ class Planner:
         time_step: float = 0.1,
         wrt_world: bool = True,
         verbose: bool = False,
-    ) -> dict[str, str | np.ndarray | np.float64]:
+    ) -> dict[str, Union[str, np.ndarray, np.float64]]:
         # plan_screw ankor end
         """
         Plan from a start configuration to a goal pose of the end-effector using

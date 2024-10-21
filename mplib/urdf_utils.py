@@ -7,6 +7,8 @@ import numpy as np
 from .collision_detection import AllowedCollisionMatrix
 from .pymp import ArticulatedModel
 
+from typing import Union
+
 
 def compute_default_collisions(
     robot: ArticulatedModel, *, num_samples=100000, verbose=False
@@ -111,7 +113,7 @@ def compute_default_collisions(
 
 
 def replace_urdf_package_keyword(
-    urdf_path: str | Path,
+    urdf_path: Union[str, Path],
     new_package_keyword: str = "",
 ) -> Path:
     """
@@ -133,7 +135,7 @@ def replace_urdf_package_keyword(
 
 
 def generate_srdf(
-    urdf_path: str | Path,
+    urdf_path: Union[str, Path],
     new_package_keyword: str = "",
     *,
     num_samples=100000,

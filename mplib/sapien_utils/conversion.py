@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Literal, Optional, Sequence
+from typing import Literal, Optional, Sequence, Union
 
 import numpy as np
 from sapien import Entity, Scene
@@ -51,7 +51,7 @@ RESET_COLOR = "\033[0m"
 
 
 # TODO: link names?
-def convert_object_name(obj: PhysxArticulation | Entity) -> str:
+def convert_object_name(obj: Union[PhysxArticulation, Entity]) -> str:
     """
     Constructs a unique name for the corresponding mplib object.
     This is necessary because mplib objects assume unique names.
@@ -183,8 +183,8 @@ class SapienPlanningWorld(PlanningWorld):
 
     def check_collision_between(
         self,
-        obj_A: PhysxArticulation | Entity,
-        obj_B: PhysxArticulation | Entity,
+        obj_A: Union[PhysxArticulation, Entity],
+        obj_B: Union[PhysxArticulation, Entity],
         *,
         acm: AllowedCollisionMatrix = AllowedCollisionMatrix(),  # noqa: B008
     ) -> list[WorldCollisionResult]:
@@ -231,12 +231,12 @@ class SapienPlanningWorld(PlanningWorld):
 
     def distance_between(
         self,
-        obj_A: PhysxArticulation | Entity,
-        obj_B: PhysxArticulation | Entity,
+        obj_A: Union[PhysxArticulation, Entity],
+        obj_B: Union[PhysxArticulation, Entity],
         *,
         acm: AllowedCollisionMatrix = AllowedCollisionMatrix(),  # noqa: B008
         return_distance_only: bool = True,
-    ) -> WorldDistanceResult | float:
+    ) -> Union[WorldDistanceResult, float]:
         """
         Check distance-to-collision between two objects,
         which can either be a PhysxArticulation or an Entity.
@@ -281,8 +281,8 @@ class SapienPlanningWorld(PlanningWorld):
 
     def _get_collision_obj(
         self,
-        obj: PhysxArticulation | Entity,
-    ) -> FCLModel | FCLObject | None:
+        obj: Union[PhysxArticulation, Entity],
+    ) -> Union[FCLModel, FCLObject, None]:
         """Helper function to get mplib collision object from sapien object"""
         if isinstance(obj, PhysxArticulation) and (
             articulation := self.get_articulation(convert_object_name(obj))
@@ -300,7 +300,9 @@ class SapienPlanningWorld(PlanningWorld):
             )
 
     @staticmethod
-    def convert_physx_component(comp: PhysxRigidBaseComponent) -> FCLObject | None:
+    def convert_physx_component(
+        comp: PhysxRigidBaseComponent,
+    ) -> Union[FCLObject, None]:
         """
         Converts a SAPIEN physx.PhysxRigidBaseComponent to an FCLObject.
         All shapes in the returned FCLObject are already set at their world poses.
@@ -363,7 +365,9 @@ class SapienPlanningWorld(PlanningWorld):
         )
 
     # ----- Overloaded PlanningWorld methods to accept SAPIEN objects ----- #
-    def is_articulation_planned(self, articulation: PhysxArticulation | str) -> bool:  # type: ignore
+    def is_articulation_planned(
+        self, articulation: Union[PhysxArticulation, str]
+    ) -> bool:  # type: ignore
         """
         Check whether the given articulation is being planned
 
@@ -388,7 +392,7 @@ class SapienPlanningWorld(PlanningWorld):
         return super().is_articulation_planned(articulation)
 
     def set_articulation_planned(  # type: ignore
-        self, articulation: PhysxArticulation | str, planned: bool
+        self, articulation: Union[PhysxArticulation, str], planned: bool
     ) -> None:
         """
         Sets the given articulation as being planned or not
@@ -413,7 +417,7 @@ class SapienPlanningWorld(PlanningWorld):
             articulation = convert_object_name(articulation)
         super().set_articulation_planned(articulation, planned)
 
-    def has_object(self, obj: Entity | str) -> bool:
+    def has_object(self, obj: Union[Entity, str]) -> bool:
         """
         Check whether the given non-articulated object exists.
 
@@ -438,7 +442,7 @@ class SapienPlanningWorld(PlanningWorld):
             obj = convert_object_name(obj)
         return super().has_object(obj)
 
-    def add_object(self, obj: FCLObject | Entity) -> None:
+    def add_object(self, obj: Union[FCLObject, Entity]) -> None:
         """
         Adds a non-articulated object to the PlanningWorld.
 
@@ -469,7 +473,7 @@ class SapienPlanningWorld(PlanningWorld):
         else:
             super().add_object(obj)
 
-    def remove_object(self, obj: Entity | str) -> None:
+    def remove_object(self, obj: Union[Entity, str]) -> None:
         """
         Removes a non-articulated object from the PlanningWorld.
 
@@ -492,7 +496,7 @@ class SapienPlanningWorld(PlanningWorld):
             obj = convert_object_name(obj)
         super().remove_object(obj)
 
-    def is_object_attached(self, obj: Entity | str) -> bool:  # type: ignore
+    def is_object_attached(self, obj: Union[Entity, str]) -> bool:  # type: ignore
         """
         Check whether the given non-articulated object is attached
 
@@ -518,12 +522,12 @@ class SapienPlanningWorld(PlanningWorld):
 
     def attach_object(  # type: ignore
         self,
-        obj: Entity | str,
-        articulation: PhysxArticulation | str,
-        link: PhysxArticulationLinkComponent | int,
+        obj: Union[Entity, str],
+        articulation: Union[PhysxArticulation, str],
+        link: Union[PhysxArticulationLinkComponent, int],
         pose: Optional[Pose] = None,
         *,
-        touch_links: Optional[list[PhysxArticulationLinkComponent | str]] = None,
+        touch_links: Optional[list[Union[PhysxArticulationLinkComponent, str]]] = None,
         obj_geom: Optional[CollisionGeometry] = None,
     ) -> None:
         """
@@ -585,7 +589,7 @@ class SapienPlanningWorld(PlanningWorld):
 
         super().attach_object(**kwargs)
 
-    def detach_object(self, obj: Entity | str, also_remove: bool = False) -> bool:  # type: ignore
+    def detach_object(self, obj: Union[Entity, str], also_remove: bool = False) -> bool:  # type: ignore
         """
         Detaches the given object.
 
@@ -615,8 +619,8 @@ class SapienPlanningWorld(PlanningWorld):
     def attach_sphere(  # type: ignore
         self,
         radius: float,
-        articulation: PhysxArticulation | str,
-        link: PhysxArticulationLinkComponent | int,
+        articulation: Union[PhysxArticulation, str],
+        link: Union[PhysxArticulationLinkComponent, int],
         pose: Pose,
     ) -> None:
         """
@@ -653,10 +657,12 @@ class SapienPlanningWorld(PlanningWorld):
 
     def attach_box(  # type: ignore
         self,
-        size: Sequence[float]
-        | np.ndarray[tuple[Literal[3], Literal[1]], np.dtype[np.floating]],
-        articulation: PhysxArticulation | str,
-        link: PhysxArticulationLinkComponent | int,
+        size: Union[
+            Sequence[float],
+            np.ndarray[tuple[Literal[3], Literal[1]], np.dtype[np.floating]],
+        ],
+        articulation: Union[PhysxArticulation, str],
+        link: Union[PhysxArticulationLinkComponent, int],
         pose: Pose,
     ) -> None:
         """
@@ -694,8 +700,8 @@ class SapienPlanningWorld(PlanningWorld):
     def attach_mesh(  # type: ignore
         self,
         mesh_path: str,
-        articulation: PhysxArticulation | str,
-        link: PhysxArticulationLinkComponent | int,
+        articulation: Union[PhysxArticulation, str],
+        link: Union[PhysxArticulationLinkComponent, int],
         pose: Pose,
         *,
         convex: bool = False,
@@ -735,8 +741,8 @@ class SapienPlanningWorld(PlanningWorld):
 
     def set_allowed_collision(
         self,
-        obj1: Entity | PhysxArticulationLinkComponent | str,
-        obj2: Entity | PhysxArticulationLinkComponent | str,
+        obj1: Union[Entity, PhysxArticulationLinkComponent, str],
+        obj2: Union[Entity, PhysxArticulationLinkComponent, str],
         allowed: bool,
     ) -> None:
         """
@@ -775,8 +781,8 @@ class SapienPlanner(Planner):
         sapien_planning_world: SapienPlanningWorld,
         move_group: str,
         *,
-        joint_vel_limits: Optional[Sequence[float] | np.ndarray] = None,
-        joint_acc_limits: Optional[Sequence[float] | np.ndarray] = None,
+        joint_vel_limits: Union[Sequence[float], np.ndarray, None] = None,
+        joint_acc_limits: Union[Sequence[float], np.ndarray, None] = None,
     ):
         """
         Creates an mplib.planner.Planner from a SapienPlanningWorld.
