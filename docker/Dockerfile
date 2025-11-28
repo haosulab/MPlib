@@ -24,7 +24,7 @@ RUN git clone --single-branch -b 3.4.0 --depth 1 https://gitlab.com/libeigen/eig
 # libccd
 RUN git clone --single-branch -b v2.1 --depth 1 https://github.com/danfis/libccd.git && \
     cd libccd && mkdir build && cd build && \
-    cmake -G "Unix Makefiles" .. && make -j$(nproc) && make install && \
+    cmake -G "Unix Makefiles" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .. && make -j$(nproc) && make install && \
     rm -rf /workspace/libccd
 
 # boost (require >= 1.58)
@@ -49,7 +49,7 @@ RUN git clone --single-branch -b 1.6.0 --depth 1 --recurse-submodules https://gi
 # octomap (for octree collision)
 RUN git clone --single-branch -b v1.9.8 --depth 1 https://github.com/OctoMap/octomap.git && \
     cd octomap/octomap && mkdir build && cd build && \
-    cmake .. && make -j$(nproc) && make install && \
+    cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .. && make -j$(nproc) && make install && \
     rm -rf /workspace/octomap
 
 # Use our fork for Halfspace distance impl & bugfix
@@ -68,7 +68,7 @@ RUN git clone --single-branch -b 20240000.1 --depth 1 https://github.com/coin-or
 
 RUN git clone --single-branch -b 1.0.2 --depth 1 https://github.com/ros/console_bridge.git && \
     cd console_bridge && mkdir build && cd build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc) && make install && \
+    cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc) && make install && \
     rm -rf /workspace/console_bridge
 
 RUN git clone --single-branch -b 1.1.1 --depth 1 https://github.com/ros/urdfdom_headers.git && \
@@ -103,7 +103,7 @@ RUN git clone --single-branch -b v5.3.1 --depth 1 https://github.com/assimp/assi
 
 RUN git clone --single-branch -b v1.5.1 --depth 1 https://github.com/orocos/orocos_kinematics_dynamics.git && \
     cd orocos_kinematics_dynamics/orocos_kdl && mkdir build && cd build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc) && make install && \
+    cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc) && make install && \
     rm -rf /workspace/orocos_kinematics_dynamics
 
 # clang library for pybind11_mkdoc
@@ -116,3 +116,11 @@ ENV LLVM_DIR_PATH=/opt/rh/llvm-toolset-11.0/root/usr/lib64 \
 # Set working directory to be repository directory
 ARG WORKDIR="/workspace"
 WORKDIR ${WORKDIR}
+
+# 选择 manylinux 里的 Python 3.12
+ENV PYBIN=/opt/python/cp312-cp312/bin
+ENV PATH="${PYBIN}:${PATH}"
+
+# 给 dev/mkdoc.sh 提供一个 python3
+RUN ln -s ${PYBIN}/python3 /usr/local/bin/python3 || \
+    ln -s ${PYBIN}/python /usr/local/bin/python3

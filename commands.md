@@ -27,13 +27,13 @@ sudo docker run --rm -it --network host \
 ```
 
 ## build wheel
-Before buiding wheel, we should have the python version we want to build wheel for installed in the docker container (conda is recommended). For distribution to other people or other machines, use `auditwheel` to wrap all the dependencies into the wheel file.
+Before buiding wheel, we should have the python version we want to build wheel for installed in the docker container, which is specified in the last few lines of the dockerfile. For distribution to other people or other machines, use `auditwheel` to wrap all the dependencies into the wheel file.
 ```bash
 pip wheel . -w dist -v
 # the wheel file will be in the ./dist folder
 
 # replace cp3xx with the python version we have
-auditwheel repair dist/mplib-0.2.0-cp3xx-cp3xx-linux_x86_64.whl -w repaired_wheels 
+auditwheel repair dist/mplib-0.2.0-cp312-cp312-linux_x86_64.whl -w repaired_wheels 
 # the repaired wheel file will be in the ./repaired_wheels folder
 ```
 Now we can just `pip install` the repaired wheel file on any (linux) machine with the same python version.
