@@ -37,3 +37,9 @@ auditwheel repair dist/mplib-0.2.0-cp312-cp312-linux_x86_64.whl -w repaired_whee
 # the repaired wheel file will be in the ./repaired_wheels folder
 ```
 Now we can just `pip install` the repaired wheel file on any (linux) machine with the same python version.
+
+## update (Dec 2 2025)
+After launching the docker, just run the following bash script to build manylinux wheels for multiple python versions at once.
+```bash
+bash build_manylinux_wheels.sh
+```

@@ -116,11 +116,3 @@ ENV LLVM_DIR_PATH=/opt/rh/llvm-toolset-11.0/root/usr/lib64 \
 # Set working directory to be repository directory
 ARG WORKDIR="/workspace"
 WORKDIR ${WORKDIR}
-
-# 选择 manylinux 里的 Python 3.12
-ENV PYBIN=/opt/python/cp312-cp312/bin
-ENV PATH="${PYBIN}:${PATH}"
-
-# 给 dev/mkdoc.sh 提供一个 python3
-RUN ln -s ${PYBIN}/python3 /usr/local/bin/python3 || \
-    ln -s ${PYBIN}/python /usr/local/bin/python3
