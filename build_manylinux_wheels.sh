@@ -23,9 +23,6 @@ cd "${REPO_ROOT}"
 export CMAKE_BUILD_PARALLEL_LEVEL="$(nproc)"
 export MAKEFLAGS="-j$(nproc)"
 
-# Make the bind-mounted repo "safe" for git operations (e.g., setuptools-git-versioning)
-git config --global --add safe.directory "${REPO_ROOT}" || true
-
 for TAG in "${PY_TAGS[@]}"; do
   PYBIN="/opt/python/${TAG}/bin"
 
