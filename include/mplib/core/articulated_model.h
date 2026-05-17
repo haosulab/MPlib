@@ -198,6 +198,10 @@ class ArticulatedModelTpl {
     setQpos(current_qpos_, true);  // update all collision links in the fcl_model_
   }
 
+  Isometry3<S> getLinkGlobalPose(size_t link_index) const {
+    return base_pose_ * pinocchio_model_->getLinkPose(link_index);
+  }
+
   /**
    * Update the SRDF file to disable self-collisions.
    *

@@ -76,6 +76,10 @@ Get the underlying FCL model.
 
 :return: FCL model used for collision checking)doc";
 
+static const char *__doc_mplib_ArticulatedModelTpl_getLinkGlobalPose =
+R"doc(
+)doc";
+
 static const char *__doc_mplib_ArticulatedModelTpl_getMoveGroupEndEffectors =
 R"doc(
 Get the end effectors of the move group.

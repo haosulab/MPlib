@@ -22,13 +22,16 @@ struct WorldCollisionResultTpl {
                           const std::string &collision_type,
                           const std::string &object_name1,
                           const std::string &object_name2,
-                          const std::string &link_name1, const std::string &link_name2)
+                          const std::string &link_name1,
+                          const std::string &link_name2,
+                          S max_penetration)
       : res(res),
         collision_type(collision_type),
         object_name1(object_name1),
         object_name2(object_name2),
         link_name1(link_name1),
-        link_name2(link_name2) {};
+        link_name2(link_name2),
+        max_penetration(max_penetration) {};
 
   ::fcl::CollisionResult<S> res;  ///< the fcl CollisionResult
   std::string collision_type,     ///< type of the collision
@@ -36,6 +39,7 @@ struct WorldCollisionResultTpl {
       object_name2,               ///< name of the second object
       link_name1,                 ///< link name of the first object in collision
       link_name2;                 ///< link name of the second object in collision
+  S max_penetration {-1};  ///< max penentration distance between the two objects
 };
 
 /// Result of minimum distance-to-collision query.
@@ -51,7 +55,8 @@ struct WorldDistanceResultTpl {
   WorldDistanceResultTpl(const ::fcl::DistanceResult<S> &res, S min_distance,
                          const std::string &distance_type,
                          const std::string &object_name1,
-                         const std::string &object_name2, const std::string &link_name1,
+                         const std::string &object_name2,
+                         const std::string &link_name1,
                          const std::string &link_name2)
       : res(res),
         min_distance(min_distance),

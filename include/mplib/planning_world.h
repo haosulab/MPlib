@@ -173,7 +173,7 @@ class PlanningWorldTpl {
    * @param resolution: resolution of the point in ``octomap::OcTree``
    */
   void addPointCloud(const std::string &name, const MatrixX3<S> &vertices,
-                     double resolution = 0.01);
+                     double resolution = 0.01, const Pose<S> &pose = Pose<S>());
 
   /**
    * Removes (and detaches) the collision object with given name if exists.
@@ -436,6 +436,51 @@ class PlanningWorldTpl {
       const CollisionRequest &request = CollisionRequest()) const;
 
   /**
+   * Check full collisions between all pairs of scene objects
+   *
+   * @param scene_object_names: list of scene object names
+   * @param request: collision request params.
+   * @return: List of ``WorldCollisionResult`` objects
+   */
+  std::vector<WorldCollisionResult> checkSceneCollision(
+      const std::vector<std::string> &scene_object_names,
+      const CollisionRequest &request = CollisionRequest()) const;
+
+  std::vector<WorldCollisionResult> checkArticulationArticulationCollision(
+    const ArticulatedModelPtr &art1, const ArticulatedModelPtr &art2,
+    const CollisionRequest &request) const;
+
+  std::vector<WorldCollisionResult> checkArticulationObjectCollision(
+    const ArticulatedModelPtr &art, const FCLObjectPtr &obj,
+    const CollisionRequest &request) const;
+
+  std::vector<WorldCollisionResult> checkObjectObjectCollision(
+    const std::string &name1, const std::string &name2,
+    const CollisionRequest &request) const;
+
+  /*
+   * Check collision between an object and the world.
+   *
+   * @param name: name of the object
+   * @param request: collision request params.
+   * @return: List of ``WorldCollisionResult`` objects
+   */
+  std::vector<WorldCollisionResult> checkGeneralObjectCollision(
+      const std::string &name, const CollisionRequest &request = CollisionRequest()) const;
+
+  /**
+   * Check collision between two specified objects.
+   *
+   * @param name1: name of the first object
+   * @param name2: name of the second object
+   * @param request: collision request params.
+   * @return: List of ``WorldCollisionResult`` objects
+   */
+  std::vector<WorldCollisionResult> checkGeneralObjectPairCollision(
+      const std::string &name1, const std::string &name2,
+      const CollisionRequest &request = CollisionRequest()) const;
+
+  /**
    * The minimum distance to self-collision given the robot in current state.
    * Calls ``distanceSelf()``.
    *
@@ -489,6 +534,11 @@ class PlanningWorldTpl {
    */
   WorldDistanceResult distance(
       const DistanceRequest &request = DistanceRequest()) const;
+
+  std::vector<WorldDistanceResult> distanceScene(
+    const std::vector<std::string> &scene_object_names,
+    const DistanceRequest &request = DistanceRequest()) const;
+
 
  private:
   std::unordered_map<std::string, ArticulatedModelPtr> articulation_map_;

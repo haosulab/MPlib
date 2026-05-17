@@ -24,9 +24,9 @@ void build_pycollision_common(py::module &m) {
       .def(py::init<>(), DOC(mplib, collision_detection, WorldCollisionResultTpl,
                              WorldCollisionResultTpl))
       .def(py::init<const CollisionResult &, const std::string &, const std::string &,
-                    const std::string &, const std::string &, const std::string &>(),
+                    const std::string &, const std::string &, const std::string &, S>(),
            py::arg("res"), py::arg("collision_type"), py::arg("object_name1"),
-           py::arg("object_name2"), py::arg("link_name1"), py::arg("link_name2"),
+           py::arg("object_name2"), py::arg("link_name1"), py::arg("link_name2"), py::arg("max_penetration"),
            DOC(mplib, collision_detection, WorldCollisionResultTpl,
                WorldCollisionResultTpl, 2))
       .def_readonly("res", &WorldCollisionResult::res,
@@ -45,7 +45,10 @@ void build_pycollision_common(py::module &m) {
           DOC(mplib, collision_detection, WorldCollisionResultTpl, link_name1))
       .def_readonly(
           "link_name2", &WorldCollisionResult::link_name2,
-          DOC(mplib, collision_detection, WorldCollisionResultTpl, link_name2));
+          DOC(mplib, collision_detection, WorldCollisionResultTpl, link_name2))
+      .def_readonly(
+          "max_penetration", &WorldCollisionResult::max_penetration,
+          DOC(mplib, collision_detection, WorldCollisionResultTpl, max_penetration));
 
   auto PyWorldDistanceResult =
       py::class_<WorldDistanceResult, std::shared_ptr<WorldDistanceResult>>(

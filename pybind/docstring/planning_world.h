@@ -195,6 +195,14 @@ Attaches given sphere to specified link of articulation (auto touch_links)
 :param link_id: index of the link of the planned articulation to attach to
 :param pose: attached pose (relative pose from attached link to object))doc";
 
+static const char *__doc_mplib_PlanningWorldTpl_checkArticulationArticulationCollision =
+R"doc(
+)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_checkArticulationObjectCollision =
+R"doc(
+)doc";
+
 static const char *__doc_mplib_PlanningWorldTpl_checkCollision =
 R"doc(
 Check full collision (calls ``checkSelfCollision()`` and
@@ -203,11 +211,36 @@ Check full collision (calls ``checkSelfCollision()`` and
 :param request: collision request params.
 :return: List of ``WorldCollisionResult`` objects)doc";
 
+static const char *__doc_mplib_PlanningWorldTpl_checkGeneralObjectCollision =
+R"doc(
+)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_checkGeneralObjectPairCollision =
+R"doc(
+Check collision between two specified objects.
+
+:param name1: name of the first object
+:param name2: name of the second object
+:param request: collision request params.
+:return: List of ``WorldCollisionResult`` objects)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_checkObjectObjectCollision =
+R"doc(
+)doc";
+
 static const char *__doc_mplib_PlanningWorldTpl_checkRobotCollision =
 R"doc(
 Check collision with other scene bodies in the world (planned articulations with
 attached objects collide against unplanned articulations and scene objects)
 
+:param request: collision request params.
+:return: List of ``WorldCollisionResult`` objects)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_checkSceneCollision =
+R"doc(
+Check full collisions between all pairs of scene objects
+
+:param scene_object_names: list of scene object names
 :param request: collision request params.
 :return: List of ``WorldCollisionResult`` objects)doc";
 
@@ -252,6 +285,10 @@ Compute the minimum distance-to-collision between a robot and the world
 :param request: distance request params.
 :return: a ``WorldDistanceResult`` object)doc";
 
+static const char *__doc_mplib_PlanningWorldTpl_distanceScene =
+R"doc(
+)doc";
+
 static const char *__doc_mplib_PlanningWorldTpl_distanceSelf =
 R"doc(
 Get the minimum distance to self-collision given the robot in current state
@@ -286,14 +323,6 @@ The minimum distance to self-collision given the robot in current state. Calls
 static const char *__doc_mplib_PlanningWorldTpl_getAllowedCollisionMatrix =
 R"doc(
 Get the current allowed collision matrix)doc";
-
-static const char *__doc_mplib_PlanningWorldTpl_setAllowedCollision =
-R"doc(
-Set the allowed collision. For more comprehensive API, please get the
-``AllowedCollisionMatrix`` object and use its methods.
-
-:param name1: name of the first object
-:param name2: name of the second object)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_getArticulation =
 R"doc(
@@ -383,6 +412,14 @@ Removes (and detaches) the collision object with given name if exists. Updates
 :param name: name of the non-articulated collision object
 :return: ``True`` if success, ``False`` if the non-articulated object with given
     name does not exist)doc";
+
+static const char *__doc_mplib_PlanningWorldTpl_setAllowedCollision =
+R"doc(
+Set the allowed collision. For more comprehensive API, please get the
+``AllowedCollisionMatrix`` object and use its methods.
+
+:param name1: name of the first object
+:param name2: name of the second object)doc";
 
 static const char *__doc_mplib_PlanningWorldTpl_setArticulationPlanned =
 R"doc(

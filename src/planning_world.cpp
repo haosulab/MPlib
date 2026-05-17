@@ -8,11 +8,17 @@
 
 namespace mplib {
 
-// Explicit Template Instantiation Definition ==========================================
-#define DEFINE_TEMPLATE_PLANNING_WORLD(S) template class PlanningWorldTpl<S>
+template <typename S>
+S getFCLContactMaxPenetration(const fcl::CollisionResult<S> &result) {
+  S max_penetration = std::numeric_limits<S>::min();
+  if (result.numContacts() == 0) return 1;
 
-DEFINE_TEMPLATE_PLANNING_WORLD(float);
-DEFINE_TEMPLATE_PLANNING_WORLD(double);
+  for (size_t i = 0; i < result.numContacts(); ++i) {
+    const auto &contact = result.getContact(i);
+    max_penetration = std::max(max_penetration, contact.penetration_depth);
+  }
+  return max_penetration;
+}
 
 template <typename S>
 PlanningWorldTpl<S>::PlanningWorldTpl(
@@ -88,12 +94,16 @@ void PlanningWorldTpl<S>::addObject(const std::string &name,
 template <typename S>
 void PlanningWorldTpl<S>::addPointCloud(const std::string &name,
                                         const MatrixX3<S> &vertices,
-                                        double resolution) {
+                                        double resolution,
+                                        const Pose<S> &pose) {
   auto tree = std::make_shared<octomap::OcTree>(resolution);
   for (const auto &row : vertices.rowwise())
     tree->updateNode(octomap::point3d(row(0), row(1), row(2)), true);
-  addObject(name,
-            std::make_shared<CollisionObject>(std::make_shared<fcl::OcTree<S>>(tree)));
+  auto cobject = std::make_shared<CollisionObject>(std::make_shared<fcl::OcTree<S>>(tree));
+  addObject(
+    std::make_shared<FCLObject>(
+      name, pose, std::vector<CollisionObjectPtr> {cobject}, std::vector<Pose<S>> {Pose<S>()}
+  ));
 }
 
 template <typename S>
@@ -113,7 +123,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::vector<std::string> &touch_links) {
   const auto T_world_obj = object_map_.at(name)->pose;
   const auto T_world_link =
-      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(link_id);
+      planned_articulation_map_.at(art_name)->getLinkGlobalPose(link_id);
   attachObject(name, art_name, link_id, Pose<S>(T_world_link.inverse() * T_world_obj),
                touch_links);
 }
@@ -123,7 +133,7 @@ void PlanningWorldTpl<S>::attachObject(const std::string &name,
                                        const std::string &art_name, int link_id) {
   const auto T_world_obj = object_map_.at(name)->pose;
   const auto T_world_link =
-      planned_articulation_map_.at(art_name)->getPinocchioModel()->getLinkPose(link_id);
+      planned_articulation_map_.at(art_name)->getLinkGlobalPose(link_id);
   attachObject(name, art_name, link_id, Pose<S>(T_world_link.inverse() * T_world_obj));
 }
 
@@ -230,6 +240,26 @@ void PlanningWorldTpl<S>::attachMesh(const std::string &mesh_path,
         art_name, link_id, pose);
 }
 
+/*
+template <typename S>
+void PlanningWorldTpl<S>::attachPointCloud(
+  const std::string &name,
+  const MatrixX3<S> &vertices,
+  double resolution,
+  const std::string &art_name,
+  int link_id,
+  const Pose<S> &pose) {
+  auto tree = std::make_shared<octomap::OcTree>(resolution);
+  for (const auto &row : vertices.rowwise())
+    tree->updateNode(octomap::point3d(row(0), row(1), row(2)), true);
+
+  removeObject(name);
+  auto obj = std::make_shared<CollisionObject>(std::make_shared<fcl::OcTree<S>>(tree));
+  addObject(name, obj);
+  attachObject(name, art_name, link_id, pose);
+}
+*/
+
 template <typename S>
 bool PlanningWorldTpl<S>::detachObject(const std::string &name, bool also_remove) {
   if (also_remove) {
@@ -334,10 +364,97 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSelfCollision(
           tmp.object_name2 = name2;
           tmp.link_name1 = name1;
           tmp.link_name2 = name2;
+          tmp.max_penetration = getFCLContactMaxPenetration<S>(result);
           ret.push_back(tmp);
         }
       }
     }
+  return ret;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkArticulationArticulationCollision(
+  const ArticulatedModelPtr &art1, const ArticulatedModelPtr &art2,
+  const CollisionRequest &request) const {
+  const auto &fcl_model1 = art1->getFCLModel();
+  const auto &fcl_model2 = art2->getFCLModel();
+  auto results = fcl_model1->checkCollisionWith(fcl_model2, request, acm_);
+  return results;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkArticulationObjectCollision(
+  const ArticulatedModelPtr &art, const FCLObjectPtr &obj,
+  const CollisionRequest &request) const {
+  const auto &fcl_model1 = art->getFCLModel();
+  auto results = fcl_model1->checkCollisionWith(obj, request, acm_);
+  return results;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkObjectObjectCollision(
+  const std::string &name1, const std::string &name2,
+  const CollisionRequest &request) const {
+  const auto &obj1 = object_map_.at(name1);
+  const auto &obj2 = object_map_.at(name2);
+  std::vector<WorldCollisionResultTpl<S>> results;
+  CollisionResult result;
+  if (auto type = acm_->getAllowedCollision(name1, name2);
+      !type || type == collision_detection::AllowedCollision::NEVER) {
+    collision_detection::fcl::collide(obj1, obj2, request, result);
+    if (result.isCollision()) {
+      WorldCollisionResult tmp;
+      tmp.res = result;
+      tmp.collision_type = "object_object";
+      tmp.object_name1 = name1;
+      tmp.object_name2 = name2;
+      tmp.max_penetration = getFCLContactMaxPenetration<S>(result);
+      results.push_back(tmp);
+    }
+  }
+  return results;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkGeneralObjectPairCollision(
+  const std::string &name1, const std::string &name2, const CollisionRequest &request) const {
+
+  if (hasArticulation(name1) && hasArticulation(name2)) {
+    const auto &art1 = getArticulation(name1);
+    const auto &art2 = getArticulation(name2);
+    return checkArticulationArticulationCollision(art1, art2, request);
+  } else if (hasArticulation(name1) && hasObject(name2)) {
+    const auto &art = getArticulation(name1);
+    const auto &obj = getObject(name2);
+    return checkArticulationObjectCollision(art, obj, request);
+  } else if (hasObject(name1) && hasArticulation(name2)) {
+    const auto &art = getArticulation(name2);
+    const auto &obj = getObject(name1);
+    return checkArticulationObjectCollision(art, obj, request);
+  } else if (hasObject(name1) && hasObject(name2)) {
+    return checkObjectObjectCollision(name1, name2, request);
+  }
+
+  std::vector<WorldCollisionResult> ret;
+  return ret;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkGeneralObjectCollision(
+  const std::string &name, const CollisionRequest &request) const {
+
+  std::vector<WorldCollisionResult> ret;
+
+  for (const auto &[art_name, art] : articulation_map_) {
+    if (name == art_name) continue;
+    auto results = checkGeneralObjectPairCollision(name, art_name, request);
+    ret.insert(ret.end(), results.begin(), results.end());
+  }
+  for (const auto &[obj_name, obj] : object_map_) {
+    if (name == obj_name) continue;
+    auto results = checkGeneralObjectPairCollision(name, obj_name, request);
+    ret.insert(ret.end(), results.begin(), results.end());
+  }
   return ret;
 }
 
@@ -402,6 +519,7 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkRobotCollision
           tmp.object_name2 = scene_obj->name;
           tmp.link_name1 = attached_body_name;
           tmp.link_name2 = scene_obj->name;
+          tmp.max_penetration = getFCLContactMaxPenetration<S>(result);
           ret.push_back(tmp);
         }
       }
@@ -416,6 +534,40 @@ std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkCollision(
   const auto ret2 = checkRobotCollision(request);
   ret1.insert(ret1.end(), ret2.begin(), ret2.end());
   return ret1;
+}
+
+template <typename S>
+std::vector<WorldCollisionResultTpl<S>> PlanningWorldTpl<S>::checkSceneCollision(
+  const std::vector<std::string> &scene_object_names,
+  const CollisionRequest &request) const {
+
+  std::vector<WorldCollisionResult> ret;
+  CollisionResult result;
+
+  std::vector<FCLObjectPtr> scene_objects;
+  for (const auto &name : scene_object_names) {
+    if (auto it = object_map_.find(name); it != object_map_.end())
+      scene_objects.push_back(it->second);
+  }
+  for (size_t i = 0; i < scene_object_names.size(); i++) {
+    for (size_t j = i + 1; j < scene_object_names.size(); j++) {
+      if (auto type = acm_->getAllowedCollision(scene_object_names[i], scene_object_names[j]);
+          !type || type == collision_detection::AllowedCollision::NEVER) {
+        result.clear();
+        collision_detection::fcl::collide(scene_objects[i], scene_objects[j], request, result);
+        if (result.isCollision()) {
+          WorldCollisionResult tmp;
+          tmp.res = result;
+          tmp.collision_type = "sceneobject_sceneobject";
+          tmp.object_name1 = scene_object_names[i];
+          tmp.object_name2 = scene_object_names[j];
+          tmp.max_penetration = getFCLContactMaxPenetration<S>(result);
+          ret.push_back(tmp);
+        }
+      }
+    }
+  }
+  return ret;
 }
 
 template <typename S>
@@ -552,5 +704,43 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distance(
   const auto ret2 = distanceRobot(request);
   return ret1.min_distance < ret2.min_distance ? ret1 : ret2;
 }
+
+template <typename S>
+std::vector<WorldDistanceResultTpl<S>> PlanningWorldTpl<S>::distanceScene(
+    const std::vector<std::string> &scene_object_names,
+    const DistanceRequest &request) const {
+
+    std::vector<WorldDistanceResult> ret_list;
+    WorldDistanceResult ret;
+    DistanceResult result;
+
+    std::vector<FCLObjectPtr> scene_objects;
+    for (const auto &name : scene_object_names) {
+        if (auto it = object_map_.find(name); it != object_map_.end())
+            scene_objects.push_back(it->second);
+    }
+    for (size_t i = 0; i < scene_object_names.size(); i++) {
+        for (size_t j = i + 1; j < scene_object_names.size(); j++) {
+            if (auto type = acm_->getAllowedCollision(scene_object_names[i], scene_object_names[j]);
+                !type || type == collision_detection::AllowedCollision::NEVER) {
+                result.clear();
+                collision_detection::fcl::distance(scene_objects[i], scene_objects[j], request, result);
+                ret.res = result;
+                ret.min_distance = result.min_distance;
+                ret.distance_type = "sceneobject_sceneobject";
+                ret.object_name1 = scene_object_names[i];
+                ret.object_name2 = scene_object_names[j];
+                ret_list.push_back(ret);
+            }
+        }
+    }
+    return ret_list;
+}
+
+// Explicit Template Instantiation Definition ==========================================
+#define DEFINE_TEMPLATE_PLANNING_WORLD(S) template class PlanningWorldTpl<S>
+
+DEFINE_TEMPLATE_PLANNING_WORLD(float);
+DEFINE_TEMPLATE_PLANNING_WORLD(double);
 
 }  // namespace mplib

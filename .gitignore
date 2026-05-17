@@ -5,6 +5,7 @@ _ext
 *.so
 build/
 dist/
+repaired_wheels/
 eggs/
 .eggs/
 *.egg-info/

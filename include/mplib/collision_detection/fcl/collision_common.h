@@ -53,6 +53,8 @@ struct FCLObject {
   std::vector<fcl::CollisionObjectPtr<S>> shapes;
   /// Relative poses from this FCLObject to each collision shape
   std::vector<Isometry3<S>> shape_poses;
+
+  void setPose(const Pose<S> &pose_);
 };
 
 /**

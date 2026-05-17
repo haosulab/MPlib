@@ -47,7 +47,9 @@ void build_pyfcl_collision_common(py::module &m) {
             for (const auto &pose : fcl_obj.shape_poses) ret.push_back(Pose<S>(pose));
             return ret;
           },
-          DOC(mplib, collision_detection, fcl, FCLObject, shape_poses));
+          DOC(mplib, collision_detection, fcl, FCLObject, shape_poses))
+      .def("set_pose", &FCLObject<S>::setPose, py::arg("pose"),
+          DOC(mplib, collision_detection, fcl, FCLObject, setPose));
 
   // collide / distance functions
   m.def(

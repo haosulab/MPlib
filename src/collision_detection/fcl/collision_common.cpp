@@ -32,6 +32,14 @@ FCLObject<S>::FCLObject(const std::string &name_, const Pose<S> &pose_,
 }
 
 template <typename S>
+void FCLObject<S>::setPose(const Pose<S> &pose_) {
+  pose = pose_.toIsometry();
+  // std::cerr << "FCLObject::setPose isometry: " << pose << std::endl;
+  for (size_t i = 0; i < shapes.size(); i++)
+    shapes[i]->setTransform(pose * shape_poses[i]);
+}
+
+template <typename S>
 size_t collide(const FCLObjectPtr<S> &obj1, const FCLObjectPtr<S> &obj2,
                const fcl::CollisionRequest<S> &request,
                fcl::CollisionResult<S> &result) {

@@ -53,6 +53,10 @@ static const char *__doc_mplib_collision_detection_fcl_FCLObject_name = R"doc(Na
 
 static const char *__doc_mplib_collision_detection_fcl_FCLObject_pose = R"doc(Pose of this FCLObject. All shapes are relative to this pose)doc";
 
+static const char *__doc_mplib_collision_detection_fcl_FCLObject_setPose =
+R"doc(
+)doc";
+
 static const char *__doc_mplib_collision_detection_fcl_FCLObject_shape_poses = R"doc(Relative poses from this FCLObject to each collision shape)doc";
 
 static const char *__doc_mplib_collision_detection_fcl_FCLObject_shapes = R"doc(All collision shapes (``fcl::CollisionObjectPtr``) making up this FCLObject)doc";

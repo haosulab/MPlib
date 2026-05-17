@@ -40,6 +40,8 @@ static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_link_
 
 static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_link_name2 = R"doc(link name of the second object in collision)doc";
 
+static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_max_penetration = R"doc(max penentration distance between the two objects)doc";
+
 static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_object_name1 = R"doc(name of the first object)doc";
 
 static const char *__doc_mplib_collision_detection_WorldCollisionResultTpl_object_name2 = R"doc(name of the second object)doc";
