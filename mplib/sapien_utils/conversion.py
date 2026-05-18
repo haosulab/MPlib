@@ -324,10 +324,8 @@ class SapienPlanningWorld(PlanningWorld):
                 # FCL Capsule has z-axis along capsule height
                 shape_poses[-1] *= Pose(q=euler2quat(0, np.pi / 2, 0))
             elif isinstance(shape, PhysxCollisionShapeConvexMesh):
-                assert np.allclose(
-                    shape.scale, 1.0
-                ), f"Not unit scale {shape.scale}, need to rescale vertices?"
-                c_geom = Convex(vertices=shape.vertices, faces=shape.triangles)
+                scaled_vertices = shape.vertices * np.expand_dims(shape.scale, axis=0)
+                c_geom = Convex(vertices=scaled_vertices, faces=shape.triangles)
             elif isinstance(shape, PhysxCollisionShapeCylinder):
                 c_geom = Cylinder(radius=shape.radius, lz=shape.half_length * 2)
                 # NOTE: physx Cylinder has x-axis along cylinder height
