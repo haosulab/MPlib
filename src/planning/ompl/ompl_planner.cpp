@@ -16,9 +16,6 @@ namespace mplib::planning::ompl {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_OMPL_PLANNER(S) template class OMPLPlannerTpl<S>
 
-DEFINE_TEMPLATE_OMPL_PLANNER(float);
-DEFINE_TEMPLATE_OMPL_PLANNER(double);
-
 #define PI 3.14159265359
 
 template <typename S>
@@ -340,4 +337,7 @@ MatrixX<S> OMPLPlannerTpl<S>::simplifyPath(const MatrixX<S> &path) const {
   return ret;
 }
 
+
+DEFINE_TEMPLATE_OMPL_PLANNER(float);
+DEFINE_TEMPLATE_OMPL_PLANNER(double);
 }  // namespace mplib::planning::ompl

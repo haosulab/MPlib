@@ -15,9 +15,6 @@ namespace mplib {
       const aiNode *node, const Vector3<S> &scale, int vertices_offset, \
       std::vector<Vector3<S>> &vertices, std::vector<fcl::Triangle> &triangles) const
 
-DEFINE_TEMPLATE_ASSIMP_LOADER(float);
-DEFINE_TEMPLATE_ASSIMP_LOADER(double);
-
 AssimpLoader::AssimpLoader() : importer_(new Assimp::Importer()) {
   // set list of ignored parameters (parameters used for rendering)
   importer_->SetPropertyInteger(
@@ -117,4 +114,7 @@ size_t AssimpLoader::_dfsBuildMesh(const aiNode *node, const Vector3<S> &scale,
   return nbVertices;
 }
 
+
+DEFINE_TEMPLATE_ASSIMP_LOADER(float);
+DEFINE_TEMPLATE_ASSIMP_LOADER(double);
 }  // namespace mplib

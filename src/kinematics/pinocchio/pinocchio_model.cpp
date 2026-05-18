@@ -15,9 +15,6 @@ namespace mplib::kinematics::pinocchio {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_PINOCCHIO_MODEL(S) template class PinocchioModelTpl<S>
 
-DEFINE_TEMPLATE_PINOCCHIO_MODEL(float);
-DEFINE_TEMPLATE_PINOCCHIO_MODEL(double);
-
 template <typename S>
 PinocchioModelTpl<S>::PinocchioModelTpl(const std::string &urdf_filename,
                                         const Vector3<S> &gravity, bool verbose)
@@ -697,4 +694,7 @@ std::tuple<VectorX<S>, bool, Vector6<S>> PinocchioModelTpl<S>::computeIKCLIKJL(
   return {qposPinocchio2User(q), success, err};
 }
 
+
+DEFINE_TEMPLATE_PINOCCHIO_MODEL(float);
+DEFINE_TEMPLATE_PINOCCHIO_MODEL(double);
 }  // namespace mplib::kinematics::pinocchio

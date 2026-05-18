@@ -13,9 +13,6 @@ namespace mplib::collision_detection::fcl {
   template fcl::ConvexPtr<S> loadMeshAsConvex<S>(const std::string &mesh_path,       \
                                                  const Vector3<S> &scale)
 
-DEFINE_TEMPLATE_FCL_UTILS(float);
-DEFINE_TEMPLATE_FCL_UTILS(double);
-
 template <typename S>
 fcl::BVHModel_OBBRSSPtr<S> loadMeshAsBVH(const std::string &mesh_path,
                                          const Vector3<S> &scale) {
@@ -55,4 +52,7 @@ fcl::ConvexPtr<S> loadMeshAsConvex(const std::string &mesh_path,
   return std::make_shared<fcl::Convex<S>>(vertices_ptr, triangles.size(), faces, true);
 }
 
+
+DEFINE_TEMPLATE_FCL_UTILS(float);
+DEFINE_TEMPLATE_FCL_UTILS(double);
 }  // namespace mplib::collision_detection::fcl

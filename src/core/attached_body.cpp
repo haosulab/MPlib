@@ -5,9 +5,6 @@ namespace mplib {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_ATTACHED_BODY(S) template class AttachedBodyTpl<S>
 
-DEFINE_TEMPLATE_ATTACHED_BODY(float);
-DEFINE_TEMPLATE_ATTACHED_BODY(double);
-
 template <typename S>
 AttachedBodyTpl<S>::AttachedBodyTpl(const std::string &name, const FCLObjectPtr &object,
                                     const ArticulatedModelPtr &attached_articulation,
@@ -31,4 +28,7 @@ void AttachedBodyTpl<S>::updatePose() const {
     object_->shapes[i]->setTransform(object_pose * object_->shape_poses[i]);
 }
 
+
+DEFINE_TEMPLATE_ATTACHED_BODY(float);
+DEFINE_TEMPLATE_ATTACHED_BODY(double);
 }  // namespace mplib

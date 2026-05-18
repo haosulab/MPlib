@@ -11,9 +11,6 @@ namespace mplib {
   template pinocchio::InertiaTpl<S> convertInertial<S>(const urdf::Inertial &Y); \
   template pinocchio::InertiaTpl<S> convertInertial<S>(const urdf::InertialSharedPtr &Y)
 
-DEFINE_TEMPLATE_CONVERSION(float);
-DEFINE_TEMPLATE_CONVERSION(double);
-
 template <typename S>
 Isometry3<S> toIsometry(const pinocchio::SE3Tpl<S> &T) {
   Isometry3<S> ret;
@@ -70,4 +67,7 @@ pinocchio::InertiaTpl<S> convertInertial(const urdf::InertialSharedPtr &Y) {
   return pinocchio::InertiaTpl<S>::Zero();
 }
 
+
+DEFINE_TEMPLATE_CONVERSION(float);
+DEFINE_TEMPLATE_CONVERSION(double);
 }  // namespace mplib

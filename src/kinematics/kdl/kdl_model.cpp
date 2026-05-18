@@ -22,9 +22,6 @@ namespace mplib::kinematics::kdl {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_KDL_MODEL(S) template class KDLModelTpl<S>
 
-DEFINE_TEMPLATE_KDL_MODEL(float);
-DEFINE_TEMPLATE_KDL_MODEL(double);
-
 template <typename S>
 KDLModelTpl<S>::KDLModelTpl(const std::string &urdf_filename,
                             const std::vector<std::string> &link_names,
@@ -185,4 +182,7 @@ std::tuple<VectorX<S>, int> KDLModelTpl<S>::TreeIKNRJL(
   return {q1, retval};
 }
 
+
+DEFINE_TEMPLATE_KDL_MODEL(float);
+DEFINE_TEMPLATE_KDL_MODEL(double);
 }  // namespace mplib::kinematics::kdl

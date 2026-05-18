@@ -11,9 +11,6 @@ namespace mplib {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_ARTICULATED_MODEL(S) template class ArticulatedModelTpl<S>
 
-DEFINE_TEMPLATE_ARTICULATED_MODEL(float);
-DEFINE_TEMPLATE_ARTICULATED_MODEL(double);
-
 template <typename S>
 ArticulatedModelTpl<S>::ArticulatedModelTpl(const std::string &urdf_filename,
                                             const std::string &srdf_filename,
@@ -136,4 +133,7 @@ void ArticulatedModelTpl<S>::setQpos(const VectorX<S> &qpos, bool full) {
   fcl_model_->updateCollisionObjects(link_pose);
 }
 
+
+DEFINE_TEMPLATE_ARTICULATED_MODEL(float);
+DEFINE_TEMPLATE_ARTICULATED_MODEL(double);
 }  // namespace mplib

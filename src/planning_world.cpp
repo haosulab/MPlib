@@ -11,9 +11,6 @@ namespace mplib {
 // Explicit Template Instantiation Definition ==========================================
 #define DEFINE_TEMPLATE_PLANNING_WORLD(S) template class PlanningWorldTpl<S>
 
-DEFINE_TEMPLATE_PLANNING_WORLD(float);
-DEFINE_TEMPLATE_PLANNING_WORLD(double);
-
 template <typename S>
 PlanningWorldTpl<S>::PlanningWorldTpl(
     const std::vector<ArticulatedModelPtr> &articulations,
@@ -553,4 +550,7 @@ WorldDistanceResultTpl<S> PlanningWorldTpl<S>::distance(
   return ret1.min_distance < ret2.min_distance ? ret1 : ret2;
 }
 
+
+DEFINE_TEMPLATE_PLANNING_WORLD(float);
+DEFINE_TEMPLATE_PLANNING_WORLD(double);
 }  // namespace mplib

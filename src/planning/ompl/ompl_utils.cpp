@@ -14,9 +14,6 @@ namespace mplib::planning::ompl {
   template VectorX<S> state2Eigen<S>(const ob::State *state_raw,                   \
                                      const ob::SpaceInformation *si, bool is_rvss)
 
-DEFINE_TEMPLATE_OMPL_UTILS(float);
-DEFINE_TEMPLATE_OMPL_UTILS(double);
-
 template <typename S>
 std::vector<S> compoundState2Vector(const ob::State *state_raw,
                                     const ob::SpaceInformation *si) {
@@ -63,4 +60,7 @@ VectorX<S> state2Eigen(const ob::State *state_raw, const ob::SpaceInformation *s
   return vector2Eigen<S, S>(state_vec);
 }
 
+
+DEFINE_TEMPLATE_OMPL_UTILS(float);
+DEFINE_TEMPLATE_OMPL_UTILS(double);
 }  // namespace mplib::planning::ompl
