@@ -12,7 +12,7 @@
 #include <kdl/treeiksolverpos_nr_jl.hpp>
 #include <kdl/treeiksolvervel_wdls.hpp>
 #include <urdf_parser/urdf_parser.h>
-#include <urdf_world/types.h>
+#include <urdf_model/types.h>
 
 #include "mplib/kinematics/kdl/kdl_utils.h"
 #include "mplib/macros/assert.h"

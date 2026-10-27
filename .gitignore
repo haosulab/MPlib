@@ -3,6 +3,8 @@ __pycache__
 _ext
 *.pyc
 *.so
+*.dylib
+*.pyd
 build/
 dist/
 eggs/
@@ -39,3 +41,7 @@ imgui.ini
 **/*_package_keyword_replaced.urdf
 dev/drake
 dev/pybind11_mkdoc
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+pixi.lock

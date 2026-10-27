@@ -1,0 +1,36 @@
+[workspace]
+authors = ["Albert Khalikov <al.ry.ri@gmail.com>"]
+channels = ["conda-forge"]
+name = "MPlib"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+# Broadened from 3.10.* to >=3.10,<3.13: C++ dependencies (Pinocchio, OMPL, Boost)
+# on conda-forge provide co-installable builds for Python 3.10 through 3.12.
+python = ">=3.10,<3.13"
+# Broadened from >=26.2.1,<27 to allow any standard pip version.
+pip = "*"
+# Build tools
+cmake = "*"
+cxx-compiler = "*"
+ninja = "*"
+pybind11 = "*"
+# C++ dependencies
+assimp = "*"
+libboost-devel = "*"
+eigen = "*"
+fcl = "*"
+ompl = "*"
+orocos-kdl = "*"
+pinocchio = ">=3,<4"
+urdfdom = "*"
+# Runtime Python libraries
+numpy = ">=2"
+pytest = "*"
+trimesh = "*"
+
+[pypi-dependencies]
+mplib = { path = "./", editable = true }

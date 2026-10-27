@@ -2,8 +2,11 @@ import os
 import unittest
 
 import numpy as np
-import sapien.core as sapien
-from transforms3d.quaternions import mat2quat
+import pytest
+
+sapien = pytest.importorskip("sapien", reason="sapien is not installed")
+import sapien.core as sapien  # noqa: E402
+from transforms3d.quaternions import mat2quat  # noqa: E402
 
 from mplib import Pose
 from mplib.sapien_utils.conversion import (

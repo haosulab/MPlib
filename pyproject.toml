@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-git-versioning<2", "libclang>=11.0.1"]
+requires = ["setuptools>=61.0", "setuptools-git-versioning<2", "numpy"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -19,7 +19,8 @@ maintainers = [
 ]
 description = "A lightweight motion planning library"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["robotics", "motion planning"]
 classifiers=[
   "Operating System :: POSIX :: Linux",
@@ -27,7 +28,6 @@ classifiers=[
   "Intended Audience :: Education",
   "Intended Audience :: Other Audience",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Framework :: Robot Framework :: Tool",
   "Programming Language :: C++",

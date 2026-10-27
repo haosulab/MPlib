@@ -9,7 +9,6 @@
 
 #include <pinocchio/multibody/data.hpp>
 #include <urdf_model/types.h>
-#include <urdf_world/types.h>
 
 #include "mplib/kinematics/pinocchio/types.h"
 #include "mplib/macros/class_forward.h"
@@ -359,7 +358,7 @@ class PinocchioModelTpl {
   void init(const urdf::ModelInterfaceSharedPtr &urdf_model, const Vector3<S> &gravity);
 
   void dfsParseTree(const urdf::LinkConstSharedPtr &link,
-                    pinocchio::UrdfVisitorBase<S> &visitor);
+                    ::pinocchio::urdf::details::UrdfVisitorBase &visitor);
 
   VectorX<S> qposUser2Pinocchio(const VectorX<S> &q_user) const;
 

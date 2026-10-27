@@ -8,7 +8,6 @@
 #include <fcl/narrowphase/collision.h>
 #include <fcl/narrowphase/distance.h>
 #include <urdf_model/types.h>
-#include <urdf_world/types.h>
 
 #include "mplib/collision_detection/collision_common.h"
 #include "mplib/collision_detection/collision_matrix.h"

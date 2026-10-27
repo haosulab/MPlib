@@ -1,9 +1,10 @@
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-from setuptools import Extension, find_packages, setup
+from setuptools import Extension, find_namespace_packages, setup
 from setuptools.command.build_ext import build_ext
 
 
@@ -27,7 +28,7 @@ class CMakeBuild(build_ext):
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
-        # cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
+        cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         cmake_args = [
@@ -35,14 +36,26 @@ class CMakeBuild(build_ext):
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
         ]
+
+        # Ensure active Python/conda environment prefix is in CMAKE_PREFIX_PATH
+        # so CMake finds pybind11, Pinocchio, OMPL, FCL, etc.
+        prefix_paths = [sys.prefix]
+        if "CONDA_PREFIX" in os.environ and os.environ["CONDA_PREFIX"] not in prefix_paths:
+            prefix_paths.append(os.environ["CONDA_PREFIX"])
+        if "CMAKE_PREFIX_PATH" in os.environ:
+            for p in os.environ["CMAKE_PREFIX_PATH"].split(os.pathsep):
+                if p and p not in prefix_paths:
+                    prefix_paths.append(p)
+        cmake_args.append(f"-DCMAKE_PREFIX_PATH={';'.join(prefix_paths)}")
+
         build_args = []
         # Adding CMake arguments set as environment variable
         # (needed e.g. to build for ARM OSx on conda-forge)
         if "CMAKE_ARGS" in os.environ:
             cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
-        # if not cmake_generator:
-        #    cmake_args += ["-GNinja"]
+        if not cmake_generator and shutil.which("ninja"):
+            cmake_args += ["-GNinja"]
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
@@ -70,10 +83,18 @@ class CMakeBuild(build_ext):
             ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
         )
 
+        if getattr(self, "editable_mode", False) or self.inplace:
+            pkg_dir = Path(ext.sourcedir) / "mplib"
+            for file in extdir.glob("pymp*"):
+                if file.is_file():
+                    dest = pkg_dir / file.name
+                    if file.resolve() != dest.resolve():
+                        shutil.copy2(file, dest)
+
 
 setup(
     name="mplib",
-    packages=find_packages(include="mplib*"),
+    packages=find_namespace_packages(include=["mplib*"]),
     package_data={"": ["**/*.pyi"], "mplib": ["py.typed"]},
     ext_modules=[CMakeExtension("mplib.pymp")],
     cmdclass={"build_ext": CMakeBuild},

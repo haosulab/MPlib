@@ -3,7 +3,7 @@
 #include <string>
 
 #include <kdl/tree.hpp>
-#include <urdf_world/types.h>
+#include <urdf_model/types.h>
 
 namespace mplib::kinematics::kdl {
 
